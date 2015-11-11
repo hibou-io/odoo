@@ -123,10 +123,16 @@ class sale_order(osv.Model):
 class website(orm.Model):
     _inherit = 'website'
 
+    def _get_pricelist_id(self, cr, uid, ids, name, args, context=None):
+        res = {}
+        pricelist = self.get_current_pricelist(cr, uid, context=context)
+        for data in self.browse(cr, uid, ids, context=context):
+            res[data.id] = pricelist.id
+        return res
+
     _columns = {
-        'pricelist_id': fields.related(
-            'user_id', 'partner_id', 'property_product_pricelist',
-            type='many2one', relation='product.pricelist', string='Default Pricelist'),
+        'pricelist_id': fields.function(_get_pricelist_id,\
+            type='many2one', relation="product.pricelist", string='Default Pricelist'),
         'currency_id': fields.related(
             'pricelist_id', 'currency_id',
             type='many2one', relation='res.currency', string='Default Currency'),
@@ -179,8 +185,9 @@ class website(orm.Model):
         :returns: pricelist recordset
         """
         isocountry = request.session.geoip and request.session.geoip.get('country_code') or False
+        user_id = self.pool['res.users'].browse(cr, uid, request.uid or uid, context=context)
         pl_ids = self._get_pl(cr, uid, isocountry, show_visible,
-                              request.website.pricelist_id.id,
+                              user_id.partner_id.property_product_pricelist.id,
                               request.session.get('website_sale_current_pl'),
                               request.website.website_pricelist_ids)
         return self.pool['product.pricelist'].browse(cr, uid, pl_ids, context=context)
@@ -248,16 +255,17 @@ class website(orm.Model):
             affiliate_id = request.session.get('affiliate_id')
             salesperson_id = affiliate_id if user_obj.exists(cr, SUPERUSER_ID, affiliate_id, context=context) else request.website.salesperson_id.id
             for w in self.browse(cr, uid, ids):
+                addr = partner.address_get(['delivery', 'invoice'])
                 values = {
                     'partner_id': partner.id,
                     'pricelist_id': pricelist_id,
+                    'payment_term_id': partner.property_payment_term_id.id if partner.property_payment_term_id else False,
                     'team_id': w.salesteam_id.id,
+                    'partner_invoice_id': addr['invoice'],
+                    'partner_shipping_id': addr['delivery'],
+                    'user_id': salesperson_id or w.salesperson_id.id,
                 }
                 sale_order_id = sale_order_obj.create(cr, SUPERUSER_ID, values, context=context)
-                sale_order_obj.onchange_partner_id(cr, SUPERUSER_ID, [sale_order_id], context=context)
-                values = {'user_id': salesperson_id or w.salesperson_id.id}
-
-                sale_order_obj.write(cr, SUPERUSER_ID, [sale_order_id], values, context=context)
                 request.session['sale_order_id'] = sale_order_id
                 sale_order = sale_order_obj.browse(cr, SUPERUSER_ID, sale_order_id, context=context)
 
