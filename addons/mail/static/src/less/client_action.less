@@ -1,27 +1,55 @@
 // ------------------------------------------------------------------
 // Layout
 // ------------------------------------------------------------------
+@mail-chat-sidebar-width: 250px;
 .o_mail_chat {
     .o-position-absolute(0, 0, 0, 0);
     height: 100%;
 
     @media (max-width: @screen-xs-max) {
         height: auto;
-        flex-direction: column;
-
     }
 
-    .o-flex-display();
-    .o-flex-flow(row, nowrap);
+    .o_mail_annoying_notification_bar {
+        height: 40px;
+        background-color: #DFA941;
+        color: white;
+        text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.25);
+        .o-flex-display();
+        border-bottom: 1px solid @odoo-main-color-muted;
+
+        .o_mail_request_permission {
+            .o-flex-display();
+            justify-content: center;
+            .o-flex(1,1, auto);
+        }
+        > span {
+            font-size: 16px;
+            line-height: 40px;
+            > a {
+                color: white;
+                margin-left: 5px;
+                text-decoration: underline;
+            }
+
+            &.fa-close {
+                margin-right: 10px;
+                cursor: pointer;
+            }
+        }
+    }
 
     .o_mail_chat_sidebar {
-        .o-flex(0, 0, 220px);
+        width: @mail-chat-sidebar-width;
+        height: 100%;
+        float: left;
         overflow: auto;
         padding: 8px 0;
         font-weight: 300;
 
         @media (max-width: @screen-xs-max) {
-            flex: none;
+            width: 100%;
+            float: none;
             display: none;
         }
 
@@ -47,6 +75,10 @@
             .o_mail_partner_unpin {
                 padding: 2px 6px;
             }
+            i.fa-envelope-o {
+                margin-left: 3px;
+            }
+
         }
         .o_mail_add_channel {
             width: 100%;
@@ -66,15 +98,21 @@
     }
 
     .o_mail_chat_content {
-        .o-flex(1, 1, 100%);
-        height: 100%;
         .o-flex-display();
         .o-flex-flow(column, nowrap);
+        height: 100%;
+        margin-left: @mail-chat-sidebar-width;
+        position: relative;
+
+        @media (max-width: @screen-xs-max) {
+            margin-left: 0;
+        }
 
         .o_mail_thread {
             .o-flex(1, 0, 0);
             overflow: auto;
             .o-webclient-padding();
+            padding-bottom: 15px;
 
             .o_chat_help_message {
                 padding: 25px 0;
@@ -83,7 +121,7 @@
         }
         .o_chat_composer {
             .o-flex(0, 0, auto);
-            .o-webclient-padding(@top: 10px, @bottom: 5px);
+            .o-webclient-padding(@top: 2px, @bottom: 8px);
 
             .o_composer {
                 .o-flex-display();
@@ -94,10 +132,28 @@
                     margin-right: 5px;
                     border: none;
                 }
-
-                .o_composer_buttons {
-                    .o-flex(0, 0, auto);
+                &.o_extended_composer .o_composer_input {
+                    margin-right: 0;
                 }
+            }
+
+            .o_composer_buttons {
+                .o-flex(0, 0, auto);
+                .o_composer_button_send {
+                    float: right;
+                }
+            }
+        }
+        .o_mail_snackbar {
+            .o-position-absolute(15px, 15px);
+            padding-top: 10px;
+            padding-bottom: 10px;
+            cursor: pointer;
+            background-color: darken(@gray, 8%);
+            color: white;
+            .o_snackbar_undo {
+                margin-left: 8px;
+                padding: 8px;
             }
         }
     }
@@ -110,7 +166,7 @@
 .o_mail_chat {
     .o_mail_chat_sidebar {
         background-color: darken(@gray, 8%);
-        color: lighten(@gray, 50%);
+        color: lighten(@gray, 60%);
         opacity: 0.9;
 
         .o_mail_chat_channel_item {
@@ -141,16 +197,6 @@
             &.o_unread_message {
                 color: white;
                 font-weight: bold;
-            }
-
-            .o_user_status {
-                font-size: 10px;
-                position: relative;
-                bottom: 1px;
-                margin-right: 3px;
-                &.fa-circle {
-                    color: @odoo-brand-optional;
-                }
             }
 
             > .badge {
@@ -196,16 +242,20 @@
                     color: white;
                 }
             }
-
-            .o_composer_mentioned_partners {
-                color: white;
-
-                > .badge {
-                    color: white;
-                    border: 1px solid white;
-                    background-color: transparent;
-                }
-            }
         }
+    }
+}
+
+// User status bullet (in Discuss sidebar and Invite dialog)
+.o_mail_user_status {
+    font-size: 10px;
+    position: relative;
+    bottom: 1px;
+    margin-right: 3px;
+    &.o_user_online {
+        color: @odoo-brand-optional;
+    }
+    &.o_user_idle {
+        color: orange;
     }
 }

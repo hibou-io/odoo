@@ -1,6 +1,7 @@
 @mail-thread-avatar-size: 36px;
 @mail-thread-icon-opacity: 0.6;
 @mail-thread-side-date-opacity: 0.6;
+@mail-thread-note: @gray-lighter;
 
 .o_mail_thread {
     .o_thread_show_more {
@@ -8,7 +9,8 @@
     }
 
     .o_thread_date_separator {
-        margin-bottom: 15px;
+        margin-top: 15px;
+        margin-bottom: 30px;
         border-bottom: solid @gray-lighter 2px;
         text-align: center;
 
@@ -19,6 +21,20 @@
             padding: 0 10px;
             font-weight: bold;
             background: white;
+        }
+    }
+
+    .o_thread_new_messages_separator {
+        margin-bottom: 15px;
+        border-bottom: solid lighten(@odoo-brand-primary, 15%) 1px;
+        text-align: right;
+        .o_thread_separator_label {
+            position: relative;
+            top: 8px;
+            padding: 0 10px;
+            background: white;
+            color: lighten(@odoo-brand-primary, 15%);
+            font-size: smaller;
         }
     }
 
@@ -82,6 +98,10 @@
         .o_thread_message_core {
             .o-flex(1, 1, auto);
 
+            &.o_mail_note {
+                background-color: @gray-lighter;
+            }
+
             .o_mail_subject {
                 font-style: italic;
             }
@@ -98,6 +118,10 @@
                 }
             }
 
+            .o_mail_body_long {
+                display: none;
+            }
+
             .o_mail_info {
                 margin-bottom: 2px;
                 .text-muted();
@@ -110,5 +134,10 @@
                 padding: 4px;
             }
         }
+    }
+    .o_thread_title {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        font-size: 20px;
     }
 }
