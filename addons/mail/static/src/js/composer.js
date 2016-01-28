@@ -5,6 +5,7 @@ var chat_manager = require('mail.chat_manager');
 
 var core = require('web.core');
 var data = require('web.data');
+var dom_utils = require('web.dom_utils');
 var Model = require('web.Model');
 var session = require('web.session');
 var Widget = require('web.Widget');
@@ -314,7 +315,7 @@ var BasicComposer = Widget.extend({
     template: "mail.ChatComposer",
 
     events: {
-        "keydown .o_composer_input": "on_keydown",
+        "keydown .o_composer_input textarea": "on_keydown",
         "keyup .o_composer_input": "on_keyup",
         "change input.o_form_input_file": "on_attachment_change",
         "click .o_composer_button_send": "send_message",
@@ -330,6 +331,7 @@ var BasicComposer = Widget.extend({
             input_max_height: 150,
             input_min_height: 28,
             mention_fetch_limit: 8,
+            mention_partners_restricted: false, // set to true to only suggest prefetched partners
             send_text: _('Send'),
         });
         this.context = this.options.context;
@@ -353,6 +355,10 @@ var BasicComposer = Widget.extend({
             model: 'mail.channel',
             redirect_classname: 'o_channel_redirect',
         });
+
+        // Emojis
+        this.emoji_container_classname = 'o_composer_emoji';
+
         this.PartnerModel = new Model('res.partner');
         this.ChannelModel = new Model('mail.channel');
     },
@@ -362,11 +368,11 @@ var BasicComposer = Widget.extend({
 
         this.$attachment_button = this.$(".o_composer_button_add_attachment");
         this.$attachments_list = this.$('.o_composer_attachments_list');
-        this.$input = this.$('.o_composer_input');
+        this.$input = this.$('.o_composer_input textarea');
         this.$input.focus(function () {
             self.trigger('input_focused');
         });
-        this.resize_input();
+        dom_utils.autoresize(this.$input, {parent: this, min_height: this.options.input_min_height});
 
         // Attachments
         $(window).on(this.fileupload_id, this.on_attachment_loaded);
@@ -385,7 +391,7 @@ var BasicComposer = Widget.extend({
                 return self.$emojis;
             },
             html: true,
-            container: '.o_composer_emoji',
+            container: '.' + self.emoji_container_classname,
             trigger: 'focus',
         });
 
@@ -421,25 +427,11 @@ var BasicComposer = Widget.extend({
 
             // Empty input, selected partners and attachments
             self.$input.val('');
-            self.resize_input();
             self.mention_manager.reset_selections();
             self.set('attachment_ids', []);
 
             self.$input.focus();
         });
-    },
-
-    /**
-     * Resizes the textarea according to its scrollHeight
-     * @param {Boolean} [force_resize] if not true, only reset the size if empty
-     */
-    resize_input: function (force_resize) {
-        if (this.$input.val() === '') {
-            this.$input.css('height', this.options.input_min_height);
-        } else if (force_resize) {
-            var height = this.$input.prop('scrollHeight') + this.options.input_baseline;
-            this.$input.css('height', Math.min(this.options.input_max_height, height));
-        }
     },
 
     // Events
@@ -456,8 +448,8 @@ var BasicComposer = Widget.extend({
     /**
      * Send the message on ENTER, but go to new line on SHIFT+ENTER
      */
-    prevent_send: function (event) {
-        return event.shiftKey;
+    should_send: function (event) {
+        return !event.shiftKey;
     },
 
     on_keydown: function (event) {
@@ -478,11 +470,12 @@ var BasicComposer = Widget.extend({
             case $.ui.keyCode.ENTER:
                 if (this.mention_manager.is_open()) {
                     event.preventDefault();
-                } else if (!this.prevent_send(event)) {
-                    event.preventDefault();
-                    this.send_message();
                 } else {
-                    this.resize_input(true);
+                    var send_message = event.ctrlKey || this.should_send(event);
+                    if (send_message) {
+                        event.preventDefault();
+                        this.send_message();
+                    }
                 }
                 break;
         }
@@ -508,7 +501,6 @@ var BasicComposer = Widget.extend({
             // Otherwise, check if a mention is typed
             default:
                 this.mention_manager.detect_delimiter();
-                this.resize_input();
         }
     },
 
@@ -629,7 +621,7 @@ var BasicComposer = Widget.extend({
                     }
                 }
             });
-            if (!suggestions.length) {
+            if (!suggestions.length && !self.options.mention_partners_restricted) {
                 // no result found among prefetched partners, fetch other suggestions
                 var kwargs = {
                     limit: limit,
@@ -664,8 +656,9 @@ var ExtendedComposer = BasicComposer.extend({
         options = _.defaults(options || {}, {
             input_min_height: 120,
         });
+        this._super(parent, options);
         this.extended = true;
-        return this._super(parent, options);
+        this.emoji_container_classname = 'o_extended_composer_emoji';
     },
 
     start: function () {
@@ -683,8 +676,8 @@ var ExtendedComposer = BasicComposer.extend({
         });
     },
 
-    prevent_send: function () {
-        return true;
+    should_send: function () {
+        return false;
     },
 });
 
