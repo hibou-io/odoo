@@ -623,16 +623,17 @@ class AccountInvoice(models.Model):
     def tax_line_move_line_get(self):
         res = []
         for tax_line in self.tax_line_ids:
-            res.append({
-                'tax_line_id': tax_line.tax_id.id,
-                'type': 'tax',
-                'name': tax_line.name,
-                'price_unit': tax_line.amount,
-                'quantity': 1,
-                'price': tax_line.amount,
-                'account_id': tax_line.account_id.id,
-                'account_analytic_id': tax_line.account_analytic_id.id,
-            })
+            if tax_line.amount:
+                res.append({
+                    'tax_line_id': tax_line.tax_id.id,
+                    'type': 'tax',
+                    'name': tax_line.name,
+                    'price_unit': tax_line.amount,
+                    'quantity': 1,
+                    'price': tax_line.amount,
+                    'account_id': tax_line.account_id.id,
+                    'account_analytic_id': tax_line.account_analytic_id.id,
+                })
         return res
 
     def inv_line_characteristic_hashcode(self, invoice_line):
@@ -658,6 +659,7 @@ class AccountInvoice(models.Model):
                     am = line2[tmp]['debit'] - line2[tmp]['credit'] + (l['debit'] - l['credit'])
                     line2[tmp]['debit'] = (am > 0) and am or 0.0
                     line2[tmp]['credit'] = (am < 0) and -am or 0.0
+                    line2[tmp]['amount_currency'] += l['amount_currency']
                     line2[tmp]['analytic_line_ids'] += l['analytic_line_ids']
                 else:
                     line2[tmp] = l
@@ -960,7 +962,7 @@ class AccountInvoice(models.Model):
         recs = self.browse(cr, uid, ids, context)
         pay_journal = self.pool.get('account.journal').browse(cr, uid, pay_journal_id, context=context)
         writeoff_acc = self.pool.get('account.account').browse(cr, uid, writeoff_acc_id, context=context)
-        return recs.pay_and_reconcile(pay_journal, pay_amount, date, writeoff_acc)
+        return AccountInvoice.pay_and_reconcile(recs, pay_journal, pay_amount, date, writeoff_acc)
 
     @api.multi
     def _track_subtype(self, init_values):
@@ -985,6 +987,17 @@ class AccountInvoice(models.Model):
         res = map(lambda l: (l[0].name, formatLang(self.env, l[1], currency_obj=currency)), res)
         return res
 
+    @api.multi
+    def _notification_group_recipients(self, message, recipients, done_ids, group_data):
+        for recipient in recipients:
+            if recipient.id in done_ids:
+                continue
+            if not recipient.user_ids:
+                group_data['partner'] |= recipient
+            else:
+                group_data['user'] |= recipient
+            done_ids.add(recipient.id)
+        return super(AccountInvoice, self)._notification_group_recipients(message, recipients, done_ids, group_data)
 
 class AccountInvoiceLine(models.Model):
     _name = "account.invoice.line"

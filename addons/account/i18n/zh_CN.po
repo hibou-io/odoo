@@ -13,6 +13,8 @@
 # Haorui Wang <yui12349856@live.com>, 2015
 # H_Tang <h_tang@foxmail.com>, 2015
 # jeffery chen fan <jeffery9@gmail.com>, 2015-2016
+# Joroy <13637815@qq.com>, 2016
+# Kai Zhu <parahexen@gmail.com>, 2016
 # Martin Trigaux, 2015
 # Rona Lin <ssauapw@qq.com>, 2015
 # waveyeung <waveyeung@qq.com>, 2015
@@ -26,8 +28,8 @@ msgstr ""
 "Project-Id-Version: Odoo 9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-12-17 14:09+0000\n"
-"PO-Revision-Date: 2016-01-21 01:30+0000\n"
-"Last-Translator: 榴莲 <nocoolyoyo@bengentea.top>\n"
+"PO-Revision-Date: 2016-03-12 02:16+0000\n"
+"Last-Translator: Joroy <13637815@qq.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/odoo/odoo-9/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1657,9 +1659,8 @@ msgstr "要求退款"
 msgid ""
 "Asset management: This allows you to manage the assets owned by a company or a person. It keeps track of the depreciation occurred on those assets, and creates account move for those depreciation lines.\n"
 "\n"
-"Revenue recognition: This allows you to manage the Revenue recognition on selling product. It keeps track of the installment occurred on those revenue recognition, and creates account move for those installment lines.\n"
 "-This installs the module account_asset. If you do not check this box, you will be able to do invoicing & payments, but not accounting (Journal Items, Chart of Accounts, ...)"
-msgstr "此处可以管理属于公司或者个人的资产.\n                跟踪资产折旧的发生，创建折旧明细账户。.\n                要安装account_asset模块. 如果不检查box, 可以处理发票和付款,\n                但不能处理账记(分录明细, 科目表, ...)"
+msgstr ""
 
 #. module: account
 #: model:account.financial.report,name:account.account_financial_report_assets0
@@ -1668,8 +1669,8 @@ msgstr "资产"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_config_settings_module_account_asset
-msgid "Assets management & Revenue recognition"
-msgstr "固定资产管理和应收确认"
+msgid "Assets management"
+msgstr "资产管理"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_chart_template_account_ids
@@ -2213,7 +2214,7 @@ msgstr "钱箱行"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_cashbox_line_cashbox_id
 msgid "Cashbox"
-msgstr ""
+msgstr "钱箱"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_chart_template_property_account_expense_categ_id
@@ -2829,7 +2830,7 @@ msgstr "创建你的产品"
 #: model:ir.model.fields,field_description:account.field_validate_account_move_create_uid
 #: model:ir.model.fields,field_description:account.field_wizard_multi_charts_accounts_create_uid
 msgid "Created by"
-msgstr "创建人"
+msgstr "创建者"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account_create_date
@@ -3587,7 +3588,7 @@ msgstr "期末余额"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_cashbox_end_id
 msgid "Ending Cashbox"
-msgstr ""
+msgstr "关闭钱箱"
 
 #. module: account
 #: model:ir.ui.view,arch_db:account.account_planner
@@ -4376,14 +4377,6 @@ msgstr "如果你想从Odoo中给客户发送报表，你应该首先记录所�
 #: model:ir.ui.view,arch_db:account.account_planner
 msgid "If you want to do it yourself:"
 msgstr "如果你想自己做:"
-
-#. module: account
-#: model:ir.ui.view,arch_db:account.account_planner
-msgid ""
-"If you'd like some assistance on any of the above, please do not hesitate \n"
-"                        to contact our accounting experts by using the \n"
-"                        <span class=\"fa fa-question-circle\"/> icon on the top bar."
-msgstr "如果你需要以上的任何帮助，不要有任何犹豫去联系我们的财务专家，　可以点击上面的 <span class=\"fa fa-question-circle\"/>图标"
 
 #. module: account
 #: model:account.payment.term,name:account.account_payment_term_immediate
@@ -5693,7 +5686,7 @@ msgstr "非流动负债"
 #: selection:account.tax,type_tax_use:0
 #: selection:account.tax.template,type_tax_use:0
 msgid "None"
-msgstr "没有"
+msgstr "无"
 
 #. module: account
 #: selection:account.financial.report,style_overwrite:0
@@ -7478,7 +7471,7 @@ msgstr "开始余额"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_cashbox_start_id
 msgid "Starting Cashbox"
-msgstr ""
+msgstr "打开钱箱"
 
 #. module: account
 #: model:ir.ui.view,arch_db:account.view_account_payment_search
@@ -9248,6 +9241,14 @@ msgid ""
 msgstr "已经调节的分录不能更改。你只能更改一些非法律强制项或者必须首先取消调节.\n%s."
 
 #. module: account
+#: code:addons/account/models/account.py:329
+#, python-format
+msgid ""
+"You cannot empty the account number once set.\n"
+"If you would like to delete the account number, you can do it from the Bank Accounts list."
+msgstr ""
+
+#. module: account
 #: code:addons/account/models/account.py:96
 #, python-format
 msgid ""
@@ -9616,7 +9617,7 @@ msgstr "一次交易大概几秒"
 #. module: account
 #: model:ir.ui.view,arch_db:account.account_planner
 msgid "send us an email"
-msgstr "给我们发一封邮件"
+msgstr "发邮件给我们"
 
 #. module: account
 #: model:ir.ui.view,arch_db:account.account_planner
@@ -9648,7 +9649,7 @@ msgstr "母公司"
 #. module: account
 #: model:ir.ui.view,arch_db:account.account_planner
 msgid "the product list"
-msgstr ""
+msgstr "产品列表"
 
 #. module: account
 #: model:ir.ui.view,arch_db:account.account_planner
