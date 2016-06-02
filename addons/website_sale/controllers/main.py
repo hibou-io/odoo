@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import werkzeug
 
 from openerp import SUPERUSER_ID
@@ -10,6 +11,8 @@ from openerp.addons.website.models.website import slug
 
 PPG = 20 # Products Per Page
 PPR = 4  # Products Per Row
+
+_logger = logging.getLogger(__name__)
 
 class table_compute(object):
     def __init__(self):
@@ -105,6 +108,8 @@ class QueryURL(object):
 
 def get_pricelist():
     return request.website.get_current_pricelist()
+    if not pricelist:
+        _logger.error('Fail to find pricelist for partner "%s" (id %s)', partner.name, partner.id)
 
 class website_sale(http.Controller):
 
@@ -620,8 +625,9 @@ class website_sale(http.Controller):
             # create partner
             billing_info['team_id'] = request.website.salesteam_id.id
             partner_id = orm_partner.create(cr, SUPERUSER_ID, billing_info, context=context)
-        order.write({'partner_id': partner_id, 'partner_invoice_id': partner_id})
+        order.write({'partner_id': partner_id})
         order_obj.onchange_partner_id(cr, SUPERUSER_ID, [order.id], context=context)
+        order.write({'partner_invoice_id': partner_id})
 
         # create a new shipping partner
         if checkout.get('shipping_id') == -1:
@@ -764,15 +770,13 @@ class website_sale(http.Controller):
         values.update(sale_order_obj._get_website_data(cr, uid, order, context))
 
         if not values['errors']:
-            # find an already existing transaction
-            tx = request.website.sale_get_transaction()
             acquirer_ids = payment_obj.search(cr, SUPERUSER_ID, [('website_published', '=', True), ('company_id', '=', order.company_id.id)], context=context)
             values['acquirers'] = list(payment_obj.browse(cr, uid, acquirer_ids, context=context))
             render_ctx = dict(context, submit_class='btn btn-primary', submit_txt=_('Pay Now'))
             for acquirer in values['acquirers']:
                 acquirer.button = payment_obj.render(
                     cr, SUPERUSER_ID, acquirer.id,
-                    tx and tx.reference or request.env['payment.transaction'].get_next_reference(order.name),
+                    '/',
                     order.amount_total,
                     order.pricelist_id.currency_id.id,
                     values={
@@ -795,6 +799,7 @@ class website_sale(http.Controller):
                                 user is redirected to the checkout page
         """
         cr, uid, context = request.cr, request.uid, request.context
+        payment_obj = request.registry.get('payment.acquirer')
         transaction_obj = request.registry.get('payment.transaction')
         order = request.website.sale_get_order(context=context)
 
@@ -811,9 +816,7 @@ class website_sale(http.Controller):
                 tx = False
                 tx_id = False
             elif tx.state == 'draft':  # button cliked but no more info -> rewrite on tx or create a new one ?
-                tx.write({
-                    'amount': order.amount_total,
-                })
+                tx.write(dict(transaction_obj.on_change_partner_id(cr, SUPERUSER_ID, None, order.partner_id.id, context=context).get('value', {}), amount=order.amount_total))
         if not tx:
             tx_id = transaction_obj.create(cr, SUPERUSER_ID, {
                 'acquirer_id': acquirer_id,
@@ -839,7 +842,17 @@ class website_sale(http.Controller):
         if tx.acquirer_id.auto_confirm == 'at_pay_now':
             request.registry['sale.order'].action_confirm(cr, SUPERUSER_ID, [order.id], context=dict(request.context, send_email=True))
 
-        return tx_id
+        return payment_obj.render(
+            request.cr, SUPERUSER_ID, tx.acquirer_id.id,
+            tx.reference,
+            order.amount_total,
+            order.pricelist_id.currency_id.id,
+            values={
+                'return_url': '/shop/payment/validate',
+                'partner_id': order.partner_shipping_id.id or order.partner_invoice_id.id,
+                'billing_partner_id': order.partner_invoice_id.id,
+            },
+            context=dict(context, submit_class='btn btn-primary', submit_txt=_('Pay Now')))
 
     @http.route('/shop/payment/get_status/<int:sale_order_id>', type='json', auth="public", website=True)
     def payment_get_status(self, sale_order_id, **post):

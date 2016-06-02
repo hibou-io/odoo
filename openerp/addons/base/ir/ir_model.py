@@ -328,6 +328,26 @@ class ir_model_fields(osv.osv):
             self.readonly = True
             self.copy = False
 
+    @api.constrains('depends')
+    def _check_depends(self):
+        """ Check whether all fields in dependencies are valid. """
+        for record in self:
+            if not record.depends:
+                continue
+            for seq in record.depends.split(","):
+                if not seq.strip():
+                    raise UserError(_("Empty dependency in %r") % (record.depends))
+                model = self.env[record.model]
+                names = seq.strip().split(".")
+                last = len(names) - 1
+                for index, name in enumerate(names):
+                    field = model._fields.get(name)
+                    if field is None:
+                        raise UserError(_("Unknown field %r in dependency %r") % (name, seq.strip()))
+                    if index < last and not field.relational:
+                        raise UserError(_("Non-relational field %r in dependency %r") % (name, seq.strip()))
+                    model = model[name]
+
     @api.onchange('compute')
     def _onchange_compute(self):
         if self.compute:
@@ -932,13 +952,14 @@ class ir_model_data(osv.osv):
         type(self).loads = self.pool.model_data_reference_ids
 
     def _auto_init(self, cr, context=None):
-        super(ir_model_data, self)._auto_init(cr, context)
+        res = super(ir_model_data, self)._auto_init(cr, context)
         cr.execute("SELECT indexname FROM pg_indexes WHERE indexname = 'ir_model_data_module_name_uniq_index'")
         if not cr.fetchone():
             cr.execute('CREATE UNIQUE INDEX ir_model_data_module_name_uniq_index ON ir_model_data (module, name)')
         cr.execute("SELECT indexname FROM pg_indexes WHERE indexname = 'ir_model_data_model_res_id_index'")
         if not cr.fetchone():
             cr.execute('CREATE INDEX ir_model_data_model_res_id_index ON ir_model_data (model, res_id)')
+        return res
 
     # NEW V8 API
     @tools.ormcache('xmlid')
@@ -971,7 +992,7 @@ class ir_model_data(osv.osv):
 
     def xmlid_to_object(self, cr, uid, xmlid, raise_if_not_found=False, context=None):
         """ Return a browse_record
-        if not found and raise_if_not_found is True return None
+        if not found and raise_if_not_found is False return None
         """ 
         t = self.xmlid_to_res_model_res_id(cr, uid, xmlid, raise_if_not_found)
         res_model, res_id = t

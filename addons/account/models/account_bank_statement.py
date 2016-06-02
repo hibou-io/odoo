@@ -392,6 +392,20 @@ class AccountBankStatementLine(models.Model):
         if self.amount_currency != 0 and self.amount == 0:
             raise ValidationError(_('If "Amount Currency" is specified, then "Amount" must be as well.'))
 
+    @api.model
+    def create(self, vals):
+        line = super(AccountBankStatementLine, self).create(vals)
+        # The most awesome fix you will ever see is below.
+        # Explanation: during a 'create', the 'convert_to_cache' method is not called. Moreover, at
+        # that point 'journal_currency_id' is not yet known since it is a related field. It means
+        # that the 'amount' field will not be properly rounded. The line below triggers a write on
+        # the 'amount' field, which will trigger the 'convert_to_cache' method, and ultimately round
+        # the field correctly.
+        # This is obviously an awful workaround, but at the time of writing, the ORM does not
+        # provide a clean mechanism to fix the issue.
+        line.amount = line.amount
+        return line
+
     @api.multi
     def unlink(self):
         for line in self:
@@ -815,6 +829,7 @@ class AccountBankStatementLine(models.Model):
             st_line_currency_rate = self.currency_id and (self.amount_currency / self.amount) or False
 
             # Create the move
+            self.sequence = self.statement_id.line_ids.ids.index(self.id) + 1
             move_name = (self.statement_id.name or self.name) + "/" + str(self.sequence)
             move_vals = self._prepare_reconciliation_move(move_name)
             move = self.env['account.move'].create(move_vals)
@@ -848,11 +863,6 @@ class AccountBankStatementLine(models.Model):
                     aml_dict['amount_currency'] = prorata_factor * self.amount
                     aml_dict['currency_id'] = statement_currency.id
 
-            # Create the move line for the statement line using the total credit/debit of the counterpart
-            # This leaves out the amount already reconciled and avoids rounding errors from currency conversion
-            st_line_amount = sum(aml_dict['credit'] - aml_dict['debit'] for aml_dict in to_create)
-            aml_obj.with_context(check_move_validity=False).create(self._prepare_reconciliation_move_line(move, st_line_amount))
-
             # Create write-offs
             for aml_dict in new_aml_dicts:
                 aml_obj.with_context(check_move_validity=False).create(aml_dict)
@@ -868,7 +878,13 @@ class AccountBankStatementLine(models.Model):
                     aml_dict['currency_id'] = counterpart_move_line.currency_id.id
                     aml_dict['amount_currency'] = company_currency.with_context(ctx).compute(aml_dict['debit'] - aml_dict['credit'], counterpart_move_line.currency_id)
                 new_aml = aml_obj.with_context(check_move_validity=False).create(aml_dict)
+
                 (new_aml | counterpart_move_line).reconcile()
+
+            # Create the move line for the statement line using the bank statement line as the remaining amount
+            # This leaves out the amount already reconciled and avoids rounding errors from currency conversion
+            st_line_amount = -sum([x.balance for x in move.line_ids])
+            aml_obj.with_context(check_move_validity=False).create(self._prepare_reconciliation_move_line(move, st_line_amount))
 
             move.post()
         counterpart_moves.assert_balanced()
