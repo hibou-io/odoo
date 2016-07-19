@@ -3,11 +3,15 @@
 # * mail
 # 
 # Translators:
+# Eddie Lim <bhweelim@yahoo.com>, 2016
 # Gary Wei <Gary.wei@elico-corp.com>, 2015-2016
 # Jeffery Chenn <jeffery9@gmail.com>, 2015-2016
 # Jeffery Chenn <jeffery9@gmail.com>, 2016
 # Joray <13637815@qq.com>, 2016
 # Joray <13637815@qq.com>, 2016
+# Joray <13637815@qq.com>, 2016
+# liAnGjiA <liangjia@qq.com>, 2015
+# lttlsnk <lttlsnk@gmail.com>, 2016
 # lttlsnk <lttlsnk@gmail.com>, 2016
 # Michael Chong <michaelchong2005@gmail.com>, 2016
 # mrshelly <mrshelly@hotmail.com>, 2015-2016
@@ -19,8 +23,8 @@ msgstr ""
 "Project-Id-Version: Odoo 9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-01-13 14:27+0000\n"
-"PO-Revision-Date: 2016-05-13 12:34+0000\n"
-"Last-Translator: Jeffery Chenn <jeffery9@gmail.com>\n"
+"PO-Revision-Date: 2016-07-07 14:36+0000\n"
+"Last-Translator: Eddie Lim <bhweelim@yahoo.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/odoo/odoo-9/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -135,7 +139,7 @@ msgstr ""
 #: code:addons/mail/static/src/js/chat_manager.js:53
 #, python-format
 msgid " from "
-msgstr ""
+msgstr "寄件者"
 
 #. module: mail
 #: model:mail.template,subject:mail.mail_template_data_notification_email_default
@@ -1491,7 +1495,7 @@ msgid ""
 "If opt-out is checked, this contact has refused to receive emails for mass "
 "mailing and marketing campaign. Filter 'Available for Mass Mailing' allows "
 "users to filter the partners when performing mass mailing."
-msgstr "如果勾选了这里，这个合作伙伴将不会收到自动提醒邮件，例如发票已生成。过滤器‘许可群发邮件'允许用户过滤出允许群发邮件的合作伙伴。"
+msgstr "如果勾选了退订，这个合作伙伴将不会收到自动提醒邮件，例如发票已生成。过滤器‘许可群发邮件'允许用户过滤出允许群发邮件的合作伙伴。"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_base_config_settings_alias_domain
@@ -1663,7 +1667,7 @@ msgstr "最后消息日期"
 #: model:ir.model.fields,field_description:mail.field_mail_wizard_invite___last_update
 #: model:ir.model.fields,field_description:mail.field_publisher_warranty_contract___last_update
 msgid "Last Modified on"
-msgstr "最后修改日"
+msgstr "最后修改时间"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel_channel_last_seen_partner_ids
@@ -1706,14 +1710,14 @@ msgstr "最后更新者"
 #: model:ir.model.fields,field_description:mail.field_mail_tracking_value_write_date
 #: model:ir.model.fields,field_description:mail.field_mail_wizard_invite_write_date
 msgid "Last Updated on"
-msgstr "最近更新时间"
+msgstr "最后更新时间"
 
 #. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/xml/client_action.xml:97
 #, python-format
 msgid "Leave this channel"
-msgstr "离开当前频道"
+msgstr "退出此频道"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_wizard_invite_channel_ids
@@ -1742,14 +1746,14 @@ msgstr "侦听器"
 #: code:addons/mail/static/src/js/chatter.js:443
 #, python-format
 msgid "Log"
-msgstr ""
+msgstr "日志"
 
 #. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/xml/chatter.xml:75
 #, python-format
 msgid "Log a note. Followers will not be notified."
-msgstr "记录备注，但关注者不会被通知。"
+msgstr "记录说明，关注者不会被通知。"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message_is_log
@@ -1770,7 +1774,7 @@ msgstr "记录内部备注"
 msgid ""
 "Log an internal note which will not be sent to followers, but which can be read\n"
 "                    by users accessing this document."
-msgstr "记录一个内部的说明，它不会被发送给跟随者，但它可以被用户访问此文档读取。"
+msgstr "记录一个内部备注，它不会被发送给跟随者，但它可以被用户访问此文档读取。"
 
 #. module: mail
 #: model:ir.ui.view,arch_db:mail.mail_channel_view_form
@@ -1796,7 +1800,7 @@ msgstr "邮件被创建，以通知现有的邮件消息的人"
 #. module: mail
 #: model:ir.ui.view,arch_db:mail.view_emails_partner_info_form
 msgid "Mailing Opt-Out"
-msgstr "邮件订阅"
+msgstr "邮件退订"
 
 #. module: mail
 #. openerp-web
@@ -1892,7 +1896,7 @@ msgstr "消息引用"
 #: code:addons/mail/static/src/xml/client_action.xml:122
 #, python-format
 msgid "Message sent in \""
-msgstr ""
+msgstr "信息发送了 \""
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_message_subtype_name
@@ -2287,7 +2291,7 @@ msgstr "打开聊天"
 #: model:ir.model.fields,field_description:mail.field_res_partner_opt_out
 #: model:ir.model.fields,field_description:mail.field_res_users_opt_out
 msgid "Opt-Out"
-msgstr "订阅"
+msgstr "退订"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_alias_alias_force_thread_id
@@ -2846,7 +2850,7 @@ msgid ""
 "Small-sized image of this contact. It is automatically resized as a 64x64px "
 "image, with aspect ratio preserved. Use this field anywhere a small image is"
 " required."
-msgstr "联系人小尺寸图片。自动缩放为64x64px ，保留纵横比。此字段用于任何需要小图片的场合"
+msgstr "联系人小尺寸图像。自动缩放为64x64px ，保留纵横比。此字段用于任何需要小图像的场合"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel_image_small
@@ -2859,7 +2863,7 @@ msgid ""
 "Small-sized photo of the group. It is automatically resized as a 64x64px "
 "image, with aspect ratio preserved. Use this field anywhere a small image is"
 " required."
-msgstr "群组的小尺寸照片. 被自动缩放到64x64px，保持纵横比。这个字段用于任何需要小图片的地方"
+msgstr "群组的小尺寸照片. 被自动缩放到64x64px，保持纵横比。这个字段用于任何需要小图像的地方"
 
 #. module: mail
 #: selection:mail.shortcode,shortcode_type:0
@@ -3025,7 +3029,7 @@ msgid ""
 "The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n"
 "\n"
 "(Document type: %s, Operation: %s)"
-msgstr "由于安全限制，请求的操作不能被完成。请联系你的系统管理员。\n\n(单据类型: %s, 操作: %s)"
+msgstr "由于安全限制，请求的操作无法完成。请联系你的系统管理员。\n\n(单据类型: %s, 操作: %s)"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_shortcode_source
@@ -3044,7 +3048,7 @@ msgstr "资料显示在下面，当发送一个邮件时，将取值于邮件模
 msgid ""
 "This field holds the image used as photo for the group, limited to "
 "1024x1024px."
-msgstr "这个字段保存的图片作为群组的照片，限制为  1024x1024px."
+msgstr "这个字段保存的图像作为群组的照片，限制为  1024x1024px."
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_channel_public
