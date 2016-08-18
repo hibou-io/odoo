@@ -72,7 +72,6 @@ class AccountFiscalPosition(models.Model):
                     tax_count += 1
                     if t.tax_dest_id:
                         result |= t.tax_dest_id
-                    break
             if not tax_count:
                 result |= tax
         return result
@@ -339,7 +338,7 @@ class ResPartner(models.Model):
             else:
                 domain += [('partner_id', 'in', self.ids)]
         #adding the overdue lines
-        overdue_domain = ['|', '&', ('date_maturity', '!=', False), ('date_maturity', '<=', date), '&', ('date_maturity', '=', False), ('date', '<=', date)]
+        overdue_domain = ['|', '&', ('date_maturity', '!=', False), ('date_maturity', '<', date), '&', ('date_maturity', '=', False), ('date', '<', date)]
         if overdue_only:
             domain += overdue_domain
         return domain
