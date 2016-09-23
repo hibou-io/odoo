@@ -741,7 +741,8 @@ form: module.record_id""" % (xml_id,)
         record.append(Field(name, name='name'))
         record.append(Field(full_tpl_id, name='key'))
         record.append(Field("qweb", name='type'))
-        record.append(Field(el.get('priority', "16"), name='priority'))
+        if 'priority' in el.attrib:
+            record.append(Field(el.get('priority'), name='priority'))
         if 'inherit_id' in el.attrib:
             record.append(Field(name='inherit_id', ref=el.get('inherit_id')))
         if 'website_id' in el.attrib:
@@ -857,11 +858,7 @@ def convert_file(cr, module, filename, idref, mode='update', noupdate=False, kin
         fp.close()
 
 def convert_sql_import(cr, fp):
-    queries = fp.read().split(';')
-    for query in queries:
-        new_query = ' '.join(query.split())
-        if new_query:
-            cr.execute(new_query)
+    cr.execute(fp.read())
 
 def convert_csv_import(cr, module, fname, csvcontent, idref=None, mode='init',
         noupdate=False):
