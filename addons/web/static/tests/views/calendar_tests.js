@@ -1571,7 +1571,7 @@ QUnit.module('Views', {
     });
 
     QUnit.test('set event as all day when field is date', function (assert) {
-        assert.expect(1);
+        assert.expect(2);
 
         this.data.event.records[0].start_date = "2016-12-14";
 
@@ -1595,9 +1595,16 @@ QUnit.module('Views', {
             viewOptions: {
                 initialDate: initialDate,
             },
+            session: {
+                getTZOffset: function () {
+                    return -480;
+                }
+            },
         });
         assert.strictEqual(calendar.$('.fc-day-grid .fc-event-container').length, 1,
             "should be one event in the all day row");
+        assert.strictEqual(calendar.model.data.data[0].r_start.date(), 14,
+            "the date should be 14");
         calendar.destroy();
     });
 
@@ -1707,6 +1714,41 @@ QUnit.module('Views', {
         calendar.destroy();
 
         testUtils.unpatch(mixins.ParentedMixin);
+    });
+
+    QUnit.test('timezone does not affect current day', function (assert) {
+        assert.expect(2);
+
+        var calendar = createView({
+            View: CalendarView,
+            model: 'event',
+            data: this.data,
+            arch:
+            '<calendar date_start="start_date">'+
+                    '<field name="name"/>'+
+            '</calendar>',
+            archs: archs,
+            viewOptions: {
+                initialDate: initialDate,
+            },
+            session: {
+                getTZOffset: function () {
+                    return -2400; // 40 hours timezone
+                },
+            },
+
+        });
+
+        var $sidebar = calendar.$('.o_calendar_sidebar');
+
+        assert.strictEqual($sidebar.find('.ui-datepicker-current-day').text(), "12", "should highlight the target day");
+
+        // go to previous day
+        $sidebar.find('.ui-datepicker-current-day').prev().click();
+
+        assert.strictEqual($sidebar.find('.ui-datepicker-current-day').text(), "11", "should highlight the selected day");
+
+        calendar.destroy();
     });
 });
 
