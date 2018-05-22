@@ -225,6 +225,7 @@ class IrQWeb(models.AbstractModel, QWeb):
                 src = el.get('src', '')
                 atype = el.get('type')
                 media = el.get('media')
+                include_path = el.get('include-path')
 
                 can_aggregate = not urls.url_parse(href).netloc and not href.startswith('/web/content')
                 if el.tag == 'style' or (el.tag == 'link' and el.get('rel') == 'stylesheet' and can_aggregate):
@@ -236,7 +237,7 @@ class IrQWeb(models.AbstractModel, QWeb):
                         atype = 'text/css'
                     path = [segment for segment in href.split('/') if segment]
                     filename = get_resource_path(*path) if path else None
-                    files.append({'atype': atype, 'url': href, 'filename': filename, 'content': el.text, 'media': media})
+                    files.append({'atype': atype, 'url': href, 'filename': filename, 'content': el.text, 'media': media, 'include_path': include_path})
                 elif el.tag == 'script':
                     atype = 'text/javascript'
                     path = [segment for segment in src.split('/') if segment]
