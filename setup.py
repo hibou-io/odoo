@@ -56,6 +56,9 @@ setup(
         'werkzeug',
         'xlsxwriter',
         'xlwt',
+        #  Hibou Odoo
+        'phonenumbers',
+        'num2words',
     ],
     python_requires='>=3.5',
     extras_require={
