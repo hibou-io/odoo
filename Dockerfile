@@ -33,6 +33,7 @@ RUN set -x; \
     && python setup.py install \
     && mv /opt/odoo/odoo/entrypoint.sh /entrypoint.sh \
     && mkdir -p /etc/odoo/ \
+    && chown -R odoo /etc/odoo \
     && cp /opt/odoo/odoo/debian/odoo.conf /etc/odoo/odoo.conf \
     # Clean Up
     && rm -rf /root/.cache \
