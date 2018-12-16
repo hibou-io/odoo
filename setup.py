@@ -56,6 +56,20 @@ setup(
         'werkzeug',
         'xlsxwriter',
         'xlwt',
+        #  Hibou Odoo
+        'cachetools',  #  used by OCA Connector (e.g. Magento Connector)
+        'cryptography',
+        'magento',  #  connector_magento
+        'markdown',  #  Hibou Odoo Suite `timesheet_description`
+        'newrelic',  #  Hibou Odoo Suite `newrelic`
+        'num2words',  #  odoo core check printing etc.
+        'phonenumbers',  #  odoo core
+        'pyOpenSSL',
+        'pycryptodome',
+        'uszipcode',  # Hibou Odoo Suite `l10n_us_partner_zipcode`, `sale_planner`
+        'watchdog',
+        'xlrd',  #  read MS Excel files
+        'xlwt',  #  write MS Excel files
     ],
     python_requires='>=3.5',
     extras_require={
