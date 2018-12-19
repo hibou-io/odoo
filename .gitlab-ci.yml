@@ -12,6 +12,7 @@ variables:
   CONTAINER_IMAGE: registry.gitlab.com/hibou-io/hibou-odoo/odoo
   GITLAB_BASE_URL: https://gitlab.com
   SUITE_PROJECT_ID: 10003343
+  ENTERPRISE_PROJECT_ID: 10004745
 
 before_script:
   - RELEASE=$(echo $CI_COMMIT_REF_SLUG | sed "s/^\([[:digit:]][[:digit:]]\)-\([[:digit:]]\)/\1\.\2/g" | sed "s/-hibou\$//g")
@@ -27,6 +28,7 @@ trigger11:
   stage: trigger
   script:
     - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=11.0 $GITLAB_BASE_URL/api/v4/projects/$SUITE_PROJECT_ID/trigger/pipeline
+    - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=11.0-hibou $GITLAB_BASE_URL/api/v4/projects/$ENTERPRISE_PROJECT_ID/trigger/pipeline
   only:
     - 11.0-hibou
 
@@ -34,6 +36,7 @@ trigger12:
   stage: trigger
   script:
     - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=12.0 $GITLAB_BASE_URL/api/v4/projects/$SUITE_PROJECT_ID/trigger/pipeline
+    - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=12.0-hibou $GITLAB_BASE_URL/api/v4/projects/$ENTERPRISE_PROJECT_ID/trigger/pipeline
   only:
     - 12.0-hibou
 
