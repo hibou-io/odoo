@@ -1,0 +1,22 @@
+image: docker:stable
+services:
+  - docker:dind
+
+stages:
+  - build
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  CONTAINER_IMAGE: registry.gitlab.com/hibou-io/hibou-odoo/odoo
+
+before_script:
+  - RELEASE=$(echo $CI_COMMIT_REF_SLUG | sed "s/-hibou//g")
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+
+build:
+  stage: build
+  script:
+    - docker build --pull -t $CONTAINER_IMAGE:$RELEASE .
+    - docker push $CONTAINER_IMAGE:$RELEASE
+    
