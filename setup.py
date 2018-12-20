@@ -57,7 +57,7 @@ setup(
         'xlsxwriter',
         'xlwt',
         #  Hibou Odoo
-        'cachetools',  #  used by OCA Connector (e.g. Magento Connector)
+        'cachetools <= 2.9.9',  #  used by OCA Connector (e.g. Magento Connector) .. 3.0.0 was tested and not working 2018/12/20
         'cryptography',
         'magento',  #  connector_magento
         'markdown',  #  Hibou Odoo Suite `timesheet_description`
