@@ -32,6 +32,14 @@ trigger11:
   only:
     - 11.0-hibou
 
+trigger11-test:
+  stage: trigger
+  script:
+    - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=11.0-test $GITLAB_BASE_URL/api/v4/projects/$SUITE_PROJECT_ID/trigger/pipeline
+    - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=11.0-hibou-test $GITLAB_BASE_URL/api/v4/projects/$ENTERPRISE_PROJECT_ID/trigger/pipeline
+  only:
+    - 11.0-hibou-test
+
 trigger12:
   stage: trigger
   script:
@@ -39,4 +47,12 @@ trigger12:
     - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=12.0-hibou $GITLAB_BASE_URL/api/v4/projects/$ENTERPRISE_PROJECT_ID/trigger/pipeline
   only:
     - 12.0-hibou
+
+trigger12-test:
+  stage: trigger
+  script:
+    - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=12.0-test $GITLAB_BASE_URL/api/v4/projects/$SUITE_PROJECT_ID/trigger/pipeline
+    - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=12.0-hibou-test $GITLAB_BASE_URL/api/v4/projects/$ENTERPRISE_PROJECT_ID/trigger/pipeline
+  only:
+    - 12.0-hibou-test
 
