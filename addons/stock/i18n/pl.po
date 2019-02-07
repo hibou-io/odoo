@@ -5,7 +5,6 @@
 # Translators:
 # Zdzisław Krajewski <zdzichucb@gmail.com>, 2018
 # Patryk Openglobe <patryk.walentowicz@openglobe.pl>, 2018
-# Piotr Cierkosz <piotr.w.cierkosz@gmail.com>, 2018
 # Mariusz, 2018
 # Maja Stawicka <mjstwck@wp.pl>, 2018
 # Judyta Kaźmierczak <judyta.kazmierczak@openglobe.pl>, 2018
@@ -15,24 +14,25 @@
 # Marcin Młynarczyk <mlynarczyk@gmail.com>, 2018
 # Maciej Wichowski <maciej.wichowski@openglobe.pl>, 2018
 # Karol Rybak <karolrybak85@gmail.com>, 2018
+# Monika Grzelak <m.e.grzelak@gmail.com>, 2018
 # Andrzej Donczew <a.donczew@hadron.eu.com>, 2018
 # zbik2607 <darek@krokus.com.pl>, 2018
 # Piotr Szlązak <szlazakpiotr@gmail.com>, 2018
+# Radosław Biegalski <radoslaw.biegalski@openglobe.pl>, 2018
 # Martin Trigaux, 2018
 # Tomasz Leppich <t.leppich@gmail.com>, 2018
 # Grzegorz Grzelak <grzegorz.grzelak@openglobe.pl>, 2018
-# Monika Grzelak <m.e.grzelak@gmail.com>, 2018
-# Radosław Biegalski <radoslaw.biegalski@openglobe.pl>, 2018
-# Paweł Wodyński <pw@myodoo.pl>, 2018
 # Maksym <ms@myodoo.pl>, 2018
+# Paweł Wodyński <pw@myodoo.pl>, 2018
+# Piotr Cierkosz <piotr.w.cierkosz@gmail.com>, 2019
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-24 09:34+0000\n"
+"POT-Creation-Date: 2019-01-09 10:31+0000\n"
 "PO-Revision-Date: 2018-08-24 09:25+0000\n"
-"Last-Translator: Maksym <ms@myodoo.pl>, 2018\n"
+"Last-Translator: Piotr Cierkosz <piotr.w.cierkosz@gmail.com>, 2019\n"
 "Language-Team: Polish (https://www.transifex.com/odoo/teams/41243/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -150,11 +150,36 @@ msgstr ""
 "                    <strong>Oto aktualny inwentarz: </strong>"
 
 #. module: stock
-#: code:addons/stock/models/stock_rule.py:111
+#: code:addons/stock/models/stock_rule.py:112
 #, python-format
 msgid ""
 "<br>A need is created in <b>%s</b> and a rule will be triggered to fulfill "
 "it."
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.stock_move_view_kanban
+#: model_terms:ir.ui.view,arch_db:stock.view_stock_inventory_kanban
+msgid "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.stock_scrap_view_kanban
+msgid ""
+"<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Expected date\" "
+"title=\"Expected date\"/>"
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.stock_picking_type_kanban
+msgid "<i class=\"fa fa-ellipsis-v\" role=\"img\" aria-label=\"Manage\" title=\"Manage\"/>"
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.report_mrp_line
+msgid ""
+"<i class=\"fa fa-fw fa-caret-right\" role=\"img\" aria-label=\"Unfold\" "
+"title=\"Unfold\"/>"
 msgstr ""
 
 #. module: stock
@@ -190,6 +215,14 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:stock.product_form_view_procurement_button
 #: model_terms:ir.ui.view,arch_db:stock.product_template_form_view_procurement_button
 msgid "<span class=\"o_stat_text\">On Hand</span>"
+msgstr "<span class=\"o_stat_text\">Na stanie</span>"
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.report_mrp_line
+msgid ""
+"<span role=\"img\" class=\"o_stock_reports_stream\" title=\"Traceability "
+"Report\" aria-label=\"Traceability Report\"><i class=\"fa fa-fw fa-level-up "
+"fa-rotate-270\"/></span>"
 msgstr ""
 
 #. module: stock
@@ -606,7 +639,7 @@ msgstr "W konkretnym dniu"
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_attachment_count
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__message_attachment_count
 msgid "Attachment Count"
-msgstr ""
+msgstr "Ilość Załączników"
 
 #. module: stock
 #: model:ir.ui.menu,name:stock.menu_variants_action
@@ -1047,6 +1080,7 @@ msgstr "Zawartość"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_replenish__product_uom_category_id
+#: model:ir.model.fields,help:stock.field_stock_inventory_line__product_uom_category_id
 msgid ""
 "Conversion between Units of Measure can only occur if they belong to the "
 "same category. The conversion will be made based on the ratios."
@@ -1340,7 +1374,7 @@ msgstr "Klienci"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_dhl
-msgid "DHL USA"
+msgid "DHL Connector"
 msgstr ""
 
 #. module: stock
@@ -1782,7 +1816,7 @@ msgstr "Projekty przesunięć"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_easypost
-msgid "Easypost"
+msgid "Easypost Connector"
 msgstr ""
 
 #. module: stock
@@ -1854,8 +1888,8 @@ msgstr "FIFO, LIFO..."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_fedex
-msgid "FedEx"
-msgstr "FedEx"
+msgid "FedEx Connector"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_destination__filtered_location
@@ -2165,6 +2199,7 @@ msgstr "Jeśli zaznaczone, to nowa wiadomość wymaga twojej uwagi."
 #: model:ir.model.fields,help:stock.field_stock_production_lot__message_has_error
 msgid "If checked, some messages have a delivery error."
 msgstr ""
+"Jesli zaznaczone, część wiadomości napotkało na błąd przy próbie doręczenia."
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__propagate
@@ -2997,7 +3032,7 @@ msgstr "Reguła MTO (na zamówienie)"
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_main_attachment_id
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__message_main_attachment_id
 msgid "Main Attachment"
-msgstr ""
+msgstr "Główny Załącznik"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:288
@@ -3096,7 +3131,7 @@ msgstr "Ilość maksymalna"
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_has_error
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__message_has_error
 msgid "Message Delivery error"
-msgstr ""
+msgstr "Błąd Doręczenia wiadomosci"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_partner__picking_warn_msg
@@ -3413,7 +3448,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_has_error_counter
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__message_has_error_counter
 msgid "Number of error"
-msgstr ""
+msgstr "Numer błedu"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__message_needaction_counter
@@ -3425,7 +3460,7 @@ msgstr "Liczba wiadomości wymagających akcji"
 #: model:ir.model.fields,help:stock.field_stock_picking__message_has_error_counter
 #: model:ir.model.fields,help:stock.field_stock_production_lot__message_has_error_counter
 msgid "Number of messages with delivery error"
-msgstr ""
+msgstr "Ilośc wiadomości z błedami przy doręczeniu"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__message_unread_counter
@@ -5293,6 +5328,10 @@ msgid ""
 "Today: Activity date is today\n"
 "Planned: Future activities."
 msgstr ""
+"Status bazuje na aktywnościach\n"
+"Opóźnione: Data \"do\" minęła\n"
+"Dziś: Aktywnośc przewidziana na dziś\n"
+"Zaplanowane: Przyszłe aktywności."
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:443
@@ -5950,12 +5989,15 @@ msgid "Traceability"
 msgstr "Śledzenie"
 
 #. module: stock
+#. openerp-web
+#: code:addons/stock/static/src/js/stock_traceability_report_widgets.js:55
 #: model:ir.actions.client,name:stock.action_stock_report
 #: model:ir.model,name:stock.model_stock_traceability_report
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_body_print
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_inventory
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 #: model_terms:ir.ui.view,arch_db:stock.view_production_lot_form
+#, python-format
 msgid "Traceability Report"
 msgstr "Raport śledzenia"
 
@@ -6068,13 +6110,13 @@ msgstr "Typ operacji"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_ups
-msgid "UPS"
-msgstr "UPS"
+msgid "UPS Connector"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_usps
-msgid "USPS"
-msgstr "USPS"
+msgid "USPS Connector"
+msgstr ""
 
 #. module: stock
 #. openerp-web
@@ -6201,6 +6243,11 @@ msgstr "JM"
 #. module: stock
 #: model:ir.ui.menu,name:stock.menu_stock_uom_categ_form_action
 msgid "UoM Categories"
+msgstr "Kategorie JM"
+
+#. module: stock
+#: model:ir.model.fields,field_description:stock.field_stock_inventory_line__product_uom_category_id
+msgid "Uom category"
 msgstr ""
 
 #. module: stock
@@ -6877,8 +6924,8 @@ msgstr "_Anuluj"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_bpost
-msgid "bpost"
-msgstr "bpost"
+msgid "bpost Connector"
+msgstr ""
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form

@@ -8,20 +8,20 @@
 # peso <peer.sommerlund@gmail.com>, 2018
 # Morten Schou <ms@msteknik.dk>, 2018
 # Jesper Carstensen <jc@danodoo.dk>, 2018
+# Pernille Kristensen <pernillekristensen1994@gmail.com>, 2018
 # Jarnhold Nattestad <nattestads@gmail.com>, 2018
 # Martin Trigaux, 2018
-# Pernille Kristensen <pernillekristensen1994@gmail.com>, 2018
 # Ejner Sønniksen <ejner@vkdata.dk>, 2018
 # lhmflexerp <lhm@flexerp.dk>, 2018
-# Sanne Kristensen <sanne@vkdata.dk>, 2018
+# Sanne Kristensen <sanne@vkdata.dk>, 2019
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-24 09:34+0000\n"
+"POT-Creation-Date: 2019-01-09 10:31+0000\n"
 "PO-Revision-Date: 2018-08-24 09:25+0000\n"
-"Last-Translator: Sanne Kristensen <sanne@vkdata.dk>, 2018\n"
+"Last-Translator: Sanne Kristensen <sanne@vkdata.dk>, 2019\n"
 "Language-Team: Danish (https://www.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -138,11 +138,36 @@ msgstr ""
 "                    <strong>Her er dit aktuelle lager: </strong>"
 
 #. module: stock
-#: code:addons/stock/models/stock_rule.py:111
+#: code:addons/stock/models/stock_rule.py:112
 #, python-format
 msgid ""
 "<br>A need is created in <b>%s</b> and a rule will be triggered to fulfill "
 "it."
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.stock_move_view_kanban
+#: model_terms:ir.ui.view,arch_db:stock.view_stock_inventory_kanban
+msgid "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.stock_scrap_view_kanban
+msgid ""
+"<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Expected date\" "
+"title=\"Expected date\"/>"
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.stock_picking_type_kanban
+msgid "<i class=\"fa fa-ellipsis-v\" role=\"img\" aria-label=\"Manage\" title=\"Manage\"/>"
+msgstr ""
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.report_mrp_line
+msgid ""
+"<i class=\"fa fa-fw fa-caret-right\" role=\"img\" aria-label=\"Unfold\" "
+"title=\"Unfold\"/>"
 msgstr ""
 
 #. module: stock
@@ -181,6 +206,14 @@ msgid "<span class=\"o_stat_text\">On Hand</span>"
 msgstr ""
 
 #. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.report_mrp_line
+msgid ""
+"<span role=\"img\" class=\"o_stock_reports_stream\" title=\"Traceability "
+"Report\" aria-label=\"Traceability Report\"><i class=\"fa fa-fw fa-level-up "
+"fa-rotate-270\"/></span>"
+msgstr ""
+
+#. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_picking
 msgid "<span><strong>Customer Address:</strong></span>"
 msgstr "<span><strong>Kundeadresse:</strong></span>"
@@ -208,7 +241,7 @@ msgstr "<span>Ny</span>"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_picking_type_kanban
 msgid "<span>View</span>"
-msgstr "<span>visning</span>"
+msgstr "<span>Visning</span>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_picking
@@ -249,12 +282,12 @@ msgstr "<strong>Lokation</strong>"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_picking
 msgid "<strong>Lot/Serial Number</strong>"
-msgstr "<strong>Lot/Serie Nummer</strong>"
+msgstr "<strong>Lot/Serienummer</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_warehouse_orderpoint_kanban
 msgid "<strong>Max qty :</strong>"
-msgstr "<strong>Max antal :</strong>"
+msgstr "<strong>Max antal:</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_warehouse_orderpoint_kanban
@@ -372,7 +405,7 @@ msgstr "Handling"
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_needaction
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__message_needaction
 msgid "Action Needed"
-msgstr "Aktion påkrævet"
+msgstr "Handling påkrævet"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location__active
@@ -536,7 +569,7 @@ msgstr "Gældende for vare"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location_route__product_categ_selectable
 msgid "Applicable on Product Category"
-msgstr "Gældende for vare kategori"
+msgstr "Gældende for varekategori"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location_route__warehouse_selectable
@@ -619,7 +652,7 @@ msgstr "Automatisk flytning"
 #. module: stock
 #: selection:stock.rule,auto:0
 msgid "Automatic No Step Added"
-msgstr "Automatisk No Step er tilføjet"
+msgstr "Automatisk no step er tilføjet"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__string_availability_info
@@ -725,12 +758,12 @@ msgstr "Køb"
 #. module: stock
 #: selection:product.template,tracking:0
 msgid "By Lots"
-msgstr "Per lot"
+msgstr "Pr. lot"
 
 #. module: stock
 #: selection:product.template,tracking:0
 msgid "By Unique Serial Number"
-msgstr "Per unik serienummer"
+msgstr "Pr. unik serienummer"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:644
@@ -857,7 +890,7 @@ msgstr "Skift til et bedre navn"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 msgid "Check Availability"
-msgstr "Tjek Tilgængelighed"
+msgstr "Tjek tilgængelighed"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__has_packages
@@ -1042,6 +1075,7 @@ msgstr "Indhold"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_replenish__product_uom_category_id
+#: model:ir.model.fields,help:stock.field_stock_inventory_line__product_uom_category_id
 msgid ""
 "Conversion between Units of Measure can only occur if they belong to the "
 "same category. The conversion will be made based on the ratios."
@@ -1342,8 +1376,8 @@ msgstr "Kunder"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_dhl
-msgid "DHL USA"
-msgstr "DHL USA"
+msgid "DHL Connector"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_report_stock_forecast__date
@@ -1437,7 +1471,7 @@ msgstr "Standard leveringsrute"
 #: model:ir.model.fields,help:stock.field_stock_quant__product_uom_id
 #: model:ir.model.fields,help:stock.field_stock_warehouse_orderpoint__product_uom
 msgid "Default unit of measure used for all stock operations."
-msgstr ""
+msgstr "Standard måleenhed, der anvendes til alle lageroperationer."
 
 #. module: stock
 #: selection:stock.move,procure_method:0
@@ -1614,7 +1648,7 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_picking
 msgid "Destination"
-msgstr "Mål"
+msgstr "Destination"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__partner_id
@@ -1682,7 +1716,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_move_operations
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_track_confirmation
 msgid "Discard"
-msgstr "Kasser"
+msgstr "Kassér"
 
 #. module: stock
 #: selection:barcode.rule,type:0
@@ -1784,7 +1818,7 @@ msgstr "Udkast - flytninger"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_easypost
-msgid "Easypost"
+msgid "Easypost Connector"
 msgstr ""
 
 #. module: stock
@@ -1842,7 +1876,7 @@ msgstr "Udløbsdato"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_form
 msgid "External note..."
-msgstr "Ekstern note"
+msgstr "Eksternt notat"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_removal__method
@@ -1851,8 +1885,8 @@ msgstr "FIFO, LIFO..."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_fedex
-msgid "FedEx"
-msgstr "FedEx"
+msgid "FedEx Connector"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_destination__filtered_location
@@ -2155,13 +2189,13 @@ msgstr ""
 #: model:ir.model.fields,help:stock.field_stock_picking__message_unread
 #: model:ir.model.fields,help:stock.field_stock_production_lot__message_unread
 msgid "If checked new messages require your attention."
-msgstr "Hvis afmærket, kræver nye beskeder din attention"
+msgstr "Hvis afkrydset, kræver nye beskeder din opmærksomhed"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__message_needaction
 #: model:ir.model.fields,help:stock.field_stock_production_lot__message_needaction
 msgid "If checked, new messages require your attention."
-msgstr "Hvis afmærket, kræver nye beskeder din opmærksomhed "
+msgstr "Hvis afkrydset, kræver nye beskeder din opmærksomhed "
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__message_has_error
@@ -2366,7 +2400,7 @@ msgstr "Modtagelses lokation"
 #: code:addons/stock/models/stock_scrap.py:138
 #, python-format
 msgid "Insufficient Quantity"
-msgstr "Utilstrækkeligt Antal"
+msgstr "Utilstrækkeligt antal"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_move_line_view_search
@@ -2509,7 +2543,7 @@ msgstr "Lager detaljer"
 #. module: stock
 #: model:ir.model,name:stock.model_stock_inventory_line
 msgid "Inventory Line"
-msgstr "Lager linie"
+msgstr "Lager linje"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_inventory_line_tree
@@ -2588,7 +2622,7 @@ msgstr "Lager af"
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_is_follower
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__message_is_follower
 msgid "Is Follower"
-msgstr "Følger"
+msgstr "Er følger"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_level__is_fresh_package
@@ -2610,7 +2644,7 @@ msgstr "Er en retur lokation?"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location__scrap_location
 msgid "Is a Scrap Location?"
-msgstr "Er dette et brok lager ?"
+msgstr "Er dette et skrotlager?"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__is_initial_demand_editable
@@ -2959,7 +2993,7 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_inventory_tree
 msgid "Lot/Serial Number Inventory"
-msgstr "Lager for Lot/Serienummer"
+msgstr "Lager for Lot/serienummer"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__lot_name
@@ -3247,7 +3281,7 @@ msgstr "Multi-lagre"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
 msgid "My Activities"
-msgstr "Mine Aktiviteter"
+msgstr "Mine aktiviteter"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_putaway__name
@@ -3395,7 +3429,7 @@ msgstr "Notat"
 #: model:ir.model.fields,field_description:stock.field_stock_picking__note
 #: model_terms:ir.ui.view,arch_db:stock.view_inventory_form
 msgid "Notes"
-msgstr "Noter"
+msgstr "Notater"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:562
@@ -3675,7 +3709,7 @@ msgstr "Ejer "
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.message_body
 msgid "Owner :"
-msgstr "Ejer :"
+msgstr "Ejer:"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location__partner_id
@@ -3960,7 +3994,7 @@ msgstr "Planlagt"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_picking_type_kanban
 msgid "Planned Transfer"
-msgstr "Planlagt Overførsel"
+msgstr "Planlagt overførsel"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:690
@@ -4293,7 +4327,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_fixed_putaway_strat__putaway_id
 msgid "Put Away Method"
-msgstr "lagre/Læg væk metode"
+msgstr "Lagre/Læg væk metode"
 
 #. module: stock
 #: model:ir.model,name:stock.model_product_putaway
@@ -5955,12 +5989,15 @@ msgid "Traceability"
 msgstr "Sporbarhed"
 
 #. module: stock
+#. openerp-web
+#: code:addons/stock/static/src/js/stock_traceability_report_widgets.js:55
 #: model:ir.actions.client,name:stock.action_stock_report
 #: model:ir.model,name:stock.model_stock_traceability_report
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_body_print
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_inventory
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 #: model_terms:ir.ui.view,arch_db:stock.view_production_lot_form
+#, python-format
 msgid "Traceability Report"
 msgstr ""
 
@@ -6073,13 +6110,13 @@ msgstr "Type af drift"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_ups
-msgid "UPS"
-msgstr "UPS"
+msgid "UPS Connector"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_usps
-msgid "USPS"
-msgstr "USPS"
+msgid "USPS Connector"
+msgstr ""
 
 #. module: stock
 #. openerp-web
@@ -6206,6 +6243,11 @@ msgstr "Enhed"
 #. module: stock
 #: model:ir.ui.menu,name:stock.menu_stock_uom_categ_form_action
 msgid "UoM Categories"
+msgstr ""
+
+#. module: stock
+#: model:ir.model.fields,field_description:stock.field_stock_inventory_line__product_uom_category_id
+msgid "Uom category"
 msgstr ""
 
 #. module: stock
@@ -6892,7 +6934,7 @@ msgstr "_Fortryd"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_bpost
-msgid "bpost"
+msgid "bpost Connector"
 msgstr ""
 
 #. module: stock

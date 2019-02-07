@@ -6,15 +6,15 @@
 # ТАрас <tratatuta@i.ua>, 2018
 # Martin Trigaux, 2018
 # Bohdan Lisnenko, 2018
-# Alina Lisnenko <alinasemeniuk1@gmail.com>, 2018
+# Alina Lisnenko <alinasemeniuk1@gmail.com>, 2019
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-08 06:49+0000\n"
+"POT-Creation-Date: 2019-01-09 10:31+0000\n"
 "PO-Revision-Date: 2018-08-24 09:20+0000\n"
-"Last-Translator: Alina Lisnenko <alinasemeniuk1@gmail.com>, 2018\n"
+"Last-Translator: Alina Lisnenko <alinasemeniuk1@gmail.com>, 2019\n"
 "Language-Team: Ukrainian (https://www.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -23,12 +23,25 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
 
 #. module: mail
-#: code:addons/mail/models/mail_channel.py:921
+#: code:addons/mail/models/mail_channel.py:922
 #, python-format
 msgid " This channel is private. People must be invited to join it."
 msgstr ""
 " Цей канал - приватний. Люди повинні бути запрошені, щоби приєднатися до "
 "нього."
+
+#. module: mail
+#: code:addons/mail/wizard/invite.py:29
+#, python-format
+msgid "%(user_name)s invited you to follow %(document)s document: %(title)s"
+msgstr ""
+"%(user_name)s запросив вас слідкувати %(document)s за документом: %(title)s"
+
+#. module: mail
+#: code:addons/mail/wizard/invite.py:31
+#, python-format
+msgid "%(user_name)s invited you to follow a new document."
+msgstr "%(user_name)s запросив вас слідкувати за новим документом."
 
 #. module: mail
 #. openerp-web
@@ -149,7 +162,7 @@ msgid ""
 msgstr ""
 
 #. module: mail
-#: code:addons/mail/models/mail_channel.py:721
+#: code:addons/mail/models/mail_channel.py:722
 #, python-format
 msgid ""
 "<div class=\"o_mail_notification\">%(author)s invited %(new_partner)s to <a "
@@ -161,7 +174,7 @@ msgstr ""
 "id=\"%(channel_id)s\">#%(channel_name)s</a></div>"
 
 #. module: mail
-#: code:addons/mail/models/mail_channel.py:828
+#: code:addons/mail/models/mail_channel.py:829
 #, python-format
 msgid ""
 "<div class=\"o_mail_notification\">created <a href=\"#\" "
@@ -171,8 +184,8 @@ msgstr ""
 "class=\"o_channel_redirect\" data-oe-id=\"%s\">#%s</a></div>"
 
 #. module: mail
-#: code:addons/mail/models/mail_channel.py:728
-#: code:addons/mail/models/mail_channel.py:802
+#: code:addons/mail/models/mail_channel.py:729
+#: code:addons/mail/models/mail_channel.py:804
 #, python-format
 msgid ""
 "<div class=\"o_mail_notification\">joined <a href=\"#\" "
@@ -182,7 +195,7 @@ msgstr ""
 "class=\"o_channel_redirect\" data-oe-id=\"%s\">#%s</a></div>"
 
 #. module: mail
-#: code:addons/mail/models/mail_channel.py:294
+#: code:addons/mail/models/mail_channel.py:295
 #, python-format
 msgid ""
 "<div class=\"o_mail_notification\">left <a href=\"#\" "
@@ -192,26 +205,22 @@ msgstr ""
 "class=\"o_channel_redirect\" data-oe-id=\"%s\">#%s</a></div>"
 
 #. module: mail
-#: code:addons/mail/wizard/invite.py:23
-#, python-format
+#: model_terms:ir.ui.view,arch_db:mail.res_partner_view_form_inherit_mail
+#: model_terms:ir.ui.view,arch_db:mail.res_partner_view_form_short
 msgid ""
-"<div><p>Hello,</p><p>%s invited you to follow %s document: %s.</p></div>"
+"<i class=\"fa fa-ban\" style=\"color: red;\" role=\"img\" title=\"This email"
+" is blacklisted for mass mailing\" aria-label=\"Blacklisted\" "
+"attrs=\"{'invisible': [('is_blacklisted', '=', False)]}\" "
+"groups=\"base.group_user\"/>"
 msgstr ""
-"<div><p>Привіт,</p><p>%s запросив вас підписатися на %s документ: "
-"%s.</p></div>"
-
-#. module: mail
-#: code:addons/mail/wizard/invite.py:26
-#, python-format
-msgid ""
-"<div><p>Hello,</p><p>%s invited you to follow a new document.</p></div>"
-msgstr ""
-"<div><p>Вітаємо,</p><p>%s запросив вас відслідковувати новий "
-"документ.</p></div>"
+"<i class=\"fa fa-ban\" style=\"color: red;\" role=\"img\" title=\"This email"
+" is blacklisted for mass mailing\" aria-label=\"Blacklisted\" "
+"attrs=\"{'invisible': [('is_blacklisted', '=', False)]}\" "
+"groups=\"base.group_user\"/>"
 
 #. module: mail
 #. openerp-web
-#: code:addons/mail/static/src/js/tour.js:28
+#: code:addons/mail/static/src/js/tour.js:60
 #, python-format
 msgid ""
 "<p><b>Chat with coworkers</b> in real-time using direct "
@@ -224,7 +233,7 @@ msgstr ""
 
 #. module: mail
 #. openerp-web
-#: code:addons/mail/static/src/js/tour.js:15
+#: code:addons/mail/static/src/js/tour.js:39
 #, python-format
 msgid ""
 "<p><b>Write a message</b> to the members of the channel here.</p> <p>You can"
@@ -238,7 +247,7 @@ msgstr ""
 
 #. module: mail
 #. openerp-web
-#: code:addons/mail/static/src/js/tour.js:11
+#: code:addons/mail/static/src/js/tour.js:23
 #, python-format
 msgid ""
 "<p>Channels make it easy to organize information across different topics and"
@@ -248,6 +257,13 @@ msgstr ""
 "<p>Канали дозволяють легко організувати інформацію по різним темам і "
 "групам.</p> <p>Спробуйте <b>створити свій перший канал</b> (наприклад, "
 "продажі, маркетинг, товар XYZ, вечірка після роботи тощо).</p>"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/js/tour.js:27
+#, python-format
+msgid "<p>Create a channel here.</p>"
+msgstr ""
 
 #. module: mail
 #. openerp-web
@@ -432,7 +448,7 @@ msgstr "Дія, яку необхідно зробити"
 #. module: mail
 #: model:ir.model,name:mail.model_ir_actions_act_window_view
 msgid "Action Window View"
-msgstr ""
+msgstr "Перегляд вікна дії"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_message_subtype__default
@@ -509,7 +525,7 @@ msgstr "Типи діяльності"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_ir_actions_server__activity_user_type
 msgid "Activity User Type"
-msgstr ""
+msgstr "Тип дії користувача"
 
 #. module: mail
 #. openerp-web
@@ -559,7 +575,7 @@ msgstr "Додати підписників можна лише за допом�
 #: model:ir.model.fields,field_description:mail.field_mail_mail__add_sign
 #: model:ir.model.fields,field_description:mail.field_mail_message__add_sign
 msgid "Add Sign"
-msgstr ""
+msgstr "Додати підпис"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_email_template_preview__user_signature
@@ -987,7 +1003,7 @@ msgstr "З повагою, "
 #: model:ir.model.fields,field_description:mail.field_mail_channel_partner__is_blacklisted
 #: model:ir.model.fields,field_description:mail.field_res_partner__is_blacklisted
 msgid "Blacklist"
-msgstr ""
+msgstr "Чорний список"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_blacklist_view_tree
@@ -1802,7 +1818,7 @@ msgstr "Установлений термін"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_ir_actions_server__activity_date_deadline_range
 msgid "Due Date In"
-msgstr ""
+msgstr "Дата виконання в"
 
 #. module: mail
 #. openerp-web
@@ -1814,7 +1830,7 @@ msgstr "Через %d днів"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_ir_actions_server__activity_date_deadline_range_type
 msgid "Due type"
-msgstr ""
+msgstr "Тип виконання"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
@@ -1877,7 +1893,7 @@ msgstr "Псевдоніми ел. пошти"
 #. module: mail
 #: model:ir.model,name:mail.model_mail_alias_mixin
 msgid "Email Aliases Mixin"
-msgstr ""
+msgstr "Змішування псевдонімів електронної пошти"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_blacklist_view_tree
@@ -2016,7 +2032,15 @@ msgid "Error during communication with the publisher warranty server."
 msgstr "Помилка під час спілкування з гарантійним сервером видавця."
 
 #. module: mail
-#: code:addons/mail/models/mail_mail.py:317
+#: code:addons/mail/models/mail_mail.py:340
+#, python-format
+msgid ""
+"Error without exception. Probably due do concurrent access update of "
+"notification records. Please see with an administrator."
+msgstr ""
+
+#. module: mail
+#: code:addons/mail/models/mail_mail.py:329
 #, python-format
 msgid ""
 "Error without exception. Probably due do sending an email without computed "
@@ -2372,7 +2396,7 @@ msgstr "Має долучення"
 #: model:ir.model.fields,help:mail.field_mail_mail__has_error
 #: model:ir.model.fields,help:mail.field_mail_message__has_error
 msgid "Has error"
-msgstr ""
+msgstr "Має помилку"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_mail__headers
@@ -2386,6 +2410,12 @@ msgstr "Заголовки"
 #: model_terms:ir.ui.view,arch_db:mail.mail_channel_send_guidelines
 msgid "Hello"
 msgstr ""
+
+#. module: mail
+#: code:addons/mail/wizard/invite.py:35
+#, python-format
+msgid "Hello,"
+msgstr "Вітаємо,"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_resend_cancel__help_message
@@ -2535,6 +2565,8 @@ msgid ""
 "If the email address is on the blacklist, the contact won't receive mass "
 "mailing anymore, from any list"
 msgstr ""
+"Якщо адреса електронної пошти знаходиться у чорному списку, контакт не буде "
+"більше отримувати масові розсилки з будь-якого списку"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_res_config_settings__alias_domain
@@ -3420,7 +3452,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:mail.field_mail_mail__moderator_id
 #: model:ir.model.fields,field_description:mail.field_mail_message__moderator_id
 msgid "Moderated By"
-msgstr ""
+msgstr "Модерував"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel__moderation_ids
@@ -3460,7 +3492,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:mail.field_mail_mail__moderation_status
 #: model:ir.model.fields,field_description:mail.field_mail_message__moderation_status
 msgid "Moderation Status"
-msgstr ""
+msgstr "Статус модерації"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_res_users__moderation_counter
@@ -3543,7 +3575,7 @@ msgstr "Необхідна дія"
 #: model:ir.model.fields,field_description:mail.field_mail_mail__need_moderation
 #: model:ir.model.fields,field_description:mail.field_mail_message__need_moderation
 msgid "Need moderation"
-msgstr ""
+msgstr "Необхідна модерація"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_notification__res_partner_id
@@ -3920,6 +3952,13 @@ msgid "Open"
 msgstr "Відкрити"
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/xml/thread.xml:409
+#, python-format
+msgid "Open Channel in Discuss to moderate"
+msgstr ""
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_alias_form
 msgid "Open Document"
 msgstr "Відкрити документ"
@@ -4136,7 +4175,7 @@ msgstr "Партнер, що потребує дії"
 #: selection:mail.compose.message,moderation_status:0
 #: selection:mail.message,moderation_status:0
 msgid "Pending Moderation"
-msgstr ""
+msgstr "Очікує модерацію"
 
 #. module: mail
 #. openerp-web
@@ -4262,6 +4301,13 @@ msgstr ""
 "- всі: кожен може опублікувати\n"
 "- партнери: лише автентифіковані партнери\n"
 "- підписники: лише ті, хто підписаний на відповідний документ або учасники підписаних каналів\n"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/js/tour.js:48
+#, python-format
+msgid "Post your message on the thread"
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_notification_borders
@@ -4847,11 +4893,6 @@ msgid "Sent"
 msgstr "Надіслано"
 
 #. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.message_notification_email
-msgid "Sent by"
-msgstr ""
-
-#. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_notification__is_email
 msgid "Sent by Email"
 msgstr "Надіслати електронною поштою"
@@ -5092,7 +5133,7 @@ msgstr ""
 #. module: mail
 #: model:ir.model.fields,help:mail.field_ir_actions_server__activity_user_field_name
 msgid "Technical name of the user on the record"
-msgstr ""
+msgstr "Технічна назва користувача, що записується"
 
 #. module: mail
 #: model:ir.actions.act_window,name:mail.wizard_email_template_preview
@@ -5565,6 +5606,9 @@ msgid ""
 " 'Generic User From Record' to specify the field name of the user to choose "
 "on the record."
 msgstr ""
+"Використовуйте \"Конкретного користувача\", щоби завжди призначати одного і "
+"того ж користувача на наступній дії. Використовуйте 'Загального користувача "
+"із запису', щоби вказати ім'я поля користувача для вибору запису."
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__use_active_domain
@@ -5599,7 +5643,7 @@ msgstr "Користувач"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_ir_actions_server__activity_user_field_name
 msgid "User field name"
-msgstr ""
+msgstr "Назва поля користувача"
 
 #. module: mail
 #. openerp-web
@@ -5670,9 +5714,19 @@ msgstr ""
 
 #. module: mail
 #. openerp-web
-#: code:addons/mail/static/src/xml/thread.xml:57
+#: code:addons/mail/static/src/xml/thread.xml:58
 #, python-format
 msgid "Viewer"
+msgstr "Глядач"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/js/tour.js:13
+#: code:addons/mail/static/src/js/tour.js:18
+#, python-format
+msgid ""
+"Want to <b>get in touch</b> with your contacts? <i>Discuss with them "
+"here.</i>"
 msgstr ""
 
 #. module: mail
@@ -5854,6 +5908,12 @@ msgid ""
 msgstr ""
 "Ви не можете видалити ці групи, тому що інші групи потрібні для всієї групи "
 "компаній."
+
+#. module: mail
+#: code:addons/mail/models/mail_thread.py:2358
+#, python-format
+msgid "You have been assigned to %s"
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.message_user_assigned

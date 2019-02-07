@@ -47,8 +47,8 @@ class SaleOrder(models.Model):
                 amount_untaxed += line.price_subtotal
                 amount_tax += line.price_tax
             order.update({
-                'amount_untaxed': order.pricelist_id.currency_id.round(amount_untaxed),
-                'amount_tax': order.pricelist_id.currency_id.round(amount_tax),
+                'amount_untaxed': amount_untaxed,
+                'amount_tax': amount_tax,
                 'amount_total': amount_untaxed + amount_tax,
             })
 
@@ -66,22 +66,31 @@ class SaleOrder(models.Model):
         for possible refunds created directly from existing invoices. This is necessary since such a
         refund is not directly linked to the SO.
         """
+        # Ignore the status of the deposit product
+        deposit_product_id = self.env['sale.advance.payment.inv']._default_product_id()
+        line_invoice_status_all = [(d['order_id'][0], d['invoice_status']) for d in self.env['sale.order.line'].read_group([('order_id', 'in', self.ids), ('product_id', '!=', deposit_product_id.id)], ['order_id', 'invoice_status'], ['order_id', 'invoice_status'], lazy=False)]
         for order in self:
             invoice_ids = order.order_line.mapped('invoice_lines').mapped('invoice_id').filtered(lambda r: r.type in ['out_invoice', 'out_refund'])
             # Search for invoices which have been 'cancelled' (filter_refund = 'modify' in
             # 'account.invoice.refund')
             # use like as origin may contains multiple references (e.g. 'SO01, SO02')
-            refunds = invoice_ids.search([('origin', 'like', order.name), ('company_id', '=', order.company_id.id)]).filtered(lambda r: r.type in ['out_invoice', 'out_refund'])
+            refunds = invoice_ids.search([('origin', 'like', order.name), ('company_id', '=', order.company_id.id), ('type', 'in', ('out_invoice', 'out_refund'))])
             invoice_ids |= refunds.filtered(lambda r: order.name in [origin.strip() for origin in r.origin.split(',')])
-            # Search for refunds as well
-            refund_ids = self.env['account.invoice'].browse()
-            if invoice_ids:
-                for inv in invoice_ids:
-                    refund_ids += refund_ids.search([('type', '=', 'out_refund'), ('origin', '=', inv.number), ('origin', '!=', False), ('journal_id', '=', inv.journal_id.id)])
 
-            # Ignore the status of the deposit product
-            deposit_product_id = self.env['sale.advance.payment.inv']._default_product_id()
-            line_invoice_status = [line.invoice_status for line in order.order_line if line.product_id != deposit_product_id]
+            # Search for refunds as well
+            domain_inv = expression.OR([
+                ['&', ('origin', '=', inv.number), ('journal_id', '=', inv.journal_id.id)]
+                for inv in invoice_ids if inv.number
+            ])
+            if domain_inv:
+                refund_ids = self.env['account.invoice'].search(expression.AND([
+                    ['&', ('type', '=', 'out_refund'), ('origin', '!=', False)], 
+                    domain_inv
+                ]))
+            else:
+                refund_ids = self.env['account.invoice'].browse()
+
+            line_invoice_status = [d[1] for d in line_invoice_status_all if d[0] == order.id]
 
             if order.state not in ('sale', 'done'):
                 invoice_status = 'no'
@@ -391,11 +400,13 @@ class SaleOrder(models.Model):
         if self.env.context.get('mail_activity_automation_skip'):
             return super(SaleOrder, self)._write(values)
 
-        res = super(SaleOrder, self)._write(values)
         if 'invoice_status' in values:
-            self.activity_unlink(['sale.mail_act_sale_upsell'])
             if values['invoice_status'] == 'upselling':
-                for order in self.filtered('user_id'):
+                filtered_self = self.search([('id', 'in', self.ids),
+                                             ('user_id', '!=', False),
+                                             ('invoice_status', '!=', 'upselling')])
+                filtered_self.activity_unlink(['sale.mail_act_sale_upsell'])
+                for order in filtered_self:
                     order.activity_schedule(
                         'sale.mail_act_sale_upsell',
                         user_id=order.user_id.id,
@@ -403,7 +414,7 @@ class SaleOrder(models.Model):
                             order._name, order.id, order.name,
                             order.partner_id._name, order.partner_id.id, order.partner_id.display_name))
 
-        return res
+        return super(SaleOrder, self)._write(values)
 
     @api.multi
     def copy_data(self, default=None):
@@ -428,7 +439,9 @@ class SaleOrder(models.Model):
     @api.model
     def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
         if self._context.get('sale_show_partner_name'):
-            if operator in ('ilike', 'like', '=', '=like', '=ilike'):
+            if operator == 'ilike' and not (name or '').strip():
+                domain = []
+            elif operator in ('ilike', 'like', '=', '=like', '=ilike'):
                 domain = expression.AND([
                     args or [],
                     ['|', ('name', operator, name), ('partner_id.name', operator, name)]
@@ -659,9 +672,10 @@ class SaleOrder(models.Model):
             self.force_quotation_send()
 
         # create an analytic account if at least an expense product
-        if any([expense_policy != 'no' for expense_policy in self.order_line.mapped('product_id.expense_policy')]):
-            if not self.analytic_account_id:
-                self._create_analytic_account()
+        for order in self:
+            if any([expense_policy not in [False, 'no'] for expense_policy in order.order_line.mapped('product_id.expense_policy')]):
+                if not order.analytic_account_id:
+                    order._create_analytic_account()
 
         return True
 
@@ -870,21 +884,6 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return '%s %s' % (self.type_name, self.name)
 
-    @api.multi
-    def get_access_action(self, access_uid=None):
-        """ Instead of the classic form view, redirect to the online quote if it exists. """
-        self.ensure_one()
-        user = access_uid and self.env['res.users'].sudo().browse(access_uid) or self.env.user
-
-        if not self.sale_order_template_id or (not user.share and not self.env.context.get('force_website')):
-            return super(SaleOrder, self).get_access_action(access_uid)
-        return {
-            'type': 'ir.actions.act_url',
-            'url': self.get_portal_url(),
-            'target': 'self',
-            'res_id': self.id,
-        }
-
     def _get_share_url(self, redirect=False, signup_partner=False, pid=None):
         self.ensure_one()
         if self.state not in ['sale', 'done']:
@@ -1038,7 +1037,7 @@ class SaleOrderLine(models.Model):
             msg = _("Extra line with %s ") % (line.product_id.display_name,)
             line.order_id.message_post(body=msg)
             # create an analytic account if at least an expense product
-            if line.product_id.expense_policy != 'no' and not self.order_id.analytic_account_id:
+            if line.product_id.expense_policy not in [False, 'no'] and not self.order_id.analytic_account_id:
                 self.order_id._create_analytic_account()
         return line
 
@@ -1120,9 +1119,16 @@ class SaleOrderLine(models.Model):
     product_uom_qty = fields.Float(string='Ordered Quantity', digits=dp.get_precision('Product Unit of Measure'), required=True, default=1.0)
     product_uom = fields.Many2one('uom.uom', string='Unit of Measure')
     product_custom_attribute_value_ids = fields.One2many('product.attribute.custom.value', 'sale_order_line_id', string='User entered custom product attribute values')
+
     # M2M holding the values of product.attribute with create_variant field set to 'no_variant'
     # It allows keeping track of the extra_price associated to those attribute values and add them to the SO line description
+    # Note: If the attributes are changed on the template, some or all records
+    # in `product_no_variant_attribute_value_ids` will be removed here, even
+    # from existing or locked sales order lines. Thus this field can only be
+    # relied on initially, but it cannot be used to recompute anything later
+    # because the result might be different then.
     product_no_variant_attribute_value_ids = fields.Many2many('product.template.attribute.value', string='Product attribute values that do not create variants')
+
     # Non-stored related field to allow portal user to see the image of the product he has ordered
     product_image = fields.Binary('Product Image', related="product_id.image", store=False, readonly=False)
 
@@ -1372,11 +1378,20 @@ class SaleOrderLine(models.Model):
         # TO DO: move me in master/saas-16 on sale.order
         # awa: don't know if it's still the case since we need the "product_no_variant_attribute_value_ids" field now
         # to be able to compute the full price
-        if self.product_no_variant_attribute_value_ids:
-            product = product.with_context(no_variant_attributes_price_extra=[
-                no_variant_attribute_value.price_extra or 0
-                for no_variant_attribute_value in self.product_no_variant_attribute_value_ids
-            ])
+
+        # it is possible that a no_variant attribute is still in a variant if
+        # the type of the attribute has been changed after creation.
+        no_variant_attributes_price_extra = [
+            ptav.price_extra for ptav in self.product_no_variant_attribute_value_ids.filtered(
+                lambda ptav:
+                    ptav.price_extra and
+                    ptav not in product.product_template_attribute_value_ids
+            )
+        ]
+        if no_variant_attributes_price_extra:
+            product = product.with_context(
+                no_variant_attributes_price_extra=no_variant_attributes_price_extra
+            )
 
         if self.order_id.pricelist_id.discount_policy == 'with_discount':
             return product.with_context(pricelist=self.order_id.pricelist_id.id).price
@@ -1397,6 +1412,16 @@ class SaleOrderLine(models.Model):
         if not self.product_id:
             return {'domain': {'product_uom': []}}
 
+        # remove the is_custom values that don't belong to this template
+        for pacv in self.product_custom_attribute_value_ids:
+            if pacv.attribute_value_id not in self.product_id.product_tmpl_id._get_valid_product_attribute_values():
+                self.product_custom_attribute_value_ids -= pacv
+
+        # remove the no_variant attributes that don't belong to this template
+        for ptav in self.product_no_variant_attribute_value_ids:
+            if ptav.product_attribute_value_id not in self.product_id.product_tmpl_id._get_valid_product_attribute_values():
+                self.product_no_variant_attribute_value_ids -= ptav
+
         vals = {}
         domain = {'product_uom': [('category_id', '=', self.product_id.uom_id.category_id.id)]}
         if not self.product_uom or (self.product_id.uom_id.id != self.product_uom.id):
@@ -1405,7 +1430,7 @@ class SaleOrderLine(models.Model):
 
         product = self.product_id.with_context(
             lang=self.order_id.partner_id.lang,
-            partner=self.order_id.partner_id.id,
+            partner=self.order_id.partner_id,
             quantity=vals.get('product_uom_qty') or self.product_uom_qty,
             date=self.order_id.date_order,
             pricelist=self.order_id.pricelist_id.id,
@@ -1429,20 +1454,6 @@ class SaleOrderLine(models.Model):
 
         name = self.get_sale_order_line_multiline_description_sale(product)
 
-        if self.product_custom_attribute_value_ids or self.product_no_variant_attribute_value_ids:
-            name += '\n'
-
-        if self.product_custom_attribute_value_ids:
-            for product_custom_attribute_value in self.product_custom_attribute_value_ids:
-                if product_custom_attribute_value.custom_value and product_custom_attribute_value.custom_value.strip():
-                    name += '\n' + product_custom_attribute_value.attribute_value_id.name + ': ' + product_custom_attribute_value.custom_value.strip()
-
-        if self.product_no_variant_attribute_value_ids:
-            for no_variant_attribute_value in self.product_no_variant_attribute_value_ids.filtered(
-                lambda product_attribute_value: not product_attribute_value.is_custom
-            ):
-                name += '\n' + no_variant_attribute_value.attribute_id.name + ': ' + no_variant_attribute_value.name
-
         vals.update(name=name)
 
         self._compute_tax_id()
@@ -1461,7 +1472,7 @@ class SaleOrderLine(models.Model):
         if self.order_id.pricelist_id and self.order_id.partner_id:
             product = self.product_id.with_context(
                 lang=self.order_id.partner_id.lang,
-                partner=self.order_id.partner_id.id,
+                partner=self.order_id.partner_id,
                 quantity=self.product_uom_qty,
                 date=self.order_id.date_order,
                 pricelist=self.order_id.pricelist_id.id,
@@ -1557,7 +1568,7 @@ class SaleOrderLine(models.Model):
         self.discount = 0.0
         product = self.product_id.with_context(
             lang=self.order_id.partner_id.lang,
-            partner=self.order_id.partner_id.id,
+            partner=self.order_id.partner_id,
             quantity=self.product_uom_qty,
             date=self.order_id.date_order,
             pricelist=self.order_id.pricelist_id.id,
@@ -1591,4 +1602,38 @@ class SaleOrderLine(models.Model):
         BUT in event_sale we need to know specifically the sales order line as well as the product to generate the name:
             the product is not sufficient because we also need to know the event_id and the event_ticket_id (both which belong to the sale order line).
         """
-        return product.get_product_multiline_description_sale()
+        return product.get_product_multiline_description_sale() + self._get_sale_order_line_multiline_description_variants()
+
+    def _get_sale_order_line_multiline_description_variants(self):
+        """When using no_variant attributes or is_custom values, the product
+        itself is not sufficient to create the description: we need to add
+        information about those special attributes and values.
+
+        See note about `product_no_variant_attribute_value_ids` above the field
+        definition: this method is not reliable to recompute the description at
+        a later time, it should only be used initially.
+
+        :return: the description related to special variant attributes/values
+        :rtype: string
+        """
+        if not self.product_custom_attribute_value_ids and not self.product_no_variant_attribute_value_ids:
+            return ""
+
+        name = "\n"
+
+        product_attribute_with_is_custom = self.product_custom_attribute_value_ids.mapped('attribute_value_id.attribute_id')
+
+        # display the no_variant attributes, except those that are also
+        # displayed by a custom (avoid duplicate)
+        for no_variant_attribute_value in self.product_no_variant_attribute_value_ids.filtered(
+            lambda ptav: ptav.attribute_id not in product_attribute_with_is_custom
+        ):
+            name += "\n" + no_variant_attribute_value.attribute_id.name + ': ' + no_variant_attribute_value.name
+
+        # display the is_custom values
+        for pacv in self.product_custom_attribute_value_ids:
+            name += "\n" + pacv.attribute_value_id.attribute_id.name + \
+                ': ' + pacv.attribute_value_id.name + \
+                ': ' + (pacv.custom_value or '').strip()
+
+        return name
