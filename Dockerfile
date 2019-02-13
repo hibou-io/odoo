@@ -14,8 +14,10 @@ RUN set -x; \
         #  for pip install \
         gcc \
         libsasl2-dev libldap2-dev libssl-dev \
-        #  for less file compilation
-        node-less \
+    ; \
+    curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g less \
     ; \
     #  install postgresql-client from postgres itself to support newer server versions
     curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
