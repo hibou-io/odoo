@@ -30,7 +30,7 @@ setup(
         'gevent',
         'html2text',
         'Jinja2',
-        'lxml',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
+        'lxml < 4.3.0',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
         'mako',
         'mock',
         'ofxparse',
