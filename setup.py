@@ -59,6 +59,7 @@ setup(
         #  Hibou Odoo
         'num2words',
         'phonenumbers',
+        'uszipcode',
         'xlrd',
     ],
     python_requires='>=3.5',

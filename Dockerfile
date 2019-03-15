@@ -40,6 +40,8 @@ RUN set -x; \
     && apt --fix-broken -y install \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+    # Prime the uszipcode database
+    && python -c 'from uszipcode import SearchEngine; SearchEngine();' \
     ;
 
 VOLUME ["/var/lib/odoo"]
