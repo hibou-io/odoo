@@ -460,6 +460,16 @@ class PurchaseOrder(models.Model):
                     'currency_id': currency.id,
                     'delay': 0,
                 }
+                # In case the order partner is a contact address, a new supplierinfo is created on
+                # the parent company. In this case, we keep the product name and code.
+                seller = line.product_id._select_seller(
+                    partner_id=line.partner_id,
+                    quantity=line.product_qty,
+                    date=line.order_id.date_order and line.order_id.date_order[:10],
+                    uom_id=line.product_uom)
+                if seller:
+                    supplierinfo['product_name'] = seller.product_name
+                    supplierinfo['product_code'] = seller.product_code
                 vals = {
                     'seller_ids': [(0, 0, supplierinfo)],
                 }
@@ -522,6 +532,8 @@ class PurchaseOrder(models.Model):
             res = self.env.ref('account.invoice_supplier_form', False)
             result['views'] = [(res and res.id or False, 'form')]
             result['res_id'] = self.invoice_ids.id
+        result['context']['default_origin'] = self.name
+        result['context']['default_reference'] = self.partner_ref
         return result
 
     @api.multi
@@ -747,9 +759,11 @@ class PurchaseOrderLine(models.Model):
     def _create_stock_moves(self, picking):
         moves = self.env['stock.move']
         done = self.env['stock.move'].browse()
-        for line in self:
-            for val in line._prepare_stock_moves(picking):
-                done += moves.create(val)
+        with self.env.norecompute():
+            for line in self:
+                for val in line._prepare_stock_moves(picking):
+                    done += moves.create(val)
+        self.recompute()
         return done
 
     @api.multi

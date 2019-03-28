@@ -499,15 +499,18 @@ class AccountInvoice(models.Model):
         """
         res = super(AccountInvoice, self).default_get(default_fields)
 
-        if not res.get('type', False) == 'out_invoice' or not 'company_id' in res:
+        if res.get('type', False) not in ('out_invoice', 'in_refund') or not 'company_id' in res:
             return res
 
-        company = self.env['res.company'].browse(res['company_id'])
-        if company.partner_id:
-            partner_bank_result = self.env['res.partner.bank'].search([('partner_id', '=', company.partner_id.id)], limit=1)
-            if partner_bank_result:
-                res['partner_bank_id'] = partner_bank_result.id
+        partner_bank_result = self._get_partner_bank_id(res['company_id'])
+        if partner_bank_result:
+            res['partner_bank_id'] = partner_bank_result.id
         return res
+
+    def _get_partner_bank_id(self, company_id):
+        company = self.env['res.company'].browse(company_id)
+        if company.partner_id:
+            return self.env['res.partner.bank'].search([('partner_id', '=', company.partner_id.id)], limit=1)
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
@@ -654,12 +657,12 @@ class AccountInvoice(models.Model):
                 msg = _('Cannot find a chart of accounts for this company, You should configure it. \nPlease go to Account Configuration.')
                 raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 
-            if type in ('out_invoice', 'out_refund'):
-                account_id = rec_account.id
-                payment_term_id = p.property_payment_term_id.id
-            else:
+            if type in ('in_invoice', 'in_refund'):
                 account_id = pay_account.id
                 payment_term_id = p.property_supplier_payment_term_id.id
+            else:
+                account_id = rec_account.id
+                payment_term_id = p.property_payment_term_id.id
 
             delivery_partner_id = self.get_delivery_partner_id()
             fiscal_position = self.env['account.fiscal.position'].get_fiscal_position(self.partner_id.id, delivery_id=delivery_partner_id)
@@ -1352,6 +1355,11 @@ class AccountInvoice(models.Model):
         values['origin'] = invoice.number
         values['payment_term_id'] = False
         values['refund_invoice_id'] = invoice.id
+
+        if values['type'] == 'in_refund':
+            partner_bank_result = self._get_partner_bank_id(values['company_id'])
+            if partner_bank_result:
+                values['partner_bank_id'] = partner_bank_result.id
 
         if date:
             values['date'] = date
