@@ -9,6 +9,7 @@ RUN set -x; \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
+        vim \
         #  for apt-key
         gnupg \
         #  for pip install \
@@ -35,6 +36,8 @@ RUN set -x; \
     ; \
     cd /opt/odoo/odoo \
     && python setup.py install \
+    && pip install \
+        ptipython \
     && mv /opt/odoo/odoo/entrypoint.sh /entrypoint.sh \
     && mkdir -p /etc/odoo/ \
     && chown -R odoo /etc/odoo \
