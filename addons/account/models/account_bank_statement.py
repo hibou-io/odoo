@@ -530,7 +530,8 @@ class AccountBankStatementLine(models.Model):
                 }
                 st_line._prepare_move_line_for_currency(aml_dict, st_line.date or fields.Date.context_today())
                 move_vals['line_ids'] = [(0, 0, aml_dict)]
-                balance_line = self._prepare_reconciliation_move_line(move_vals, st_line.amount)
+                balance_line = self._prepare_reconciliation_move_line(
+                    move_vals, -aml_dict['debit'] if st_line.amount < 0 else aml_dict['credit'])
                 move_vals['line_ids'].append((0, 0, balance_line))
                 move_list.append(move_vals)
 
