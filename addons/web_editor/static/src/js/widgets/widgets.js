@@ -949,7 +949,7 @@ var VideoWidget = MediaWidget.extend({
             $video.attr('src', vinMatch[0] + '/embed/simple');
             videoType = 'vin';
         } else if (vimMatch && vimMatch[3].length) {
-            $video.attr('src', '//player.vimeo.com/video/' + vimMatch[3] + autoplay);
+            $video.attr('src', '//player.vimeo.com/video/' + vimMatch[3] + autoplay.replace('mute', 'muted'));
             videoType = 'vim';
         } else if (dmMatch && dmMatch[2].length) {
             var just_id = dmMatch[2].replace('video/','');
@@ -1162,9 +1162,9 @@ var MediaDialog = Dialog.extend({
                 tabToShow = 'image';
             } else if (self.$media.is('a.o_image')) {
                 tabToShow = 'document';
-            } else if (self.$media.attr('class').match(/(^|\s)media_iframe_video($|\s)/)) {
+            } else if (self.$media.hasClass('media_iframe_video')) {
                 tabToShow = 'video';
-            } else if (self.$media.parent().attr('class').match(/(^|\s)media_iframe_video($|\s)/)) {
+            } else if (self.$media.parent().hasClass('media_iframe_video')) {
                 self.$media = self.$media.parent();
                 self.media = self.$media[0];
                 tabToShow = 'video';
