@@ -942,6 +942,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             batch.clear()
             batch_xml_ids.clear()
 
+            unknown_msg = _(u"Unknown database error: '%s'")
             try:
                 cr.execute('SAVEPOINT model_load_save')
             except psycopg2.InternalError as e:
@@ -949,7 +950,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # already logged
                 if not any(message['type'] == 'error' for message in messages):
                     info = data_list[0]['info']
-                    messages.append(dict(info, type='error', message=u"Unknown database error: '%s'" % e))
+                    messages.append(dict(info, type='error', message=unknown_msg % e))
                 return
 
             # try to create in batch
@@ -2674,7 +2675,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             try:
                 field.setup_full(self)
             except Exception:
-                if not self.pool.loaded and field.base_field.manual:
+                if field.base_field.manual:
                     # Something goes wrong when setup a manual field.
                     # This can happen with related fields using another manual many2one field
                     # that hasn't been loaded because the comodel does not exist yet.
@@ -3108,7 +3109,19 @@ Fields:
                 raise ValidationError(_('A document was modified since you last viewed it (%s:%d)') % (self._description, res[0]))
 
     def _check_company(self, fnames=None):
-        """ Check the companies of the values of the given field names. """
+        """ Check the companies of the values of the given field names.
+
+        :param list fnames: names of relational fields to check
+        :raises UserError: if the `company_id` of the value of any field is not
+            in `[False, self.company_id]` (or `self` if
+            :class:`~odoo.addons.base.models.res_company`).
+
+        For :class:`~odoo.addons.base.models.res_users` relational fields,
+        verifies record company is in `company_ids` fields.
+
+        User with main company A, having access to company A and B, could be
+        assigned or linked to records in company B.
+        """
         if fnames is None:
             fnames = self._fields
 
@@ -3133,12 +3146,13 @@ Fields:
             # The first part of the check verifies that all records linked via relation fields are compatible
             # with the company of the origin document, i.e. `self.account_id.company_id == self.company_id`
             for name in regular_fields:
+                corecord = record.sudo()[name]
                 # Special case with `res.users` since an user can belong to multiple companies.
-                if record[name]._name == 'res.users' and record[name].company_ids:
-                    if not (company <= record[name].company_ids):
+                if corecord._name == 'res.users' and corecord.company_ids:
+                    if not (company <= corecord.company_ids):
                         inconsistent_fields.add(name)
                         inconsistent_recs |= record
-                elif not (record[name].company_id <= company):
+                elif not (corecord.company_id <= company):
                     inconsistent_fields.add(name)
                     inconsistent_recs |= record
             # The second part of the check (for property / company-dependent fields) verifies that the records
@@ -3151,11 +3165,12 @@ Fields:
                 company = self.env.company
             for name in property_fields:
                 # Special case with `res.users` since an user can belong to multiple companies.
-                if record[name]._name == 'res.users' and record[name].company_ids:
-                    if not (company <= record[name].company_ids):
+                corecord = record.sudo()[name]
+                if corecord._name == 'res.users' and corecord.company_ids:
+                    if not (company <= corecord.company_ids):
                         inconsistent_fields.add(name)
                         inconsistent_recs |= record
-                elif not (record[name].company_id <= company):
+                elif not (corecord.company_id <= company):
                     inconsistent_fields.add(name)
                     inconsistent_recs |= record
 
@@ -3284,19 +3299,13 @@ Record ids: %(records)s
         self.flush()
         self.modified(self._fields)
 
-        # Check if the records are used as default properties.
-        refs = ['%s,%s' % (self._name, i) for i in self.ids]
-        if self.env['ir.property'].search([('res_id', '=', False), ('value_reference', 'in', refs)]):
-            raise UserError(_('Unable to delete this document because it is used as a default property'))
-
-        # Delete the records' properties.
         with self.env.norecompute():
             self.check_access_rule('unlink')
-            self.env['ir.property'].search([('res_id', 'in', refs)]).sudo().unlink()
 
             cr = self._cr
             Data = self.env['ir.model.data'].sudo().with_context({})
             Defaults = self.env['ir.default'].sudo()
+            Property = self.env['ir.property'].sudo()
             Attachment = self.env['ir.attachment'].sudo()
             ir_model_data_unlink = Data
             ir_attachment_unlink = Attachment
@@ -3309,6 +3318,14 @@ Record ids: %(records)s
                 self.env.remove_to_compute(field, self)
 
             for sub_ids in cr.split_for_in_conditions(self.ids):
+                # Check if the records are used as default properties.
+                refs = ['%s,%s' % (self._name, i) for i in sub_ids]
+                if Property.search([('res_id', '=', False), ('value_reference', 'in', refs)], limit=1):
+                    raise UserError(_('Unable to delete this document because it is used as a default property'))
+
+                # Delete the records' properties.
+                Property.search([('res_id', 'in', refs)]).unlink()
+
                 query = "DELETE FROM %s WHERE id IN %%s" % self._table
                 cr.execute(query, (sub_ids,))
 
@@ -5033,9 +5050,9 @@ Record ids: %(records)s
 
             The returned recordset has the same prefetch object as ``self``.
         """
-        if args and 'allowed_company_ids' not in args[0] and 'allowed_company_ids' in self._context:
-            args[0]['allowed_company_ids'] = self._context.get('allowed_company_ids') 
         context = dict(args[0] if args else self._context, **kwargs)
+        if 'allowed_company_ids' not in context and 'allowed_company_ids' in self._context:
+            context['allowed_company_ids'] = self._context.get('allowed_company_ids')
         return self.with_env(self.env(context=context))
 
     def with_prefetch(self, prefetch_ids=None):
@@ -5732,7 +5749,8 @@ Record ids: %(records)s
                     # mark the field as computed on missing records, otherwise
                     # they remain forever in the todo list, and lead to an
                     # infinite loop...
-                    self.env.remove_to_compute(field, recs - existing)
+                    for f in recs._field_computed[field]:
+                        self.env.remove_to_compute(f, recs - existing)
             else:
                 self.env.cache.invalidate([(field, recs._ids)])
                 self.env.remove_to_compute(field, recs)
@@ -6158,8 +6176,8 @@ def convert_pgerror_not_null(model, fields, info, e):
 def convert_pgerror_unique(model, fields, info, e):
     # new cursor since we're probably in an error handler in a blown
     # transaction which may not have been rollbacked/cleaned yet
-    with closing(model.env.registry.cursor()) as cr:
-        cr.execute("""
+    with closing(model.env.registry.cursor()) as cr_tmp:
+        cr_tmp.execute("""
             SELECT
                 conname AS "constraint name",
                 t.relname AS "table name",
@@ -6172,7 +6190,7 @@ def convert_pgerror_unique(model, fields, info, e):
             JOIN pg_class t ON t.oid = conrelid
             WHERE conname = %s
         """, [e.diag.constraint_name])
-        constraint, table, ufields = cr.fetchone() or (None, None, None)
+        constraint, table, ufields = cr_tmp.fetchone() or (None, None, None)
     # if the unique constraint is on an expression or on an other table
     if not ufields or model._table != table:
         return {'message': tools.ustr(e)}

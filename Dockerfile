@@ -1,4 +1,4 @@
-FROM python:3.7.5-slim-stretch
+FROM python:3.7.6-slim-stretch
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
@@ -8,6 +8,7 @@ RUN set -x; \
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
+        zip \
         curl \
         vim \
         #  for apt-key
@@ -51,6 +52,8 @@ RUN set -x; \
     cd /opt/odoo/odoo \
     && python setup.py install \
     && mv /opt/odoo/odoo/entrypoint.sh /entrypoint.sh \
+    && mv /opt/odoo/odoo/wait-for-psql.py /usr/local/bin/wait-for-psql.py \
+    && chmod a+x /usr/local/bin/wait-for-psql.py \
     && mkdir -p /etc/odoo/ \
     && chown -R odoo /etc/odoo \
     && cp /opt/odoo/odoo/debian/odoo.conf /etc/odoo/odoo.conf \

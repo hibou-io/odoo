@@ -818,6 +818,16 @@ var BasicModel = AbstractModel.extend({
                         defs.push(self._fetchNameGet(dataPoint));
                     }
                 }
+            } else if (field.type === 'reference' && field.value) {
+                const ref = field.value.split(',');
+                dataPoint = self._makeDataPoint({
+                    context: record.context,
+                    data: { id: parseInt(ref[1], 10) },
+                    modelName: ref[0],
+                    parentID: record.id,
+                });
+                defs.push(self._fetchNameGet(dataPoint));
+                record.data[field.name] = dataPoint.id;
             } else if (field.type === 'one2many' || field.type === 'many2many') {
                 var relatedFieldsInfo = {};
                 relatedFieldsInfo.default = {};
@@ -4227,7 +4237,7 @@ var BasicModel = AbstractModel.extend({
         options = options || {};
         var defs = [];
         var field = record.fields[fieldName];
-        var fieldInfo = record.fieldsInfo[options.viewType || record.viewType][fieldName];
+        var fieldInfo = record.fieldsInfo[options.viewType || record.viewType][fieldName] || {};
         var view = fieldInfo.views && fieldInfo.views[fieldInfo.mode];
         var fieldsInfo = view ? view.fieldsInfo : fieldInfo.fieldsInfo;
         var fields = view ? view.fields : fieldInfo.relatedFields;
