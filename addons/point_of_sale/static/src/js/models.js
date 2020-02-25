@@ -977,7 +977,7 @@ exports.PosModel = Backbone.Model.extend({
         options = options || {};
 
         var self = this;
-        var timeout = typeof options.timeout === 'number' ? options.timeout : 7500 * orders.length;
+        var timeout = typeof options.timeout === 'number' ? options.timeout : 30000 * orders.length;
 
         // Keep the order ids that are about to be sent to the
         // backend. In between create_from_ui and the success callback
@@ -1023,9 +1023,9 @@ exports.PosModel = Backbone.Model.extend({
                     }
                     self.set('failed',error);
                 }
-                console.error('Failed to send orders:', orders);
+                console.warn('Failed to send orders:', orders);
                 self.gui.show_sync_error_popup();
-                throw reason;
+                throw error;
             });
     },
 
@@ -1985,8 +1985,8 @@ exports.Orderline = Backbone.Model.extend({
 
         return {
             'taxes': taxes_vals,
-            'total_excluded': sign * round_pr(total_excluded, currency_rounding),
-            'total_included': sign * round_pr(total_included, currency_rounding),
+            'total_excluded': sign * round_pr(total_excluded, this.pos.currency.rounding),
+            'total_included': sign * round_pr(total_included, this.pos.currency.rounding),
         }
     },
     get_all_prices: function(){
@@ -2933,7 +2933,7 @@ exports.Order = Backbone.Model.extend({
 
         return total;
     },
-    get_change: function(paymentline) {
+    get_change_value: function(paymentline) {
         if (!paymentline) {
             var change = this.get_total_paid() - this.get_total_with_tax();
         } else {
@@ -2946,7 +2946,11 @@ exports.Order = Backbone.Model.extend({
                 }
             }
         }
-        return round_pr(Math.max(0,change), this.pos.currency.rounding);
+        return round_pr(change, this.pos.currency.rounding)
+    },
+    get_change: function(paymentline) {
+        var change = this.get_change_value(paymentline);
+        return Math.max(0,change);
     },
     get_due: function(paymentline) {
         if (!paymentline) {
@@ -3067,6 +3071,9 @@ exports.NumpadState = Backbone.Model.extend({
             }else{
                 this.trigger('set_value',this.get('buffer'));
             }
+        } else if (this.get('buffer') === "-0") {
+            this.set({ buffer: "0" });
+            this.trigger('set_value',this.get('buffer'));
         }else{
             var newBuffer = this.get('buffer').slice(0,-1) || "";
             this.set({ buffer: newBuffer });
