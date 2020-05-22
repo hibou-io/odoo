@@ -13,8 +13,8 @@
 # Norimichi Sugimoto <norimichi.sugimoto@tls-ltd.co.jp>, 2019
 # Yoon Nankyung <nankyung.yoon@pro-spire.co.jp>, 2019
 # Martin Trigaux, 2019
-# Yoshi Tashiro <tashiro@roomsfor.hk>, 2019
 # Tim Siu Lai <tl@roomsfor.hk>, 2019
+# Yoshi Tashiro <tashiro@roomsfor.hk>, 2020
 # 
 msgid ""
 msgstr ""
@@ -22,7 +22,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:34+0000\n"
 "PO-Revision-Date: 2018-08-24 09:24+0000\n"
-"Last-Translator: Tim Siu Lai <tl@roomsfor.hk>, 2019\n"
+"Last-Translator: Yoshi Tashiro <tashiro@roomsfor.hk>, 2020\n"
 "Language-Team: Japanese (https://www.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -239,12 +239,12 @@ msgstr "<i class=\"fa fa-times\"/> 拒否"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "<small><b class=\"text-muted\">This offer expires in</b></small>"
-msgstr ""
+msgstr "<small><b class=\"text-muted\">オファーの有効期日まで</b></small>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "<small><b class=\"text-muted\">Your advantage</b></small>"
-msgstr ""
+msgstr "<small><b class=\"text-muted\">特別価格</b></small>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_orders
@@ -285,6 +285,8 @@ msgid ""
 "<span groups=\"account.group_show_line_subtotals_tax_excluded\">Amount</span>\n"
 "                                <span groups=\"account.group_show_line_subtotals_tax_included\">Total Price</span>"
 msgstr ""
+"<span groups=\"account.group_show_line_subtotals_tax_excluded\">税抜金額</span>\n"
+"<span groups=\"account.group_show_line_subtotals_tax_included\">税込金額</span>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
@@ -329,7 +331,7 @@ msgstr ""
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
 msgid "<strong class=\"d-block mb-1\">Invoices</strong>"
-msgstr ""
+msgstr "<strong class=\"d-block mb-1\">請求書</strong>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
@@ -414,7 +416,7 @@ msgstr "<strong>こちらはドラフト見積です。</strong>"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "<strong>This offer expired!</strong>"
-msgstr ""
+msgstr "<strong>このオファーは期限切れです。</strong>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
@@ -1060,7 +1062,7 @@ msgstr "顧客国"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_report__commercial_partner_id
 msgid "Customer Entity"
-msgstr ""
+msgstr "顧客事業体"
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__access_url
@@ -1133,7 +1135,7 @@ msgstr "日付:"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
 msgid "Default Limit:"
-msgstr ""
+msgstr "デフォルト期間:"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_res_config_settings__use_quotation_validity_days
@@ -1493,7 +1495,7 @@ msgstr ""
 #. module: sale
 #: model:ir.actions.act_window,name:sale.action_open_sale_onboarding_payment_acquirer_wizard
 msgid "How your customers can confirm an order"
-msgstr ""
+msgstr "顧客のオーダ確認方法"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_product_attribute_custom_value__id
@@ -1724,7 +1726,7 @@ msgstr "請求書の統計情報"
 msgid ""
 "Invoices will be created in draft so that you can review\n"
 "                        them before validation."
-msgstr "請求書はドラフトで作成されるので、監査の前に確認することができます。"
+msgstr "請求書はドラフトで作成されるので、検証前に確認することができます。"
 
 #. module: sale
 #: code:addons/sale/models/sales_team.py:96
@@ -2411,7 +2413,7 @@ msgstr "PayPal 支払"
 #: selection:res.company,sale_onboarding_payment_method:0
 #: selection:sale.payment.acquirer.onboarding.wizard,payment_method:0
 msgid "Pay with another payment acquirer"
-msgstr ""
+msgstr "他の決済サービスでの支払"
 
 #. module: sale
 #: selection:sale.payment.acquirer.onboarding.wizard,payment_method:0
@@ -3652,7 +3654,7 @@ msgstr ""
 msgid ""
 "There is no invoiceable line. If a product has a Delivered quantities "
 "invoicing policy, please make sure that a quantity has been delivered."
-msgstr ""
+msgstr "請求可能な明細がありません。プロダクトの請求方針が配送済数量である場合は、配送が済んでいることをご確認ください。"
 
 #. module: sale
 #: model_terms:ir.actions.act_window,help:sale.action_orders_upselling
@@ -3759,7 +3761,7 @@ msgstr "請求対象数量"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_view_search_inherit_sale
 msgid "To Upsell"
-msgstr ""
+msgstr "アップセル対象"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form

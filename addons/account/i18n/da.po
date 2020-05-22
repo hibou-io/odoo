@@ -18,10 +18,10 @@
 # Joe Hansen <joedalton2@yahoo.dk>, 2019
 # Rasmus Værum <rasmus@niova.dk>, 2019
 # Ejner Sønniksen <ejner@vkdata.dk>, 2019
-# Sanne Kristensen <sanne@vkdata.dk>, 2019
 # Kenneth Hansen <kenneth@vkdata.dk>, 2019
-# lhmflexerp <lhm@flexerp.dk>, 2019
 # Simon Andersen <simon@vkdata.dk>, 2019
+# Sanne Kristensen <sanne@vkdata.dk>, 2019
+# lhmflexerp <lhm@flexerp.dk>, 2019
 # 
 msgid ""
 msgstr ""
@@ -29,7 +29,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:33+0000\n"
 "PO-Revision-Date: 2018-08-24 09:14+0000\n"
-"Last-Translator: Simon Andersen <simon@vkdata.dk>, 2019\n"
+"Last-Translator: lhmflexerp <lhm@flexerp.dk>, 2019\n"
 "Language-Team: Danish (https://www.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -577,6 +577,11 @@ msgstr "<span>Oprindeligt beløb</span>"
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "<span>Quantity</span>"
 msgstr "<span>Antal</span>"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_payment_receipt_document
+msgid "<span>Reference</span>"
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
@@ -1799,7 +1804,7 @@ msgstr "Analysekonto"
 #: model:ir.ui.menu,name:account.account_analytic_group_menu
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Analytic Account Groups"
-msgstr ""
+msgstr "Analysekontigrupper"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__group_analytic_accounting
@@ -3973,7 +3978,7 @@ msgstr "Standard indkøbsmoms"
 #. module: account
 #: model:ir.model.fields,help:account.field_res_config_settings__invoice_reference_type
 msgid "Default Reference Type on Invoices."
-msgstr ""
+msgstr "Standard referencetype på faktura"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_company__account_sale_tax_id
@@ -4673,6 +4678,7 @@ msgstr "Regnskabsperioder"
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__fiscal_position_id
 #: model:ir.model.fields,field_description:account.field_res_partner__property_account_position_id
 #: model:ir.model.fields,field_description:account.field_res_users__property_account_position_id
+#: model_terms:ir.ui.view,arch_db:account.view_account_position_filter
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_form
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_template_search
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_template_tree
@@ -4917,7 +4923,7 @@ msgstr "Dan posteringer"
 #. module: account
 #: model:ir.ui.menu,name:account.account_reports_legal_statements_menu
 msgid "Generic Statements"
-msgstr ""
+msgstr "Generalle rapporter"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
@@ -6128,7 +6134,7 @@ msgstr "Journaler"
 #. module: account
 #: model:ir.actions.report,name:account.action_report_journal
 msgid "Journals Audit"
-msgstr ""
+msgstr "Journalrevidering"
 
 #. module: account
 #: selection:res.company,fiscalyear_last_month:0
@@ -8233,7 +8239,7 @@ msgstr "Indkøb"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.invoice_supplier_form
 msgid "Purchase Representative"
-msgstr ""
+msgstr "Indkøbsrepræsentant"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
@@ -9880,8 +9886,8 @@ msgstr ""
 #: model:ir.model.fields,help:account.field_account_payment__multi
 #: model:ir.model.fields,help:account.field_account_register_payments__multi
 msgid ""
-"Technical field indicating if the user selected invoices from multiple "
-"partners or from different types."
+"Technical field indicating if the registering payment will generate multiple"
+" payments or not."
 msgstr ""
 
 #. module: account

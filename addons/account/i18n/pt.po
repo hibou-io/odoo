@@ -4,11 +4,10 @@
 # 
 # Translators:
 # Daniel C Santos <dcs@thinkopensolutions.pt>, 2018
-# cafonso <cafonso62@gmail.com>, 2018
 # Ricardo Correia <rcorreiavv@gmail.com>, 2018
+# Manuela Silva <inactive+h_manuela_rodsilva@transifex.com>, 2018
 # José Gomes <jg@opencloud.pro>, 2018
 # Martin Trigaux, 2018
-# Manuela Silva <inactive+h_manuela_rodsilva@transifex.com>, 2018
 # Joao Felix <jrmfelix@gmail.com>, 2018
 # Ricardo Martins <ricardo.nbs.martins@gmail.com>, 2018
 # Diogo Fonseca <dsf@thinkopensolutions.pt>, 2018
@@ -19,7 +18,8 @@
 # Pedro Castro Silva <pedrocs@exo.pt>, 2019
 # Tiago Santos <tiago.santos@arxi.pt>, 2019
 # Reinaldo Ramos <reinaldo.ramos@arxi.pt>, 2019
-# Nuno Silva <nuno.silva@arxi.pt>, 2019
+# cafonso <cafonso62@gmail.com>, 2019
+# Nuno Silva <nuno.silva@arxi.pt>, 2020
 # 
 msgid ""
 msgstr ""
@@ -27,7 +27,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:33+0000\n"
 "PO-Revision-Date: 2018-08-24 09:14+0000\n"
-"Last-Translator: Nuno Silva <nuno.silva@arxi.pt>, 2019\n"
+"Last-Translator: Nuno Silva <nuno.silva@arxi.pt>, 2020\n"
 "Language-Team: Portuguese (https://www.transifex.com/odoo/teams/41243/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -551,6 +551,11 @@ msgid "<span>Quantity</span>"
 msgstr "<span>Quantidade </span>"
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_payment_receipt_document
+msgid "<span>Reference</span>"
+msgstr ""
+
+#. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
 msgid "<span>Reporting</span>"
 msgstr "<span>Relatórios</span>"
@@ -597,7 +602,7 @@ msgstr ""
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.portal_invoice_page
 msgid "<strong class=\"text-muted\">Your Contact</strong>"
-msgstr "<strong class=\"text-muted\">O teu Contacto </strong>"
+msgstr "<strong class=\"text-muted\">O Seu Contacto</strong>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document_with_payments
@@ -3674,7 +3679,7 @@ msgstr "Ativos Correntes"
 #. module: account
 #: model:account.account.type,name:account.data_account_type_current_liabilities
 msgid "Current Liabilities"
-msgstr "Passivo Corrente"
+msgstr "Passivos Correntes"
 
 #. module: account
 #: model:account.account.type,name:account.data_unaffected_earnings
@@ -3886,7 +3891,7 @@ msgid ""
 msgstr ""
 "Exmo. Senhor/Senhora,\n"
 "\n"
-"Os nossos registos indicam que alguns pagamentos na sua conta, ainda se encontram por liquidar. Por favor, encontre os detalhes abaixo.\n"
+"Os nossos registos indicam que alguns pagamentos na sua conta ainda se encontram por liquidar. Por favor, encontre os detalhes abaixo.\n"
 "Se o valor já tiver sido pago, por favor, ignore este aviso. Caso contrário, por favor, envie-nos o total indicado abaixo.\n"
 "Se tiver quaisquer dúvidas em relação à sua conta, por favor, contacte-nos.\n"
 "\n"
@@ -4654,6 +4659,7 @@ msgstr "Períodos Fiscais"
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__fiscal_position_id
 #: model:ir.model.fields,field_description:account.field_res_partner__property_account_position_id
 #: model:ir.model.fields,field_description:account.field_res_users__property_account_position_id
+#: model_terms:ir.ui.view,arch_db:account.view_account_position_filter
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_form
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_template_search
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_template_tree
@@ -7019,7 +7025,7 @@ msgstr "Nova data de previsão de pagamento:"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr ""
+msgstr "Prazo da Próxima Atividade"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice__activity_summary
@@ -8261,7 +8267,7 @@ msgstr "Compras"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.invoice_supplier_form
 msgid "Purchase Representative"
-msgstr ""
+msgstr "Responsável de Compras"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
@@ -9919,11 +9925,9 @@ msgstr ""
 #: model:ir.model.fields,help:account.field_account_payment__multi
 #: model:ir.model.fields,help:account.field_account_register_payments__multi
 msgid ""
-"Technical field indicating if the user selected invoices from multiple "
-"partners or from different types."
+"Technical field indicating if the registering payment will generate multiple"
+" payments or not."
 msgstr ""
-"Campo técnico que indica se o utilizador selecionou faturas de vários "
-"parceiros ou de tipos diferentes."
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice_refund__refund_only
@@ -10388,6 +10392,7 @@ msgstr ""
 #, python-format
 msgid "The lock date for advisors is irreversible and can't be removed."
 msgstr ""
+"A data de fecho para consultores é irreversível e não pode ser alterada."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__move_id
@@ -10405,6 +10410,8 @@ msgstr "O nome que será utilizado na linha de movimentos contabilísticos"
 msgid ""
 "The new lock date for advisors must be set after the previous lock date."
 msgstr ""
+"A nova data de fecho para consultores deve ser estabecida posteriormente à "
+"data de fecho anterior."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__refund_sequence_number_next
@@ -11882,6 +11889,9 @@ msgid ""
 "You cannot define stricter conditions on advisors than on users. Please make"
 " sure that the lock date on advisor is set before the lock date for users."
 msgstr ""
+"Não pode definir condições mais estritas para consultores do que para "
+"utilizadores. Assegure-se de que a data de fecho de consultores fica "
+"estabelecida antes da data de fecho para utilizadores."
 
 #. module: account
 #: code:addons/account/models/account_payment.py:611
@@ -11967,6 +11977,9 @@ msgid ""
 "You cannot lock a period that is not finished yet. Please make sure that the"
 " lock date for advisors is not set after the last day of the previous month."
 msgstr ""
+"Não pode fechar um período que ainda não tenha terminado, Assegure-se de que"
+" a data de fecho para consultores seja definida não ultrapassando o último "
+"dia do mês anterior."
 
 #. module: account
 #. openerp-web

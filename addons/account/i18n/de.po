@@ -20,7 +20,6 @@
 # Jan Meyer, 2018
 # Marco Tarsia <marco.y.tarsia@gmail.com>, 2018
 # Michael Schütt <michael.schuett.lwl@gmail.com>, 2018
-# Ermin Trevisan <trevi@twanda.com>, 2018
 # Jan Dillmann <derjan@devzero.de>, 2018
 # Wolfgang Taferner, 2019
 # Albert Hild <mail@albert-hild.de>, 2019
@@ -35,6 +34,10 @@
 # Olivier Jossen <olivier.jossen@braintec-group.com>, 2019
 # Matt <matt.fasola@braintec-group.com>, 2019
 # Felix Schubert <felix.schubert@go-erp.com>, 2019
+# Ermin Trevisan <trevi@twanda.com>, 2020
+# JEK Odoo <jek@odoo.com>, 2020
+# Tom Bache, 2020
+# philku79 <philip.kuss@gmx.de>, 2020
 # 
 msgid ""
 msgstr ""
@@ -42,7 +45,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:33+0000\n"
 "PO-Revision-Date: 2018-08-24 09:14+0000\n"
-"Last-Translator: Felix Schubert <felix.schubert@go-erp.com>, 2019\n"
+"Last-Translator: philku79 <philip.kuss@gmx.de>, 2020\n"
 "Language-Team: German (https://www.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -181,8 +184,7 @@ msgid ""
 "</div>\n"
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"<p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"Sehr geehrte(r) ${object.partner_id.name}<br/><br/>\n"
+"<p style=\"margin: 0px; padding: 0px; font-size: 13px;\">Guten Tag ${object.partner_id.name}<br/><br/>\n"
 "Wir haben Ihre Zahlung dankend erhalten\n"
 "Anbei übersenden wir Ihnen die Zahlungsbestätigung<strong>${(object.name or '').replace('/','-')} </strong>\n"
 "für<strong>${format_amount(object.amount, object.currency_id)}</strong>von ${object.company_id.name}.\n"
@@ -231,24 +233,24 @@ msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "<p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
 "\n"
-"Sehr geehrte(r) ${object.partner_id.name}\n"
+"Guten Tag ${object.partner_id.name}\n"
 " % if object.partner_id.parent_id:\n"
 " (${object.partner_id.parent_id.name})\n"
 " % endif\n"
 " \n"
-"Anliegend erhalten Sie\n"
+"Beiliegend erhalten Sie\n"
 "% if object.number:\n"
-" invoice ${object.number}\n"
+" Ihre Rechnung ${object.number}\n"
 " % else:\n"
-" invoice\n"
+" Ihre Rechnung\n"
 "% endif\n"
 " % if object.origin:\n"
-" (with reference: ${object.origin})\n"
+" (mit Referenz: ${object.origin})\n"
 " % endif\n"
 " in Höhe von <strong>${format_amount(object.amount_total, object.currency_id)}</strong>\n"
 " von ${object.company_id.name}.\n"
 " % if object.state=='paid':\n"
-" Die Rechnung ist bereits bezahlt\n"
+" Diese Rechnung ist bereits bezahlt.\n"
 " % else:\n"
 " Bitte überweisen Sie den Rechnungsbetrag so bald wie möglich.\n"
 " % endif\n"
@@ -558,7 +560,7 @@ msgstr "<span>Rechnungen importieren</span>"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_payment_receipt_document
 msgid "<span>Invoice Date</span>"
-msgstr "<span>Rechnungsdaten</span>"
+msgstr "<span>Rechnungsdatum</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_payment_receipt_document
@@ -599,6 +601,11 @@ msgstr "<span>ursprünglicher Betrag</span>"
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "<span>Quantity</span>"
 msgstr "<span>Menge</span>"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_payment_receipt_document
+msgid "<span>Reference</span>"
+msgstr "<span>Referenz</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
@@ -882,6 +889,10 @@ msgid ""
 "either in 'Tax-Included' or in 'Tax-Excluded' mode\n"
 "(or switch twice the mode if you are already in the desired one)."
 msgstr ""
+"Ein Benutzer kann nicht sowohl Tax B2B als auch Tax B2C haben.\n"
+"Sie sollten in den Allgemeinen Einstellungen gehen und wählen, ob die Produktpreise\n"
+"entweder im Modus 'Steuer inbegriffen' oder 'Steuer ausgeschlossen' \n"
+"(oder wechseln Sie den Modus zwei Mal, wenn Sie sich bereits im gewünschten Modus befinden)."
 
 #. module: account
 #: model:res.groups,name:account.group_warning_account
@@ -1237,7 +1248,7 @@ msgstr ""
 #: model:ir.cron,cron_name:account.ir_cron_reverse_entry
 #: model:ir.cron,name:account.ir_cron_reverse_entry
 msgid "Account; Reverse entries"
-msgstr "Konto; Einträge umkehren"
+msgstr "Konto; Buchungen stornieren"
 
 #. module: account
 #: model:ir.ui.menu,name:account.account_account_menu
@@ -4025,7 +4036,7 @@ msgstr "Fest zugeordnete Gutschrift-Sequenz"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_company__invoice_reference_type
 msgid "Default Communication Type"
-msgstr ""
+msgstr "Standard Kommunikationsweg"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_journal__default_credit_account_id
@@ -4236,7 +4247,7 @@ msgstr "Abweichung des berechneten zum angegebenen Endsaldo."
 #: code:addons/account/models/account_move.py:408
 #, python-format
 msgid "Difference debit - credit: "
-msgstr ""
+msgstr "Differenz Soll - Haben:"
 
 #. module: account
 #: model:ir.model,name:account.model_digest_digest
@@ -4456,7 +4467,7 @@ msgstr "Fälligkeitsdatum"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_payment_term_line_form
 msgid "Due the"
-msgstr ""
+msgstr "Fällig am"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -4759,6 +4770,7 @@ msgstr "Steuer-Zeiträume"
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__fiscal_position_id
 #: model:ir.model.fields,field_description:account.field_res_partner__property_account_position_id
 #: model:ir.model.fields,field_description:account.field_res_users__property_account_position_id
+#: model_terms:ir.ui.view,arch_db:account.view_account_position_filter
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_form
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_template_search
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_template_tree
@@ -4862,14 +4874,14 @@ msgstr "Mahnstufen"
 #: model:ir.model.fields,field_description:account.field_account_invoice__message_follower_ids
 #: model:ir.model.fields,field_description:account.field_account_payment__message_follower_ids
 msgid "Followers"
-msgstr "Abonnenten"
+msgstr "Followers"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement__message_channel_ids
 #: model:ir.model.fields,field_description:account.field_account_invoice__message_channel_ids
 #: model:ir.model.fields,field_description:account.field_account_payment__message_channel_ids
 msgid "Followers (Channels)"
-msgstr "Abonnenten (Kanäle)"
+msgstr "Followers (Kanäle)"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement__message_partner_ids
@@ -5568,7 +5580,7 @@ msgstr "Inaktiv"
 #. module: account
 #: selection:account.payment.method,payment_type:0
 msgid "Inbound"
-msgstr "Eingehende Anrufe"
+msgstr "Eingehend"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_tax__analytic
@@ -5650,7 +5662,7 @@ msgstr ""
 #. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__tax_line_id
 msgid "Indicates that this journal item is a tax line"
-msgstr ""
+msgstr "Weist darauf hin, dieser Journaleintrag ist eine Steuerkennzeichen"
 
 #. module: account
 #. openerp-web
@@ -6003,7 +6015,7 @@ msgstr "ist zwischen"
 #: model:ir.model.fields,field_description:account.field_account_invoice__message_is_follower
 #: model:ir.model.fields,field_description:account.field_account_payment__message_is_follower
 msgid "Is Follower"
-msgstr "Ist ein Abonnent"
+msgstr "Ist ein Follower"
 
 #. module: account
 #: selection:account.reconcile.model,match_amount:0
@@ -8693,7 +8705,7 @@ msgstr "Rechnungen erstatten"
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_from_invoices
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_invoice_form
 msgid "Register Payment"
-msgstr "Einzahlung erfassen"
+msgstr "Zahlung erfassen"
 
 #. module: account
 #: model:ir.model,name:account.model_account_register_payments
@@ -9964,7 +9976,7 @@ msgstr "Steuer anzeigen B2C"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice__amount_tax_signed
 msgid "Tax in Invoice Currency"
-msgstr ""
+msgstr "Steuer in Rechnungswährung"
 
 #. module: account
 #: sql_constraint:account.tax:0 sql_constraint:account.tax.template:0
@@ -10102,11 +10114,9 @@ msgstr ""
 #: model:ir.model.fields,help:account.field_account_payment__multi
 #: model:ir.model.fields,help:account.field_account_register_payments__multi
 msgid ""
-"Technical field indicating if the user selected invoices from multiple "
-"partners or from different types."
+"Technical field indicating if the registering payment will generate multiple"
+" payments or not."
 msgstr ""
-"Technisches Feld, aus dem hervorgeht, ob der Benutzer Rechnungen von "
-"mehreren Partnern oder von verschiedenen Typen ausgewählt hat."
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice_refund__refund_only
@@ -10852,6 +10862,9 @@ msgid ""
 "There is no Transfer Account defined in the accounting settings. Please "
 "define one to be able to confirm this transfer."
 msgstr ""
+"Es ist kein Transferkonto definiert in der Buchhaltungeinrichtung. Sie "
+"müssen zuerst ein solches einrichten, bevor Sie diesen Transfer bestätigen "
+"können."
 
 #. module: account
 #: code:addons/account/models/account_bank_statement.py:181
@@ -11242,7 +11255,7 @@ msgstr "Gesamtbetrag"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_line_tax_audit_tree
 msgid "Total Base Amount"
-msgstr ""
+msgstr "Gesamtbetrag"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -11397,7 +11410,7 @@ msgstr "Überweisung an %s"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_search
 msgid "Transfers"
-msgstr "Bewegungen"
+msgstr "Transfers"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account__user_type_id
@@ -11499,7 +11512,7 @@ msgstr "Zähler der ungelesenen Nachrichten"
 #: model_terms:ir.ui.view,arch_db:account.account_unreconcile_view
 #, python-format
 msgid "Unreconcile"
-msgstr "Storno Ausgleich"
+msgstr "Ausgleich stornieren"
 
 #. module: account
 #: model:ir.actions.act_window,name:account.action_account_unreconcile
@@ -11534,7 +11547,7 @@ msgstr "Nettobetrag in Unternehmenswährung"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice__amount_untaxed_invoice_signed
 msgid "Untaxed Amount in Invoice Currency"
-msgstr ""
+msgstr "Nettobetrag in Rechnungswährung"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__price_total
