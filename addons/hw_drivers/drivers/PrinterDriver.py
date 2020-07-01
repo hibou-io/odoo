@@ -12,13 +12,17 @@ import base64
 import re
 import subprocess
 import tempfile
-from uuid import getnode as get_mac
 from PIL import Image, ImageOps
 
 from odoo import http, _
 from odoo.addons.hw_drivers.controllers.driver import event_manager, Driver, PPDs, conn, printers, cups_lock, iot_devices
 from odoo.addons.hw_drivers.tools import helpers
 from odoo.addons.hw_proxy.controllers.main import drivers as old_drivers
+
+try:
+    from odoo.addons.hw_drivers.controllers.driver import cm
+except:
+    cm = None
 
 _logger = logging.getLogger(__name__)
 
@@ -232,6 +236,7 @@ class PrinterDriver(Driver):
         ip = ''
         mac = ''
         homepage = ''
+        pairing_code = ''
 
         ssid = helpers.get_ssid()
         wlan = '\nWireless network:\n%s\n\n' % ssid
@@ -251,21 +256,21 @@ class PrinterDriver(Driver):
         else:
             ip = '\nIP Addresses:\n%s\n' % '\n'.join(ips)
 
-        mac_addr = get_mac()
-        h = iter(hex(mac_addr)[2:].zfill(12))
-        mac_addr = ":".join(i + next(h) for i in h)
-
         if len(ips) >= 1:
             ips_filtered = [i for i in ips if i != '127.0.0.1']
             main_ips = ips_filtered and ips_filtered[0] or '127.0.0.1'
-            mac = '\nMAC Address:\n%s\n' % mac_addr
+            mac = '\nMAC Address:\n%s\n' % helpers.get_mac_address()
             homepage = '\nHomepage:\nhttp://%s:8069\n\n' % main_ips
+
+        code = cm and cm.pairing_code
+        if code:
+            pairing_code = '\nPairing Code:\n%s\n' % code
 
         center = b'\x1b\x61\x01'
         title = b'\n\x1b\x21\x30\x1b\x4d\x01IoTBox Status\x1b\x4d\x00\x1b\x21\x00\n'
         cut = b'\x1d\x56\x41'
 
-        self.print_raw(center + title + wlan.encode() + mac.encode() + ip.encode() + homepage.encode() + cut + b'\n')
+        self.print_raw(center + title + wlan.encode() + mac.encode() + ip.encode() + homepage.encode() + pairing_code.encode() + cut + b'\n')
 
     def open_cashbox(self):
         """Sends a signal to the current printer to open the connected cashbox."""

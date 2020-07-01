@@ -20,6 +20,8 @@ echo "export LC_ALL=en_US.UTF-8" >> ~/.bashrc
 locale-gen
 source ~/.bashrc
 
+apt-mark hold firmware-brcm80211
+# upgrade firmware-brcm80211 broke access point on rpi4
 apt-get update && apt-get -y upgrade
 # Do not be too fast to upgrade to more recent firmware and kernel than 4.38
 # Firmware 4.44 seems to prevent the LED mechanism from working
@@ -120,6 +122,11 @@ PIP_TO_INSTALL="
     pycups"
 
 pip3 install ${PIP_TO_INSTALL}
+
+# Dowload MPD server and library for Six terminals
+wget 'https://nightly.odoo.com/master/iotbox/eftdvs' -P /usr/local/bin/
+chmod +x /usr/local/bin/eftdvs
+wget 'https://nightly.odoo.com/master/iotbox/eftapi.so' -P /usr/lib/
 
 groupadd usbusers
 usermod -a -G usbusers pi
