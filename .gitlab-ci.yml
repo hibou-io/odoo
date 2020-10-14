@@ -16,6 +16,7 @@ variables:
 
 before_script:
   - RELEASE=$(echo $CI_COMMIT_REF_SLUG | sed "s/^\([[:digit:]][[:digit:]]\)-\([[:digit:]]\)/\1\.\2/g" | sed "s/-hibou//g")
+  - RELEASE_DATE="$(echo $RELEASE | sed "s/-test//g")-$(date '+%Y-%m-%d')"
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
 
 build:
@@ -24,6 +25,8 @@ build:
     - docker pull $CONTAINER_IMAGE:$RELEASE || true
     - docker build --pull -t $CONTAINER_IMAGE:$RELEASE .
     - docker push $CONTAINER_IMAGE:$RELEASE
+    - docker tag $CONTAINER_IMAGE:$RELEASE $CONTAINER_IMAGE:$RELEASE_DATE
+    - docker push $CONTAINER_IMAGE:$RELEASE_DATE
 
 trigger:
   variables:
