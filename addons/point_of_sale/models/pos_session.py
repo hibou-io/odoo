@@ -418,7 +418,7 @@ class PosSession(models.Model):
                     # Combine stock lines
                     order_pickings = self.env['stock.picking'].search([
                         '|',
-                        ('origin', '=', order.name),
+                        ('origin', '=', '%s - %s' % (self.name, order.name)),
                         ('id', '=', order.picking_id.id)
                     ])
                     stock_moves = self.env['stock.move'].search([
@@ -429,7 +429,7 @@ class PosSession(models.Model):
                     for move in stock_moves:
                         exp_key = move.product_id.property_account_expense_id or move.product_id.categ_id.property_account_expense_categ_id
                         out_key = move.product_id.categ_id.property_stock_account_output_categ_id
-                        amount = -sum(move.stock_valuation_layer_ids.mapped('value'))
+                        amount = -sum(move.sudo().stock_valuation_layer_ids.mapped('value'))
                         stock_expense[exp_key] = self._update_amounts(stock_expense[exp_key], {'amount': amount}, move.picking_id.date, force_company_currency=True)
                         stock_output[out_key] = self._update_amounts(stock_output[out_key], {'amount': amount}, move.picking_id.date, force_company_currency=True)
 
@@ -503,7 +503,7 @@ class PosSession(models.Model):
         split_cash_receivable_vals = defaultdict(list)
         for payment, amounts in split_receivables_cash.items():
             statement = statements_by_journal_id[payment.payment_method_id.cash_journal_id.id]
-            split_cash_statement_line_vals[statement].append(self._get_statement_line_vals(statement, payment.payment_method_id.receivable_account_id, amounts['amount']))
+            split_cash_statement_line_vals[statement].append(self._get_statement_line_vals(statement, payment.payment_method_id.receivable_account_id, amounts['amount'], payment.payment_date.date()))
             split_cash_receivable_vals[statement].append(self._get_split_receivable_vals(payment, amounts['amount'], amounts['amount_converted']))
         # handle combine cash payments
         combine_cash_statement_line_vals = defaultdict(list)
@@ -611,7 +611,7 @@ class PosSession(models.Model):
         orders_to_invoice = self.order_ids.filtered(lambda order: not order.is_invoiced)
         stock_moves = (
             orders_to_invoice.mapped('picking_id') +
-            self.env['stock.picking'].search([('origin', 'in', orders_to_invoice.mapped('name'))])
+            self.env['stock.picking'].search([('origin', 'in', orders_to_invoice.mapped(lambda o: '%s - %s' % (self.name, o.name)))])
         ).mapped('move_lines')
         stock_account_move_lines = self.env['account.move'].search([('stock_move_id', 'in', stock_moves.ids)]).mapped('line_ids')
         for account_id in stock_output_lines:
@@ -724,9 +724,9 @@ class PosSession(models.Model):
         partial_args = {'account_id': out_account.id, 'move_id': self.move_id.id}
         return self._credit_amounts(partial_args, amount, amount_converted, force_company_currency=True)
 
-    def _get_statement_line_vals(self, statement, receivable_account, amount):
+    def _get_statement_line_vals(self, statement, receivable_account, amount, date=False):
         return {
-            'date': fields.Date.context_today(self),
+            'date': date or fields.Date.context_today(self),
             'amount': amount,
             'name': self.name,
             'statement_id': statement.id,

@@ -55,7 +55,7 @@ class AccountMove(models.Model):
     def _compute_l10n_latam_sequence(self):
         recs_with_journal_id = self.filtered('journal_id')
         for rec in recs_with_journal_id:
-            rec.l10n_latam_sequence_id = rec._get_document_type_sequence()
+            rec.l10n_latam_sequence_id = rec._get_document_type_sequence()[:1]
         remaining = self - recs_with_journal_id
         remaining.l10n_latam_sequence_id = False
 
@@ -134,6 +134,11 @@ class AccountMove(models.Model):
                 raise ValidationError(_('You can not use a %s document type with a refund invoice') % internal_type)
             elif internal_type == 'credit_note' and invoice_type in ['out_invoice', 'in_invoice']:
                 raise ValidationError(_('You can not use a %s document type with a invoice') % (internal_type))
+
+    def _get_name_invoice_report(self, report_xml_id):
+        """ method to be inherit by latam localizations that have an custom invoice reports """
+        self.ensure_one()
+        return report_xml_id
 
     def _get_l10n_latam_documents_domain(self):
         self.ensure_one()
