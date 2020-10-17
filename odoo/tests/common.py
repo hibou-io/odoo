@@ -1235,7 +1235,7 @@ class Form(object):
             order.append(fname)
 
             modifiers[fname] = {
-                modifier: domain if isinstance(domain, bool) else normalize_domain(domain)
+                modifier: bool(domain) if isinstance(domain, int) else normalize_domain(domain)
                 for modifier, domain in json.loads(f.get('modifiers', '{}')).items()
             }
             ctx = f.get('context')
@@ -1643,7 +1643,7 @@ class Form(object):
                         stored = UpdateDict(record_to_values(subfields, record))
 
                     updates = (
-                        (k, self._cleanup_onchange(subfields[k], v, None))
+                        (k, self._cleanup_onchange(subfields[k], v, stored.get(k)))
                         for k, v in command[2].items()
                         if k in subfields
                     )
