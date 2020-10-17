@@ -4,6 +4,7 @@ services:
 
 stages:
   - build
+  - build-release
   - trigger
 
 variables:
@@ -22,12 +23,31 @@ before_script:
 build:
   stage: build
   script:
+    - docker pull $CONTAINER_IMAGE:$RELEASE || true
     - docker build --pull -t $CONTAINER_IMAGE:$RELEASE .
     - docker push $CONTAINER_IMAGE:$RELEASE
     - docker tag $CONTAINER_IMAGE:$RELEASE $CONTAINER_IMAGE:$RELEASE_DATE
     - docker push $CONTAINER_IMAGE:$RELEASE_DATE
+  except:
+    - /^\d+\.\d+-hibou$/
+
+build-release:
+  variables:
+    GIT_STRATEGY: none
+  stage: build-release
+  script:
+    - apk add python3
+    - docker pull registry.gitlab.com/hibou-io/hibou-odoo/flow
+    - docker tag registry.gitlab.com/hibou-io/hibou-odoo/flow flow
+    - docker run -v "${PWD}/.local:/dest" flow self-install /dest
+    - cd .local/flow
+    - ./entrypoint.sh docker-release "${CONTAINER_IMAGE}:${RELEASE_DATE}" "${CONTAINER_IMAGE}:${RELEASE}" --pull-fail-strat backoff-days --pull-fail-strat-limit 14
+  only:
+    - /^\d+\.\d+-hibou$/
 
 trigger:
+  variables:
+    GIT_STRATEGY: none
   stage: trigger
   script:
     - docker run byrnedo/alpine-curl curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=$RELEASE $GITLAB_BASE_URL/api/v4/projects/$SUITE_PROJECT_ID/trigger/pipeline
