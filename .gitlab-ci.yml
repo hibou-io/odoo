@@ -41,7 +41,7 @@ build-release:
     - docker tag registry.gitlab.com/hibou-io/hibou-odoo/flow flow
     - docker run -v "${PWD}/.local:/dest" flow self-install /dest
     - cd .local/flow
-    - ./entrypoint.sh docker-release "${CONTAINER_IMAGE}:${RELEASE_DATE}" "${CONTAINER_IMAGE}" --pull-fail-strat backoff-days --pull-fail-strat-limit 14
+    - ./entrypoint.sh docker-release "${CONTAINER_IMAGE}:${RELEASE_DATE}" "${CONTAINER_IMAGE}:${RELEASE}" --pull-fail-strat backoff-days --pull-fail-strat-limit 14
   only:
     - /^\d+\.\d+-hibou$/
 
