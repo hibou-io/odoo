@@ -199,7 +199,7 @@ class HolidaysRequest(models.Model):
     request_date_to = fields.Date('Request End Date')
     # Interface fields used when using hour-based computation
     request_hour_from = fields.Selection([
-        ('0', '12:00 AM'), ('0.5', '0:30 AM'),
+        ('0', '12:00 AM'), ('0.5', '12:30 AM'),
         ('1', '1:00 AM'), ('1.5', '1:30 AM'),
         ('2', '2:00 AM'), ('2.5', '2:30 AM'),
         ('3', '3:00 AM'), ('3.5', '3:30 AM'),
@@ -211,7 +211,7 @@ class HolidaysRequest(models.Model):
         ('9', '9:00 AM'), ('9.5', '9:30 AM'),
         ('10', '10:00 AM'), ('10.5', '10:30 AM'),
         ('11', '11:00 AM'), ('11.5', '11:30 AM'),
-        ('12', '12:00 PM'), ('12.5', '0:30 PM'),
+        ('12', '12:00 PM'), ('12.5', '12:30 PM'),
         ('13', '1:00 PM'), ('13.5', '1:30 PM'),
         ('14', '2:00 PM'), ('14.5', '2:30 PM'),
         ('15', '3:00 PM'), ('15.5', '3:30 PM'),
@@ -224,7 +224,7 @@ class HolidaysRequest(models.Model):
         ('22', '10:00 PM'), ('22.5', '10:30 PM'),
         ('23', '11:00 PM'), ('23.5', '11:30 PM')], string='Hour from')
     request_hour_to = fields.Selection([
-        ('0', '12:00 AM'), ('0.5', '0:30 AM'),
+        ('0', '12:00 AM'), ('0.5', '12:30 AM'),
         ('1', '1:00 AM'), ('1.5', '1:30 AM'),
         ('2', '2:00 AM'), ('2.5', '2:30 AM'),
         ('3', '3:00 AM'), ('3.5', '3:30 AM'),
@@ -236,7 +236,7 @@ class HolidaysRequest(models.Model):
         ('9', '9:00 AM'), ('9.5', '9:30 AM'),
         ('10', '10:00 AM'), ('10.5', '10:30 AM'),
         ('11', '11:00 AM'), ('11.5', '11:30 AM'),
-        ('12', '12:00 PM'), ('12.5', '0:30 PM'),
+        ('12', '12:00 PM'), ('12.5', '12:30 PM'),
         ('13', '1:00 PM'), ('13.5', '1:30 PM'),
         ('14', '2:00 PM'), ('14.5', '2:30 PM'),
         ('15', '3:00 PM'), ('15.5', '3:30 PM'),
@@ -549,7 +549,13 @@ class HolidaysRequest(models.Model):
             else:
                 holiday.can_approve = True
 
-    @api.constrains('date_from', 'date_to', 'state', 'employee_id')
+    @api.constrains('date_from', 'date_to')
+    def _check_number_of_days(self):
+        leaves = self.filtered(lambda l: l.employee_id and not l.number_of_days)
+        if leaves:
+            raise ValidationError(_('The following employees are not supposed to work during that period:\n %s') % ','.join(leaves.mapped('employee_id.name')))
+
+    @api.constrains('date_from', 'date_to', 'employee_id')
     def _check_date(self):
         for holiday in self.filtered('employee_id'):
             domain = [
@@ -924,7 +930,7 @@ class HolidaysRequest(models.Model):
             'parent_id': self.id,
             'employee_id': employee.id,
             'state': 'validate',
-        } for employee in employees]
+        } for employee in employees if work_days_data[employee.id]['days']]
 
     def action_draft(self):
         if any(holiday.state not in ['confirm', 'refuse'] for holiday in self):

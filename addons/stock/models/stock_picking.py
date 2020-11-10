@@ -94,7 +94,7 @@ class PickingType(models.Model):
                 vals['sequence_id'] = self.env['ir.sequence'].create({
                     'name': _('Sequence') + ' ' + vals['sequence_code'],
                     'prefix': vals['sequence_code'], 'padding': 5,
-                    'company_id': self.env.company.id,
+                    'company_id': vals.get('company_id') or self.env.company.id,
                 }).id
 
         picking_type = super(PickingType, self).create(vals)
@@ -292,7 +292,7 @@ class Picking(models.Model):
         help="Date Promise to the customer on the top level document (SO/PO)")
     has_deadline_issue = fields.Boolean(
         "Is late", compute='_compute_has_deadline_issue', store=True, default=False,
-        help="Is late or will be late depending of the deadline and scheduled date")
+        help="Is late or will be late depending on the deadline and scheduled date")
     date = fields.Datetime(
         'Creation Date',
         default=fields.Datetime.now, index=True, tracking=True,
@@ -324,6 +324,7 @@ class Picking(models.Model):
         readonly=True)
     picking_type_entire_packs = fields.Boolean(related='picking_type_id.show_entire_packs',
         readonly=True)
+    hide_picking_type = fields.Boolean(compute='_compute_hide_pickign_type')
     partner_id = fields.Many2one(
         'res.partner', 'Contact',
         check_company=True,
@@ -347,13 +348,13 @@ class Picking(models.Model):
         help='Check the existence of destination packages on move lines')
     show_check_availability = fields.Boolean(
         compute='_compute_show_check_availability',
-        help='Technical field used to compute whether the check availability button should be shown.')
+        help='Technical field used to compute whether the button "Check Availability" should be displayed.')
     show_mark_as_todo = fields.Boolean(
         compute='_compute_show_mark_as_todo',
-        help='Technical field used to compute whether the mark as todo button should be shown.')
+        help='Technical field used to compute whether the button "Mark as Todo" should be displayed.')
     show_validate = fields.Boolean(
         compute='_compute_show_validate',
-        help='Technical field used to compute whether the validate should be shown.')
+        help='Technical field used to decide whether the button "Validate" should be displayed.')
     use_create_lots = fields.Boolean(related='picking_type_id.use_create_lots')
     owner_id = fields.Many2one(
         'res.partner', 'Assign Owner',
@@ -394,6 +395,9 @@ class Picking(models.Model):
         for picking in self:
             picking.has_deadline_issue = picking.date_deadline and picking.date_deadline < picking.scheduled_date or False
 
+    def _compute_hide_pickign_type(self):
+        self.hide_picking_type = self.env.context.get('default_picking_type_id', False)
+
     @api.depends('move_lines.delay_alert_date')
     def _compute_delay_alert_date(self):
         delay_alert_date_data = self.env['stock.move'].read_group([('id', 'in', self.move_lines.ids), ('delay_alert_date', '!=', False)], ['delay_alert_date:max'], 'picking_id')
@@ -414,7 +418,7 @@ class Picking(models.Model):
                 picking.products_availability_state = 'late'
             elif forecast_date:
                 picking.products_availability = _('Exp %s', format_date(self.env, forecast_date))
-                picking.products_availability_state = 'late' if picking.date_deadline < forecast_date else 'expected'
+                picking.products_availability_state = 'late' if picking.date_deadline and picking.date_deadline < forecast_date else 'expected'
 
     @api.depends('picking_type_id.show_operations')
     def _compute_show_operations(self):
@@ -570,7 +574,7 @@ class Picking(models.Model):
 
     @api.onchange('picking_type_id', 'partner_id')
     def onchange_picking_type(self):
-        if self.picking_type_id:
+        if self.picking_type_id and self.state == 'draft':
             self = self.with_company(self.company_id)
             if self.picking_type_id.default_location_src_id:
                 location_id = self.picking_type_id.default_location_src_id.id
@@ -586,11 +590,13 @@ class Picking(models.Model):
             else:
                 location_dest_id, supplierloc = self.env['stock.warehouse']._get_partner_locations()
 
-            if self.state == 'draft':
-                self.location_id = location_id
-                self.location_dest_id = location_dest_id
+            self.location_id = location_id
+            self.location_dest_id = location_dest_id
+            (self.move_lines | self.move_ids_without_package).update({
+                "picking_type_id": self.picking_type_id,
+                "company_id": self.company_id,
+            })
 
-        # TDE CLEANME move into onchange_partner_id
         if self.partner_id and self.partner_id.picking_warn:
             if self.partner_id.picking_warn == 'no-message' and self.partner_id.parent_id:
                 partner = self.partner_id.parent_id
@@ -642,6 +648,10 @@ class Picking(models.Model):
         if vals.get('partner_id'):
             for picking in res.filtered(lambda p: p.location_id.usage == 'supplier' or p.location_dest_id.usage == 'customer'):
                 picking.message_subscribe([vals.get('partner_id')])
+        if vals.get('picking_type_id'):
+            for move in res.move_lines:
+                if not move.description_picking:
+                    move.description_picking = move.product_id.with_context(lang=move._get_lang())._get_description(move.picking_id.picking_type_id)
 
         return res
 
@@ -669,6 +679,7 @@ class Picking(models.Model):
             self.mapped('move_lines').filtered(lambda move: not move.scrapped).write(after_vals)
         if vals.get('move_lines'):
             self._autoconfirm_picking()
+
         return res
 
     def unlink(self):
@@ -835,7 +846,7 @@ class Picking(models.Model):
             for pack in origin_packages:
                 if picking._check_move_lines_map_quant_package(pack):
                     package_level_ids = picking.package_level_ids.filtered(lambda pl: pl.package_id == pack)
-                    move_lines_to_pack = picking.move_line_ids.filtered(lambda ml: ml.package_id == pack)
+                    move_lines_to_pack = picking.move_line_ids.filtered(lambda ml: ml.package_id == pack and not ml.result_package_id)
                     if not package_level_ids:
                         self.env['stock.package_level'].create({
                             'picking_id': picking.id,
@@ -845,9 +856,11 @@ class Picking(models.Model):
                             'move_line_ids': [(6, 0, move_lines_to_pack.ids)],
                             'company_id': picking.company_id.id,
                         })
-                        move_lines_to_pack.write({
-                            'result_package_id': pack.id,
-                        })
+                        # TODO: in master, move package field in `stock` and clean code.
+                        if pack._allowed_to_move_between_transfers():
+                            move_lines_to_pack.write({
+                                'result_package_id': pack.id,
+                            })
                     else:
                         move_lines_in_package_level = move_lines_to_pack.filtered(lambda ml: ml.move_id.package_level_id)
                         move_lines_without_package_level = move_lines_to_pack - move_lines_in_package_level

@@ -180,8 +180,8 @@ class AccountPayment(models.Model):
 
         if not self.journal_id.payment_debit_account_id or not self.journal_id.payment_credit_account_id:
             raise UserError(_(
-                "You can't create a new payment without an outstanding payments/receipts accounts set on the %s journal."
-            ) % self.journal_id.display_name)
+                "You can't create a new payment without an outstanding payments/receipts account set on the %s journal.",
+                self.journal_id.display_name))
 
         # Compute amounts.
         write_off_amount = write_off_line_vals.get('amount', 0.0)
@@ -285,11 +285,16 @@ class AccountPayment(models.Model):
                 pay.is_reconciled = True
                 pay.is_matched = True
             else:
-                # The journal entry seems reconciled.
                 residual_field = 'amount_residual' if pay.currency_id == pay.company_id.currency_id else 'amount_residual_currency'
+                if pay.journal_id.default_account_id and pay.journal_id.default_account_id in liquidity_lines.account_id:
+                    # Allow user managing payments without any statement lines by using the bank account directly.
+                    # In that case, the user manages transactions only using the register payment wizard.
+                    pay.is_matched = True
+                else:
+                    pay.is_matched = pay.currency_id.is_zero(sum(liquidity_lines.mapped(residual_field)))
+
                 reconcile_lines = (counterpart_lines + writeoff_lines).filtered(lambda line: line.account_id.reconcile)
                 pay.is_reconciled = pay.currency_id.is_zero(sum(reconcile_lines.mapped(residual_field)))
-                pay.is_matched = pay.currency_id.is_zero(sum(liquidity_lines.mapped(residual_field)))
 
     @api.model
     def _get_method_codes_using_bank_account(self):

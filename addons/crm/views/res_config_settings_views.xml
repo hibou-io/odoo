@@ -82,18 +82,15 @@
                                     <field name="predictive_lead_scoring_fields_str" invisible="1"/>
                                 </div>
                                 <div class="mt16">
-                                    Start Date: Consider leads created as of the
+                                    Consider leads created as of the
                                     <field name="predictive_lead_scoring_start_date_str" invisible="1"/>
-                                    <field name="predictive_lead_scoring_start_date" required="1"/>
+                                    <field name="predictive_lead_scoring_start_date" class="oe_inline" required="1"/>
                                 </div>
                                 <div class="mt16" groups="base.group_erp_manager">
                                     <div class="text-muted">
-                                        By <b>updating lead probabilities</b>, you will regenerate the frequency table and recompute the probability of all the leads.
-                                        This can be useful after changing the start date (you need to save first !) or to ensure every lead probabilities are up to date.
-                                        <br/>
-                                        This can take up to several minutes depending on the number of leads you have !!!
+                                        Use this button to update the probabilities of all leads. This can take up to several minutes depending on how many there are.
                                     </div>
-                                    <button name="action_reset_lead_probabilities" type="object" string="Update" class="btn-primary"/>
+                                    <button name="action_reset_lead_probabilities" type="object" string="Update Probabilities" class="btn-primary"/>
                                 </div>
                             </div>
                         </div>
@@ -138,7 +135,7 @@
 
                             <div class="o_setting_right_pane" id="crm_iap_lead_settings">
                                 <label string="Lead Mining" for="module_crm_iap_lead"/>
-                                <a href="https://www.odoo.com/documentation/user/13.0/crm/acquire_leads/lead_mining.html" title="Documentation" class="o_doc_link" target="_blank"></a>
+                                <a href="https://www.odoo.com/documentation/user/14.0/crm/acquire_leads/lead_mining.html" title="Documentation" class="o_doc_link" target="_blank"></a>
                                 <div class="text-muted">
                                     Generate new leads based on their country, industry, size, etc.
                                 </div>
@@ -151,7 +148,7 @@
 
                             <div class="o_setting_right_pane" id="mail_client_extension">
                                 <label string="Outlook CRM Extension" for="module_mail_client_extension"/>
-                                <a href="https://www.odoo.com/documentation/user/crm/optimize/mail_client_extension.html" title="Documentation" class="o_doc_link" target="_blank"></a>
+                                <a href="https://www.odoo.com/documentation/user/crm/optimize/outlook_extension.html" title="Documentation" class="o_doc_link" target="_blank"></a>
                                 <div class="text-muted">
                                     Turn emails received in your Outlook mailbox into leads and log their content as internal notes.
                                 </div>
@@ -170,7 +167,7 @@
         <field name="view_id" ref="res_config_settings_view_form"/>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
-        <field name="context">{'module' : 'crm'}</field>
+        <field name="context">{'module' : 'crm', 'bin_size': False}</field>
     </record>
 
     <record id="crm_config_settings_menu" model="ir.ui.menu">

@@ -11,9 +11,9 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~13.5\n"
+"Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-01 07:28+0000\n"
+"POT-Creation-Date: 2020-09-29 13:45+0000\n"
 "PO-Revision-Date: 2020-09-07 08:11+0000\n"
 "Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2020\n"
 "Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
@@ -56,10 +56,10 @@ msgid ""
 "                                            Active Users\n"
 "                                        </span>"
 msgstr ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&gt;', '1')]}\">\n"
+"<span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '!=', '1')]}\">\n"
 "                                            Utente attivo\n"
 "                                        </span>\n"
-"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '&lt;=', '1')]}\">\n"
+"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('active_user_count', '==', '1')]}\">\n"
 "                                            Utenti attivi\n"
 "                                        </span>"
 
@@ -74,10 +74,10 @@ msgid ""
 "                                        </span>\n"
 "                                        <br/>"
 msgstr ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('company_count', '&gt;', '1')]}\">\n"
+"<span class=\"o_form_label\" attrs=\"{'invisible':[('company_count', '!=', '1')]}\">\n"
 "                                            Azienda\n"
 "                                        </span>\n"
-"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('company_count', '&lt;=', '1')]}\">\n"
+"                                        <span class=\"o_form_label\" attrs=\"{'invisible':[('company_count', '==', '1')]}\">\n"
 "                                            Aziende\n"
 "                                        </span>\n"
 "                                        <br/>"
@@ -92,10 +92,10 @@ msgid ""
 "                                                Languages\n"
 "                                            </span>"
 msgstr ""
-"<span class=\"o_form_label\" attrs=\"{'invisible':[('language_count', '&gt;', '1')]}\">\n"
+"<span class=\"o_form_label\" attrs=\"{'invisible':[('language_count', '!=', '1')]}\">\n"
 "                                                Lingua\n"
 "                                            </span>\n"
-"                                            <span class=\"o_form_label\" attrs=\"{'invisible':[('language_count', '&lt;=', '1')]}\">\n"
+"                                            <span class=\"o_form_label\" attrs=\"{'invisible':[('language_count', '==', '1')]}\">\n"
 "                                                Lingue\n"
 "                                            </span>"
 
@@ -187,7 +187,7 @@ msgstr "Consente agli utenti di sincronizzare i calendari con Google Calendar"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_microsoft_calendar
-msgid "Allow the users to synchronize their calendar with Office 365 Calendar"
+msgid "Allow the users to synchronize their calendar with Outlook Calendar"
 msgstr ""
 
 #. module: base_setup
@@ -506,7 +506,7 @@ msgstr "Ultima modifica il"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Layout"
-msgstr "Schema"
+msgstr "Struttura"
 
 #. module: base_setup
 #. openerp-web
@@ -518,7 +518,7 @@ msgstr "Carica dati dimostrativi"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Manage API Keys"
-msgstr ""
+msgstr "Gestisci chiavi API"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -586,11 +586,6 @@ msgstr "Odoo S.A."
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
-msgid "Office 365 Calendar"
-msgstr ""
-
-#. module: base_setup
-#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "On Apple Store"
 msgstr "Su Apple Store"
 
@@ -598,6 +593,11 @@ msgstr "Su Apple Store"
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "On Google Play"
 msgstr "Su Google Play"
+
+#. module: base_setup
+#: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
+msgid "Outlook Calendar"
+msgstr "Calendario Outlook"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__paperformat_id
@@ -619,7 +619,7 @@ msgstr "Inviti in attesa:"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Permissions"
-msgstr ""
+msgstr "Permessi"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -629,7 +629,7 @@ msgstr "Anteprima documento"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Send SMS"
-msgstr "Invia SMS"
+msgstr "Invio SMS"
 
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
@@ -664,7 +664,7 @@ msgstr "Sincronizzazione del calendario con Google Calendar"
 #. module: base_setup
 #: model_terms:ir.ui.view,arch_db:base_setup.res_config_settings_view_form
 msgid "Synchronize your calendar with Outlook"
-msgstr ""
+msgstr "Sincronizzazione del calendario con Outlook"
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_base_gengo
@@ -738,8 +738,9 @@ msgstr "altro"
 msgid ""
 "reCAPTCHA is a free service that protects your website from spam and abuse."
 msgstr ""
+"reCAPTCHA è un servizio gratuito che protegge i siti web da spam e abusi."
 
 #. module: base_setup
 #: model:ir.model.fields,field_description:base_setup.field_res_config_settings__module_google_recaptcha
 msgid "reCAPTCHA: Easy on Humans, Hard on Bots"
-msgstr ""
+msgstr "reCAPTCHA: facile per gli umani, difficile per i bot"

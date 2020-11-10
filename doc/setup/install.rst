@@ -136,7 +136,7 @@ used to install *Odoo Community Edition* by executing the following commands **a
 .. code-block:: console
 
     # wget -O - https://nightly.odoo.com/odoo.key | apt-key add -
-    # echo "deb http://nightly.odoo.com/13.0/nightly/deb/ ./" >> /etc/apt/sources.list.d/odoo.list
+    # echo "deb http://nightly.odoo.com/14.0/nightly/deb/ ./" >> /etc/apt/sources.list.d/odoo.list
     # apt-get update && apt-get install odoo
 
 You can then use the usual `apt-get upgrade` command to keep your installation up-to-date.
@@ -211,7 +211,7 @@ commands:
 
 .. code-block:: console
 
-    $ sudo dnf config-manager --add-repo=https://nightly.odoo.com/13.0/nightly/rpm/odoo.repo
+    $ sudo dnf config-manager --add-repo=https://nightly.odoo.com/14.0/nightly/rpm/odoo.repo
     $ sudo dnf install -y odoo
     $ sudo systemctl enable odoo
     $ sudo systemctl start odoo
@@ -518,7 +518,9 @@ On Debian/Unbuntu, the following command should install all the required librari
 
 .. code-block:: console
 
-    $ sudo apt install python3-dev libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev
+    $ sudo apt install python3-dev libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev \
+        libtiff5-dev libjpeg8-dev libopenjp2-7-dev zlib1g-dev libfreetype6-dev \
+        liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev libpq-dev
 
 Odoo dependencies are listed in the `requirements.txt` file located at the root of the Odoo
 community directory.

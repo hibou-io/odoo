@@ -135,6 +135,9 @@ class ChatWindow extends Component {
         if (!this._threadRef.comp || !this.chatWindow.threadViewer) {
             return;
         }
+        this.chatWindow.threadViewer.saveThreadCacheScrollHeightAsInitial(
+            this._threadRef.comp.getScrollHeight()
+        );
         this.chatWindow.threadViewer.saveThreadCacheScrollPositionsAsInitial(
             this._threadRef.comp.getScrollTop()
         );
@@ -206,34 +209,6 @@ class ChatWindow extends Component {
     }
 
     /**
-     * Handle focus of the chat window based on position of click. The click on
-     * chat window that folds it should NOT set focus on this chat window.
-     *
-     * @private
-     * @param {MouseEvent} ev
-     */
-    _onClick(ev) {
-        const chatWindowHeader = this._chatWindowHeaderRef.el;
-        if (chatWindowHeader && chatWindowHeader.contains(ev.target)) {
-            // handled in _onClickedHeader
-            return;
-        }
-        if (this.chatWindow.isFocused) {
-            return;
-        }
-        if (isEventHandled(ev, 'Message.authorOpenChat')) {
-            return;
-        }
-        if (isEventHandled(ev, 'Message.authorOpenProfile')) {
-            return;
-        }
-        if (isEventHandled(ev, 'PartnerImStatusIcon.openChat')) {
-            return;
-        }
-        this.chatWindow.focus();
-    }
-
-    /**
      * Called when clicking on header of chat window. Usually folds the chat
      * window.
      *
@@ -275,12 +250,6 @@ class ChatWindow extends Component {
      * @private
      */
     _onFocusout() {
-        if (this._inputRef.comp) {
-            this._inputRef.comp.focusout();
-        }
-        if (this._threadRef.comp) {
-            this._threadRef.comp.focusout();
-        }
         if (!this.chatWindow) {
             // ignore focus out due to record being deleted
             return;

@@ -414,7 +414,7 @@
                     <field name="invoice_partner_display_name" invisible="context.get('default_move_type') not in ('out_invoice', 'out_refund','out_receipt')" groups="base.group_user" string="Customer" />
                     <field name="invoice_date" optional="show" invisible="context.get('default_move_type') not in ('in_invoice', 'in_refund','in_receipt')" string="Bill Date"/>
                     <field name="invoice_date" optional="show" invisible="context.get('default_move_type') not in ('out_invoice', 'out_refund','out_receipt')" string="Invoice Date"/>
-                    <field name="invoice_date_due" widget="remaining_days" optional="show" attrs="{'invisible': [['payment_state', '=', 'paid']]}"/>
+                    <field name="invoice_date_due" widget="remaining_days" optional="show" attrs="{'invisible': [['payment_state', 'in', ('paid', 'in_payment', 'reversed')]]}"/>
                     <field name="invoice_origin" optional="hide" string="Source Document"/>
                     <field name="payment_reference" optional="hide" invisible="context.get('default_move_type') in ('out_invoice', 'out_refund','out_receipt')"/>
                     <field name="ref" optional="hide"/>
@@ -446,12 +446,29 @@
             </field>
         </record>
 
+        <record id="view_in_invoice_tree" model="ir.ui.view">
+            <field name="name">account.out.invoice.tree</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_invoice_tree"/>
+            <field name="mode">primary</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='ref']" position="attributes">
+                    <attribute name="optional">show</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='payment_state']" position="attributes">
+                    <attribute name="optional">hide</attribute>
+                </xpath>
+            </field>
+        </record>
+
         <record id="view_account_move_kanban" model="ir.ui.view">
             <field name="name">account.move.kanban</field>
             <field name="model">account.move</field>
             <field name="arch" type="xml">
                 <kanban class="o_kanban_mobile" sample="1">
                     <field name="journal_id"/>
+                    <field name="partner_id"/>
                     <field name="ref"/>
                     <field name="date"/>
                     <field name="state"/>
@@ -460,7 +477,12 @@
                             <div t-attf-class="oe_kanban_global_click">
                                 <div class="row mb4">
                                     <div class="col-6 o_kanban_record_headings">
-                                        <strong><span><field name="journal_id"/></span></strong>
+                                        <strong>
+                                            <span>
+                                                <field name="partner_id" attrs="{'invisible': [('partner_id', '=', False)]}" />
+                                                <field name="journal_id" attrs="{'invisible': [('partner_id', '!=', False)]}" />
+                                            </span>
+                                        </strong>
                                     </div>
                                     <div class="col-6 text-right">
                                         <strong><i class="fa fa-clock-o" aria-label="Date" role="img" title="Date"/> <t t-esc="record.date.value"/></strong>
@@ -638,7 +660,7 @@
                                 <field name="ref" nolabel="1" attrs="{'invisible':[('move_type', 'not in', ('in_invoice', 'in_receipt', 'in_refund'))]}" />
                                 <field name="ref" attrs="{'invisible':[('move_type', 'in', ('in_invoice', 'in_receipt', 'in_refund', 'out_invoice', 'out_refund'))]}"/>
                                 <field name="payment_reference"
-                                       attrs="{'invisible': ['|',('move_type', 'not in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt')), ('state', '=', 'draft')], 'readonly': [('state', '!=', 'draft')]}"/>
+                                       attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt'))], 'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="partner_bank_id"
                                        context="{'default_partner_id': commercial_partner_id}"
                                        domain="[('partner_id', '=', bank_partner_id)]"
@@ -1342,7 +1364,7 @@
             <field name="name">Bills</field>
             <field name="res_model">account.move</field>
             <field name="view_mode">tree,kanban,form</field>
-            <field name="view_id" ref="view_invoice_tree"/>
+            <field name="view_id" ref="view_in_invoice_tree"/>
             <field name="search_view_id" ref="view_account_invoice_filter"/>
             <field name="domain">[('move_type', '=', 'in_invoice')]</field>
             <field name="context">{'default_move_type': 'in_invoice'}</field>
@@ -1359,7 +1381,7 @@
             <field name="name">Refunds</field>
             <field name="res_model">account.move</field>
             <field name="view_mode">tree,kanban,form</field>
-            <field name="view_id" ref="view_invoice_tree"/>
+            <field name="view_id" ref="view_in_invoice_tree"/>
             <field name="search_view_id" ref="view_account_invoice_filter"/>
             <field name="domain">[('move_type', '=', 'in_refund')]</field>
             <field name="context">{'default_move_type': 'in_refund'}</field>
@@ -1394,7 +1416,7 @@
             <field name="name">Receipts</field>
             <field name="res_model">account.move</field>
             <field name="view_mode">tree,kanban,form</field>
-            <field name="view_id" ref="view_invoice_tree"/>
+            <field name="view_id" ref="view_in_invoice_tree"/>
             <field name="search_view_id" ref="view_account_invoice_filter"/>
             <field name="domain">[('move_type', '=', 'in_receipt')]</field>
             <field name="context">{'default_move_type': 'in_receipt'}</field>

@@ -18,9 +18,9 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~13.5\n"
+"Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-01 07:29+0000\n"
+"POT-Creation-Date: 2020-09-29 13:46+0000\n"
 "PO-Revision-Date: 2020-09-07 08:18+0000\n"
 "Last-Translator: Max-Milan Stoyanov, 2020\n"
 "Language-Team: German (https://www.transifex.com/odoo/teams/41243/de/)\n"
@@ -242,6 +242,16 @@ msgstr "Erstellt am"
 #: model:ir.model.fields,field_description:sms.field_sms_sms__partner_id
 msgid "Customer"
 msgstr "Kunde"
+
+#. module: sms
+#: model:sms.template,name:sms.sms_template_demo_0
+msgid "Customer: automated SMS"
+msgstr ""
+
+#. module: sms
+#: model:sms.template,body:sms.sms_template_demo_0
+msgid "Dear ${object.display_name} this is an automated SMS."
+msgstr ""
 
 #. module: sms
 #: model:ir.model.fields,field_description:sms.field_sms_template__null_value
@@ -1277,8 +1287,21 @@ msgid "You do not have access to the message and/or related document."
 msgstr ""
 
 #. module: sms
+#. openerp-web
+#: code:addons/sms/static/src/js/fields_sms_widget.js:0
+#, python-format
+msgid ""
+"Your SMS Text Message must include at least one non-whitespace character"
+msgstr ""
+
+#. module: sms
 #: model_terms:ir.ui.view,arch_db:sms.sms_composer_view_form
 msgid "are invalid."
+msgstr ""
+
+#. module: sms
+#: model_terms:ir.ui.view,arch_db:sms.sms_composer_view_form
+msgid "e.g. +1 415 555 0100"
 msgstr ""
 
 #. module: sms

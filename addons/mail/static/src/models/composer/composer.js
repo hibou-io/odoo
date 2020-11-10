@@ -103,6 +103,21 @@ function factory(dependencies) {
         }
 
         /**
+         * Focus this composer and remove focus from all others.
+         * Focus is a global concern, it makes no sense to have multiple composers focused at the
+         * same time.
+         */
+        focus() {
+            const allComposers = this.env.models['mail.composer'].all();
+            for (const otherComposer of allComposers) {
+                if (otherComposer !== this && otherComposer.hasFocus) {
+                    otherComposer.update({ hasFocus: false });
+                }
+            }
+            this.update({ hasFocus: true });
+        }
+
+        /**
          * Inserts text content in text input based on selection.
          *
          * @param {string} content
@@ -155,7 +170,7 @@ function factory(dependencies) {
                     recordReplacement = this[this.activeSuggestedRecordName].name;
                     break;
                 case 'activeSuggestedPartner':
-                    recordReplacement = this[this.activeSuggestedRecordName].name.replace(/ /g, '\u00a0');
+                    recordReplacement = this[this.activeSuggestedRecordName].name;
                     this.update({
                         mentionedPartners: [['link', this[this.activeSuggestedRecordName]]],
                     });
@@ -174,9 +189,9 @@ function factory(dependencies) {
          */
         _computeRecipients() {
             const recipients = [...this.mentionedPartners];
-            if (this.thread) {
+            if (this.thread && !this.isLog) {
                 for (const recipient of this.thread.suggestedRecipientInfoList) {
-                    if (recipient.isSelected) {
+                    if (recipient.partner && recipient.isSelected) {
                         recipients.push(recipient.partner);
                     }
                 }
@@ -254,30 +269,39 @@ function factory(dependencies) {
             if (thread.model === 'mail.channel') {
                 const command = this._getCommandFromText(body);
                 Object.assign(postData, {
-                    command,
-                    subtype_xmlid: 'mail.mt_comment'
+                    subtype_xmlid: 'mail.mt_comment',
                 });
-                messageId = await this.async(() => this.env.services.rpc({
-                    model: 'mail.channel',
-                    method: command ? 'execute_command' : 'message_post',
-                    args: [thread.id],
-                    kwargs: postData,
-                }));
+                if (command) {
+                    messageId = await this.async(() => this.env.models['mail.thread'].performRpcExecuteCommand({
+                        channelId: thread.id,
+                        command: command.name,
+                        postData,
+                    }));
+                } else {
+                    messageId = await this.async(() =>
+                        this.env.models['mail.thread'].performRpcMessagePost({
+                            postData,
+                            threadId: thread.id,
+                            threadModel: thread.model,
+                        })
+                    );
+                }
             } else {
                 Object.assign(postData, {
                     subtype_xmlid: this.isLog ? 'mail.mt_note' : 'mail.mt_comment',
                 });
-                messageId = await this.async(() => this.env.services.rpc({
-                    model: thread.model,
-                    method: 'message_post',
-                    args: [thread.id],
-                    kwargs: postData,
-                }));
+                messageId = await this.async(() =>
+                    this.env.models['mail.thread'].performRpcMessagePost({
+                        postData,
+                        threadId: thread.id,
+                        threadModel: thread.model,
+                    })
+                );
                 const [messageData] = await this.async(() => this.env.services.rpc({
                     model: 'mail.message',
                     method: 'message_format',
                     args: [[messageId]],
-                }));
+                }, { shadow: true }));
                 this.env.models['mail.message'].insert(Object.assign(
                     {},
                     this.env.models['mail.message'].convertData(messageData),
@@ -486,15 +510,18 @@ function factory(dependencies) {
          * @returns {mail.partner[]}
          */
         _computeMentionedPartners() {
-            const inputMentions = this.textInputContent.match(
-                new RegExp("@[^ ]+(?= |&nbsp;|$)", 'g')
-            ) || [];
             const unmentionedPartners = [];
+            // ensure the same mention is not used multiple times if multiple
+            // partners have the same name
+            const namesIndex = {};
             for (const partner of this.mentionedPartners) {
-                let inputMention = inputMentions.find(item => {
-                    return item === ("@" + partner.name).replace(/ /g, '\u00a0');
-                });
-                if (!inputMention) {
+                const fromIndex = namesIndex[partner.name] !== undefined
+                    ? namesIndex[partner.name] + 1 :
+                    0;
+                const index = this.textInputContent.indexOf(`@${partner.name}`, fromIndex);
+                if (index !== -1) {
+                    namesIndex[partner.name] = index;
+                } else {
                     unmentionedPartners.push(partner);
                 }
             }
@@ -509,15 +536,18 @@ function factory(dependencies) {
          * @returns {mail.partner[]}
          */
         _computeMentionedChannels() {
-            const inputMentions = this.textInputContent.match(
-                new RegExp("#[^ ]+(?= |&nbsp;|$)", 'g')
-            ) || [];
             const unmentionedChannels = [];
+            // ensure the same mention is not used multiple times if multiple
+            // channels have the same name
+            const namesIndex = {};
             for (const channel of this.mentionedChannels) {
-                let inputMention = inputMentions.find(item => {
-                    return item === ("#" + channel.name).replace(/ /g, '\u00a0');
-                });
-                if (!inputMention) {
+                const fromIndex = namesIndex[channel.name] !== undefined
+                    ? namesIndex[channel.name] + 1 :
+                    0;
+                const index = this.textInputContent.indexOf(`#${channel.name}`, fromIndex);
+                if (index !== -1) {
+                    namesIndex[channel.name] = index;
+                } else {
                     unmentionedChannels.push(channel);
                 }
             }
@@ -553,53 +583,64 @@ function factory(dependencies) {
          * @returns {string}
          */
         _generateMentionsLinks(body) {
-            if (this.mentionedPartners.length === 0 && this.mentionedChannels.length === 0) {
-                return body;
+            // List of mention data to insert in the body.
+            // Useful to do the final replace after parsing to avoid using the
+            // same tag twice if two different mentions have the same name.
+            const mentions = [];
+            for (const partner of this.mentionedPartners) {
+                const placeholder = `@-mention-partner-${partner.id}`;
+                const text = `@${owl.utils.escape(partner.name)}`;
+                mentions.push({
+                    class: 'o_mail_redirect',
+                    id: partner.id,
+                    model: 'res.partner',
+                    placeholder,
+                    text,
+                });
+                body = body.replace(text, placeholder);
             }
-            const inputMentions = body.match(new RegExp("(@|#)" + '[^ ]+(?= |&nbsp;|$)', 'g'));
-            const substrings = [];
-            let startIndex = 0;
-            for (const match of inputMentions) {
-                const suggestionDelimiter = match[0];
-                const matchName = owl.utils.escape(match.substring(1).replace(new RegExp('\u00a0', 'g'), ' '));
-                const endIndex = body.indexOf(match, startIndex) + match.length;
-                let field = "mentionedPartners";
-                let model = "res.partner";
-                let cssClass = "o_mail_redirect";
-                if (suggestionDelimiter === "#") {
-                    field = "mentionedChannels";
-                    model = "mail.channel";
-                    cssClass = "o_channel_redirect";
-                }
-                const mention = this[field].find(mention =>
-                    mention.name === matchName
-                );
-                let mentionLink = suggestionDelimiter + matchName;
-                if (mention) {
-                    const baseHREF = this.env.session.url('/web');
-                    const href = `href='${baseHREF}#model=${model}&id=${mention.id}'`;
-                    const attClass = `class='${cssClass}'`;
-                    const dataOeId = `data-oe-id='${mention.id}'`;
-                    const dataOeModel = `data-oe-model='${model}'`;
-                    const target = `target='_blank'`;
-                    mentionLink = `<a ${href} ${attClass} ${dataOeId} ${dataOeModel} ${target} >${suggestionDelimiter}${matchName}</a>`;
-                }
-                substrings.push(body.substring(startIndex, body.indexOf(match, startIndex)));
-                substrings.push(mentionLink);
-                startIndex = endIndex;
+            for (const channel of this.mentionedChannels) {
+                const placeholder = `#-mention-channel-${channel.id}`;
+                const text = `#${owl.utils.escape(channel.name)}`;
+                mentions.push({
+                    class: 'o_channel_redirect',
+                    id: channel.id,
+                    model: 'mail.channel',
+                    placeholder,
+                    text,
+                });
+                body = body.replace(text, placeholder);
             }
-            substrings.push(body.substring(startIndex, body.length));
-            return substrings.join('');
+            const baseHREF = this.env.session.url('/web');
+            for (const mention of mentions) {
+                const href = `href='${baseHREF}#model=${mention.model}&id=${mention.id}'`;
+                const attClass = `class='${mention.class}'`;
+                const dataOeId = `data-oe-id='${mention.id}'`;
+                const dataOeModel = `data-oe-model='${mention.model}'`;
+                const target = `target='_blank'`;
+                const link = `<a ${href} ${attClass} ${dataOeId} ${dataOeModel} ${target}>${mention.text}</a>`;
+                body = body.replace(mention.placeholder, link);
+            }
+            return body;
         }
 
         /**
          * @private
          * @param {string} content html content
-         * @returns {string|undefined} command, if any in the content
+         * @returns {mail.channel_command|undefined} command, if any in the content
          */
         _getCommandFromText(content) {
             if (content.startsWith('/')) {
-                return content.substring(1).split(/\s/)[0];
+                const firstWord = content.substring(1).split(/\s/)[0];
+                return this.env.messaging.commands.find(command => {
+                    if (command.name !== firstWord) {
+                        return false;
+                    }
+                    if (command.channel_types) {
+                        return command.channel_types.includes(this.thread.channel_type);
+                    }
+                    return true;
+                });
             }
             return undefined;
         }
@@ -634,6 +675,7 @@ function factory(dependencies) {
             if (this.suggestedCannedResponses[0]) {
                 this.update({
                     activeSuggestedCannedResponse: [['link', this.suggestedCannedResponses[0]]],
+                    hasToScrollToActiveSuggestion: true,
                 });
             } else {
                 this.update({
@@ -662,14 +704,17 @@ function factory(dependencies) {
             this.update({
                 suggestedChannels: [[
                     'insert-and-replace',
-                    mentions.map(data =>
-                        this.env.models['mail.thread'].convertData(data))
-                    ]],
+                    mentions.map(data => {
+                        const threadData = this.env.models['mail.thread'].convertData(data);
+                        return Object.assign({ model: 'mail.channel' }, threadData);
+                    })
+                ]],
             });
 
             if (this.suggestedChannels[0]) {
                 this.update({
                     activeSuggestedChannel: [['link', this.suggestedChannels[0]]],
+                    hasToScrollToActiveSuggestion: true,
                 });
             } else {
                 this.update({
@@ -682,18 +727,20 @@ function factory(dependencies) {
          * @param {string} mentionKeyword
          */
         _updateSuggestedChannelCommands(mentionKeyword) {
-            this.update({
-                suggestedChannelCommands: [[
-                    'replace',
-                    this.env.messaging.commands.filter(
-                        command => command.name.includes(mentionKeyword)
-                    )
-                ]],
+            const commands = this.env.messaging.commands.filter(command => {
+                if (!command.name.includes(mentionKeyword)) {
+                    return false;
+                }
+                if (command.channel_types) {
+                    return command.channel_types.includes(this.thread.channel_type);
+                }
+                return true;
             });
-
+            this.update({ suggestedChannelCommands: [['replace', commands]] });
             if (this.suggestedChannelCommands[0]) {
                 this.update({
                     activeSuggestedChannelCommand: [['link', this.suggestedChannelCommands[0]]],
+                    hasToScrollToActiveSuggestion: true,
                 });
             } else {
                 this.update({
@@ -738,10 +785,12 @@ function factory(dependencies) {
             if (this.mainSuggestedPartners[0]) {
                 this.update({
                     activeSuggestedPartner: [['link', this.mainSuggestedPartners[0]]],
+                    hasToScrollToActiveSuggestion: true,
                 });
             } else if (this.extraSuggestedPartners[0]) {
                 this.update({
                     activeSuggestedPartner: [['link', this.extraSuggestedPartners[0]]],
+                    hasToScrollToActiveSuggestion: true,
                 });
             } else {
                 this.update({
@@ -886,6 +935,13 @@ function factory(dependencies) {
             default: false,
         }),
         /**
+         * Determines whether the currently active suggestion should be scrolled
+         * into view.
+         */
+        hasToScrollToActiveSuggestion: attr({
+            default: false,
+        }),
+        /**
          * If true composer will log a note, else a comment will be posted.
          */
         isLog: attr({
@@ -925,6 +981,7 @@ function factory(dependencies) {
         recipients: many2many('mail.partner', {
             compute: '_computeRecipients',
             dependencies: [
+                'isLog',
                 'mentionedPartners',
                 'threadSuggestedRecipientInfoListIsSelected',
                 // FIXME thread.suggestedRecipientInfoList.partner should be a

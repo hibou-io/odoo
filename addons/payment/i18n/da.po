@@ -15,14 +15,15 @@
 # Ejner Sønniksen <ejner@vkdata.dk>, 2020
 # lhmflexerp <lhm@flexerp.dk>, 2020
 # Mads Søndergaard, 2020
+# Mads Søndergaard <mads@vkdata.dk>, 2020
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~13.5\n"
+"Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-01 07:29+0000\n"
+"POT-Creation-Date: 2020-10-29 15:48+0000\n"
 "PO-Revision-Date: 2020-09-07 08:15+0000\n"
-"Last-Translator: Mads Søndergaard, 2020\n"
+"Last-Translator: Mads Søndergaard <mads@vkdata.dk>, 2020\n"
 "Language-Team: Danish (https://www.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -171,8 +172,8 @@ msgstr ""
 #. module: payment
 #: code:addons/payment/models/account_invoice.py:0
 #, python-format
-msgid "A journal must be specified of the acquirer %s."
-msgstr "En journal skal være specificeret af modtager %s."
+msgid "A journal must be specified for the acquirer %s."
+msgstr ""
 
 #. module: payment
 #: code:addons/payment/models/account_invoice.py:0
@@ -366,8 +367,8 @@ msgstr "Autoriserings besked"
 
 #. module: payment
 #: model:payment.acquirer,name:payment.payment_acquirer_authorize
-msgid "Authorize.Net"
-msgstr "Authorize.Net"
+msgid "Authorize.net"
+msgstr ""
 
 #. module: payment
 #: model:ir.model.fields.selection,name:payment.selection__payment_transaction__state__authorized
@@ -640,6 +641,11 @@ msgstr "Kreditkort (i kraft af Buckaroo)"
 #: model:payment.acquirer,display_as:payment.payment_acquirer_ingenico
 msgid "Credit Card (powered by Ingenico)"
 msgstr "Kreditkort (i kraft af Ingenico)"
+
+#. module: payment
+#: model:payment.acquirer,display_as:payment.payment_acquirer_odoo_by_adyen
+msgid "Credit Card (powered by Odoo Payments)"
+msgstr ""
 
 #. module: payment
 #: model:payment.acquirer,display_as:payment.payment_acquirer_payulatam
@@ -951,7 +957,7 @@ msgstr ""
 #. module: payment
 #: model:ir.model.fields,field_description:payment.field_payment_acquirer__inbound_payment_method_ids
 msgid "Inbound Payment Methods"
-msgstr ""
+msgstr "Indgående Betalingsmetoder"
 
 #. module: payment
 #: model:payment.acquirer,name:payment.payment_acquirer_ingenico
@@ -1246,6 +1252,11 @@ msgid "Odoo Enterprise Module"
 msgstr "Odoo Enterprise Modul"
 
 #. module: payment
+#: model:payment.acquirer,name:payment.payment_acquirer_odoo_by_adyen
+msgid "Odoo Payments by Adyen"
+msgstr "Odoo Betalinger af Adyen"
+
+#. module: payment
 #. openerp-web
 #: code:addons/payment/static/src/js/payment_form.js:0
 #, python-format
@@ -1305,6 +1316,7 @@ msgstr "Partner navn"
 #. module: payment
 #: model:ir.model.fields.selection,name:payment.selection__payment_acquirer_onboarding_wizard__payment_method__paypal
 #: model:ir.model.fields.selection,name:payment.selection__res_company__payment_onboarding_payment_method__paypal
+#: model:payment.acquirer,name:payment.payment_acquirer_paypal
 msgid "PayPal"
 msgstr "PayPal"
 
@@ -1461,11 +1473,6 @@ msgstr "Fejlede betalinger"
 #, python-format
 msgid "Payments received"
 msgstr "Modtaget betalinger"
-
-#. module: payment
-#: model:payment.acquirer,name:payment.payment_acquirer_paypal
-msgid "Paypal"
-msgstr "Paypal"
 
 #. module: payment
 #: model:ir.model.fields,field_description:payment.field_payment_acquirer_onboarding_wizard__paypal_user_type
@@ -2111,6 +2118,7 @@ msgstr "Din ordre behandles, vent venligst ..."
 #: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_authorize
 #: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_buckaroo
 #: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_ingenico
+#: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_odoo_by_adyen
 #: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_paypal
 #: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_payu
 #: model_terms:payment.acquirer,auth_msg:payment.payment_acquirer_payulatam
@@ -2129,6 +2137,7 @@ msgstr "Din betaling er blevet godkendt."
 #: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_authorize
 #: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_buckaroo
 #: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_ingenico
+#: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_odoo_by_adyen
 #: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_paypal
 #: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_payu
 #: model_terms:payment.acquirer,cancel_msg:payment.payment_acquirer_payulatam
@@ -2154,6 +2163,7 @@ msgstr "Din betaling er modtaget, men skal bekræftes manuelt."
 #: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_authorize
 #: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_buckaroo
 #: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_ingenico
+#: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_odoo_by_adyen
 #: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_paypal
 #: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_payu
 #: model_terms:payment.acquirer,pending_msg:payment.payment_acquirer_payulatam
@@ -2172,6 +2182,7 @@ msgstr "Din betaling er behandlet, men venter på godkendelse."
 #: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_authorize
 #: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_buckaroo
 #: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_ingenico
+#: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_odoo_by_adyen
 #: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_paypal
 #: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_payu
 #: model_terms:payment.acquirer,done_msg:payment.payment_acquirer_payulatam

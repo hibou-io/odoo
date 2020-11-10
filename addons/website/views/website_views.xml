@@ -14,7 +14,7 @@
             <field name="res_model">ir.module.module</field>
             <field name="view_mode">kanban,tree,form</field>
             <field name="domain">['!', ('name', '=like', 'theme_%')]</field>
-            <field name="context" eval="{'search_default_category_id': ref('base.module_category_website_website')}"/>
+            <field name="context" eval="{'search_default_category_id': ref('base.module_category_website_website'), 'searchpanel_default_category_id': ref('base.module_category_website')}"/>
         </record>
 
 
@@ -443,6 +443,7 @@
         </record>
 
         <record id="theme_install_todo" model="ir.actions.todo">
+            <field name="name">Go to theme</field>
             <field name="action_id" ref="theme_install_act_url"/>
             <field name="sequence">0</field>
         </record>

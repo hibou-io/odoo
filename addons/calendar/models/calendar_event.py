@@ -135,7 +135,7 @@ class Meeting(models.Model):
         time_str = to_text(date.strftime(format_time))
 
         if zallday:
-            display_time = _("AllDay , %(day)s", day=date_str)
+            display_time = _("All Day, %(day)s", day=date_str)
         elif zduration < 24:
             duration = date + timedelta(minutes=round(zduration*60))
             duration_time = to_text(duration.strftime(format_time))
@@ -720,7 +720,7 @@ class Meeting(models.Model):
                 detached_events = event._apply_recurrence_values(recurrence_values)
                 detached_events.active = False
 
-        events.attendee_ids._send_mail_to_attendees('calendar.calendar_template_meeting_invitation')
+        events.filtered(lambda event: event.start > fields.Datetime.now()).attendee_ids._send_mail_to_attendees('calendar.calendar_template_meeting_invitation')
         events._sync_activities(fields={f for vals in vals_list for f in vals.keys() })
 
         # Notify attendees if there is an alarm on the created event, as it might have changed their

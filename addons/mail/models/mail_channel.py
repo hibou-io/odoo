@@ -264,8 +264,15 @@ class Channel(models.Model):
         return values
 
     def _subscribe_users(self):
+        to_create = []
         for mail_channel in self:
-            mail_channel.write({'channel_partner_ids': [(4, pid) for pid in mail_channel.mapped('group_ids').mapped('users').mapped('partner_id').ids]})
+            partners_to_add = mail_channel.group_ids.users.partner_id - mail_channel.channel_partner_ids
+            to_create += [{
+                'channel_id': mail_channel.id,
+                'partner_id': partner.id,
+            } for partner in partners_to_add]
+
+        self.env['mail.channel.partner'].create(to_create)
 
     def action_follow(self):
         self.ensure_one()
@@ -603,8 +610,12 @@ class Channel(models.Model):
                     info['is_pinned'] = partner_channel.is_pinned
 
             # add members infos
-            partner_ids = channel_partners.mapped('partner_id').ids
-            info['members'] = [partner_infos[partner] for partner in partner_ids]
+            if channel.channel_type != 'channel':
+                # avoid sending potentially a lot of members for big channels
+                # exclude chat and other small channels from this optimization because they are
+                # assumed to be smaller and it's important to know the member list for them
+                partner_ids = channel_partners.mapped('partner_id').ids
+                info['members'] = [partner_infos[partner] for partner in partner_ids]
             if channel.channel_type != 'channel':
                 info['seen_partners_info'] = [{
                     'id': cp.id,
@@ -668,6 +679,7 @@ class Channel(models.Model):
             # pin up the channel for the current partner
             if pin:
                 self.env['mail.channel.partner'].search([('partner_id', '=', self.env.user.partner_id.id), ('channel_id', '=', channel.id)]).write({'is_pinned': True})
+            channel._broadcast(self.env.user.partner_id.ids)
         else:
             # create a new one
             channel = self.create({
@@ -677,7 +689,6 @@ class Channel(models.Model):
                 'email_send': False,
                 'name': ', '.join(self.env['res.partner'].sudo().browse(partners_to).mapped('name')),
             })
-            # broadcast the channel header to the other partner (not me)
             channel._broadcast(partners_to)
         return channel.channel_info()[0]
 
@@ -731,8 +742,7 @@ class Channel(models.Model):
         self.ensure_one()
         channel_partners = self.env['mail.channel.partner'].search(
             [('partner_id', '=', self.env.user.partner_id.id), ('channel_id', '=', self.id)])
-        if not pinned:
-            self.env['bus.bus'].sendone((self._cr.dbname, 'res.partner', self.env.user.partner_id.id), self.channel_info('unsubscribe')[0])
+        self.env['bus.bus'].sendone((self._cr.dbname, 'res.partner', self.env.user.partner_id.id), self.channel_info('unsubscribe' if not pinned else False)[0])
         if channel_partners:
             channel_partners.write({'is_pinned': pinned})
 
@@ -851,6 +861,7 @@ class Channel(models.Model):
                 'info': 'typing_status',
                 'is_typing': is_typing,
                 'partner_id': self.env.user.partner_id.id,
+                'partner_name': self.env.user.partner_id.name,
             }
             notifications.append([(self._cr.dbname, 'mail.channel', channel.id), data]) # notify backend users
             notifications.append([channel.uuid, data]) # notify frontend users

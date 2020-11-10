@@ -17,6 +17,8 @@ from odoo.exceptions import UserError
 from odoo.modules.module import get_module_path, get_resource_path
 from odoo.tools.misc import file_open
 
+from ..models.ir_attachment import SUPPORTED_IMAGE_MIMETYPES
+
 logger = logging.getLogger(__name__)
 DEFAULT_LIBRARY_ENDPOINT = 'https://media-api.odoo.com'
 
@@ -224,7 +226,10 @@ class Web_Editor(http.Controller):
         else:
             # Find attachment by url. There can be multiple matches because of default
             # snippet images referencing the same image in /static/, so we limit to 1
-            attachment = request.env['ir.attachment'].search([('url', '=like', src)], limit=1)
+            attachment = request.env['ir.attachment'].search([
+                ('url', '=like', src),
+                ('mimetype', 'in', SUPPORTED_IMAGE_MIMETYPES),
+            ], limit=1)
         if not attachment:
             return {
                 'attachment': False,
@@ -526,13 +531,20 @@ class Web_Editor(http.Controller):
                 svg = file.read()
 
         user_colors = []
-        for key, color in kwargs.items():
-            match = re.match('^c([1-5])$', key)
-            if match:
+        for key, value in kwargs.items():
+            colorMatch = re.match('^c([1-5])$', key)
+            if colorMatch:
                 # Check that color is hex or rgb(a) to prevent arbitrary injection
-                if not re.match(r'(?i)^#[0-9A-F]{6,8}$|^rgba?\(\d{1,3},\d{1,3},\d{1,3}(?:,[0-9.]{1,4})?\)$', color.replace(' ', '')):
+                if not re.match(r'(?i)^#[0-9A-F]{6,8}$|^rgba?\(\d{1,3},\d{1,3},\d{1,3}(?:,[0-9.]{1,4})?\)$', value.replace(' ', '')):
                     raise werkzeug.exceptions.BadRequest()
-                user_colors.append([tools.html_escape(color), match.group(1)])
+                user_colors.append([tools.html_escape(value), colorMatch.group(1)])
+            elif key == 'flip':
+                if value == 'x':
+                    svg = svg.replace('<svg ', '<svg style="transform: scaleX(-1);" ')
+                elif value == 'y':
+                    svg = svg.replace('<svg ', '<svg style="transform: scaleY(-1)" ')
+                elif value == 'xy':
+                    svg = svg.replace('<svg ', '<svg style="transform: scale(-1)" ')
 
         default_palette = {
             '1': '#3AADAA',

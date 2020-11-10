@@ -828,10 +828,10 @@ tour.stepUtils.openBuggerMenu("li.breadcrumb-item.active:contains('Manufacturing
     content: _t('Edit the production order'),
     extra_trigger: 'body.o_web_client:not(.oe_wait)',
 }, {
-    trigger: ".o_field_widget[name=qty_producing]",
+    trigger: "input[name=qty_producing]",
+    position: 'left',
     content: _t("Produce"),
     run: "text 1",
-    extra_trigger: 'body.o_web_client:not(.oe_wait)',
 },
 ...tour.stepUtils.statusbarButtonsSteps('Mark as Done', _t("Mark as Done"), ".o_statusbar_status .btn.dropdown-toggle:contains('To Close')"),
 {
@@ -941,7 +941,7 @@ tour.stepUtils.mobileModifier(tour.stepUtils.autoExpandMoreButtons('.o_control_p
     position: "bottom",
 },
 ...tour.stepUtils.statusbarButtonsSteps('Confirm', _t("Validate"), ".breadcrumb-item.active:contains('Draft Invoice')"),
-...tour.stepUtils.statusbarButtonsSteps('Register Payment', _t("Register Payment"), ".breadcrumb-item.active:contains('INV/')"),
+...tour.stepUtils.statusbarButtonsSteps('Register Payment', _t("Register Payment"), ".o_statusbar_status .btn.dropdown-toggle:contains('Posted')"),
 {
     trigger: ".modal-footer .btn-primary",
     content: _t("Validate"),

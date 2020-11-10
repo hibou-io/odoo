@@ -277,6 +277,9 @@ class IrActionsActWindow(models.Model):
             "context", "domain", "filter", "groups_id", "limit", "res_id",
             "res_model", "search_view", "search_view_id", "target", "view_id",
             "view_mode", "views",
+            # `flags` is not a real field of ir.actions.act_window but is used
+            # to give the parameters to generate the action
+            "flags"
         }
 
 
@@ -372,7 +375,7 @@ class IrActionsServer(models.Model):
 #  - records: recordset of all records on which the action is triggered in multi-mode; may be void
 #  - time, datetime, dateutil, timezone: useful Python libraries
 #  - log: log(message, level='info'): logging function to record debug information in ir.logging table
-#  - Warning: Warning Exception to use with raise
+#  - UserError: Warning Exception to use with raise
 # To return an action, assign: action = {...}\n\n\n\n"""
 
     @api.model
@@ -601,6 +604,16 @@ class IrActionsServer(models.Model):
                     raise
 
             eval_context = self._get_eval_context(action)
+            records = eval_context.get('record') or eval_context['model']
+            records |= eval_context.get('records') or eval_context['model']
+            if records:
+                try:
+                    records.check_access_rule('write')
+                except AccessError:
+                    _logger.warning("Forbidden server action %r executed while the user %s does not have access to %s.",
+                        action.name, self.env.user.login, records,
+                    )
+                    raise
 
             runner, multi = action._get_runner()
             if runner and multi:
@@ -662,10 +675,10 @@ class IrServerObjectLines(models.Model):
                 try:
                     value = int(value)
                     if not self.env[line.col1.relation].browse(value).exists():
-                        record = self.env[line.col1.relation]._search([], limit=1)
+                        record = list(self.env[line.col1.relation]._search([], limit=1))
                         value = record[0] if record else 0
                 except ValueError:
-                    record = self.env[line.col1.relation]._search([], limit=1)
+                    record = list(self.env[line.col1.relation]._search([], limit=1))
                     value = record[0] if record else 0
                 line.resource_ref = '%s,%s' % (line.col1.relation, value)
             else:

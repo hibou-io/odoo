@@ -592,9 +592,9 @@ class MrpProduction(models.Model):
         self.move_finished_ids = [(2, move.id) for move in self.move_finished_ids]
         self.picking_type_id = self.bom_id.picking_type_id or self.picking_type_id
 
-    @api.onchange('date_planned_start')
+    @api.onchange('date_planned_start', 'product_id')
     def _onchange_date_planned_start(self):
-        if not self.is_planned:
+        if self.date_planned_start and not self.is_planned:
             date_planned_finished = self.date_planned_start + relativedelta(days=self.product_id.produce_delay)
             date_planned_finished = date_planned_finished + relativedelta(days=self.company_id.manufacturing_lead)
             if date_planned_finished == self.date_planned_start:
@@ -754,6 +754,13 @@ class MrpProduction(models.Model):
 
     @api.model
     def create(self, values):
+        # Remove from `move_finished_ids` the by-product moves and then move `move_byproduct_ids`
+        # into `move_finished_ids` to avoid duplicate and inconsistency.
+        if values.get('move_finished_ids', False):
+            values['move_finished_ids'] = list(filter(lambda move: move[2]['byproduct_id'] is False, values['move_finished_ids']))
+        if values.get('move_byproduct_ids', False):
+            values['move_finished_ids'] = values.get('move_finished_ids', []) + values['move_byproduct_ids']
+            del values['move_byproduct_ids']
         if not values.get('name', False) or values['name'] == _('New'):
             picking_type_id = values.get('picking_type_id') or self._get_default_picking_type()
             picking_type_id = self.env['stock.picking.type'].browse(picking_type_id)

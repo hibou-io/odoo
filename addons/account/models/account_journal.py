@@ -77,7 +77,7 @@ class AccountJournal(models.Model):
              "receivable account.", string='Outstanding Receipts Account',
         domain=lambda self: "[('deprecated', '=', False), ('company_id', '=', company_id), \
                              ('user_type_id.type', 'not in', ('receivable', 'payable')), \
-                             ('user_type_id', '=', %s)]" % self.env.ref('account.data_account_type_current_assets').id)
+                             '|', ('user_type_id', '=', %s), ('id', '=', default_account_id)]" % self.env.ref('account.data_account_type_current_assets').id)
     payment_credit_account_id = fields.Many2one(
         comodel_name='account.account', check_company=True, copy=False, ondelete='restrict',
         help="Outgoing payments entries triggered by bills/credit notes will be posted on the Outstanding Payments Account "
@@ -86,7 +86,7 @@ class AccountJournal(models.Model):
              "payable account.", string='Outstanding Payments Account',
         domain=lambda self: "[('deprecated', '=', False), ('company_id', '=', company_id), \
                              ('user_type_id.type', 'not in', ('receivable', 'payable')), \
-                             ('user_type_id', '=', %s)]" % self.env.ref('account.data_account_type_current_assets').id)
+                             '|', ('user_type_id', '=', %s), ('id', '=', default_account_id)]" % self.env.ref('account.data_account_type_current_assets').id)
     suspense_account_id = fields.Many2one(
         comodel_name='account.account', check_company=True, ondelete='restrict', readonly=False, store=True,
         compute='_compute_suspense_account_id',
@@ -468,6 +468,16 @@ class AccountJournal(models.Model):
                 return journal_code
 
     @api.model
+    def _prepare_liquidity_account_vals(self, company, code, vals):
+        return {
+            'name': vals.get('name'),
+            'code': code,
+            'user_type_id': self.env.ref('account.data_account_type_liquidity').id,
+            'currency_id': vals.get('currency_id'),
+            'company_id': company.id,
+        }
+
+    @api.model
     def _fill_missing_values(self, vals):
         journal_type = vals.get('type')
 
@@ -508,17 +518,9 @@ class AccountJournal(models.Model):
 
             # === Fill missing accounts ===
             if not has_liquidity_accounts:
-                liquidity_account = self.env['account.account'].create({
-                    'name': vals.get('name'),
-                    'code': self.env['account.account']._search_new_account_code(company, digits, liquidity_account_prefix),
-                    'user_type_id': liquidity_type.id,
-                    'currency_id': vals.get('currency_id'),
-                    'company_id': company.id,
-                })
-
-                vals.update({
-                    'default_account_id': liquidity_account.id,
-                })
+                default_account_code = self.env['account.account']._search_new_account_code(company, digits, liquidity_account_prefix)
+                default_account_vals = self._prepare_liquidity_account_vals(company, default_account_code, vals)
+                vals['default_account_id'] = self.env['account.account'].create(default_account_vals).id
             if not has_payment_accounts:
                 vals['payment_debit_account_id'] = self.env['account.account'].create({
                     'name': _("Outstanding Receipts"),
@@ -542,10 +544,6 @@ class AccountJournal(models.Model):
         # === Fill missing refund_sequence ===
         if 'refund_sequence' not in vals:
             vals['refund_sequence'] = vals['type'] in ('sale', 'purchase')
-
-        # === Fill missing alias name ===
-        if journal_type in ('sale', 'purchase') and 'alias_name' not in vals:
-            vals['alias_name'] = '%s-%s' % (company.name, vals.get('code'))
 
     @api.model
     def create(self, vals):
@@ -731,7 +729,12 @@ class AccountJournal(models.Model):
 
         accounts = self.payment_debit_account_id + self.payment_credit_account_id
         if not accounts:
-            return 0.0
+            return 0.0, 0
+
+        # Allow user managing payments without any statement lines.
+        # In that case, the user manages transactions only using the register payment wizard.
+        if self.default_account_id in accounts:
+            return 0.0, 0
 
         domain = (domain or []) + [
             ('account_id', 'in', tuple(accounts.ids)),

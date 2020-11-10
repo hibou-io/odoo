@@ -463,7 +463,7 @@ QUnit.test('basic chatter rendering without messages', async function (assert) {
 QUnit.test('chatter updating', async function (assert) {
     assert.expect(3);
 
-    this.data['mail.message'].records.push({ model: 'res.partner', res_id: 12 });
+    this.data['mail.message'].records.push({ body: "not empty", model: 'res.partner', res_id: 12 });
     this.data['res.partner'].records.push(
         { display_name: "first partner", id: 11 },
         { display_name: "second partner", id: 12 }
@@ -919,6 +919,40 @@ QUnit.test('Attachments that have been unlinked from server should be visually u
         document.querySelector('.o_ChatterTopbar_buttonCount').textContent,
         '1',
         "Partner1 should now have 1 attachment after it has been unlinked from server"
+    );
+});
+
+QUnit.test('chatter just contains "creating a new record" message during the creation of a new record after having displayed a chatter for an existing record', async function (assert) {
+    assert.expect(2);
+
+    this.data['res.partner'].records.push({ id: 12 });
+    await this.createView({
+        data: this.data,
+        hasView: true,
+        View: FormView,
+        model: 'res.partner',
+        res_id: 12,
+        arch: `
+            <form>
+                <div class="oe_chatter">
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        `,
+    });
+
+    await afterNextRender(() => {
+        document.querySelector('.o_form_button_create').click();
+    });
+    assert.containsOnce(
+        document.body,
+        '.o_Message',
+        "Should have a single message when creating a new record"
+    );
+    assert.strictEqual(
+        document.querySelector('.o_Message_content').textContent,
+        'Creating a new record...',
+        "the message content should be in accord to the creation of this record"
     );
 });
 

@@ -11,7 +11,6 @@ const components = {
     PartnerImStatusIcon: require('mail/static/src/components/partner_im_status_icon/partner_im_status_icon.js'),
 };
 const useStore = require('mail/static/src/component_hooks/use_store/use_store.js');
-const { markEventHandled } = require('mail/static/src/utils/utils.js');
 const { timeFromNow } = require('mail.utils');
 
 const { _lt } = require('web.core');
@@ -105,13 +104,6 @@ class Message extends Component {
     _constructor() {}
 
     mounted() {
-        // Remove all readmore before if any before reinsert them with _insertReadMoreLess.
-        // This is needed because _insertReadMoreLess is working with direct DOM mutations
-        // which are not sync with Owl.
-        for (const el of [...this._contentRef.el.querySelectorAll(':scope .o_Message_readMoreLess')]) {
-            el.remove();
-        }
-        this._insertReadMoreLess($(this._contentRef.el));
         this._update();
     }
 
@@ -401,6 +393,15 @@ class Message extends Component {
      * @private
      */
     _update() {
+        // Remove all readmore before if any before reinsert them with _insertReadMoreLess.
+        // This is needed because _insertReadMoreLess is working with direct DOM mutations
+        // which are not sync with Owl.
+        if (this._contentRef.el) {
+            for (const el of [...this._contentRef.el.querySelectorAll(':scope .o_Message_readMoreLess')]) {
+                el.remove();
+            }
+            this._insertReadMoreLess($(this._contentRef.el));
+        }
         this._wasSelected = this.props.isSelected;
         if (!this.state.timeElapsed) {
             this.state.timeElapsed = timeFromNow(this.message.date);
@@ -458,7 +459,6 @@ class Message extends Component {
         if (!this.hasAuthorOpenChat) {
             return;
         }
-        markEventHandled(ev, 'Message.authorOpenChat');
         this.message.author.openChat();
     }
 
@@ -470,7 +470,6 @@ class Message extends Component {
         if (!this.message.author) {
             return;
         }
-        markEventHandled(ev, 'Message.authorOpenProfile');
         this.message.author.openProfile();
     }
 

@@ -14,6 +14,12 @@ const {
 const Bus = require('web.Bus');
 const { makeTestPromise, file: { createFile, inputFiles } } = require('web.test_utils');
 
+const {
+    applyFilter,
+    toggleAddCustomFilter,
+    toggleFilterMenu,
+} = require('web.test_utils_control_panel');
+
 QUnit.module('mail', {}, function () {
 QUnit.module('components', {}, function () {
 QUnit.module('discuss', {}, function () {
@@ -513,6 +519,7 @@ QUnit.test('sidebar: channel rendering with needaction counter', async function 
     this.data['mail.channel'].records.push({ id: 20 });
     // expected needaction message
     this.data['mail.message'].records.push({
+        body: "not empty",
         channel_ids: [20], // link message to channel
         id: 100, // random unique id, useful to link notification
     });
@@ -1186,6 +1193,7 @@ QUnit.test('load single message from channel initially', async function (assert)
     // channel expected to be rendered, with a random unique id that will be referenced in the test
     this.data['mail.channel'].records.push({ id: 20 });
     this.data['mail.message'].records.push({
+        body: "not empty",
         channel_ids: [20],
         date: "2019-04-20 10:00:00",
         id: 100,
@@ -1554,6 +1562,7 @@ QUnit.test('load all messages from channel initially, less than fetch limit (29 
     this.data['res.partner'].records.push({ id: 11 });
     for (let i = 28; i >= 0; i--) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [20],
             date: "2019-04-20 10:00:00",
             model: 'mail.channel',
@@ -1613,6 +1622,7 @@ QUnit.test('load more messages from channel', async function (assert) {
     this.data['res.partner'].records.push({ id: 11 });
     for (let i = 0; i < 40; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [20],
             date: "2019-04-20 10:00:00",
             model: 'mail.channel',
@@ -1684,6 +1694,7 @@ QUnit.test('auto-scroll to bottom of thread', async function (assert) {
     this.data['mail.channel'].records.push({ id: 20 });
     for (let i = 1; i <= 25; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [20],
             model: 'mail.channel',
             res_id: 20,
@@ -1719,6 +1730,7 @@ QUnit.test('load more messages from channel (auto-load on scroll)', async functi
     this.data['mail.channel'].records.push({ id: 20 });
     for (let i = 0; i < 40; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [20],
             model: 'mail.channel',
             res_id: 20,
@@ -1784,6 +1796,7 @@ QUnit.test('new messages separator [REQUIRE FOCUS]', async function (assert) {
     });
     for (let i = 1; i <= 25; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [20],
             id: 100 + i, // for setting proper value for seen_message_id
             model: 'mail.channel',
@@ -1883,9 +1896,19 @@ QUnit.test('new messages separator [REQUIRE FOCUS]', async function (assert) {
 QUnit.test('restore thread scroll position', async function (assert) {
     assert.expect(6);
     // channels expected to be rendered, with random unique id that will be referenced in the test
-    this.data['mail.channel'].records.push({ id: 11 }, { id: 12 });
+    this.data['mail.channel'].records.push(
+        {
+            id: 11,
+            seen_message_id: 50, // prevent race condition with mark as seen (task-2372339)
+        },
+        {
+            id: 12,
+            seen_message_id: 50, // prevent race condition with mark as seen (task-2372339)
+        },
+    );
     for (let i = 1; i <= 25; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [11],
             model: 'mail.channel',
             res_id: 11,
@@ -1893,6 +1916,7 @@ QUnit.test('restore thread scroll position', async function (assert) {
     }
     for (let i = 1; i <= 24; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [12],
             model: 'mail.channel',
             res_id: 12,
@@ -2036,6 +2060,7 @@ QUnit.test('message origin redirect to channel', async function (assert) {
     this.data['mail.channel'].records.push({ id: 11 }, { id: 12 });
     this.data['mail.message'].records.push(
         {
+            body: "not empty",
             channel_ids: [11, 12],
             id: 100,
             model: 'mail.channel',
@@ -2043,6 +2068,7 @@ QUnit.test('message origin redirect to channel', async function (assert) {
             res_id: 11,
         },
         {
+            body: "not empty",
             channel_ids: [11, 12],
             id: 101,
             model: 'mail.channel',
@@ -2245,6 +2271,7 @@ QUnit.test('redirect to author (open chat)', async function (assert) {
     this.data['mail.message'].records.push(
         {
             author_id: 7,
+            body: "not empty",
             channel_ids: [1],
             id: 100,
             model: 'mail.channel',
@@ -2483,6 +2510,7 @@ QUnit.test('inbox: mark all messages as read', async function (assert) {
     this.data['mail.message'].records.push(
         // first expected message
         {
+            body: "not empty",
             channel_ids: [20], // link message to channel
             id: 100, // random unique id, useful to link notification
             // needaction needs to be set here for message_fetch domain, because
@@ -2491,6 +2519,7 @@ QUnit.test('inbox: mark all messages as read', async function (assert) {
         },
         // second expected message
         {
+            body: "not empty",
             channel_ids: [20], // link message to channel
             id: 101, // random unique id, useful to link notification
             // needaction needs to be set here for message_fetch domain, because
@@ -2586,8 +2615,8 @@ QUnit.test('starred: unstar all', async function (assert) {
 
     // messages expected to be starred
     this.data['mail.message'].records.push(
-        { starred_partner_ids: [this.data.currentPartnerId] },
-        { starred_partner_ids: [this.data.currentPartnerId] }
+        { body: "not empty", starred_partner_ids: [this.data.currentPartnerId] },
+        { body: "not empty", starred_partner_ids: [this.data.currentPartnerId] }
     );
     await this.start({
         discuss: {
@@ -2647,6 +2676,7 @@ QUnit.test('toggle_star message', async function (assert) {
     // with a random unique id, will be referenced in the test
     this.data['mail.channel'].records.push({ id: 20 });
     this.data['mail.message'].records.push({
+        body: "not empty",
         channel_ids: [20],
         id: 100,
         model: 'mail.channel',
@@ -3176,6 +3206,7 @@ QUnit.test('rendering of inbox message', async function (assert) {
     assert.expect(7);
 
     this.data['mail.message'].records.push({
+        body: "not empty",
         model: 'res.partner', // random existing model
         needaction: true, // for message_fetch domain
         needaction_partner_ids: [this.data.currentPartnerId], // for consistency
@@ -3228,6 +3259,7 @@ QUnit.test('mark channel as seen on last message visible [REQUIRE FOCUS]', async
     // and a random unique id that will be referenced in the test
     this.data['mail.channel'].records.push({ id: 10, message_unread_counter: 1 });
     this.data['mail.message'].records.push({
+        body: "not empty",
         channel_ids: [10],
         model: 'mail.channel',
         res_id: 10,
@@ -3318,6 +3350,7 @@ QUnit.test('receive new needaction messages', async function (assert) {
     // simulate receiving a new needaction message
     await afterNextRender(() => {
         const data = {
+            body: "not empty",
             id: 100,
             needaction_partner_ids: [3],
             model: 'res.partner',
@@ -3359,6 +3392,7 @@ QUnit.test('receive new needaction messages', async function (assert) {
     // simulate receiving another new needaction message
     await afterNextRender(() => {
         const data2 = {
+            body: "not empty",
             id: 101,
             needaction_partner_ids: [3],
             model: 'res.partner',
@@ -3533,6 +3567,7 @@ QUnit.test('load recent messages from thread (already loaded some old messages)'
     this.data['mail.channel'].records.push({ id: 20 });
     for (let i = 0; i < 50; i++) {
         this.data['mail.message'].records.push({
+            body: "not empty",
             channel_ids: [20], // id of related channel
             id: 100 + i, // random unique id, will be referenced in the test
             model: 'mail.channel', // expected value to link message to channel
@@ -3610,6 +3645,7 @@ QUnit.test('messages marked as read move to "History" mailbox', async function (
     // expected messages
     this.data['mail.message'].records.push(
         {
+            body: "not empty",
             id: 100, // random unique id, useful to link notification
             model: 'mail.channel', // value to link message to channel
             // needaction needs to be set here for message_fetch domain, because
@@ -3618,6 +3654,7 @@ QUnit.test('messages marked as read move to "History" mailbox', async function (
             res_id: 20, // id of related channel
         },
         {
+            body: "not empty",
             id: 101, // random unique id, useful to link notification
             model: 'mail.channel', // value to link message to channel
             // needaction needs to be set here for message_fetch domain, because
@@ -3734,11 +3771,13 @@ QUnit.test('mark a single message as read should only move this message to "Hist
 
     this.data['mail.message'].records.push(
         {
+            body: "not empty",
             id: 1,
             needaction: true,
             needaction_partner_ids: [this.data.currentPartnerId],
         },
         {
+            body: "not empty",
             id: 2,
             needaction: true,
             needaction_partner_ids: [this.data.currentPartnerId],
@@ -3856,6 +3895,7 @@ QUnit.test('all messages in "Inbox" in "History" after marked all as read', asyn
     for (let id = messageOffset; id < messageOffset + 40; id++) {
         // message expected to be found in Inbox
         this.data['mail.message'].records.push({
+            body: "not empty",
             id, // will be used to link notification to message
             // needaction needs to be set here for message_fetch domain, because
             // mocked models don't have computed fields
@@ -4179,6 +4219,78 @@ QUnit.test('auto-focus composer on opening thread', async function (assert) {
         document.querySelector(`.o_ComposerTextInput_textarea`),
         "composer of chat 'Demo User' should be automatically focused on opening"
     );
+});
+
+QUnit.test('mark channel as seen if last message is visible when switching channels when the previous channel had a more recent last message than the current channel', async function (assert) {
+    assert.expect(1);
+
+    this.data['mail.channel'].records.push(
+        { id: 10, message_unread_counter: 1, name: 'Bla' },
+        { id: 11, message_unread_counter: 1, name: 'Blu' },
+    );
+    this.data['mail.message'].records.push({
+        body: 'oldest message',
+        channel_ids: [10],
+        id: 10,
+    }, {
+        body: 'newest message',
+        channel_ids: [11],
+        id: 11,
+    });
+    await this.start({
+        discuss: {
+            context: {
+                active_id:  'mail.channel_11',
+            },
+        },
+    });
+    await afterNextRender(() => {
+        document.querySelector(`
+            .o_DiscussSidebar_item[data-thread-local-id="${
+                this.env.models['mail.thread'].findFromIdentifyingData({
+                    id: 10,
+                    model: 'mail.channel',
+                }).localId
+            }"]
+        `).click();
+    });
+    assert.doesNotHaveClass(
+        document.querySelector(`
+            .o_DiscussSidebar_item[data-thread-local-id="${
+                this.env.models['mail.thread'].findFromIdentifyingData({
+                    id: 10,
+                    model: 'mail.channel',
+                }).localId
+            }"]
+        `),
+        'o-unread',
+        "sidebar item of channel ID 10 should no longer be unread"
+    );
+});
+
+QUnit.test('add custom filter should filter messages accordingly to selected filter', async function (assert) {
+    assert.expect(4);
+
+    this.data['mail.channel'].records.push({
+        id: 20,
+        name: "General"
+    });
+    await this.start({
+        async mockRPC(route, args) {
+            if (args.method === 'message_fetch') {
+                const domainsAsStr = args.kwargs.domain.map(domain => domain.join(''));
+                assert.step(`message_fetch:${domainsAsStr.join(',')}`);
+            }
+            return this._super(...arguments);
+        },
+    });
+    assert.verifySteps(['message_fetch:needaction=true'], "A message_fetch request should have been done for needaction messages as inbox is selected by default");
+
+    // Open filter menu of control panel and select a custom filter (id = 0, the only one available)
+    await toggleFilterMenu(document.body);
+    await toggleAddCustomFilter(document.body);
+    await applyFilter(document.body);
+    assert.verifySteps(['message_fetch:id=0,needaction=true'], "A message_fetch request should have been done for selected filter & domain of current thread (inbox)");
 });
 
 });

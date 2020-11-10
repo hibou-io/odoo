@@ -7,15 +7,15 @@
 # Simone Bernini <simone@aperturelabs.it>, 2020
 # Paolo Valier, 2020
 # David Minneci <david@numeko.it>, 2020
-# Léonie Bouchat <lbo@odoo.com>, 2020
 # Luana Andronico <andronicoluana@gmail.com>, 2020
+# Léonie Bouchat <lbo@odoo.com>, 2020
 # Sergio Zanchetta <primes2h@gmail.com>, 2020
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~13.5\n"
+"Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-01 07:28+0000\n"
+"POT-Creation-Date: 2020-09-29 13:45+0000\n"
 "PO-Revision-Date: 2020-09-07 08:11+0000\n"
 "Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2020\n"
 "Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
@@ -59,6 +59,17 @@ msgstr "%s%% sconto sull'importo totale"
 #: model_terms:ir.ui.view,arch_db:coupon.report_coupon
 msgid "*Valid for following products:"
 msgstr ""
+
+#. module: coupon
+#: model:coupon.program,name:coupon.10_percent_coupon
+msgid "10% Discount"
+msgstr "Sconto 10%"
+
+#. module: coupon
+#: model:product.product,name:coupon.product_product_10_percent_discount
+#: model:product.template,name:coupon.product_product_10_percent_discount_product_template
+msgid "10.0% discount on total amount"
+msgstr "10,0% di sconto sull'importo totale"
 
 #. module: coupon
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_program_view_coupon_program_form
@@ -269,7 +280,7 @@ msgstr "Applicare sul primo"
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_program_view_promo_program_search
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_program_view_search
 msgid "Archived"
-msgstr "Archiviati"
+msgstr "In archivio"
 
 #. module: coupon
 #: model:ir.model.fields.selection,name:coupon.selection__coupon_program__promo_code_usage__no_code_needed
@@ -312,6 +323,11 @@ msgstr ""
 "                È possibile condividere i codici promozionali o concedere le promozioni automaticamente se alcune condizioni sono soddisfatte."
 
 #. module: coupon
+#: model:coupon.program,name:coupon.3_cabinets_plus_1_free
+msgid "Buy 3 large cabinets, get one for free"
+msgstr "Aquista 3 grandi armadietti e ricevine uno gratis"
+
+#. module: coupon
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_generate_view_form
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_view_form
 msgid "Cancel"
@@ -326,6 +342,11 @@ msgstr "Annullata"
 #: model:ir.model.fields,field_description:coupon.field_coupon_coupon__code
 msgid "Code"
 msgstr "Codice"
+
+#. module: coupon
+#: model:coupon.program,name:coupon.10_percent_auto_applied
+msgid "Code for 10% on orders"
+msgstr "Codice per 10% sugli ordini"
 
 #. module: coupon
 #: model:ir.model.fields,field_description:coupon.field_coupon_program__company_id
@@ -373,7 +394,7 @@ msgstr "Programma buoni sconto"
 #. module: coupon
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_program_view_coupon_program_form
 msgid "Coupon Program Name"
-msgstr ""
+msgstr "Nome programma buoni sconto"
 
 #. module: coupon
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_program_view_coupon_program_form
@@ -421,7 +442,7 @@ msgstr ""
 #: model:ir.model.fields,help:coupon.field_coupon_program__rule_partners_domain
 #: model:ir.model.fields,help:coupon.field_coupon_rule__rule_partners_domain
 msgid "Coupon program will work for selected customers only"
-msgstr "Il programma buono sconto funziona solo per i clienti selezionati"
+msgstr "Il programma buoni sconto funziona solo per i clienti selezionati"
 
 #. module: coupon
 #: model:ir.actions.server,name:coupon.expire_coupon_cron_ir_actions_server
@@ -481,7 +502,8 @@ msgstr "Cliente"
 #: model:ir.model.fields,help:coupon.field_coupon_program__reward_product_uom_id
 #: model:ir.model.fields,help:coupon.field_coupon_reward__reward_product_uom_id
 msgid "Default unit of measure used for all stock operations."
-msgstr "Unità di misura predefinita per ogni operazione di stoccaggio."
+msgstr ""
+"Unità di misura predefinita usata per tutte le operazioni di magazzino."
 
 #. module: coupon
 #: model:ir.model.fields,field_description:coupon.field_coupon_program__discount_percentage
@@ -589,6 +611,12 @@ msgstr "Prodotto gratuito"
 #, python-format
 msgid "Free Product - %s"
 msgstr "Prodotto gratuito - %s"
+
+#. module: coupon
+#: model:product.product,name:coupon.product_product_free_large_cabinet
+#: model:product.template,name:coupon.product_product_free_large_cabinet_product_template
+msgid "Free Product - Large Cabinet"
+msgstr "Prodotto gratuito - Armadietto grande"
 
 #. module: coupon
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_generate_view_form
@@ -1015,7 +1043,7 @@ msgstr "Stato"
 #. module: coupon
 #: model:ir.model.fields.selection,name:coupon.selection__coupon_rule__rule_minimum_amount_tax_inclusion__tax_excluded
 msgid "Tax Excluded"
-msgstr "Imposta esclusa"
+msgstr "Imponibile"
 
 #. module: coupon
 #: model:ir.model.fields.selection,name:coupon.selection__coupon_rule__rule_minimum_amount_tax_inclusion__tax_included
@@ -1063,6 +1091,14 @@ msgid "Unit of Measure"
 msgstr "Unità di misura"
 
 #. module: coupon
+#: model:product.product,uom_name:coupon.product_product_10_percent_discount
+#: model:product.product,uom_name:coupon.product_product_free_large_cabinet
+#: model:product.template,uom_name:coupon.product_product_10_percent_discount_product_template
+#: model:product.template,uom_name:coupon.product_product_free_large_cabinet_product_template
+msgid "Units"
+msgstr "Unità"
+
+#. module: coupon
 #: model:ir.model.fields.selection,name:coupon.selection__coupon_program__promo_code_usage__code_needed
 msgid "Use a code"
 msgstr "Usa un codice"
@@ -1091,12 +1127,12 @@ msgstr "Validità"
 #: model:ir.model.fields,field_description:coupon.field_coupon_program__validity_duration
 #: model_terms:ir.ui.view,arch_db:coupon.coupon_program_view_coupon_program_form
 msgid "Validity Duration"
-msgstr "Durata della validità"
+msgstr "Durata validità"
 
 #. module: coupon
 #: model:ir.model.fields,help:coupon.field_coupon_program__validity_duration
 msgid "Validity duration for a coupon after its generation"
-msgstr "Durata di validità di un buono sconto dopo la sua creazione"
+msgstr "Durata validità di un buono sconto dopo la creazione"
 
 #. module: coupon
 #: code:addons/coupon/models/coupon_program.py:0

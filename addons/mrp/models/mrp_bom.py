@@ -89,8 +89,12 @@ class MrpBom(models.Model):
     def _check_bom_lines(self):
         for bom in self:
             for bom_line in bom.bom_line_ids:
-                if bom.product_id and bom_line.product_id == bom.product_id:
-                    raise ValidationError(_("BoM line product %s should not be the same as BoM product.", bom.display_name))
+                if bom.product_id:
+                    same_product = bom.product_id == bom_line.product_id
+                else:
+                    same_product = bom.product_tmpl_id == bom_line.product_id.product_tmpl_id
+                if same_product:
+                    raise ValidationError(_("BoM line product %s should not be the same as BoM product.") % bom.display_name)
                 if bom.product_id and bom_line.bom_product_template_attribute_value_ids:
                     raise ValidationError(_("BoM cannot concern product %s and have a line with attributes (%s) at the same time.")
                         % (bom.product_id.display_name, ", ".join([ptav.display_name for ptav in bom_line.bom_product_template_attribute_value_ids])))
@@ -169,10 +173,10 @@ class MrpBom(models.Model):
     def _bom_find(self, product_tmpl=None, product=None, picking_type=None, company_id=False, bom_type=False):
         """ Finds BoM for particular product, picking and company """
         if product and product.type == 'service' or product_tmpl and product_tmpl.type == 'service':
-            return False
+            return self.env['mrp.bom']
         domain = self._bom_find_domain(product_tmpl=product_tmpl, product=product, picking_type=picking_type, company_id=company_id, bom_type=bom_type)
         if domain is False:
-            return domain
+            return self.env['mrp.bom']
         return self.search(domain, order='sequence, product_id', limit=1)
 
     def explode(self, product, quantity, picking_type=False):

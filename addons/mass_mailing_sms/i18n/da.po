@@ -11,16 +11,17 @@
 # Sanne Kristensen <sanne@vkdata.dk>, 2020
 # Ejner Sønniksen <ejner@vkdata.dk>, 2020
 # lhmflexerp <lhm@flexerp.dk>, 2020
-# Walther Barnett <wba@miracle.dk>, 2020
+# walther_b <wba@miracle.dk>, 2020
 # Mads Søndergaard, 2020
+# Mads Søndergaard <mads@vkdata.dk>, 2020
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~13.5\n"
+"Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-01 07:28+0000\n"
+"POT-Creation-Date: 2020-09-29 13:45+0000\n"
 "PO-Revision-Date: 2020-09-07 08:14+0000\n"
-"Last-Translator: Mads Søndergaard, 2020\n"
+"Last-Translator: Mads Søndergaard <mads@vkdata.dk>, 2020\n"
 "Language-Team: Danish (https://www.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -127,6 +128,11 @@ msgid "Attachment Count"
 msgstr "Antal vedhæftninger"
 
 #. module: mass_mailing_sms
+#: model:utm.tag,name:mass_mailing_sms.mailing_tag_0
+msgid "Bioutifoul SMS"
+msgstr "Bioutifoul SMS"
+
+#. module: mass_mailing_sms
 #: code:addons/mass_mailing_sms/controllers/main.py:0
 #, python-format
 msgid ""
@@ -141,7 +147,7 @@ msgstr "Afvis-listet"
 #. module: mass_mailing_sms
 #: model:ir.model.fields,field_description:mass_mailing_sms.field_mailing_contact__mobile_blacklisted
 msgid "Blacklisted Phone Is Mobile"
-msgstr ""
+msgstr "Blokeret Telefon er Mobiltelefon"
 
 #. module: mass_mailing_sms
 #: model:ir.ui.menu,name:mass_mailing_sms.phone_blacklist_menu
@@ -151,7 +157,7 @@ msgstr ""
 #. module: mass_mailing_sms
 #: model:ir.model.fields,field_description:mass_mailing_sms.field_mailing_contact__phone_blacklisted
 msgid "Blacklisted Phone is Phone"
-msgstr ""
+msgstr "Blokeret Telefon er Telefon"
 
 #. module: mass_mailing_sms
 #: model:ir.model.fields,field_description:mass_mailing_sms.field_sms_composer__utm_campaign_id
@@ -257,6 +263,14 @@ msgid "Exclude Blacklisted Phone"
 msgstr "Udeluk blokerede telefon"
 
 #. module: mass_mailing_sms
+#: model:mailing.mailing,name:mass_mailing_sms.mailing_sms_1
+#: model:mailing.mailing,sms_subject:mass_mailing_sms.mailing_sms_1
+#: model:mailing.mailing,subject:mass_mailing_sms.mailing_sms_1
+#: model:utm.source,name:mass_mailing_sms.mailing_sms_1_utm_source
+msgid "Extra Promo"
+msgstr "Ekstra kampagne"
+
+#. module: mass_mailing_sms
 #: model:ir.model.fields,field_description:mass_mailing_sms.field_mailing_trace__failure_type
 msgid "Failure type"
 msgstr "Fejltype"
@@ -351,6 +365,8 @@ msgid ""
 "If the sanitized phone number is on the blacklist, the contact won't receive"
 " mass mailing sms anymore, from any list"
 msgstr ""
+"Hvis det rensede telefonnummer er blokeret, vil kontakten ikke modtag masse "
+"mailing sms mere, fra hvilken som helst liste"
 
 #. module: mass_mailing_sms
 #: model:ir.model.fields,field_description:mass_mailing_sms.field_mailing_mailing__sms_allow_unsubscribe
@@ -365,6 +381,9 @@ msgid ""
 "distinguish which number is blacklisted             when there is both a "
 "mobile and phone field in a model."
 msgstr ""
+"Indikere om et blokeret renset telefonnummer er et mobil nummer. Hjælper med"
+" at kende forskel på hvilket nummer er blokeret      når der er både en "
+"mobil og telefon felt i en model. "
 
 #. module: mass_mailing_sms
 #: model:ir.model.fields,help:mass_mailing_sms.field_mailing_contact__phone_blacklisted
@@ -372,7 +391,7 @@ msgid ""
 "Indicates if a blacklisted sanitized phone number is a phone number. Helps "
 "distinguish which number is blacklisted             when there is both a "
 "mobile and phone field in a model."
-msgstr ""
+msgstr "Indikere om et blokeret renset telefonnummer er en telefon"
 
 #. module: mass_mailing_sms
 #: model:ir.model.fields.selection,name:mass_mailing_sms.selection__mailing_trace__failure_type__sms_credit
@@ -722,6 +741,11 @@ msgid "Test SMS marketing"
 msgstr "Test SMS marketing"
 
 #. module: mass_mailing_sms
+#: model_terms:mailing.list,toast_content:mass_mailing_sms.mailing_list_sms_0
+msgid "Thanks for subscribing!"
+msgstr "Tak for du abonnere!"
+
+#. module: mass_mailing_sms
 #: code:addons/mass_mailing_sms/models/mailing_mailing.py:0
 #, python-format
 msgid "There are no recipients selected."
@@ -737,6 +761,8 @@ msgstr "Der opstod en fejl ved forsøg på afmelding"
 msgid ""
 "This phone number is blacklisted for SMS Marketing. Click to unblacklist."
 msgstr ""
+"Dette telefonnummer er blokeret for SMS Marketing. Klik for at fjerne "
+"blokering."
 
 #. module: mass_mailing_sms
 #: model_terms:ir.ui.view,arch_db:mass_mailing_sms.mailing_mailing_view_form_sms
@@ -846,6 +872,15 @@ msgstr "Website kommunikations historik"
 #: model:ir.model.fields.selection,name:mass_mailing_sms.selection__mailing_trace__failure_type__sms_number_format
 msgid "Wrong Number Format"
 msgstr "Forkert nummer format"
+
+#. module: mass_mailing_sms
+#: model:mailing.mailing,name:mass_mailing_sms.mailing_sms_0
+#: model:mailing.mailing,sms_subject:mass_mailing_sms.mailing_sms_0
+#: model:mailing.mailing,subject:mass_mailing_sms.mailing_sms_0
+#: model:utm.campaign,name:mass_mailing_sms.utm_campaign_0
+#: model:utm.source,name:mass_mailing_sms.mailing_sms_0_utm_source
+msgid "XMas Promo"
+msgstr "Jule kampagne"
 
 #. module: mass_mailing_sms
 #: model_terms:ir.actions.act_window,help:mass_mailing_sms.mailing_mailing_action_sms

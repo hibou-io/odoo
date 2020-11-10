@@ -1807,18 +1807,33 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
     @api.model
     def _add_missing_default_values(self, values):
         # avoid overriding inherited values when parent is set
-        avoid_models = {
-            parent_model
-            for parent_model, parent_field in self._inherits.items()
-            if parent_field in values
-        }
+        avoid_models = set()
+
+        def collect_models_to_avoid(model):
+            for parent_mname, parent_fname in model._inherits.items():
+                if parent_fname in values:
+                    avoid_models.add(parent_mname)
+                else:
+                    # manage the case where an ancestor parent field is set
+                    collect_models_to_avoid(self.env[parent_mname])
+
+        collect_models_to_avoid(self)
+
+        def avoid(field):
+            # check whether the field is inherited from one of avoid_models
+            if avoid_models:
+                while field.inherited:
+                    field = field.related_field
+                    if field.model_name in avoid_models:
+                        return True
+            return False
 
         # compute missing fields
         missing_defaults = {
             name
             for name, field in self._fields.items()
             if name not in values
-            if not (field.inherited and field.related_field.model_name in avoid_models)
+            if not avoid(field)
         }
 
         if not missing_defaults:
@@ -2790,7 +2805,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 "Invalid _rec_name=%r for model %r" % (cls._rec_name, cls._name)
         elif 'name' in cls._fields:
             cls._rec_name = 'name'
-        elif 'x_name' in cls._fields:
+        elif cls._custom and 'x_name' in cls._fields:
             cls._rec_name = 'x_name'
 
         # 6. determine and validate active_name
@@ -4825,6 +4840,10 @@ Fields:
         """ stuff to do right after the registry is built """
         pass
 
+    def _unregister_hook(self):
+        """ Clean up what `~._register_hook` has done. """
+        pass
+
     @classmethod
     def _patch_method(cls, name, method):
         """ Monkey-patch a method for all instances of this model. This replaces
@@ -5264,7 +5283,7 @@ Fields:
                         model = model[fname]
                 if comparator in ('like', 'ilike', '=like', '=ilike', 'not ilike', 'not like'):
                     value_esc = value.replace('_', '?').replace('%', '*').replace('[', '?')
-                records = self.browse()
+                records_ids = set()
                 for rec in self:
                     data = rec.mapped(key)
                     if comparator in ('child_of', 'parent_of'):
@@ -5328,8 +5347,9 @@ Fields:
                         ok = bool(fnmatch.filter(data, value and value_esc.lower()))
                     else:
                         raise ValueError
-                    if ok: records |= rec
-                result.append(records)
+                    if ok:
+                       records_ids.add(rec.id)
+                result.append(self.browse(records_ids))
         while len(result)>1:
             result.append(result.pop() & result.pop())
         return result[0]
@@ -5483,8 +5503,13 @@ Fields:
 
     def __iter__(self):
         """ Return an iterator over ``self``. """
-        for id in self._ids:
-            yield self._browse(self.env, (id,), self._prefetch_ids)
+        if len(self._ids) > PREFETCH_MAX and self._prefetch_ids is self._ids:
+            for ids in self.env.cr.split_for_in_conditions(self._ids):
+                for id_ in ids:
+                    yield self._browse(self.env, (id_,), ids)
+        else:
+            for id in self._ids:
+                yield self._browse(self.env, (id,), self._prefetch_ids)
 
     def __contains__(self, item):
         """ Test whether ``item`` (record or field name) is an element of ``self``.
@@ -6058,20 +6083,34 @@ Fields:
                 if name not in values
             ]))
 
-        # prefetch x2many lines without data (for the initial snapshot)
+        # prefetch x2many lines: this speeds up the initial snapshot by avoiding
+        # to compute fields on new records as much as possible, as that can be
+        # costly and is not necessary at all
         for name, subnames in nametree.items():
             if subnames and values.get(name):
-                # retrieve all ids in commands
+                # retrieve all line ids in commands
                 line_ids = set()
                 for cmd in values[name]:
                     if cmd[0] in (1, 4):
                         line_ids.add(cmd[1])
                     elif cmd[0] == 6:
                         line_ids.update(cmd[2])
-                # build corresponding new lines, and prefetch fields
-                new_lines = self[name].browse(NewId(id_) for id_ in line_ids)
-                for subname in subnames:
-                    new_lines.mapped(subname)
+                # prefetch stored fields on lines
+                lines = self[name].browse(line_ids)
+                fnames = [subname
+                          for subname in subnames
+                          if lines._fields[subname].base_field.store]
+                lines._read(fnames)
+                # copy the cache of lines to their corresponding new records;
+                # this avoids computing computed stored fields on new_lines
+                new_lines = lines.browse(map(NewId, line_ids))
+                cache = self.env.cache
+                for fname in fnames:
+                    field = lines._fields[fname]
+                    cache.update(new_lines, field, [
+                        field.convert_to_cache(value, new_line, validate=False)
+                        for value, new_line in zip(cache.get_values(lines, field), new_lines)
+                    ])
 
         # Isolate changed values, to handle inconsistent data sent from the
         # client side: when a form view contains two one2many fields that
@@ -6200,8 +6239,9 @@ Fields:
 
             It is the responsibility of the generator to handle the field_name correctly.
             The generator could generate values for multiple fields together. In this case,
-            the field_name should be more a "field_group", covering the different fields
-            updated by the generator (e.g. "_address" for a generator updating multiple address fields).
+            the field_name should be more a "field_group" (should be begin by a "_"), covering
+            the different fields updated by the generator (e.g. "_address" for a generator
+            updating multiple address fields).
         """
         return []
 
