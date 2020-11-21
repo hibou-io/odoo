@@ -71,6 +71,7 @@ class StockPackageLevel(models.Model):
                                 'result_package_id': package_level.package_id.id,
                                 'package_level_id': package_level.id,
                                 'move_id': corresponding_move.id,
+                                'owner_id': quant.owner_id.id,
                             })
                     for rec, quant in ml_update_dict.items():
                         rec.qty_done = quant
@@ -146,8 +147,6 @@ class StockPackageLevel(models.Model):
         if vals.get('location_dest_id'):
             result.mapped('move_line_ids').write({'location_dest_id': vals['location_dest_id']})
             result.mapped('move_ids').write({'location_dest_id': vals['location_dest_id']})
-        if result.picking_id.state != 'draft' and result.location_id and result.location_dest_id and not result.move_ids and not result.move_line_ids:
-            result._generate_moves()
         return result
 
     def write(self, vals):
