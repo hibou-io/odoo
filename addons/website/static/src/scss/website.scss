@@ -458,6 +458,9 @@ table.table_desc tr td {
 // Three columns
 
 .s_three_columns {
+    .card .media_iframe_video {
+        width: 100%;
+    }
     .align-items-stretch .card {
         height: 100%;
     }
@@ -1146,6 +1149,10 @@ table.table_desc tr td {
 
 // Navbar Dropdown Menu
 header {
+    &#top {
+        z-index: $zindex-fixed;
+    }
+
     // In mobile there is no need to limit the height...
     @include media-breakpoint-up(lg) {
         .navbar .dropdown-menu {
