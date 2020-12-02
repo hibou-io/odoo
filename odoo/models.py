@@ -40,7 +40,7 @@ from operator import attrgetter, itemgetter
 
 import babel.dates
 import dateutil.relativedelta
-import psycopg2
+import psycopg2, psycopg2.extensions
 from lxml import etree
 from lxml.builder import E
 
@@ -509,7 +509,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         cls._inherits = {}
         cls._depends = {}
         cls._constraints = {}
-        cls._sql_constraints = []
+        cls._sql_constraints = {}
 
         for base in reversed(cls.__bases__):
             if not getattr(base, 'pool', None):
@@ -528,10 +528,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # cons may override a constraint with the same function name
                 cls._constraints[getattr(cons[0], '__name__', id(cons[0]))] = cons
 
-            cls._sql_constraints += base._sql_constraints
+            for cons in base._sql_constraints:
+                cls._sql_constraints[cons[0]] = cons
 
         cls._sequence = cls._sequence or (cls._table + '_id_seq')
         cls._constraints = list(cls._constraints.values())
+        cls._sql_constraints = list(cls._sql_constraints.values())
 
         # update _inherits_children of parent models
         for parent_name in cls._inherits:
@@ -668,19 +670,27 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             for r in missing
         )
         fields = ['module', 'model', 'name', 'res_id']
-        cr.copy_from(io.StringIO(
-            u'\n'.join(
-                u"%s\t%s\t%s\t%d" % (
-                    modname,
-                    record._name,
-                    xids[record.id][1],
-                    record.id,
-                )
-                for record in missing
-            )),
-            table='ir_model_data',
-            columns=fields,
-        )
+
+        # disable eventual async callback / support for the extent of
+        # the COPY FROM, as these are apparently incompatible
+        callback = psycopg2.extensions.get_wait_callback()
+        psycopg2.extensions.set_wait_callback(None)
+        try:
+            cr.copy_from(io.StringIO(
+                u'\n'.join(
+                    u"%s\t%s\t%s\t%d" % (
+                        modname,
+                        record._name,
+                        xids[record.id][1],
+                        record.id,
+                    )
+                    for record in missing
+                )),
+                table='ir_model_data',
+                columns=fields,
+            )
+        finally:
+            psycopg2.extensions.set_wait_callback(callback)
         self.env['ir.model.data'].invalidate_cache(fnames=fields)
 
         return (
@@ -830,14 +840,16 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         ModelData.clear_caches()
         extracted = self._extract_records(fields, data, log=messages.append)
         converted = self._convert_records(extracted, log=messages.append)
-        for id, xid, record, info in converted:
+        unknown_msg = _(u"Unknown database error: '%s'")
+        errors = 0
+        for i, (id, xid, record, info) in enumerate(converted, 1):
             try:
                 cr.execute('SAVEPOINT model_load_save')
             except psycopg2.InternalError as e:
                 # broken transaction, exit and hope the source error was
                 # already logged
                 if not any(message['type'] == 'error' for message in messages):
-                    messages.append(dict(info, type='error',message=u"Unknown database error: '%s'" % e))
+                    messages.append(dict(info, type='error', message=unknown_msg % e))
                 break
             try:
                 ids.append(ModelData._update(self._name, current_module, record, mode=mode,
@@ -847,18 +859,26 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 messages.append(dict(info, type='warning', message=str(e)))
                 cr.execute('ROLLBACK TO SAVEPOINT model_load_save')
             except psycopg2.Error as e:
-                messages.append(dict(info, type='error', **PGERROR_TO_OE[e.pgcode](self, fg, info, e)))
                 # Failed to write, log to messages, rollback savepoint (to
                 # avoid broken transaction) and keep going
                 cr.execute('ROLLBACK TO SAVEPOINT model_load_save')
+                messages.append(dict(info, type='error', **PGERROR_TO_OE[e.pgcode](self, fg, info, e)))
+                errors += 1
             except Exception as e:
-                _logger.exception("Error while loading record")
-                message = (_(u'Unknown error during import:') + u' %s: %s' % (type(e), e))
-                moreinfo = _('Resolve other errors first')
-                messages.append(dict(info, type='error', message=message, moreinfo=moreinfo))
+                _logger.debug("Error while loading record", exc_info=True)
                 # Failed for some reason, perhaps due to invalid data supplied,
                 # rollback savepoint and keep going
                 cr.execute('ROLLBACK TO SAVEPOINT model_load_save')
+                message = (_(u'Unknown error during import:') + u' %s: %s' % (type(e), e))
+                moreinfo = _('Resolve other errors first')
+                messages.append(dict(info, type='error', message=message, moreinfo=moreinfo))
+                errors += 1
+            if errors >= 10 and (errors >= i / 10):
+                messages.append({
+                    'type': 'warning',
+                    'message': _(u"Found more than 10 errors and more than one error per 10 records, interrupted to avoid showing too many errors.")
+                })
+                break
         if any(message['type'] == 'error' for message in messages):
             cr.execute('ROLLBACK TO SAVEPOINT model_load')
             ids = False
@@ -1580,19 +1600,34 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
     @api.model
     def _add_missing_default_values(self, values):
         # avoid overriding inherited values when parent is set
-        avoid_models = {
-            parent_model
-            for parent_model, parent_field in self._inherits.items()
-            if parent_field in values
-        }
+        avoid_models = set()
+
+        def collect_models_to_avoid(model):
+            for parent_mname, parent_fname in model._inherits.items():
+                if parent_fname in values:
+                    avoid_models.add(parent_mname)
+                else:
+                    # manage the case where an ancestor parent field is set
+                    collect_models_to_avoid(self.env[parent_mname])
+
+        collect_models_to_avoid(self)
+
+        def avoid(field):
+            # check whether the field is inherited from one of avoid_models
+            if avoid_models:
+                while field.inherited:
+                    field = field.related_field
+                    if field.model_name in avoid_models:
+                        return True
+            return False
 
         # compute missing fields
         missing_defaults = {
             name
             for name, field in self._fields.items()
             if name not in values
-            if self._log_access and name not in MAGIC_COLUMNS
-            if not (field.inherited and field.related_field.model_name in avoid_models)
+            if not (self._log_access and name in MAGIC_COLUMNS)
+            if not avoid(field)
         }
 
         if not missing_defaults:
@@ -1694,7 +1729,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
     def _read_group_prepare(self, orderby, aggregated_fields, annotated_groupbys, query):
         """
         Prepares the GROUP BY and ORDER BY terms for the read_group method. Adds the missing JOIN clause
-        to the query if order should be computed against m2o field. 
+        to the query if order should be computed against m2o field.
         :param orderby: the orderby definition in the form "%(field)s %(order)s"
         :param aggregated_fields: list of aggregated fields in the query
         :param annotated_groupbys: list of dictionaries returned by _read_group_process_groupby
@@ -1784,9 +1819,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         return {
             'field': split[0],
             'groupby': gb,
-            'type': field_type, 
+            'type': field_type,
             'display_format': display_formats[gb_function or 'month'] if temporal else None,
-            'interval': time_intervals[gb_function or 'month'] if temporal else None,                
+            'interval': time_intervals[gb_function or 'month'] if temporal else None,
             'tz_convert': tz_convert,
             'qualified_field': qualified_field
         }
@@ -1811,8 +1846,8 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
     @api.model
     def _read_group_format_result(self, data, annotated_groupbys, groupby, domain):
         """
-            Helper method to format the data contained in the dictionary data by 
-            adding the domain corresponding to its values, the groupbys in the 
+            Helper method to format the data contained in the dictionary data by
+            adding the domain corresponding to its values, the groupbys in the
             context and by properly formatting the date/datetime values.
 
         :param data: a single group
@@ -1883,10 +1918,10 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         :param domain: list specifying search criteria [['field_name', 'operator', 'value'], ...]
         :param list fields: list of fields present in the list view specified on the object
-        :param list groupby: list of groupby descriptions by which the records will be grouped.  
+        :param list groupby: list of groupby descriptions by which the records will be grouped.
                 A groupby description is either a field (then it will be grouped by that field)
                 or a string 'field:groupby_function'.  Right now, the only functions supported
-                are 'day', 'week', 'month', 'quarter' or 'year', and they only make sense for 
+                are 'day', 'week', 'month', 'quarter' or 'year', and they only make sense for
                 date/datetime fields.
         :param int offset: optional number of records to skip
         :param int limit: optional max number of records to return
@@ -1894,7 +1929,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                              overriding the natural sort ordering of the
                              groups, see also :py:meth:`~osv.osv.osv.search`
                              (supported only for many2one fields currently)
-        :param bool lazy: if true, the results are only grouped by the first groupby and the 
+        :param bool lazy: if true, the results are only grouped by the first groupby and the
                 remaining groupbys are put in the __context key.  If false, all the groupbys are
                 done in one call.
         :return: list of dictionaries(one dictionary for each record) containing:
@@ -2010,7 +2045,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             # Right now, read_group only fill results in lazy mode (by default).
             # If you need to have the empty groups in 'eager' mode, then the
             # method _read_group_fill_results need to be completely reimplemented
-            # in a sane way 
+            # in a sane way
             result = self._read_group_fill_results(
                 domain, groupby_fields[0], groupby[len(annotated_groupbys):],
                 aggregated_fields, count_field, result, read_group_order=order,
@@ -2414,6 +2449,15 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         cls._setup_done = True
 
+        # 5. determine and validate rec_name
+        if cls._rec_name:
+            assert cls._rec_name in cls._fields, \
+                "Invalid rec_name %s for model %s" % (cls._rec_name, cls._name)
+        elif 'name' in cls._fields:
+            cls._rec_name = 'name'
+        elif 'x_name' in cls._fields:
+            cls._rec_name = 'x_name'
+
     @api.model
     def _setup_fields(self):
         """ Setup the fields, except for recomputation triggers. """
@@ -2425,7 +2469,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             try:
                 field.setup_full(self)
             except Exception:
-                if not self.pool.loaded and field.base_field.manual:
+                if field.base_field.manual:
                     # Something goes wrong when setup a manual field.
                     # This can happen with related fields using another manual many2one field
                     # that hasn't been loaded because the comodel does not exist yet.
@@ -2437,6 +2481,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         for name in bad_fields:
             del cls._fields[name]
             delattr(cls, name)
+
+        # fix up _rec_name
+        if 'x_name' in bad_fields and cls._rec_name == 'x_name':
+            cls._rec_name = None
+            field = cls._fields['display_name']
+            field.depends = tuple(name for name in field.depends if name != 'x_name')
 
         # map each field to the fields computed with the same method
         groups = defaultdict(list)
@@ -2459,21 +2509,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             # set up field triggers (on database-persisted models only)
             for field in cls._fields.values():
                 # dependencies of custom fields may not exist; ignore that case
-                exceptions = (Exception,) if field.manual else ()
+                exceptions = (Exception,) if field.base_field.manual else ()
                 with tools.ignore(*exceptions):
                     field.setup_triggers(self)
 
         # register constraints and onchange methods
         cls._init_constraints_onchanges()
-
-        # validate rec_name
-        if cls._rec_name:
-            assert cls._rec_name in cls._fields, \
-                "Invalid rec_name %s for model %s" % (cls._rec_name, cls._name)
-        elif 'name' in cls._fields:
-            cls._rec_name = 'name'
-        elif 'x_name' in cls._fields:
-            cls._rec_name = 'x_name'
 
         # make sure parent_order is set when necessary
         if cls._parent_store and not cls._parent_order:
@@ -2775,11 +2816,11 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             if forbidden:
                 _logger.info(
                     _('The requested operation cannot be completed due to record rules: Document type: %s, Operation: %s, Records: %s, User: %s') % \
-                    (self._name, 'read', ','.join([str(r.id) for r in self][:6]), self._uid))
+                    (self._name, 'read', ','.join([str(r.id) for r in forbidden]), self._uid))
                 # store an access error exception in existing records
                 exc = AccessError(
                     _('The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n\n(Document type: %s, Operation: %s)') % (self._description, 'read')
-                    + ' - ({} {}, {} {})'.format(_('Records:'), self.ids[:6], _('User:'), self._uid)
+                    + ' - ({} {}, {} {})'.format(_('Records:'), forbidden.ids[:6], _('User:'), self._uid)
                 )
                 self.env.cache.set_failed(forbidden, self._fields.values(), exc)
 
@@ -2879,7 +2920,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     _('Missing document(s)') + ':' + _('One of the documents you are trying to access has been deleted, please try again after refreshing.')
                     + '\n\n({} {}, {} {}, {} {}, {} {})'.format(
                         _('Document type:'), self._description, _('Operation:'), operation,
-                        _('Records:'), missing_ids[:6], _('User:'), self._uid,
+                        _('Records:'), list(missing_ids)[:6], _('User:'), self._uid,
                     )
                 )
 
@@ -2944,22 +2985,24 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         self.check_access_rights('unlink')
 
-        # Check if the records are used as default properties.
-        refs = ['%s,%s' % (self._name, i) for i in self.ids]
-        if self.env['ir.property'].search([('res_id', '=', False), ('value_reference', 'in', refs)]):
-            raise UserError(_('Unable to delete this document because it is used as a default property'))
-
-        # Delete the records' properties.
         with self.env.norecompute():
             self.check_access_rule('unlink')
-            self.env['ir.property'].search([('res_id', 'in', refs)]).sudo().unlink()
 
             cr = self._cr
             Data = self.env['ir.model.data'].sudo().with_context({})
             Defaults = self.env['ir.default'].sudo()
+            Property = self.env['ir.property'].sudo()
             Attachment = self.env['ir.attachment']
 
             for sub_ids in cr.split_for_in_conditions(self.ids):
+                # Check if the records are used as default properties.
+                refs = ['%s,%s' % (self._name, i) for i in sub_ids]
+                if Property.search([('res_id', '=', False), ('value_reference', 'in', refs)], limit=1):
+                    raise UserError(_('Unable to delete this document because it is used as a default property'))
+
+                # Delete the records' properties.
+                Property.search([('res_id', 'in', refs)]).unlink()
+
                 query = "DELETE FROM %s WHERE id IN %%s" % self._table
                 cr.execute(query, (sub_ids,))
 
@@ -4010,7 +4053,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             # mark missing records in cache with a failed value
             exc = MissingError(
                 _("Record does not exist or has been deleted.")
-                + '\n\n({} {}, {} {})'.format(_('Records:'), (self - existing).ids[:6], _('User:'), self._uid)
+                + '\n\n({} {}, {} {})'.format(_('Records:'), (self - existing)[:6], _('User:'), self._uid)
             )
             self.env.cache.set_failed(self - existing, self._fields.values(), exc)
         return existing
@@ -4555,6 +4598,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             recs = self
             for name in func.split('.'):
                 recs = recs._mapped_func(operator.itemgetter(name))
+                if isinstance(recs, BaseModel):
+                    # allow feedback to self's prefetch object
+                    recs = recs.with_prefetch(self._prefetch)
             return recs
         else:
             return self._mapped_func(func)
@@ -4899,7 +4945,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     target0 = self
                 else:
                     env = self.env(user=SUPERUSER_ID, context={'active_test': False})
-                    target0 = env[model_name].search([(path, 'in', self.ids)])
+                    target0 = env[model_name].search([(path, 'in', self.ids)], order='id')
                     target0 = target0.with_env(self.env)
                 # prepare recomputation for each field on linked records
                 for field in stored:
@@ -5344,8 +5390,8 @@ def convert_pgerror_not_null(model, fields, info, e):
         return {'message': tools.ustr(e)}
 
     field_name = e.diag.column_name
-    field = fields[field_name]
-    message = _(u"Missing required value for the field '%s' (%s)") % (field['string'], field_name)
+    field_description = _get_translated_field_name(model, field_name)
+    message = _(u"Missing required value for the field '%s' (%s)") % (field_description, field_name)
     return {
         'message': message,
         'field': field_name,
@@ -5354,8 +5400,8 @@ def convert_pgerror_not_null(model, fields, info, e):
 def convert_pgerror_unique(model, fields, info, e):
     # new cursor since we're probably in an error handler in a blown
     # transaction which may not have been rollbacked/cleaned yet
-    with closing(model.env.registry.cursor()) as cr:
-        cr.execute("""
+    with closing(model.env.registry.cursor()) as cr_tmp:
+        cr_tmp.execute("""
             SELECT
                 conname AS "constraint name",
                 t.relname AS "table name",
@@ -5368,7 +5414,7 @@ def convert_pgerror_unique(model, fields, info, e):
             JOIN pg_class t ON t.oid = conrelid
             WHERE conname = %s
         """, [e.diag.constraint_name])
-        constraint, table, ufields = cr.fetchone() or (None, None, None)
+        constraint, table, ufields = cr_tmp.fetchone() or (None, None, None)
     # if the unique constraint is on an expression or on an other table
     if not ufields or model._table != table:
         return {'message': tools.ustr(e)}
@@ -5376,18 +5422,29 @@ def convert_pgerror_unique(model, fields, info, e):
     # TODO: add stuff from e.diag.message_hint? provides details about the constraint & duplication values but may be localized...
     if len(ufields) == 1:
         field_name = ufields[0]
-        field = fields[field_name]
-        message = _(u"The value for the field '%s' already exists (this is probably '%s' in the current model).") % (field_name, field['string'])
+        field_description = _get_translated_field_name(model, field_name)
+        message = _(u"The value for the field '%s' already exists (this is probably '%s' in the current model).") % (field_name, field_description)
         return {
             'message': message,
             'field': field_name,
         }
-    field_strings = [fields[fname]['string'] for fname in ufields]
+    field_strings = [_get_translated_field_name(model, fname) for fname in ufields]
     message = _(u"The values for the fields '%s' already exist (they are probably '%s' in the current model).") % (', '.join(ufields), ', '.join(field_strings))
     return {
         'message': message,
         # no field, unclear which one we should pick and they could be in any order
     }
+
+def _get_translated_field_name(model, field_name):
+    """From a lang-free environment, build a new one with the information from
+       the current user, to get the field(_name)'s description in its language.
+    """
+    field = model._fields[field_name]
+    ctx = model.env.user.context_get()  # get the lang
+    ctx.update(model.env.context)  # only overwrite it if not already there
+    env = model.with_context(ctx).env
+    return field._description_string(env)
+
 
 PGERROR_TO_OE = defaultdict(
     # shape of mapped converters

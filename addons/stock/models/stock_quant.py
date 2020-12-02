@@ -77,7 +77,10 @@ class StockQuant(models.Model):
     def check_quantity(self):
         for quant in self:
             if float_compare(quant.quantity, 1, precision_rounding=quant.product_uom_id.rounding) > 0 and quant.lot_id and quant.product_id.tracking == 'serial':
-                raise ValidationError(_('A serial number should only be linked to a single product.'))
+                message_base = _('A serial number should only be linked to a single product.')
+                message_quant = _('Please check the following serial number (name, id): ')
+                message_sn = '(%s, %s)' % (quant.lot_id.name, quant.lot_id.id)
+                raise ValidationError("\n".join([message_base, message_quant, message_sn]))
 
     @api.constrains('location_id')
     def check_location_id(self):
@@ -293,6 +296,22 @@ class StockQuant(models.Model):
         return reserved_quants
 
     @api.model
+    def _unlink_zero_quants(self):
+        """ _update_available_quantity may leave quants with no
+        quantity and no reserved_quantity. It used to directly unlink
+        these zero quants but this proved to hurt the performance as
+        this method is often called in batch and each unlink invalidate
+        the cache. We defer the calls to unlink in this method.
+        """
+        precision_digits = max(6, self.env.ref('product.decimal_product_uom').digits * 2)
+        # Use a select instead of ORM search for UoM robustness.
+        query = """SELECT id FROM stock_quant WHERE round(quantity::numeric, %s) = 0 AND round(reserved_quantity::numeric, %s) = 0;"""
+        params = (precision_digits, precision_digits)
+        self.env.cr.execute(query, params)
+        quant_ids = self.env['stock.quant'].browse([quant['id'] for quant in self.env.cr.dictfetchall()])
+        quant_ids.sudo().unlink()
+
+    @api.model
     def _merge_quants(self):
         """ In a situation where one transaction is updating a quant via
         `_update_available_quantity` and another concurrent one calls this function with the same
@@ -465,7 +484,7 @@ class QuantPackage(models.Model):
                     ('product_qty', '!=', 0),
                 ])
                 move_line_to_modify.write({'package_id': False})
-                package.mapped('quant_ids').write({'package_id': False})
+                package.mapped('quant_ids').sudo().write({'package_id': False})
 
     def action_view_picking(self):
         action = self.env.ref('stock.action_picking_tree_all').read()[0]

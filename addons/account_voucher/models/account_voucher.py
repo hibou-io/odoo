@@ -113,7 +113,7 @@ class AccountVoucher(models.Model):
                 ('type', 'in', ('bank', 'cash')),
                 ('company_id', '=', voucher.company_id.id),
             ]
-            if voucher.account_id and voucher.account_id.internal_type == 'liquidity':
+            if voucher.account_id:
                 field = 'default_debit_account_id' if voucher.voucher_type == 'sale' else 'default_credit_account_id'
                 domain.append((field, '=', voucher.account_id.id))
             voucher.payment_journal_id = self.env['account.journal'].search(domain, limit=1)
@@ -341,11 +341,16 @@ class AccountVoucher(models.Model):
             # When global rounding is activated, we must wait until all tax lines are computed to
             # merge them.
             if tax_calculation_rounding_method == 'round_globally':
-                self.env['account.move.line'].create(move_line)
+                # _apply_taxes modifies the dict move_line in place to account for included/excluded taxes
                 tax_lines_vals += self.env['account.move.line'].with_context(round=False)._apply_taxes(
                     move_line,
                     move_line.get('debit', 0.0) - move_line.get('credit', 0.0)
                 )
+                # rounding False means the move_line's amount are not rounded
+                currency = self.env['res.currency'].browse(company_currency)
+                move_line['debit'] = currency.round(move_line['debit'])
+                move_line['credit'] = currency.round(move_line['credit'])
+                self.env['account.move.line'].create(move_line)
             else:
                 self.env['account.move.line'].with_context(apply_taxes=True).create(move_line)
 
