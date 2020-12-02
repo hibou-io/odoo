@@ -1,4 +1,4 @@
-FROM python:3.7.6-slim-stretch
+FROM python:3.7.9-slim-stretch
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
