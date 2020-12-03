@@ -1,13 +1,14 @@
 FROM python:3.7.9-slim-stretch
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
-COPY --chown=104 ./requirements.txt /opt/odoo/odoo/requirements.txt
+COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
 RUN set -x; \
     # Add Odoo User
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
+        zip \
         curl \
         vim \
         #  for apt-key
@@ -23,14 +24,16 @@ RUN set -x; \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
+    #  install Python Requirements
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
+    && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
     # install node
     && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g less \
     #  install wkhtmltox
     && cd /tmp \
-    && curl -o wkhtmltox.deb -SL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
+    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
     && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \
     && dpkg --force-depends -i wkhtmltox.deb \
     && rm -rf wkhtmltox.deb \
@@ -41,13 +44,6 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-# More likely to change pieces
-COPY --chown=104 ./requirements-hibou.txt /opt/odoo/odoo/requirements-hibou.txt
-
-RUN set -x; \
-    pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
-    && rm -rf /root/.cache \
-    ;
 
 # Prime the uszipcode cache.
 USER 104
@@ -58,8 +54,10 @@ COPY --chown=104 . /opt/odoo/odoo
 
 RUN set -x; \
     cd /opt/odoo/odoo \
-    && python3 setup.py install \
+    && python setup.py install \
     && mv /opt/odoo/odoo/entrypoint.sh /entrypoint.sh \
+    && mv /opt/odoo/odoo/wait-for-psql.py /usr/local/bin/wait-for-psql.py \
+    && chmod a+x /usr/local/bin/wait-for-psql.py \
     && mkdir -p /etc/odoo/ \
     && chown -R odoo /etc/odoo \
     && cp /opt/odoo/odoo/debian/odoo.conf /etc/odoo/odoo.conf \
