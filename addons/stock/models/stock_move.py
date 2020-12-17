@@ -436,8 +436,8 @@ class StockMove(models.Model):
                 [('id', 'child_of', warehouse.view_location_id.id)],
                 ['id'],
             )]
-            forecast_lines = self.env['report.stock.report_product_product_replenishment']\
-                ._get_report_lines(None, product_variant_ids, wh_location_ids)
+            ForecastedReport = self.env['report.stock.report_product_product_replenishment']
+            forecast_lines = ForecastedReport.with_context(warehouse=warehouse.id)._get_report_lines(None, product_variant_ids, wh_location_ids)
             for move in moves:
                 lines = [l for l in forecast_lines if l["move_out"] == move._origin and l["replenishment_filled"] is True]
                 if lines:
@@ -469,11 +469,17 @@ class StockMove(models.Model):
 
     @api.depends('move_line_ids', 'move_line_ids.lot_id', 'move_line_ids.qty_done')
     def _compute_lot_ids(self):
+        domain_nosuggest = [('move_id', 'in', self.ids), ('lot_id', '!=', False), '|', ('qty_done', '!=', 0.0), ('product_qty', '=', 0.0)]
+        domain_suggest = [('move_id', 'in', self.ids), ('lot_id', '!=', False), ('qty_done', '!=', 0.0)]
+        lots_by_move_id_list = []
+        for domain in [domain_nosuggest, domain_suggest]:
+            lots_by_move_id = self.env['stock.move.line'].read_group(
+                domain,
+                ['move_id', 'lot_ids:array_agg(lot_id)'], ['move_id'],
+            )
+            lots_by_move_id_list.append({by_move['move_id'][0]: by_move['lot_ids'] for by_move in lots_by_move_id})
         for move in self:
-            if move.picking_type_id.show_reserved is False:
-                move.lot_ids = move.move_line_nosuggest_ids.filtered(lambda ml: ml.lot_id and not float_is_zero(ml.qty_done, precision_rounding=ml.product_uom_id.rounding)).lot_id
-            else:
-                move.lot_ids = move.move_line_ids.filtered(lambda ml: ml.lot_id and not float_is_zero(ml.qty_done, precision_rounding=ml.product_uom_id.rounding)).lot_id
+            move.lot_ids = lots_by_move_id_list[0 if move.picking_type_id.show_reserved else 1].get(move.id, [])
 
     def _set_lot_ids(self):
         for move in self:

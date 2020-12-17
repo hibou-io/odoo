@@ -81,6 +81,16 @@ class Message extends Component {
          */
         this._wasSelected;
         /**
+         * Value of the last rendered prettyBody. Useful to compare to new value
+         * to decide if it has to be updated.
+         */
+        this._lastPrettyBody;
+        /**
+         * Reference to element containing the prettyBody. Useful to be able to
+         * replace prettyBody with new value in JS (which is faster than t-raw).
+         */
+        this._prettyBodyRef = useRef('prettyBody');
+        /**
          * Reference to the content of the message.
          */
         this._contentRef = useRef('content');
@@ -158,13 +168,6 @@ class Message extends Component {
     }
 
     /**
-     * @returns {mail.attachment[]}
-     */
-    get imageAttachments() {
-        return this.message.attachments.filter(attachment => attachment.fileType === 'image');
-    }
-
-    /**
      * Tell whether the bottom of this message is visible or not.
      *
      * @param {Object} param0
@@ -211,14 +214,6 @@ class Message extends Component {
     get message() {
         return this.env.models['mail.message'].get(this.props.messageLocalId);
     }
-
-    /**
-     * @returns {mail.attachment[]}
-     */
-    get nonImageAttachments() {
-        return this.message.attachments.filter(attachment => attachment.fileType !== 'image');
-    }
-
     /**
      * @returns {string}
      */
@@ -386,6 +381,10 @@ class Message extends Component {
         if (!this.message) {
             return;
         }
+        if (this._prettyBodyRef.el && this.message.prettyBody !== this._lastPrettyBody) {
+            this._prettyBodyRef.el.innerHTML = this.message.prettyBody;
+            this._lastPrettyBody = this.message.prettyBody;
+        }
         // Remove all readmore before if any before reinsert them with _insertReadMoreLess.
         // This is needed because _insertReadMoreLess is working with direct DOM mutations
         // which are not sync with Owl.
@@ -536,7 +535,6 @@ class Message extends Component {
     _onClickOriginThread(ev) {
         // avoid following dummy href
         ev.preventDefault();
-        this.message.markAsRead();
         this.message.originThread.open();
     }
 

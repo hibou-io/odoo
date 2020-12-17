@@ -62,6 +62,7 @@ from .tools.misc import CountingStream, clean_context, DEFAULT_SERVER_DATETIME_F
 from .tools.translate import _
 from .tools import date_utils
 from .tools import populate
+from .tools.lru import LRU
 
 _logger = logging.getLogger(__name__)
 _schema = logging.getLogger(__name__ + '.schema')
@@ -1077,7 +1078,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         # make 'flush' available to the methods below, in the case where XMLID
         # resolution fails, for instance
-        flush_self = self.with_context(import_flush=flush)
+        flush_self = self.with_context(import_flush=flush, import_cache=LRU(1024))
 
         # TODO: break load's API instead of smuggling via context?
         limit = self._context.get('_import_limit')
@@ -5283,7 +5284,7 @@ Fields:
                         model = model[fname]
                 if comparator in ('like', 'ilike', '=like', '=ilike', 'not ilike', 'not like'):
                     value_esc = value.replace('_', '?').replace('%', '*').replace('[', '?')
-                records_ids = set()
+                records_ids = OrderedSet()
                 for rec in self:
                     data = rec.mapped(key)
                     if comparator in ('child_of', 'parent_of'):
@@ -6053,7 +6054,9 @@ Fields:
                         # diff(), therefore evaluating line._prefetch_ids with an empty
                         # cache simply returns nothing, which discards the prefetching
                         # optimization!
-                        record[name]
+                        record._cache[name] = tuple(
+                            line_snapshot['<record>'].id for line_snapshot in self[name]
+                        )
                         for line_snapshot in self[name]:
                             line = line_snapshot['<record>']
                             line = line._origin or line
@@ -6077,11 +6080,13 @@ Fields:
         nametree = PrefixTree(self.browse(), field_onchange)
 
         if first_call:
-            values.update(self.default_get([
-                name
-                for name in nametree
-                if name not in values
-            ]))
+            names = [name for name in values if name != 'id']
+            missing_names = [name for name in nametree if name not in values]
+            defaults = self.default_get(missing_names)
+            for name in missing_names:
+                values[name] = defaults.get(name, False)
+                if name in defaults:
+                    names.append(name)
 
         # prefetch x2many lines: this speeds up the initial snapshot by avoiding
         # to compute fields on new records as much as possible, as that can be

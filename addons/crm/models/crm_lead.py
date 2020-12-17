@@ -325,7 +325,15 @@ class Lead(models.Model):
     def _inverse_phone(self):
         for lead in self:
             if lead.partner_id and lead.phone != lead.partner_id.phone:
-                lead.partner_id.phone = lead.phone
+                # force reset
+                if not lead.phone or not lead.partner_id.phone:
+                    lead.partner_id.phone = lead.phone
+                # compare formatted values as we may have encoding differences between equivalent numbers
+                else:
+                    lead_phone_formatted = lead.phone_format(lead.phone)
+                    partner_phone_formatted = lead.phone_format(lead.partner_id.phone)
+                    if lead_phone_formatted != partner_phone_formatted:
+                        lead.partner_id.phone = lead.phone
 
     @api.depends('phone', 'country_id.code')
     def _compute_phone_state(self):
@@ -398,9 +406,18 @@ class Lead(models.Model):
     @api.depends('email_from', 'phone', 'partner_id')
     def _compute_ribbon_message(self):
         for lead in self:
-            partner_formatted_phone = lead.partner_id.phone and self.phone_format(lead.partner_id.phone)
             will_write_email = lead.partner_id and lead.email_from != lead.partner_id.email
-            will_write_phone = lead.partner_id and lead.phone != partner_formatted_phone
+            will_write_phone = False
+            if lead.partner_id and lead.phone != lead.partner_id.phone:
+                # if reset -> obviously new value will be propagated
+                if not lead.phone or not lead.partner_id.phone:
+                    will_write_phone = True
+                # otherwise compare formatted values as we may have encoding differences
+                else:
+                    lead_phone_formatted = lead.phone_format(lead.phone)
+                    partner_phone_formatted = lead.phone_format(lead.partner_id.phone)
+                    if lead_phone_formatted != partner_phone_formatted:
+                        will_write_phone = True
 
             if will_write_email and will_write_phone:
                 lead.ribbon_message = _('By saving this change, the customer email and phone number will also be updated.')
@@ -771,6 +788,7 @@ class Lead(models.Model):
     def _get_rainbowman_message(self):
         message = False
         if self.user_id and self.team_id and self.expected_revenue:
+            self.flush()  # flush fields to make sure DB is up to date
             query = """
                 SELECT
                     SUM(CASE WHEN user_id = %(user_id)s THEN 1 ELSE 0 END) as total_won,
