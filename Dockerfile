@@ -11,6 +11,10 @@ RUN set -x; \
         zip \
         curl \
         vim \
+        #  for openupgrade and Odoo upgrade script
+        git \
+        openssh-client \
+        rsync \
         #  for apt-key
         gnupg \
         #  for pip install \
@@ -27,6 +31,7 @@ RUN set -x; \
     #  install Python Requirements
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
     && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
+    && pip3 install git+git://github.com/OCA/openupgradelib.git \
     #  install wkhtmltox
     && cd /tmp \
     && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
