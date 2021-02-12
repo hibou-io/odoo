@@ -30,7 +30,7 @@ RUN set -x; \
     # install node
     && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g less \
+    && npm install -g less@3.0.4 less-plugin-clean-css \
     #  install wkhtmltox
     && cd /tmp \
     && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
