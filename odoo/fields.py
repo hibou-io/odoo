@@ -607,7 +607,7 @@ class Field(MetaField('DummyField', (object,), {})):
         Property._set_multi(self.name, self.model_name, values)
 
     def _search_company_dependent(self, records, operator, value):
-        Property = records.env['ir.property']
+        Property = records.env['ir.property'].sudo()
         return Property.search_multi(self.name, self.model_name, operator, value)
 
     #
@@ -814,6 +814,8 @@ class Field(MetaField('DummyField', (object,), {})):
             not column
             and len(self.related or ()) == 2
             and self.related_field.store and not self.related_field.compute
+            and not (self.related_field.type == 'binary' and self.related_field.attachment)
+            and self.related_field.type not in ('one2many', 'many2many')
         ):
             join_field = model._fields[self.related[0]]
             if (
@@ -2976,6 +2978,9 @@ class _RelationalMulti(_Relational):
             value = record.env[self.comodel_name].browse(value)
 
         if isinstance(value, BaseModel) and value._name == self.comodel_name:
+            def get_origin(val):
+                return val._origin if isinstance(val, BaseModel) else val
+
             # make result with new and existing records
             inv_names = {field.name for field in record._field_inverses[self]}
             result = [(6, 0, [])]
@@ -2994,7 +2999,7 @@ class _RelationalMulti(_Relational):
                         values = record._convert_to_write({
                             name: record[name]
                             for name in record._cache
-                            if name not in inv_names and record[name] != origin[name]
+                            if name not in inv_names and get_origin(record[name]) != origin[name]
                         })
                         if values:
                             result.append((1, origin.id, values))
@@ -3301,11 +3306,14 @@ class One2many(_RelationalMulti):
                         browse([command[1]])[inverse] = False
                     elif command[0] == 4:
                         browse([command[1]])[inverse] = recs[-1]
-                    elif command[0] in (5, 6):
+                    elif command[0] == 5:
+                        cache.update(recs, self, itertools.repeat(()))
+                    elif command[0] == 6:
                         # assign the given lines to the last record only
-                        cache.update(recs, self, [()] * len(recs))
-                        lines = comodel.browse(command[2] if command[0] == 6 else [])
-                        cache.set(recs[-1], self, lines._ids)
+                        cache.update(recs, self, itertools.repeat(()))
+                        last, lines = recs[-1], browse(command[2])
+                        cache.set(last, self, lines._ids)
+                        cache.update(lines, inverse_field, itertools.repeat(last.id))
 
         else:
             def link(record, lines):
@@ -3502,6 +3510,7 @@ class Many2many(_RelationalMulti):
         context.update(self.context)
         comodel = records.env[self.comodel_name].with_context(**context)
         domain = self.get_domain_list(records)
+        comodel._flush_search(domain)
         wquery = comodel._where_calc(domain)
         comodel._apply_ir_rules(wquery, 'read')
         order_by = comodel._generate_order_by(None, wquery)
