@@ -11,6 +11,7 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
   CONTAINER_IMAGE: registry.gitlab.com/hibou-io/hibou-odoo/odoo
+  DOCKERHUB_IMAGE: hibou/hibou-odoo
   GITLAB_BASE_URL: https://gitlab.com
   SUITE_PROJECT_ID: 10003343
   ENTERPRISE_PROJECT_ID: 10004745
@@ -28,6 +29,11 @@ build:
     - docker push $CONTAINER_IMAGE:$RELEASE
     - docker tag $CONTAINER_IMAGE:$RELEASE $CONTAINER_IMAGE:$RELEASE_DATE
     - docker push $CONTAINER_IMAGE:$RELEASE_DATE
+    - docker login -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}"
+    - docker tag $CONTAINER_IMAGE:$RELEASE $DOCKERHUB_IMAGE:$RELEASE
+    - docker push $DOCKERHUB_IMAGE:$RELEASE
+    - docker tag $DOCKERHUB_IMAGE:$RELEASE $DOCKERHUB_IMAGE:$RELEASE_DATE
+    - docker push $DOCKERHUB_IMAGE:$RELEASE_DATE
   except:
     - /^\d+\.\d+-hibou$/
 
@@ -41,7 +47,9 @@ build-release:
     - docker tag registry.gitlab.com/hibou-io/hibou-odoo/flow flow
     - docker run -v "${PWD}/.local:/dest" flow self-install /dest
     - cd .local/flow
-    - ./entrypoint.sh docker-release "${CONTAINER_IMAGE}:${RELEASE_DATE}" "${CONTAINER_IMAGE}" --pull-fail-strat backoff-days --pull-fail-strat-limit 14
+    - ./entrypoint.sh docker-release "${CONTAINER_IMAGE}:${RELEASE_DATE}" "${CONTAINER_IMAGE}:${RELEASE}" --pull-fail-strat backoff-days --pull-fail-strat-limit 14
+    - docker login -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}"
+    - ./entrypoint.sh docker-release "${DOCKERHUB_IMAGE}:${RELEASE_DATE}" "${DOCKERHUB_IMAGE}:${RELEASE}" --pull-fail-strat backoff-days --pull-fail-strat-limit 14
   only:
     - /^\d+\.\d+-hibou$/
 
