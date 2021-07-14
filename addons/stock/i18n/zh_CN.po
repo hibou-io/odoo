@@ -21,11 +21,10 @@
 # fausthuang, 2020
 # roye w <159820@qq.com>, 2020
 # Manga Tsang <mts@odoo.com>, 2020
-# Felix Yang - Elico Corp <felixyangsh@aliyun.com>, 2020
+# Felix Yang <felixyangsh@aliyun.com>, 2020
 # as co02 <asco02@163.com>, 2020
 # Martin Trigaux, 2020
 # niulin lnc. <admin@niulin.net>, 2020
-# liAnGjiA <liangjia@qq.com>, 2020
 # Gary Wei <Gary.wei@elico-corp.com>, 2020
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2020
 # e2f_cn c5 <jarvisn@ecinnovations.com>, 2020
@@ -35,14 +34,15 @@
 # JZH-Odoo <jzh@odoo.com>, 2020
 # bower Guo <124358678@qq.com>, 2020
 # inspur qiuguodong <qiuguodong@inspur.com>, 2020
-# mao luo <dooms21day@163.com>, 2020
+# GritLuo <dooms21day@163.com>, 2020
 # guohuadeng <guohuadeng@hotmail.com>, 2020
 # snow wang <147156565@qq.com>, 2020
 # Zang <minoscc@gmail.com>, 2020
 # ljsrzc007 <ljsrzc007@gmail.com>, 2020
 # Melvin Liu <betien@msn.cn>, 2020
 # Daniel Yang <daniel.yang.zhenyu@gmail.com>, 2021
-# Jeffery CHEN Fan <jeffery9@gmail.com>, 2021
+# Jeffery CHEN <jeffery9@gmail.com>, 2021
+# liAnGjiA <liangjia@qq.com>, 2021
 # 
 msgid ""
 msgstr ""
@@ -50,7 +50,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-27 11:23+0000\n"
 "PO-Revision-Date: 2020-09-07 08:19+0000\n"
-"Last-Translator: Jeffery CHEN Fan <jeffery9@gmail.com>, 2021\n"
+"Last-Translator: liAnGjiA <liangjia@qq.com>, 2021\n"
 "Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -4678,7 +4678,7 @@ msgstr "在此日期处理以保证准时"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Process operations faster with barcodes"
-msgstr "使用条码更快的处理作业"
+msgstr "使用条码更快的处理作业【亲，这是企业版的付费功能】"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -5240,7 +5240,7 @@ msgstr "收货路线"
 #: model:stock.picking.type,name:stock.picking_type_in
 #, python-format
 msgid "Receipts"
-msgstr "收货"
+msgstr "收货入库"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
@@ -7192,6 +7192,13 @@ msgid "Unreserve"
 msgstr "取消保留"
 
 #. module: stock
+#: code:addons/stock/models/stock_inventory.py:0
+#: code:addons/stock/models/stock_inventory.py:0
+#, python-format
+msgid "Unsupported search on %s outside of an Inventory Adjustment"
+msgstr ""
+
+#. module: stock
 #: model:ir.ui.menu,name:stock.menu_stock_uom_form_action
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 #: model_terms:ir.ui.view,arch_db:stock.stock_inventory_line_tree
@@ -7311,7 +7318,7 @@ msgstr "查看"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form
 msgid "View Diagram"
-msgstr "图形视图"
+msgstr "查看简明线路示意图"
 
 #. module: stock
 #. openerp-web
@@ -7961,9 +7968,9 @@ msgid ""
 "            Choose the quantity to buy or manufacture and launch orders in a click.\n"
 "            To save time in the future, set the rules as \"automated\"."
 msgstr ""
-"You'll find here smart replenishment propositions based on inventory forecasts.\n"
-"            Choose the quantity to buy or manufacture and launch orders in a click.\n"
-"            To save time in the future, set the rules as \"automated\"."
+"在odoo系统可以自动补货，目的是减少人工干预，降低人力成本。在这里你可以找到基于智能化的库存预测的补货建议。\n"
+"            然后您就选择要购买或生产的数量，然后单击启动订单。\n"
+"            为了节省将来的时间，请将规则设置为“automated自动补货”。"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule

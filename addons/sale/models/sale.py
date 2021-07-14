@@ -138,6 +138,22 @@ class SaleOrder(models.Model):
             """, (list(value),))
             so_ids = self.env.cr.fetchone()[0] or []
             return [('id', 'in', so_ids)]
+        elif operator == '=' and not value:
+            # special case for [('invoice_ids', '=', False)], i.e. "Invoices is not set"
+            #
+            # We cannot just search [('order_line.invoice_lines', '=', False)]
+            # because it returns orders with uninvoiced lines, which is not
+            # same "Invoices is not set" (some lines may have invoices and some
+            # doesn't)
+            #
+            # A solution is making inverted search first ("orders with invoiced
+            # lines") and then invert results ("get all other orders")
+            #
+            # Domain below returns subset of ('order_line.invoice_lines', '!=', False)
+            order_ids = self._search([
+                ('order_line.invoice_lines.move_id.move_type', 'in', ('out_invoice', 'out_refund'))
+            ])
+            return [('id', 'not in', order_ids)]
         return ['&', ('order_line.invoice_lines.move_id.move_type', 'in', ('out_invoice', 'out_refund')), ('order_line.invoice_lines.move_id', operator, value)]
 
     name = fields.Char(string='Order Reference', required=True, copy=False, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
@@ -295,6 +311,7 @@ class SaleOrder(models.Model):
         """ For service and consumable, we only take the min dates. This method is extended in sale_stock to
             take the picking_policy of SO into account.
         """
+        self.mapped("order_line")  # Prefetch indication
         for order in self:
             dates_list = []
             for line in order.order_line.filtered(lambda x: x.state != 'cancel' and not x._is_delivery() and not x.display_type):
@@ -444,7 +461,7 @@ class SaleOrder(models.Model):
                 }
             }
 
-    @api.onchange('pricelist_id')
+    @api.onchange('pricelist_id', 'order_line')
     def _onchange_pricelist_id(self):
         if self.order_line and self.pricelist_id and self._origin.pricelist_id != self.pricelist_id:
             self.show_update_pricelist = True
@@ -679,7 +696,7 @@ Reason(s) of this behavior could be:
             invoiceable_lines = order._get_invoiceable_lines(final)
 
             if not any(not line.display_type for line in invoiceable_lines):
-                raise self._nothing_to_invoice_error()
+                continue
 
             invoice_line_vals = []
             down_payment_section_added = False
@@ -711,6 +728,7 @@ Reason(s) of this behavior could be:
         if not grouped:
             new_invoice_vals_list = []
             invoice_grouping_keys = self._get_invoice_grouping_keys()
+            invoice_vals_list = sorted(invoice_vals_list, key=lambda x: [x.get(grouping_key) for grouping_key in invoice_grouping_keys])
             for grouping_keys, invoices in groupby(invoice_vals_list, key=lambda x: [x.get(grouping_key) for grouping_key in invoice_grouping_keys]):
                 origins = set()
                 payment_refs = set()
@@ -855,6 +873,14 @@ Reason(s) of this behavior could be:
         if self.env.context.get('mark_so_as_sent'):
             self.filtered(lambda o: o.state == 'draft').with_context(tracking_disable=True).write({'state': 'sent'})
         return super(SaleOrder, self.with_context(mail_post_autofollow=True)).message_post(**kwargs)
+
+    def _sms_get_number_fields(self):
+        """ No phone or mobile field is available on sale model. Instead SMS will
+        fallback on partner-based computation using ``_sms_get_partner_fields``. """
+        return []
+
+    def _sms_get_partner_fields(self):
+        return ['partner_id']
 
     def _send_order_confirmation_mail(self):
         if self.env.su:
@@ -1083,19 +1109,6 @@ Reason(s) of this behavior could be:
         self.ensure_one()
         return '%s %s' % (self.type_name, self.name)
 
-    def _get_share_url(self, redirect=False, signup_partner=False, pid=None):
-        """Override for sales order.
-
-        If the SO is in a state where an action is required from the partner,
-        return the URL with a login token. Otherwise, return the URL with a
-        generic access token (no login).
-        """
-        self.ensure_one()
-        if self.state not in ['sale', 'done']:
-            auth_param = url_encode(self.partner_id.signup_get_auth_param()[self.partner_id.id])
-            return self.get_portal_url(query_string='&%s' % auth_param)
-        return super(SaleOrder, self)._get_share_url(redirect, signup_partner, pid)
-
     def _get_payment_type(self, tokenize=False):
         self.ensure_one()
         return 'form_save' if tokenize else 'form'
@@ -1169,7 +1182,7 @@ class SaleOrderLine(models.Model):
 
     def _expected_date(self):
         self.ensure_one()
-        order_date = fields.Datetime.from_string(self.order_id.date_order if self.order_id.state in ['sale', 'done'] else fields.Datetime.now())
+        order_date = fields.Datetime.from_string(self.order_id.date_order if self.order_id.date_order and self.order_id.state in ['sale', 'done'] else fields.Datetime.now())
         return order_date + timedelta(days=self.customer_lead or 0.0)
 
     @api.depends('product_uom_qty', 'discount', 'price_unit', 'tax_id')

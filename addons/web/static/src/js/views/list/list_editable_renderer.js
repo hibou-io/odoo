@@ -263,7 +263,7 @@ ListRenderer.include({
                     currentWidget = self.allFieldWidgets[currentRowID][self.currentFieldIndex];
                     if (currentWidget) {
                         focusedElement = currentWidget.getFocusableElement().get(0);
-                        if (currentWidget.formatType !== 'boolean') {
+                        if (currentWidget.formatType !== 'boolean' && focusedElement) {
                             selectionRange = dom.getSelectionRange(focusedElement);
                         }
                     }
@@ -1834,6 +1834,12 @@ ListRenderer.include({
         // ignore clicks if target is inside the list. In that case, they are
         // handled directly by the renderer.
         if (this.el.contains(event.target) && this.el !== event.target) {
+            return;
+        }
+
+        // ignore click if search facet is removed as it will re-render whole
+        // listview again
+        if ($(event.target).hasClass('o_facet_remove')) {
             return;
         }
 

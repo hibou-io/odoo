@@ -4,14 +4,21 @@
 # 
 # Translators:
 # e2f <projects@e2f.com>, 2020
-# Pedro M. Baeza <pedro.baeza@gmail.com>, 2020
 # David Arnold <blaggacao@users.noreply.github.com>, 2020
 # Miguel Orueta <mo@landoo.es>, 2020
 # Nicolás Broggi <rnbroggi@gmail.com>, 2020
 # Jon Perez <jop@odoo.com>, 2020
 # Martin Trigaux, 2020
-# Jorge Alfonso <jlalfonso21@gmail.com>, 2020
+# Jorge Luis Alfonso <jlalfonso21@gmail.com>, 2020
 # Jesús Alan Ramos Rodríguez <alan.ramos@jarsa.com.mx>, 2021
+# Pedro M. Baeza <pedro.baeza@tecnativa.com>, 2021
+# José Cabrera Lozano <jose.cabrera@edukative.es>, 2021
+# jabelchi, 2021
+# Braulio D. López Vázquez <bdl@odoo.com>, 2021
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2021
+# Daniela Cervantes <dace@odoo.com>, 2021
+# Nelson Ramírez Sánchez <info@konos.cl>, 2021
+# Rick Hunter <rick.hunter.ec@gmail.com>, 2021
 # 
 msgid ""
 msgstr ""
@@ -19,7 +26,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-10-29 15:48+0000\n"
 "PO-Revision-Date: 2020-09-07 08:14+0000\n"
-"Last-Translator: Jesús Alan Ramos Rodríguez <alan.ramos@jarsa.com.mx>, 2021\n"
+"Last-Translator: Rick Hunter <rick.hunter.ec@gmail.com>, 2021\n"
 "Language-Team: Spanish (https://www.transifex.com/odoo/teams/41243/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,6 +44,12 @@ msgid ""
 " * Done: The MO is closed, the stock moves are posted. \n"
 " * Cancelled: The MO has been cancelled, can't be confirmed anymore."
 msgstr ""
+"* Borrador: El MO aún no está confirmado.\n"
+"* Confirmado: El MO está confirmado, las reglas de stock y el reordenamiento de los componentes se gestionan.\n"
+"* En curso: la producción ha comenzado (en el MO o en el WO).\n"
+"* Para cerrar: La producción está hecha, el MO tiene que estar cerrado.\n"
+"* Listo: el MO está cerrado, los movimientos de acciones se registran.\n"
+"* Cancelado: el MO ha sido cancelado, ya no se puede confirmar."
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_production__reservation_state
@@ -96,7 +109,7 @@ msgstr "# of LdM donde son usados"
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
 msgid "%s Child MO's"
-msgstr ""
+msgstr "%s Órdenes de Fabricación hijas"
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_production.py:0
@@ -197,7 +210,7 @@ msgstr ""
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
 msgid "<span class=\"o_stat_text\">Child MO</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Órdenes de Fabricación hijas</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_workcenter_view
@@ -239,12 +252,12 @@ msgstr "<span class=\"o_stat_text\">Desechos </span>"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
 msgid "<span class=\"o_stat_text\">Source MO</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Orden de fabricación fuente</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
 msgid "<span class=\"text-bf\">To Produce</span>"
-msgstr ""
+msgstr "<span class=\"text-bf\">Para producir</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrp_bom
@@ -270,7 +283,7 @@ msgstr "<span>Nuevo</span>"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_production_type_kanban
 msgid "<span>Orders</span>"
-msgstr ""
+msgstr "<span>Órdenes</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_workcenter_kanban
@@ -280,7 +293,7 @@ msgstr "<span>PLANIFICAR ÓRDENES</span>"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_report_delivery_no_kit_section
 msgid "<span>Products not associated with a kit</span>"
-msgstr ""
+msgstr "<span>Productos no asociados con un kit</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_workcenter_kanban
@@ -295,17 +308,17 @@ msgstr "<span>ÓRDENES DE TRABAJO</span>"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_workorder_form_view_inherit
 msgid "<span>minutes</span>"
-msgstr ""
+msgstr "<span>minutos</span>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_workorder_form_view_inherit
 msgid "<strong class=\"mr8 oe_inline\">to</strong>"
-msgstr ""
+msgstr "<strong class=\"mr8 oe_inline\">para</strong>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrporder
 msgid "<strong>Description:</strong><br/>"
-msgstr ""
+msgstr "<strong>Descripción:</strong><br/>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_workcenter_productivity_loss_kanban
@@ -393,6 +406,13 @@ msgid "A Manufacturing Order is already done or cancelled."
 msgstr "Una orden de fabricación ya ha sido terminada o cancelada."
 
 #. module: mrp
+#: code:addons/mrp/models/stock_warehouse.py:0
+#, python-format
+msgid ""
+"A product with a kit-type bill of materials can not have a reordering rule."
+msgstr ""
+
+#. module: mrp
 #: code:addons/mrp/models/mrp_workcenter.py:0
 #, python-format
 msgid "A workcenter cannot be an alternative of itself"
@@ -477,7 +497,7 @@ msgstr ""
 #. module: mrp
 #: model:res.groups,name:mrp.group_mrp_manager
 msgid "Administrator"
-msgstr "Administradora"
+msgstr "Administrador"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.stock_production_type_kanban
@@ -1661,12 +1681,12 @@ msgstr "Duración prevista (en minutos)"
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__datas
 msgid "File Content (base64)"
-msgstr ""
+msgstr "Contenido del archivo (base64)"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__raw
 msgid "File Content (raw)"
-msgstr ""
+msgstr "Contenido del archivo (raw)"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__file_size
@@ -2639,7 +2659,7 @@ msgstr "Varios"
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_immediate_production__mo_ids
 msgid "Mo"
-msgstr ""
+msgstr "Lun"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__move_byproduct_ids
@@ -2995,7 +3015,7 @@ msgstr "Plantilla de Producto Padre"
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_consumption_warning_line__mrp_consumption_warning_id
 msgid "Parent Wizard"
-msgstr ""
+msgstr "Asistente padre "
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_routing_workcenter__worksheet_google_slide
@@ -3140,6 +3160,12 @@ msgstr "Problemas de planificación"
 #: model:product.template,name:mrp.product_product_plastic_laminate_product_template
 msgid "Plastic Laminate"
 msgstr "Lámina de plástico"
+
+#. module: mrp
+#: code:addons/mrp/models/stock_move.py:0
+#, python-format
+msgid "Please delete the Manufacture Order first."
+msgstr ""
 
 #. module: mrp
 #: model:product.product,name:mrp.product_product_wood_ply
@@ -3942,7 +3968,7 @@ msgstr "Fecha de inicio"
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__state
 msgid "State"
-msgstr "Provincia"
+msgstr "Estado"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_unbuild__state
@@ -5075,12 +5101,12 @@ msgstr "Usuario que trabaja en esta orden de trabajo."
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__worksheet
 msgid "Worksheet"
-msgstr "Hoja de cálculo"
+msgstr "Hoja de trabajo"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__worksheet_type
 msgid "Worksheet Type"
-msgstr ""
+msgstr "Tipo de hoja de trabajo"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__worksheet_google_slide
@@ -5109,6 +5135,14 @@ msgid ""
 msgstr ""
 "Puede tanto subir un archivo de su ordenador como copiar/pegar un enlace de "
 "internet a su fichero."
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"You can not create a kit-type bill of materials for products that have at "
+"least one reordering rule."
+msgstr ""
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_bom.py:0
@@ -5201,6 +5235,14 @@ msgid ""
 "You have not recorded <i>produced</i> quantities yet, by clicking on "
 "<i>apply</i> Odoo will produce all the finished products and consume all "
 "components."
+msgstr ""
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_production.py:0
+#, python-format
+msgid ""
+"You must indicate a non-zero amount consumed for at least one of your "
+"components"
 msgstr ""
 
 #. module: mrp
@@ -5354,7 +5396,7 @@ msgstr "se ha actualizado la cantidad."
 #: code:addons/mrp/static/src/js/mrp_documents_controller_mixin.js:0
 #, python-format
 msgid "status code: %s </br> message: %s"
-msgstr ""
+msgstr "código de estado: %s </br> mensaje: %s"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_form_view

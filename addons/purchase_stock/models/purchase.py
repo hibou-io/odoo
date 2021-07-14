@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import api, fields, models, SUPERUSER_ID, _
-from odoo.tools.float_utils import float_compare
+from odoo.tools.float_utils import float_compare, float_round
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import UserError
@@ -31,17 +31,10 @@ class PurchaseOrder(models.Model):
         help="Completion date of the first receipt order.")
     on_time_rate = fields.Float(related='partner_id.on_time_rate', compute_sudo=False)
 
-    @api.depends('order_line.move_ids.returned_move_ids',
-                 'order_line.move_ids.state',
-                 'order_line.move_ids.picking_id')
+    @api.depends('order_line.move_ids.picking_id')
     def _compute_picking(self):
         for order in self:
-            pickings = self.env['stock.picking']
-            for line in order.order_line:
-                # We keep a limited scope on purpose. Ideally, we should also use move_orig_ids and
-                # do some recursive search, but that could be prohibitive if not done correctly.
-                moves = line.move_ids | line.move_ids.mapped('returned_move_ids')
-                pickings |= moves.mapped('picking_id')
+            pickings = order.order_line.mapped('move_ids.picking_id')
             order.picking_ids = pickings
             order.picking_count = len(pickings)
 
@@ -340,6 +333,18 @@ class PurchaseOrderLine(models.Model):
             self.filtered(lambda l: l.order_id.state == 'purchase')._create_or_update_picking()
         return result
 
+    def unlink(self):
+        self.move_ids._action_cancel()
+
+        ppg_cancel_lines = self.filtered(lambda line: line.propagate_cancel)
+        ppg_cancel_lines.move_dest_ids._action_cancel()
+
+        not_ppg_cancel_lines = self.filtered(lambda line: not line.propagate_cancel)
+        not_ppg_cancel_lines.move_dest_ids.write({'procure_method': 'make_to_stock'})
+        not_ppg_cancel_lines.move_dest_ids._recompute_state()
+
+        return super().unlink()
+
     # --------------------------------------------------
     # Business methods
     # --------------------------------------------------
@@ -382,10 +387,13 @@ class PurchaseOrderLine(models.Model):
         line = self[0]
         order = line.order_id
         price_unit = line.price_unit
+        price_unit_prec = self.env['decimal.precision'].precision_get('Product Price')
         if line.taxes_id:
+            qty = line.product_qty or 1
             price_unit = line.taxes_id.with_context(round=False).compute_all(
-                price_unit, currency=line.order_id.currency_id, quantity=1.0, product=line.product_id, partner=line.order_id.partner_id
+                price_unit, currency=line.order_id.currency_id, quantity=qty, product=line.product_id, partner=line.order_id.partner_id
             )['total_void']
+            price_unit = float_round(price_unit / qty, precision_digits=price_unit_prec)
         if line.product_uom.id != line.product_id.uom_id.id:
             price_unit *= line.product_uom.factor / line.product_id.uom_id.factor
         if order.currency_id != order.company_id.currency_id:
@@ -462,7 +470,6 @@ class PurchaseOrderLine(models.Model):
             'origin': self.order_id.name,
             'description_picking': description_picking,
             'propagate_cancel': self.propagate_cancel,
-            'route_ids': self.order_id.picking_type_id.warehouse_id and [(6, 0, [x.id for x in self.order_id.picking_type_id.warehouse_id.route_ids])] or [],
             'warehouse_id': self.order_id.picking_type_id.warehouse_id.id,
             'product_uom_qty': product_uom_qty,
             'product_uom': product_uom.id,

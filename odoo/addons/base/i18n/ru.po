@@ -9,7 +9,6 @@
 # Evgeny Kemerov <sintezz777@gmail.com>, 2020
 # Евгений Залевский <zal_ei@mail.ru>, 2020
 # GulShar Mungatova <mungatova@gmail.com>, 2020
-# ILMIR <karamov@it-projects.info>, 2020
 # Ꚁemetron <d.v.selitsky@gmail.com>, 2020
 # Max Belyanin <maxbelyanin@gmail.com>, 2020
 # 6da4f49c4b78e697e34b24b2a66289f5, 2020
@@ -32,8 +31,9 @@
 # Collex100, 2020
 # Sergey Vilizhanin, 2020
 # Irina Fedulova <istartlin@gmail.com>, 2020
-# Сергей Шебанин <sergey@shebanin.ru>, 2020
 # Ivan Yelizariev // IEL <yelizariev@itpp.dev>, 2021
+# Сергей Шебанин <sergey@shebanin.ru>, 2021
+# ILMIR <karamov@it-projects.info>, 2021
 # 
 msgid ""
 msgstr ""
@@ -41,7 +41,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-27 13:50+0000\n"
 "PO-Revision-Date: 2020-09-07 08:09+0000\n"
-"Last-Translator: Ivan Yelizariev // IEL <yelizariev@itpp.dev>, 2021\n"
+"Last-Translator: ILMIR <karamov@it-projects.info>, 2021\n"
 "Language-Team: Russian (https://www.transifex.com/odoo/teams/41243/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -838,7 +838,7 @@ msgid ""
 "        Make calls using a VOIP system"
 msgstr ""
 "\n"
-"Делайте звонки используя систему IP-телефонии"
+"Совершайте звонки при помощи систем IP-телефонии"
 
 #. module: base
 #: model:ir.module.module,description:base.module_sale_renting
@@ -1302,6 +1302,9 @@ msgid ""
 "    Under Construction\n"
 "    "
 msgstr ""
+"\n"
+"    В разработке\n"
+"    "
 
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_ebay
@@ -4521,19 +4524,26 @@ msgid ""
 "* In a module, so that administrators and users of Odoo who do not\n"
 "  need or want an online import can avoid it being available to users.\n"
 msgstr ""
-"Новый расширенный импорт файлов для Odoo ============================ "
-"Повторно воплотите систему импорта файлов Odoo * Серверная сторона, "
-"предыдущая система заставляет большую часть логики клиенту, дублирует усилия"
-" (между клиентами), делает систему импорта намного тяжелее для использования"
-" без клиента (прямой RPC или другие формы автоматизации) и дает знания о "
-"импорт / экспорт системы намного тяжелее, чтобы собрать, поскольку она "
-"распространяется на 3+ различные проекты . * В более расширенный способ, "
-"когда пользователи и партнеры могут создавать их собственный интерфейс для "
-"импорта с другими форматами файлов (например, файлы OpenDocument), которые "
-"могут быть простыми для обработки в рабочем потоке или от источника их "
-"данных. * В модуле, для администраторов и пользователей Odoo, которые этого "
-"не делают, им это не нужно или хотят онлайн-импорт, чтобы избежать его "
-"доступности для пользователей."
+"\n"
+"Поддержка расширенного импорта файлов для Odoo\n"
+"============================\n"
+"\n"
+"Вторая версия механизма импорта из файла:\n"
+"\n"
+"* Вся обработка на сервере. Предыдущая версия имела достаточно\n"
+"много логики в клиенте. что дублировало код и затрудняло\n"
+"использование механизма импорта все стандартного клиента\n"
+"(через RPC или другие механизмы автоматизации) и усложняло\n"
+"то, чтобы разобраться в коде, так как он был распределен по\n"
+"3-м различным проектам.\n"
+"\n"
+"* С более расширяемой архитектурой. Так что пользователи и\n"
+"партнеры могут создавать собственные интерфейсы импорта\n"
+"с поддержкой дополнительных форматов (например, OpenDocument),\n"
+"которые могут быть более подходящими для их рабочего процесса\n"
+"или источников данных.\n"
+"\n"
+"* В отдельном модуле. Так что администраторы и пользователи Odoo, которым не нужна поддержка импорта могут отключить его.\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_sale_account_accountant
@@ -6892,6 +6902,16 @@ msgid ""
 "can setup API keys to replace their main password.\n"
 "    "
 msgstr ""
+"\n"
+"Двухфакторная аутентификация (TOTP)\n"
+"================================\n"
+"Позволяет пользователям подключать двухфакторную аутентификацию к своим профилям для большей безопасности, с использованием одноразовых паролей (TOTP).\n"
+"\n"
+"Пользователь, у которого включена эта опция, должен будет ввести код из 6 цифр из приложения-аутентификатора при входе в систему.\n"
+"Все популярные приложения поддерживаются.\n"
+"\n"
+"Заметка: логично, что двухфакторная аутентификация заблокирует доступ по паролю для RPC-запросов. Для программного доступа через RPC-протокол вы можете настроить API-ключи в профиле.\n"
+"    "
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_tr
@@ -7529,7 +7549,7 @@ msgstr "-В этом модуле нельзя создать отчет."
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.module_form
 msgid "-This module does not create views."
-msgstr "-В этом модуле нельзя увидеть количество просмотров."
+msgstr "- Этот модуль не содержит представлений."
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.module_form
@@ -7745,14 +7765,22 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid ""
 "<span class=\"o_form_label o_td_label\" name=\"address_name\">\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'contact')]}\">Company Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'invoice')]}\">Invoice Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'delivery')]}\">Delivery Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'other')]}\">Other Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', 'private')]}\">Private Address</b>\n"
-"                                <b attrs=\"{'invisible': [('type', '!=', False)]}\">Address</b>\n"
+"                                <b attrs=\"{'invisible': [('company_type', '!=', 'company')]}\">Company Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'invoice'), ('company_type', '=', 'company')]}\">Invoice Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'delivery'), ('company_type', '=', 'company')]}\">Delivery Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'other'), ('company_type', '=', 'company')]}\">Other Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'private'), ('company_type', '=', 'company')]}\">Private Address</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', 'not in', (False, 'contact')), ('company_type', '=', 'company')]}\">Address</b>\n"
 "                            </span>"
 msgstr ""
+"<span class=\"o_form_label o_td_label\" name=\"address_name\">\n"
+"                                <b attrs=\"{'invisible': [('company_type', '!=', 'company')]}\">Адрес компании</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'invoice'), ('company_type', '=', 'company')]}\">Адрес для счетов</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'delivery'), ('company_type', '=', 'company')]}\">Адрес для доставки</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'other'), ('company_type', '=', 'company')]}\">Другой адрес</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', '!=', 'private'), ('company_type', '=', 'company')]}\">Приватный адрес</b>\n"
+"                                <b attrs=\"{'invisible': ['|', ('type', 'not in', (False, 'contact')), ('company_type', '=', 'company')]}\">Адрес</b>\n"
+"                            </span>"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_base_module_update
@@ -8007,7 +8035,7 @@ msgstr "<u><strong>Безопасность</strong></u>"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.report_irmodeloverview
 msgid "<u><strong>Views</strong></u>"
-msgstr "<u><strong>Виды</strong></u>"
+msgstr "<u><strong>Представления</strong></u>"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_mx_edi_landing
@@ -8134,7 +8162,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_A
 msgid "A AGRICULTURE, FORESTRY AND FISHING"
-msgstr "СЕЛЬСКОЕ ХОЗЯЙСТВО, ЛЕСНОЕ И РЫБАЛКА"
+msgstr "СЕЛЬСКОЕ, ЛЕСНОЕ И РЫБНОЕ ХОЗЯЙСТВО"
 
 #. module: base
 #: model:ir.module.module,description:base.module_website_slides_forum
@@ -8409,7 +8437,7 @@ msgstr ""
 #. module: base
 #: model:res.groups,name:base.group_private_addresses
 msgid "Access to Private Addresses"
-msgstr "Доступ к частным адресам"
+msgstr "Доступ к приватным адресам"
 
 #. module: base
 #: model:res.groups,name:base.group_allow_export
@@ -8485,7 +8513,7 @@ msgstr "Номер счета должен быть уникальным"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
 msgid "Account Security"
-msgstr ""
+msgstr "Параметры доступа"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_taxcloud
@@ -8763,7 +8791,7 @@ msgstr "Добавить"
 #. module: base
 #: model:ir.actions.act_window,name:base.action_view_base_language_install
 msgid "Add Language"
-msgstr ""
+msgstr "Добавить язык"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_mail_bot
@@ -8788,7 +8816,7 @@ msgstr "Добавить ссылку для редактирования лок
 #. module: base
 #: model:ir.module.module,summary:base.module_base_address_city
 msgid "Add a many2one field city on addresses"
-msgstr "Добавить many2one поле \"Город\" в адреса"
+msgstr "Добавляет поле \"Город\" к адресам"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_form_project
@@ -8850,7 +8878,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_base_address_extended
 msgid "Add extra fields on addresses"
-msgstr "Добавить дополнительные поля к адресам"
+msgstr "Добавляет дополнительные поля к адресам"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.act_report_xml_view
@@ -8937,13 +8965,13 @@ msgstr "Тип адреса"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_country_form
 msgid "Address format..."
-msgstr "Адресный формат..."
+msgstr "Формат адреса..."
 
 #. module: base
 #: code:addons/base/models/ir_qweb_fields.py:0
 #, python-format
 msgid "Address separator"
-msgstr "разделитель адреса"
+msgstr "Разделитель для адреса"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_pos_restaurant_adyen
@@ -9041,7 +9069,7 @@ msgstr "Администрирование"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_N
 msgid "Administrative"
-msgstr "Административный"
+msgstr "Управление"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_res_country_state__name
@@ -9194,8 +9222,8 @@ msgid ""
 "All contacts must have the same email. Only the Administrator can merge "
 "contacts with different emails."
 msgstr ""
-"Все договоры должны иметь одинаковую электронную почту. Только администратор"
-" может объединить договоры с разными адресами."
+"Все контакты должны иметь одинаковый email. Только администратор может "
+"объединить контакты с разными email."
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.onboarding_step
@@ -9271,7 +9299,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_stock_barcode_quality_control
 msgid "Allows the usage of quality checks within the barcode views"
-msgstr "Позволяет использование проверок качества без просмотров штрих-кода"
+msgstr "Позволяет использовать проверку качества с использованием штрихкодов"
 
 #. module: base
 #: model:ir.module.module,description:base.module_web_map
@@ -9904,7 +9932,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_B
 msgid "B MINING AND QUARRYING"
-msgstr "Б МАЙНИНГ И ПРОИЗВОДСТВО"
+msgstr "ДОБЫЧА ПОЛЕЗНЫХ ИСКОПАЕМЫХ"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__report_paperformat__format__b0
@@ -10007,7 +10035,7 @@ msgstr "Банковские счета"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_res_bank_form
 msgid "Bank Address"
-msgstr ""
+msgstr "Адрес банка"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_bank__bic
@@ -10154,12 +10182,12 @@ msgstr "Архитектура базового просмотра"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_base_import
 msgid "Base import"
-msgstr "Базовый импорт"
+msgstr "Импорт из файла"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_base_import_module
 msgid "Base import module"
-msgstr "Базовый импортный модуль"
+msgstr "Базовый модуль для импорта из файла"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_ui_view__mode__primary
@@ -10586,7 +10614,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_C
 msgid "C MANUFACTURING"
-msgstr "C ПРОИЗВОДСТВО"
+msgstr "ОБРАБАТЫВАЮЩАЯ ПРОМЫШЛЕННОСТЬ"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__report_paperformat__format__c5e
@@ -10907,7 +10935,7 @@ msgstr "Общайтесь в чате с посетителями вашего 
 #. module: base
 #: model:ir.module.module,summary:base.module_mail
 msgid "Chat, mail gateway and private channels"
-msgstr "Чат, шлюз электронной почты и частные каналы"
+msgstr "Чат, шлюз электронной почты и приватные каналы"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_accounting_localizations_check
@@ -11034,8 +11062,8 @@ msgid ""
 "Choose a subview of partners that includes only address fields, to change "
 "the way users can input addresses."
 msgstr ""
-"Выберите сопровождение партнеров, который включает только поля адреса, чтобы"
-" изменить то, как пользователи смогут вводить адреса."
+"Выберите представление, содержащее поля для адреса, чтобы изменить способ "
+"ввода адресов для пользователей."
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_mail_server__smtp_encryption
@@ -11071,7 +11099,7 @@ msgstr "Город"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_base_address_city
 msgid "City Addresses"
-msgstr "Адреса в городе"
+msgstr "Адреса с городами"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_logging__type__client
@@ -11300,12 +11328,12 @@ msgstr "Компания"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.onboarding_company_step
 msgid "Company Data"
-msgstr "данные компании"
+msgstr "Данные компании"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_company__favicon
 msgid "Company Favicon"
-msgstr ""
+msgstr "Иконка для сайта"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_company__logo
@@ -11597,7 +11625,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_F
 msgid "Construction"
-msgstr "Создание"
+msgstr "Строительная промышленность"
 
 #. module: base
 #: model:res.partner.category,name:base.res_partner_category_8
@@ -11757,7 +11785,7 @@ msgstr "Коста Рика - Учет"
 #: code:addons/base/models/res_partner.py:0
 #, python-format
 msgid "Couldn't create contact without email address!"
-msgstr "Невозможно создать контакт без адреса электронной почты!"
+msgstr "Невозможно создать контакт без email!"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model__count
@@ -11930,12 +11958,12 @@ msgstr "Создать новый тег для контактов"
 #: model_terms:ir.actions.act_window,help:base.action_partner_customer_form
 #: model_terms:ir.actions.act_window,help:base.action_partner_form
 msgid "Create a new customer in your address book"
-msgstr "Создайте нового клиента в ваши адресной книге"
+msgstr "Создайте нового клиента в вашей адресной книге"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.res_partner_industry_action
 msgid "Create a new industry"
-msgstr "Создать новую промышленность"
+msgstr "Создать новую отрасль"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_partner_supplier_form
@@ -12387,8 +12415,8 @@ msgid ""
 "Customized views are used when users reorganize the content of their "
 "dashboard views (via web client)"
 msgstr ""
-"Настраиваемые виды используются при организации содержимого инфо-панели "
-"(через веб-клиент)"
+"Настраиваемые представления используются при организации содержимого инфо-"
+"панели (через веб-клиент)"
 
 #. module: base
 #: model:res.country,name:base.cy
@@ -12408,7 +12436,7 @@ msgstr "Берег 🐘 Слоновой Кости"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_D
 msgid "D ELECTRICITY,GAS,STEAM AND AIR CONDITIONING SUPPLY"
-msgstr "D ЭЛЕКТРОЭНЕРГИЯ, ГАЗ, ТОПЛИВО И ПРЕДПРИЯТИЕ С ПОВИТРИЗАЦИИ"
+msgstr "ЭЛЕКТРОЭНЕРГИЯ, ГАЗ И ТОПЛИВО"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery_dhl
@@ -12442,7 +12470,7 @@ msgstr "Инфо-панели"
 #: model:ir.module.category,name:base.module_category_productivity_data_cleaning
 #: model:ir.module.module,shortdesc:base.module_data_cleaning
 msgid "Data Cleaning"
-msgstr ""
+msgstr "Очистка данных"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_data_merge
@@ -12860,7 +12888,9 @@ msgstr "Показывает, куда вставлять символ: посл
 msgid ""
 "Determines where the customer/company name should be placed, i.e. after or "
 "before the address."
-msgstr "Укажите расположение имени покупателя/компании, до или после адреса."
+msgstr ""
+"Укажите, где должно располагаться имя человека или компании, до или после "
+"адреса."
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
@@ -13362,6 +13392,8 @@ msgid ""
 "Due to security restrictions, you are not allowed to access "
 "'%(document_kind)s' (%(document_model)s) records."
 msgstr ""
+"Из-за ограничений безопасности, вам не разрешено просматривать записи\n"
+"'%(document_kind)s' (%(document_model)s)."
 
 #. module: base
 #: code:addons/base/models/ir_rule.py:0
@@ -13370,6 +13402,8 @@ msgid ""
 "Due to security restrictions, you are not allowed to create "
 "'%(document_kind)s' (%(document_model)s) records."
 msgstr ""
+"Из-за ограничений безопасности, вам не разрешено создавать записи\n"
+"'%(document_kind)s' (%(document_model)s)."
 
 #. module: base
 #: code:addons/base/models/ir_rule.py:0
@@ -13378,6 +13412,8 @@ msgid ""
 "Due to security restrictions, you are not allowed to delete "
 "'%(document_kind)s' (%(document_model)s) records."
 msgstr ""
+"Из-за ограничений безопасности, вам не разрешено удалять записи\n"
+"'%(document_kind)s' (%(document_model)s)."
 
 #. module: base
 #: code:addons/base/models/ir_rule.py:0
@@ -13386,6 +13422,8 @@ msgid ""
 "Due to security restrictions, you are not allowed to modify "
 "'%(document_kind)s' (%(document_model)s) records."
 msgstr ""
+"Из-за ограничений безопасности, вам не разрешено изменять записи\n"
+"'%(document_kind)s' (%(document_model)s)."
 
 #. module: base
 #: code:addons/base/models/res_company.py:0
@@ -13398,8 +13436,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_E
 msgid "E WATER SUPPLY;SEWERAGE,WASTE MANAGEMENT AND REMEDIATION ACTIVITIES"
-msgstr ""
-"Е ВОДОСНАБЖЕНИЯ, РЕШЕНИЯ, УТИЛИЗАЦИЯ ОТХОДОВ И Регистрационная деятельность"
+msgstr "ВОДОСНАБЖЕНИЕ, КАНАЛИЗАЦИЯ, ВОДООЧИСТКА"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_be_edi
@@ -13584,7 +13621,7 @@ msgstr "Электронная почта"
 #: model_terms:ir.ui.view,arch_db:base.view_users_form
 #: model_terms:ir.ui.view,arch_db:base.view_users_simple_form
 msgid "Email Address"
-msgstr "Адрес эл. почты"
+msgstr "Адрес email"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_fetchmail
@@ -13600,7 +13637,7 @@ msgstr "Email-маркетинг"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__signature
 msgid "Email Signature"
-msgstr ""
+msgstr "Подпись в Email"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__employee
@@ -13661,7 +13698,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_D
 msgid "Energy supply"
-msgstr "энергоснабжение"
+msgstr "Энергетика"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_crm_iap_lead_enrich
@@ -14130,7 +14167,7 @@ msgstr ""
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_module_filter
 msgid "Extra"
-msgstr "Дополнительный"
+msgstr "Расширения"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_usability
@@ -14157,12 +14194,12 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_U
 msgid "Extraterritorial"
-msgstr "экстратерриториальный"
+msgstr "Экстратерриториальный"
 
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_F
 msgid "F CONSTRUCTION"
-msgstr "F СТРОИТЕЛЬСТВО"
+msgstr "СТРОИТЕЛЬНАЯ ПРОМЫШЛЕННОСТЬ"
 
 #. module: base
 #: model:ir.actions.server,name:base.demo_failure_action
@@ -14606,7 +14643,7 @@ msgstr "Фильтры, видимые только для одного поль
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_K
 msgid "Finance/Insurance"
-msgstr "Финансы / Страхование"
+msgstr "Финансовый сектор / Страхование"
 
 #. module: base
 #: model:ir.module.module,description:base.module_data_merge
@@ -14800,7 +14837,7 @@ msgstr "Формат"
 #: model:ir.model.fields,help:base.field_res_partner__email_formatted
 #: model:ir.model.fields,help:base.field_res_users__email_formatted
 msgid "Format email address \"Name <email@domain>\""
-msgstr "Формат адреса электронной почты \"Имя <email@domain>\""
+msgstr "Формат адреса email \"Имя <email@domain>\""
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__email_formatted
@@ -14947,8 +14984,7 @@ msgstr "Функция"
 #: model:res.partner.industry,full_name:base.res_partner_industry_G
 msgid "G WHOLESALE AND RETAIL TRADE;REPAIR OF MOTOR VEHICLES AND MOTORCYCLES"
 msgstr ""
-"G ОПТОВАЯ И РОЗНИЧНАЯ ТОРГОВЛЯ, РЕМОНТ МОТОРНЫХ ТРАНСПОРТНЫХ СРЕДСТВ И "
-"МОТОЦИКЛОВ"
+"G ОПТОВАЯ И РОЗНИЧНАЯ ТОРГОВЛЯ, РЕМОНТ ТРАНСПОРТНЫХ СРЕДСТВ И МОТОЦИКЛОВ"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_module_module__license__gpl-2
@@ -15425,7 +15461,7 @@ msgstr "Гайана"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_H
 msgid "H TRANSPORTATION AND STORAGE"
-msgstr "H И ХРАНЕНИЕ"
+msgstr "ТРАНСПОРТИРОВКА И ХРАНЕНИЕ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_holidays_attendance
@@ -15505,7 +15541,7 @@ msgstr "Расположение заголовка"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_Q
 msgid "Health/Social"
-msgstr "Медицина / Социалка"
+msgstr "Здравоохранение"
 
 #. module: base
 #: model:res.country,name:base.hm
@@ -15798,7 +15834,7 @@ msgstr "Часы"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_T
 msgid "Households"
-msgstr "домохозяйства"
+msgstr "Домашняя промышленность"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_cron__numbercall
@@ -15855,7 +15891,7 @@ msgstr "Венгрия"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_I
 msgid "I ACCOMMODATION AND FOOD SERVICE ACTIVITIES"
-msgstr "I ДЕЯТЕЛЬНОСТЬ ОБСЛУЖИВАНИЕ И Срок годности ПРОДУКЦИИ"
+msgstr "ГОСТИНИЦЫ И ОБЩЕСТВЕННОЕ ПИТАНИЕ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_iap_crm
@@ -16028,7 +16064,7 @@ msgstr "ISO Код"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_J
 msgid "IT/Communication"
-msgstr "IT / Связь"
+msgstr "Информационные технологии"
 
 #. module: base
 #: model:res.country,name:base.is
@@ -16493,7 +16529,7 @@ msgstr "Индонезия - Бухучет"
 #. module: base
 #: model:ir.actions.act_window,name:base.res_partner_industry_action
 msgid "Industries"
-msgstr ""
+msgstr "Отрасли"
 
 #. module: base
 #: model:ir.model,name:base.model_res_partner_industry
@@ -16502,7 +16538,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:base.res_partner_industry_view_form
 #: model_terms:ir.ui.view,arch_db:base.res_partner_industry_view_tree
 msgid "Industry"
-msgstr "промышленность"
+msgstr "Отрасль"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model__info
@@ -16542,7 +16578,7 @@ msgstr "Унаследованный Вид"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_view_form
 msgid "Inherited Views"
-msgstr "Унаследованные Виды"
+msgstr "Дочерние представления"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model__inherited_model_ids
@@ -16928,11 +16964,13 @@ msgid ""
 "Invoice & Delivery addresses are used in sales orders. Private addresses are"
 " only visible by authorized users."
 msgstr ""
+"Адреса доставки и для счетов используются в заказах на продажу. Приватные "
+"адреса доступны только авторизованным пользователям."
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_partner__type__invoice
 msgid "Invoice Address"
-msgstr "Адрес выставления счета"
+msgstr "Адрес для счета"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_account
@@ -17056,7 +17094,7 @@ msgstr "Италия - электронное выставление счета"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_J
 msgid "J INFORMATION AND COMMUNICATION"
-msgstr "J ИНФОРМАЦИЯ И СВЯЗЬ"
+msgstr "ИНФОРМАЦИЯ И СВЯЗЬ"
 
 #. module: base
 #: model:res.country,name:base.jm
@@ -17107,7 +17145,7 @@ msgstr "только завершено"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_K
 msgid "K FINANCIAL AND INSURANCE ACTIVITIES"
-msgstr "К ФИНАНСОВАЯ И СТРАХОВАЯ ДЕЯТЕЛЬНОСТЬ"
+msgstr "ФИНАНСОВАЯ И СТРАХОВАЯ ДЕЯТЕЛЬНОСТЬ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_digest
@@ -17185,7 +17223,7 @@ msgstr "Киргизия"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_L
 msgid "L REAL ESTATE ACTIVITIES"
-msgstr "L ДЕЯТЕЛЬНОСТЬ НЕДВИЖИМОСТИ"
+msgstr "ОПЕРАЦИИ С НЕДВИЖИМОСТЬЮ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_latam_invoice_document
@@ -17588,7 +17626,7 @@ msgstr "Последняя версия"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__login_date
 msgid "Latest authentication"
-msgstr ""
+msgstr "Последний вход"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_company__font__lato
@@ -17620,7 +17658,7 @@ msgstr "Макет в отчетах"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_crm_iap_lead_enrich
 msgid "Lead Enrichment"
-msgstr ""
+msgstr "Обогащение данных в лидах"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_crm_iap_lead
@@ -17971,7 +18009,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_M
 msgid "M PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES"
-msgstr "М ПРОФЕССИОНАЛЬНАЯ, НАУЧНАЯ И ТЕХНИЧЕСКАЯ ДЕЯТЕЛЬНОСТЬ"
+msgstr "НАУЧНАЯ И ТЕХНИЧЕСКАЯ ДЕЯТЕЛЬНОСТЬ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_mrp_workorder
@@ -18085,7 +18123,7 @@ msgstr ""
 #. module: base
 #: model:ir.ui.menu,name:base.menu_module_tree
 msgid "Main Apps"
-msgstr ""
+msgstr "Встроенные модули"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_sequence_date_range__sequence_id
@@ -18397,7 +18435,7 @@ msgstr "Управляйте вашими складскими и логисти
 #: model:res.partner.industry,name:base.res_partner_industry_C
 #: model_terms:ir.ui.view,arch_db:base.user_groups_view
 msgid "Manufacturing"
-msgstr "Производство"
+msgstr "Обрабатывающая промышленность"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_mrp_product_expiry
@@ -18742,7 +18780,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_B
 msgid "Mining"
-msgstr "добыча"
+msgstr "Горная промышленность"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_cron__interval_type__minutes
@@ -18764,7 +18802,7 @@ msgstr "Разное"
 #: model:res.partner.title,name:base.res_partner_title_miss
 #: model:res.partner.title,shortcut:base.res_partner_title_miss
 msgid "Miss"
-msgstr "Г-жа"
+msgstr "Леди"
 
 #. module: base
 #: code:addons/base/models/ir_mail_server.py:0
@@ -19133,7 +19171,7 @@ msgstr "Г-н."
 #. module: base
 #: model:res.partner.title,shortcut:base.res_partner_title_madam
 msgid "Mrs."
-msgstr "Г-жа"
+msgstr "Госпожа"
 
 #. module: base
 #: model:res.groups,name:base.group_multi_company
@@ -19169,7 +19207,7 @@ msgstr "Мьянма"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_N
 msgid "N ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES"
-msgstr "N Административная деятельность и деятельность ПОДДЕРЖКИ"
+msgstr "АДМИНИСТРАТИВНАЯ ДЕЯТЕЛЬНОСТЬ"
 
 #. module: base
 #: model:res.country,vat_label:base.co model:res.country,vat_label:base.gt
@@ -19464,7 +19502,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_act_window__view_ids
 msgid "No of Views"
-msgstr "Nº просмотров"
+msgstr "Варианты представлений"
 
 #. module: base
 #: code:addons/base/models/ir_mail_server.py:0
@@ -19638,8 +19676,7 @@ msgstr ""
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_O
 msgid "O PUBLIC ADMINISTRATION AND DEFENCE;COMPULSORY SOCIAL SECURITY"
-msgstr ""
-"O ОБЩЕСТВЕННАЯ АДМИНИСТРАЦИЯ И ОБОРОНА; Обязательное социальное БЕЗОПАСНОСТЬ"
+msgstr "ГОСУДАРСТВЕННОЕ УПРАВЛЕНИЕ И ОБОРОНА, СОЦИАЛЬНОЕ ОБЕСПЕЧЕНИЕ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_auth_oauth
@@ -20466,7 +20503,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,description:base.module_payment_odoo_by_adyen
 msgid "Odoo Payments by Adyen"
-msgstr ""
+msgstr "Платеж Odoo посредством Adyen"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_payment_odoo_by_adyen
@@ -20995,6 +21032,16 @@ msgstr ""
 msgid ""
 "Odoo is currently processing a scheduled action.\n"
 "Module operations are not possible at this time, please try again later or contact your system administrator."
+msgstr ""
+
+#. module: base
+#: code:addons/base/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"Odoo is unable to merge the PDFs attached to the following records:\n"
+"%s\n"
+"\n"
+"Please exclude them from the selection to continue. It's possible to still retrieve those PDFs by selecting each of the affected records individually, which will avoid merging."
 msgstr ""
 
 #. module: base
@@ -21560,7 +21607,7 @@ msgstr "Другой проприетарный"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_S
 msgid "Other Services"
-msgstr "другие услуги"
+msgstr "Другие услуги"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_model_form
@@ -21597,7 +21644,7 @@ msgstr "Сервера отправки почты"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_microsoft_calendar
 msgid "Outlook Calendar"
-msgstr ""
+msgstr "Календарь Outlook"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_report_paperformat__dpi
@@ -21624,7 +21671,7 @@ msgstr "Владелец"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_P
 msgid "P EDUCATION"
-msgstr "P ОБРАЗОВАНИЕ"
+msgstr "ОБРАЗОВАНИЕ"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_pe
@@ -21831,13 +21878,13 @@ msgstr "Теги партнёра"
 #. module: base
 #: model:ir.model,name:base.model_res_partner_title
 msgid "Partner Title"
-msgstr "Название партнера"
+msgstr "Обращение к персоне"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_title_form
 #: model_terms:ir.ui.view,arch_db:base.view_partner_title_tree
 msgid "Partner Titles"
-msgstr "Заголовок Партнера"
+msgstr "Обращения к персоне"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users__active_partner
@@ -22355,18 +22402,18 @@ msgstr "Приоритет"
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_partner__type__private
 msgid "Private Address"
-msgstr "Личный адрес"
+msgstr "Приватный адрес"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.res_partner_view_form_private
 msgid "Private Address Form"
-msgstr "Форма частного адреса"
+msgstr "Форма приватного адреса"
 
 #. module: base
 #: code:addons/models.py:0
 #, python-format
 msgid "Private methods (such as %s) cannot be called remotely."
-msgstr "Частные методы (такие как %s) не могут быть вызваны удаленно."
+msgstr "Приватные методы (такие как %s) не могут быть вызваны удаленно."
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_sale_stock
@@ -22598,7 +22645,7 @@ msgstr "Публичный"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_O
 msgid "Public Administration"
-msgstr "публичное администрирование"
+msgstr "Государственное управление"
 
 #. module: base
 #: model:res.groups,comment:base.group_public
@@ -22723,7 +22770,7 @@ msgstr "Выражение Python"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_Q
 msgid "Q HUMAN HEALTH AND SOCIAL WORK ACTIVITIES"
-msgstr "Q ЧЕЛОВЕЧЕСКОЕ ЗДОРОВЬЕ И ДЕЯТЕЛЬНОСТЬ СОЦИАЛЬНОЙ РАБОТЫ"
+msgstr "ДЕЯТЕЛЬНОСТЬ В ОБЛАСТИ ЗДРАВООХРАНЕНИЯ И СОЦИАЛЬНОЙ ЗАЩИТЫ"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_ui_view__type__qweb
@@ -22734,7 +22781,7 @@ msgstr "QWeb"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.act_report_xml_view
 msgid "QWeb views"
-msgstr "QWeb виды"
+msgstr "QWeb представления"
 
 #. module: base
 #: model:res.country,name:base.qa
@@ -22929,7 +22976,7 @@ msgstr "Qweb поле many2many"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_R
 msgid "R ARTS, ENTERTAINMENT AND RECREATION"
-msgstr "R ИСКУССТВО, РАЗВЛЕЧЕНИЯ И ОТДЫХ"
+msgstr "ИСКУССТВО, РАЗВЛЕЧЕНИЯ И ОТДЫХ"
 
 #. module: base
 #: model:res.country,vat_label:base.mx
@@ -23530,7 +23577,7 @@ msgstr "Реюньон"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_S
 msgid "S OTHER SERVICE ACTIVITIES"
-msgstr "S ДРУГАЯ ДЕЯТЕЛЬНОСТЬ УСЛУГИ"
+msgstr "ДРУГИЕ УСЛУГИ"
 
 #. module: base
 #: model:res.country.group,name:base.sepa_zone
@@ -23917,7 +23964,7 @@ msgstr "планируемый пользователь"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_M
 msgid "Scientific"
-msgstr "научный"
+msgstr "Наука"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_users_apikeys__scope
@@ -23995,7 +24042,7 @@ msgstr ""
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_company__secondary_color
 msgid "Secondary Color"
-msgstr ""
+msgstr "Вспомогательный цвет"
 
 #. module: base
 #: model:ir.ui.menu,name:base.menu_security
@@ -24221,7 +24268,7 @@ msgstr "Формат разделителя"
 #: code:addons/base/models/ir_qweb_fields.py:0
 #, python-format
 msgid "Separator use to split the address from the display_name."
-msgstr "Используется разделитель, чтобы разделить адрес с display_name."
+msgstr "Разделитель, чтобы отделить адрес от Отображаемого имени."
 
 #. module: base
 #: model:ir.model,name:base.model_ir_sequence
@@ -24578,7 +24625,7 @@ msgstr ""
 #: model:ir.module.category,name:base.module_category_marketing_social_marketing
 #: model:ir.module.module,shortdesc:base.module_social
 msgid "Social Marketing"
-msgstr "Меркетинг соцсетей"
+msgstr "Меркетинг в соцсетях"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_social_media
@@ -25188,8 +25235,9 @@ msgid ""
 "T ACTIVITIES OF HOUSEHOLDS AS EMPLOYERS;UNDIFFERENTIATED GOODS- AND "
 "SERVICES-PRODUCING ACTIVITIES OF HOUSEHOLDS FOR OWN USE"
 msgstr ""
-"T ДЕЯТЕЛЬНОСТЬ ГОСУДАРСТВЕННОГО ПРЕДПРИЯТИЯ В РАМКАХ ДЕЯТЕЛЬНОСТИ СИСТЕМЫ; "
-"НЕДИФЕРЕНЦИЙНИ ПРОДУКТЫ И УСЛУГИ ГОСУДАРСТВЕННОЙ ДЕЯТЕЛЬНОСТИ ДОРОГИ"
+"ДЕЯТЕЛЬНОСТЬ ДОМАШНИХ ХОЗЯЙСТВ В КАЧЕСТВЕ РАБОТОДАТЕЛЕЙ, ЛЮБАЯ ДЕЯТЕЛЬНОСТЬ "
+"ДОМАШНИХ ХОЗЯЙСТВ ПО ПРОИЗВОДСТВУ ТОВАРОВ И УСЛУГ ДЛЯ СОБСТВЕННОГО "
+"ПОТРЕБЛЕНИЯ"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__base_language_export__format__tgz
@@ -25285,7 +25333,7 @@ msgstr "Логи задач"
 #: model:ir.model.fields,field_description:base.field_res_partner__vat
 #: model:ir.model.fields,field_description:base.field_res_users__vat
 msgid "Tax ID"
-msgstr "ID налога"
+msgstr "ИНН"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_sale_taxcloud_delivery
@@ -25728,6 +25776,12 @@ msgid "The internal user in charge of this contact."
 msgstr "Внутренний пользователь, который отвечает за этот контакт."
 
 #. module: base
+#: code:addons/base/models/res_country.py:106
+#, python-format
+msgid "The layout contains an invalid format key"
+msgstr ""
+
+#. module: base
 #: model:ir.model.fields,help:base.field_ir_model__inherited_model_ids
 msgid "The list of models that extends the current model."
 msgstr "Список моделей, расширяющих текущую модель."
@@ -25898,6 +25952,13 @@ msgid ""
 "Fields:\n"
 "%(fields_list)s"
 msgstr ""
+"Запрошенная операция не может быть завершена из-за ограничений по безопасности .\n"
+"\n"
+"Тип документа: %(document_kind)s (%(document_model)s)\n"
+"Операция: %(operation)s\n"
+"Пользователь: %(user)s\n"
+"Поля:\n"
+"%(fields_list)s "
 
 #. module: base
 #: model:ir.model.constraint,message:base.constraint_res_currency_rounding_gt_zero
@@ -25918,7 +25979,7 @@ msgstr ""
 msgid ""
 "The server refused the sender address (%(email_from)s) with error %(repl)s"
 msgstr ""
-"Сервер отказался от адреса отправителя (%(email_from)s ) с ошибкой%(repl)s "
+"Сервер не принял адрес отправителя (%(email_from)s ) с ошибкой%(repl)s "
 
 #. module: base
 #: code:addons/base/models/ir_mail_server.py:0
@@ -25977,7 +26038,7 @@ msgid ""
 "The user this filter is private to. When left empty the filter is public and"
 " available to all users."
 msgstr ""
-"Пользователь фильтра. Если оставить пустым, то фильтр будет доступен всем."
+"Кому доступен фильтр. Если оставить пустым, то фильтр будет доступен всем."
 
 #. module: base
 #: code:addons/models.py:0
@@ -26014,7 +26075,7 @@ msgstr "Тема"
 #: model:ir.ui.menu,name:base.menu_theme_store
 #: model:ir.ui.menu,name:base.theme_store
 msgid "Theme Store"
-msgstr ""
+msgstr "Темы оформления"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.base_partner_merge_automatic_wizard_form
@@ -26035,7 +26096,7 @@ msgstr ""
 #: model:ir.actions.act_url,name:base.action_third_party
 #: model:ir.ui.menu,name:base.menu_third_party
 msgid "Third-Party Apps"
-msgstr ""
+msgstr "Сторонние модули"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_res_lang__iso_code
@@ -26432,7 +26493,7 @@ msgstr "Восточный Тимор"
 #: model:ir.model.fields,field_description:base.field_res_partner_title__name
 #: model:ir.model.fields,field_description:base.field_res_users__title
 msgid "Title"
-msgstr "Заголовок"
+msgstr "Обращение"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_sequence_date_range__date_to
@@ -26702,7 +26763,7 @@ msgstr "Переводы"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_H
 msgid "Transportation"
-msgstr "перевозки"
+msgstr "Транспорт"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_actions_act_window_view__view_mode__tree
@@ -26791,7 +26852,7 @@ msgstr "Сниппет скроллер Twitter на сайте"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_auth_totp
 msgid "Two-Factor Authentication (TOTP)"
-msgstr ""
+msgstr "Двухфакторная аутентификация (TOTP)"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_attachment__type
@@ -26844,7 +26905,7 @@ msgstr "Тип:"
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_U
 msgid "U ACTIVITIES OF EXTRA TERRITORIAL ORGANISATIONS AND BODIES"
-msgstr "U деятельность эксперта ТЕРРИТОРИАЛЬНЫХ ОРГАНИЗАЦИЙ И ОРГАНОВ"
+msgstr "ДЕЯТЕЛЬНОСТЬ ЭКСТЕРРИТОРИАЛЬНЫХ ОРГАНИЗАЦИЙ И ОРГАНОВ"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_ae
@@ -27138,7 +27199,7 @@ msgstr ""
 #: code:addons/base/static/src/js/res_config_settings.js:0
 #, python-format
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Изменения еще не сохранены"
 
 #. module: base
 #: code:addons/base/models/ir_ui_view.py:0
@@ -27275,7 +27336,7 @@ msgstr "используйте кому"
 #: code:addons/base/models/ir_qweb_fields.py:0
 #, python-format
 msgid "Use comma instead of the <br> tag to display the address"
-msgstr "Для отображения адреса используйте <br> кому, а не тег"
+msgstr "Использовать запятую вместо <br> при отображении адреса"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_sale_coupon
@@ -27338,8 +27399,8 @@ msgid ""
 "display addresses (in reports for example), while this field is used to "
 "modify the input form for addresses."
 msgstr ""
-"Используйте это поле, если вы хотите заменить обычный способ кодирования "
-"полного адреса. Обратите внимание, что поле address_format используется для "
+"Используйте это поле, если вы хотите заменить обычный способ ввода полного "
+"адреса. Обратите внимание, что поле address_format используется для "
 "изменения способа отображения адресов (например, в отчетах), тогда как это "
 "поле используется для изменения формы ввода для адресов."
 
@@ -27404,7 +27465,7 @@ msgstr "Записи в журнале пользователя"
 #. module: base
 #: model:ir.module.category,name:base.module_category_user_type
 msgid "User types"
-msgstr "типы пользователей"
+msgstr "Типы пользователей"
 
 #. module: base
 #: model:ir.model,name:base.model_change_password_user
@@ -27688,7 +27749,7 @@ msgstr ""
 #: code:addons/base/models/ir_ui_view.py:0
 #, python-format
 msgid "View '%(name)s' is private"
-msgstr ""
+msgstr "Приватное представление '%(name)s'"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_ui_view__arch
@@ -27761,7 +27822,7 @@ msgstr "Посмотреть:%s "
 #: model_terms:ir.ui.view,arch_db:base.view_view_tree
 #: model_terms:ir.ui.view,arch_db:base.view_window_action_form
 msgid "Views"
-msgstr "Просмотры"
+msgstr "Представления"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_ui_view
@@ -27837,7 +27898,7 @@ msgstr "Предупреждения"
 #. module: base
 #: model:res.partner.industry,name:base.res_partner_industry_E
 msgid "Water supply"
-msgstr "Поставка воды"
+msgstr "Водная промышленность"
 
 #. module: base
 #: model:res.partner,website_short_description:base.res_partner_18
@@ -28196,7 +28257,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_work_entry
 msgid "Work Entries"
-msgstr ""
+msgstr "Рабочие записи"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_work_entry_contract
@@ -28383,9 +28444,8 @@ msgstr "Нельзя активировать суперпользователя
 #. module: base
 #: code:addons/base/models/res_partner.py:0
 #, python-format
-msgid "You cannot archive a contact linked to an internal user."
+msgid "You cannot archive a contact linked to a portal or internal user."
 msgstr ""
-"Невозможно архивировать контакт, связанный с внутренним пользователем."
 
 #. module: base
 #: code:addons/base/models/res_partner.py:0
@@ -28667,7 +28727,7 @@ msgstr "выполнено"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid "e.g. BE0477472701"
-msgstr "например, BE0477472701"
+msgstr "например, 325507450001"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_base_import_language
@@ -28677,7 +28737,7 @@ msgstr "т.е. Английский язык"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 msgid "e.g. Mister"
-msgstr ""
+msgstr "например, Господин"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form

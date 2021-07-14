@@ -1629,7 +1629,6 @@ QUnit.module('fields', {}, function () {
                             '</form>' +
                         '</field>' +
                     '</form>',
-                debug: 1,
             });
 
 
@@ -1708,7 +1707,7 @@ QUnit.module('fields', {}, function () {
             var positions = [
                 [6, 0, 'top', ['3', '6', '1', '2', '5', '7', '4']], // move the last to the first line
                 [5, 1, 'top', ['7', '6', '1', '2', '5']], // move the penultimate to the second line
-                [2, 5, 'center', ['1', '2', '5', '6']], // move the third to the penultimate line
+                [2, 5, 'bottom', ['1', '2', '5', '6']], // move the third to the penultimate line
             ];
             async function dragAndDrop() {
                 var pos = positions.shift();
@@ -4664,6 +4663,55 @@ QUnit.module('fields', {}, function () {
             // then we render the control panel (also in owl), so we have to wait again for the
             // next animation frame
             await testUtils.owlCompatibilityNextTick();
+            form.destroy();
+        });
+
+        QUnit.test('parent data is properly sent on an onchange rpc (existing x2many record)', async function (assert) {
+            assert.expect(4);
+
+            this.data.partner.onchanges = {
+                display_name: function () {},
+            };
+            this.data.partner.records[0].p = [1];
+            this.data.partner.records[0].turtles = [2];
+            const form = await createView({
+                View: FormView,
+                model: 'partner',
+                data: this.data,
+                arch: `
+                    <form>
+                        <field name="foo"/>
+                        <field name="p">
+                            <tree editable="top">
+                                <field name="display_name"/>
+                                <field name="turtles" widget="many2many_tags"/>
+                            </tree>
+                        </field>
+                    </form>`,
+                res_id: 1,
+                mockRPC(route, args) {
+                    if (args.method === 'onchange') {
+                        const fieldValues = args.args[1];
+                        assert.strictEqual(fieldValues.trululu.foo, "yop");
+                        // we only send fields that changed inside the reverse many2one
+                        assert.deepEqual(fieldValues.trululu.p, [
+                            [1, 1, { display_name: 'new val' }],
+                        ]);
+                    }
+                    return this._super(...arguments);
+                },
+                viewOptions: {
+                    mode: 'edit',
+                },
+            });
+
+            assert.containsOnce(form, '.o_data_row');
+
+            await testUtils.dom.click(form.$('.o_data_row .o_data_cell:first'));
+
+            assert.containsOnce(form, '.o_data_row.o_selected_row');
+            await testUtils.fields.editInput(form.$('.o_selected_row .o_field_widget[name=display_name]'), "new val");
+
             form.destroy();
         });
 
@@ -9839,6 +9887,72 @@ QUnit.module('fields', {}, function () {
 
             form.destroy();
             delete fieldRegistry.map.my_relational_field;
+        });
+
+        QUnit.test('reordering embedded one2many with handle widget starting with same sequence', async function (assert) {
+            assert.expect(3);
+
+            this.data.turtle = {
+                fields: {turtle_int: {string: "int", type: "integer", sortable: true}},
+                records: [
+                    {id: 1, turtle_int: 1},
+                    {id: 2, turtle_int: 1},
+                    {id: 3, turtle_int: 1},
+                    {id: 4, turtle_int: 2},
+                    {id: 5, turtle_int: 3},
+                    {id: 6, turtle_int: 4},
+                ],
+            };
+            this.data.partner.records[0].turtles = [1, 2, 3, 4, 5, 6];
+
+            const form = await createView({
+                View: FormView,
+                model: 'partner',
+                data: this.data,
+                arch: `
+                    <form string="Partners">
+                        <sheet>
+                            <notebook>
+                                <page string="P page">
+                                    <field name="turtles">
+                                        <tree default_order="turtle_int">
+                                            <field name="turtle_int" widget="handle"/>
+                                            <field name="id"/>
+                                        </tree>
+                                    </field>
+                                </page>
+                            </notebook>
+                        </sheet>
+                    </form>`,
+                res_id: 1,
+            });
+
+            await testUtils.form.clickEdit(form);
+
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "123456", "default should be sorted by id");
+
+            // Drag and drop the fourth line in first position
+            await testUtils.dom.dragAndDrop(
+                form.$('.ui-sortable-handle').eq(3),
+                form.$('tbody tr').first(),
+                {position: 'top'}
+            );
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "412356", "should still have the 6 rows in the correct order");
+
+            await testUtils.form.clickSave(form);
+
+            assert.deepEqual(_.map(this.data.turtle.records, function (turtle) {
+                return _.pick(turtle, 'id', 'turtle_int');
+            }), [
+                {id: 1, turtle_int: 2},
+                {id: 2, turtle_int: 3},
+                {id: 3, turtle_int: 4},
+                {id: 4, turtle_int: 1},
+                {id: 5, turtle_int: 5},
+                {id: 6, turtle_int: 6},
+            ], "should have saved the updated turtle_int sequence");
+
+            form.destroy();
         });
     });
 });
