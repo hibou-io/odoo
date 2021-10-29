@@ -285,10 +285,15 @@ export function findNode(domPath, findCallback = () => true, stopCallback = () =
  *
  * @param {Node} node
  * @param {string} [selector=undefined]
+ * @param {boolean} [restrictToEditable=false]
  * @returns {HTMLElement}
  */
-export function closestElement(node, selector) {
+export function closestElement(node, selector, restrictToEditable=false) {
     const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    if (restrictToEditable && selector && element) {
+        const elementFound = element.closest(selector);
+        return elementFound && elementFound.querySelector('.odoo-editor-editable') ? null : elementFound;
+    }
     return selector && element ? element.closest(selector) : element || node;
 }
 
@@ -795,7 +800,7 @@ export function preserveCursor(document) {
  * Source:
  * https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
  *
- * */
+ **/
 const blockTagNames = [
     'ADDRESS',
     'ARTICLE',
@@ -899,7 +904,7 @@ export function isBold(node) {
 }
 
 export function isUnbreakable(node) {
-    if (!node || node.nodeType === Node.TEXT_NODE || !node.isContentEditable) {
+    if (!node || node.nodeType === Node.TEXT_NODE) {
         return false;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -978,6 +983,53 @@ export function getInSelection(document, selector) {
                 node => range.intersectsNode(node),
             ))
     );
+}
+
+// This is a list of "paragraph-related elements", defined as elements that
+// behave like paragraphs.
+const paragraphRelatedElements = [
+    'P',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
+];
+
+/**
+ * Return true if the given node allows "paragraph-related elements".
+ *
+ * @see paragraphRelatedElements
+ * @param {Node} node
+ * @returns {boolean}
+ */
+export function allowsParagraphRelatedElements(node) {
+    return isBlock(node) && !paragraphRelatedElements.includes(node.nodeName);
+}
+
+/**
+ * Take a node and unwrap all of its block contents recursively. All blocks
+ * (except for firstChilds) are preceded by a <br> in order to preserve the line
+ * breaks.
+ *
+ * @param {Node} node
+ */
+export function makeContentsInline(node) {
+    let childIndex = 0;
+    for (const child of node.childNodes) {
+        if (isBlock(child)) {
+            if (childIndex && paragraphRelatedElements.includes(child.nodeName)) {
+                child.before(document.createElement('br'));
+            }
+            for (const grandChild of child.childNodes) {
+                child.before(grandChild);
+                makeContentsInline(grandChild);
+            }
+            child.remove();
+        }
+        childIndex += 1;
+    }
 }
 
 /**

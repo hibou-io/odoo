@@ -981,7 +981,7 @@ class Users(models.Model):
                     "and *might* be a proxy. If your Odoo is behind a proxy, "
                     "it may be mis-configured. Check that you are running "
                     "Odoo in Proxy Mode and that the proxy is properly configured, see "
-                    "https://www.odoo.com/documentation/14.0/administration/deployment/deploy.html#https for details.",
+                    "https://www.odoo.com/documentation/15.0/administration/install/deploy.html#https for details.",
                     source
                 )
             raise AccessDenied(_("Too many login failures, please wait a bit before trying again."))
@@ -1471,7 +1471,12 @@ class UsersView(models.Model):
             if is_boolean_group(f):
                 values[f] = get_boolean_group(f) in gids
             elif is_selection_groups(f):
-                selected = [gid for gid in get_selection_groups(f) if gid in gids]
+                # determine selection groups, in order
+                sel_groups = self.env['res.groups'].sudo().browse(get_selection_groups(f))
+                sel_order = {g: len(g.trans_implied_ids & sel_groups) for g in sel_groups}
+                sel_groups = sel_groups.sorted(key=sel_order.get)
+                # determine which ones are in gids
+                selected = [gid for gid in sel_groups.ids if gid in gids]
                 # if 'Internal User' is in the group, this is the "User Type" group
                 # and we need to show 'Internal User' selected, not Public/Portal.
                 if self.env.ref('base.group_user').id in selected:

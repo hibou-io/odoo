@@ -36,6 +36,14 @@ class IrAttachment(models.Model):
                 except AccessError:
                     pass
 
+    def _delete_and_notify(self):
+        for attachment in self:
+            if attachment.res_model == 'mail.channel' and attachment.res_id:
+                self.env['bus.bus']._sendone(self.env['mail.channel'].browse(attachment.res_id), 'ir.attachment/delete', {
+                    'id': attachment.id,
+                })
+        self.unlink()
+
     def _attachment_format(self, commands=False):
         safari = request and request.httprequest.user_agent and request.httprequest.user_agent.browser == 'safari'
         res_list = []

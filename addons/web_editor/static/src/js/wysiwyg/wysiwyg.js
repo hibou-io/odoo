@@ -55,6 +55,7 @@ const Wysiwyg = Widget.extend({
         this.colorpickers = {};
         this._onDocumentMousedown = this._onDocumentMousedown.bind(this);
         this._onBlur = this._onBlur.bind(this);
+        this.customizableLinksSelector = 'a:not([data-toggle="tab"]):not([data-toggle="collapse"])';
     },
     /**
      *
@@ -84,6 +85,12 @@ const Wysiwyg = Widget.extend({
             editorCollaborationOptions = this.setupCollaboration(options.collaborationChannel);
         }
 
+        const getYoutubeVideoElement =  (url) => {
+            const videoWidget = new weWidgets.VideoWidget(this, undefined, {});
+            const src = videoWidget._createVideoNode(url).$video.attr('src');
+            return videoWidget.getWrappedIframe(src)[0];
+        };
+
         this.odooEditor = new OdooEditor(this.$editable[0], Object.assign({
             _t: _t,
             toolbar: this.toolbar.$el[0],
@@ -94,6 +101,7 @@ const Wysiwyg = Widget.extend({
             controlHistoryFromDocument: this.options.controlHistoryFromDocument,
             getContentEditableAreas: this.options.getContentEditableAreas,
             defaultLinkAttributes: this.options.userGeneratedContent ? {rel: 'ugc' } : {},
+            getYoutubeVideoElement: getYoutubeVideoElement,
             getContextFromParentRect: options.getContextFromParentRect,
             getPowerboxElement: () => {
                 const selection = document.getSelection();
@@ -178,7 +186,7 @@ const Wysiwyg = Widget.extend({
 
             self.openMediaDialog(params);
         });
-        this.$editable.on('dblclick', 'a', function (ev) {
+        this.$editable.on('dblclick', this.customizableLinksSelector, function (ev) {
             if (!this.getAttribute('data-oe-model') && self.toolbar.$el.is(':visible')) {
                 self.showTooltip = false;
                 self.toggleLinkTools({
@@ -245,14 +253,14 @@ const Wysiwyg = Widget.extend({
         Wysiwyg.activeCollaborationChannelNames.add(channelName);
 
         this.call('bus_service', 'onNotification', this, (notifications) => {
-            for (const [channel, busData] of notifications) {
+            for (const { payload, type } of notifications) {
                 if (
-                    channel[1] === 'editor_collaboration' &&
-                    channel[2] === modelName &&
-                    channel[3] === fieldName &&
-                    channel[4] === resId
+                    type === 'editor_collaboration' &&
+                    payload.model_name === modelName &&
+                    payload.field_name === fieldName &&
+                    payload.res_id === resId
                 ) {
-                    this._peerToPeerLoading.then(() => this.ptp.handleNotification(busData));
+                    this._peerToPeerLoading.then(() => this.ptp.handleNotification(payload));
                 }
             }
         });
@@ -437,7 +445,7 @@ const Wysiwyg = Widget.extend({
                     }
                 }
             },
-        }
+        };
         return editorCollaborationOptions;
     },
     /**
@@ -707,7 +715,7 @@ const Wysiwyg = Widget.extend({
      * Set cursor to the editor latest position before blur or to the last editable node, ready to type.
      */
     focus: function () {
-        if(!this.odooEditor.historyResetLatestComputedSelection()) {
+        if (!this.odooEditor.historyResetLatestComputedSelection()) {
             // If the editor don't have an history step to focus to,
             // We place the cursor after the end of the editor exiting content.
             const range = document.createRange();
@@ -820,6 +828,10 @@ const Wysiwyg = Widget.extend({
      * @param {boolean} [options.noFocusUrl=false] Disable the automatic focusing of the URL field.
      */
     toggleLinkTools(options = {}) {
+        const linkEl = getInSelection(this.odooEditor.document, 'a');
+        if (linkEl && !linkEl.matches(this.customizableLinksSelector)) {
+            return;
+        }
         if (this.snippetsMenu && !options.forceDialog) {
             if (this.linkTools) {
                 this.linkTools.destroy();
@@ -849,6 +861,9 @@ const Wysiwyg = Widget.extend({
             const restoreSelection = preserveCursor(this.odooEditor.document);
             linkDialog.open();
             linkDialog.on('save', this, data => {
+                if (!data) {
+                    return;
+                }
                 const linkWidget = linkDialog.linkWidget;
                 getDeepRange(this.$editable[0], {range: data.range, select: true});
                 if (!linkWidget.$link.length) {
@@ -918,6 +933,9 @@ const Wysiwyg = Widget.extend({
         mediaDialog.open();
 
         mediaDialog.on('save', this, function (element) {
+            if (!element) {
+                return;
+            }
             // restore saved html classes
             if (params.htmlClass) {
                 element.className += " " + params.htmlClass;
@@ -1331,7 +1349,7 @@ const Wysiwyg = Widget.extend({
             this._updateMediaJustifyButton();
             this._updateFaResizeButtons();
         }
-        const link = getInSelection(this.odooEditor.document, 'a');
+        const link = getInSelection(this.odooEditor.document, this.customizableLinksSelector);
         if (isInMedia || link) {
             // Handle the media/link's tooltip.
             this.showTooltip = true;
@@ -1345,14 +1363,16 @@ const Wysiwyg = Widget.extend({
             }, 400);
         }
         // Update color of already opened colorpickers.
-        for (let eventName in this.colorpickers) {
-            const selectedColor = this._getSelectedColor($, eventName);
-            if (selectedColor) {
-                // If the palette was already opened (e.g. modifying a gradient), the new DOM state
-                // must be reflected in the palette, but the tab selection must not be impacted.
-                this.colorpickers[eventName].setSelectedColor(null, selectedColor, false);
+        setTimeout(() => {
+            for (let eventName in this.colorpickers) {
+                const selectedColor = this._getSelectedColor($, eventName);
+                if (selectedColor) {
+                    // If the palette was already opened (e.g. modifying a gradient), the new DOM state
+                    // must be reflected in the palette, but the tab selection must not be impacted.
+                    this.colorpickers[eventName].setSelectedColor(null, selectedColor, false);
+                }
             }
-        }
+        }, 0);
     },
     _updateMediaJustifyButton: function (commandState) {
         if (!this.lastMediaClicked) {

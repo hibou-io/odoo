@@ -65,7 +65,7 @@ class MrpProduction(models.Model):
     def _get_default_date_planned_start(self):
         if self.env.context.get('default_date_deadline'):
             return fields.Datetime.to_datetime(self.env.context.get('default_date_deadline'))
-        return fields.Datetime.now().replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+        return datetime.datetime.now()
 
     @api.model
     def _get_default_is_locked(self):
@@ -184,13 +184,12 @@ class MrpProduction(models.Model):
         ('confirmed', 'Waiting'),
         ('assigned', 'Ready'),
         ('waiting', 'Waiting Another Operation')],
-        string='Material Availability',
+        string='MO Readiness',
         compute='_compute_reservation_state', copy=False, index=True, readonly=True,
         store=True, tracking=True,
-        help=" * Ready: The material is available to start the production.\n\
-            * Waiting: The material is not available to start the production.\n\
-            The material availability is impacted by the manufacturing readiness\
-            defined on the BoM.")
+        help="Manufacturing readiness for this MO, as per bill of material configuration:\n\
+            * Ready: The material is available to start the production.\n\
+            * Waiting: The material is not available to start the production.\n")
 
     move_raw_ids = fields.One2many(
         'stock.move', 'raw_material_production_id', 'Components',
@@ -258,7 +257,8 @@ class MrpProduction(models.Model):
     mrp_production_backorder_count = fields.Integer("Count of linked backorder", compute='_compute_mrp_production_backorder')
     show_lock = fields.Boolean('Show Lock/unlock buttons', compute='_compute_show_lock')
     components_availability = fields.Char(
-        string="Component Availability", compute='_compute_components_availability')
+        string="Component Status", compute='_compute_components_availability',
+        help="Latest component availability status for this MO. If green, then the MO's readiness status is ready, as per BOM configuration.")
     components_availability_state = fields.Selection([
         ('available', 'Available'),
         ('expected', 'Expected'),
@@ -286,19 +286,16 @@ class MrpProduction(models.Model):
     def _compute_components_availability(self):
         productions = self.filtered(lambda mo: mo.state not in ('cancel', 'done', 'draft'))
         productions.components_availability_state = 'available'
+        productions.components_availability = _('Available')
+
         other_productions = self - productions
         other_productions.components_availability = False
         other_productions.components_availability_state = False
 
-        productions_ready = productions.filtered(lambda mo: mo.reservation_state == 'assigned')
-        productions_ready.components_availability = _('Ready')
-        productions_not_ready = (productions - productions_ready)
-        productions_not_ready.components_availability = _('Available')
-
-        all_raw_moves = productions_not_ready.move_raw_ids
+        all_raw_moves = productions.move_raw_ids
         # Force to prefetch more than 1000 by 1000
         all_raw_moves._fields['forecast_availability'].compute_value(all_raw_moves)
-        for production in productions_not_ready:
+        for production in productions:
             if any(float_compare(move.forecast_availability, 0 if move.state == 'draft' else move.product_qty, move.product_id.uom_id.rounding) == -1 for move in production.move_raw_ids):
                 production.components_availability = _('Not Available')
                 production.components_availability_state = 'late'
@@ -1134,7 +1131,8 @@ class MrpProduction(models.Model):
         self.ensure_one()
         self.lot_producing_id = self.env['stock.production.lot'].create({
             'product_id': self.product_id.id,
-            'company_id': self.company_id.id
+            'company_id': self.company_id.id,
+            'name': self.env['stock.production.lot']._get_next_serial(self.company_id, self.product_id) or self.env['ir.sequence'].next_by_code('stock.lot.serial'),
         })
         if self.move_finished_ids.filtered(lambda m: m.product_id == self.product_id).move_line_ids:
             self.move_finished_ids.filtered(lambda m: m.product_id == self.product_id).move_line_ids.lot_id = self.lot_producing_id
@@ -1177,7 +1175,9 @@ class MrpProduction(models.Model):
         self.move_raw_ids._trigger_scheduler()
         self.picking_ids.filtered(
             lambda p: p.state not in ['cancel', 'done']).action_confirm()
-        self.state = 'confirmed'
+        # Force confirm state only for draft production not for more advanced state like
+        # 'progress' (in case of backorders with some qty_producing)
+        self.filtered(lambda mo: mo.state == 'draft').state = 'confirmed'
         return True
 
     def action_assign(self):
@@ -1517,7 +1517,6 @@ class MrpProduction(models.Model):
         # Remove the serial move line without reserved quantity. Post inventory will assigned all the non done moves
         # So those move lines are duplicated.
         backorders.move_raw_ids.move_line_ids.filtered(lambda ml: ml.product_id.tracking == 'serial' and ml.product_qty == 0).unlink()
-        backorders.move_raw_ids._recompute_state()
 
         for old_wo, wo in zip(self.workorder_ids, backorders.workorder_ids):
             wo.qty_produced = max(old_wo.qty_produced - old_wo.qty_producing, 0)
@@ -1594,7 +1593,7 @@ class MrpProduction(models.Model):
         action = {
             'res_model': 'mrp.production',
             'type': 'ir.actions.act_window',
-            'context': dict(context, mo_ids_to_backorder=None)
+            'context': dict(context, mo_ids_to_backorder=None, button_mark_done_production_ids=None)
         }
         if len(backorders) == 1:
             action.update({
@@ -1753,7 +1752,7 @@ class MrpProduction(models.Model):
             message += "\n".join(component.name for component in multiple_lot_components)
         if message:
             raise UserError(message)
-        next_serial = self.env['stock.production.lot'].get_next_serial(self.company_id, self.product_id)
+        next_serial = self.env['stock.production.lot']._get_next_serial(self.company_id, self.product_id)
         action = self.env["ir.actions.actions"]._for_xml_id("mrp.act_assign_serial_numbers_production")
         action['context'] = {
             'default_production_id': self.id,
@@ -1809,7 +1808,13 @@ class MrpProduction(models.Model):
                     duplicates_unbuild = self.env['stock.move.line'].search_count(domain_unbuild + [
                         ('move_id.unbuild_id', '!=', False)
                     ])
-                    if not (duplicates_unbuild and duplicates - duplicates_unbuild == 0):
+                    removed = self.env['stock.move.line'].search_count([
+                        ('lot_id', '=', move_line.lot_id.id),
+                        ('state', '=', 'done'),
+                        ('location_dest_id.scrap_location', '=', True)
+                    ])
+                    # Either removed or unbuild
+                    if not ((duplicates_unbuild or removed) and duplicates - duplicates_unbuild - removed == 0):
                         raise UserError(message)
                 # Check presence of same sn in current production
                 duplicates = co_prod_move_lines.filtered(lambda ml: ml.qty_done and ml.lot_id == move_line.lot_id) - move_line
@@ -1845,7 +1850,13 @@ class MrpProduction(models.Model):
                     duplicates_unbuild = self.env['stock.move.line'].search_count(domain_unbuild + [
                             ('move_id.unbuild_id', '!=', False)
                         ])
-                    if not (duplicates_unbuild and duplicates - duplicates_unbuild == 0):
+                    removed = self.env['stock.move.line'].search_count([
+                        ('lot_id', '=', move_line.lot_id.id),
+                        ('state', '=', 'done'),
+                        ('location_dest_id.scrap_location', '=', True)
+                    ])
+                    # Either removed or unbuild
+                    if not ((duplicates_unbuild or removed) and duplicates - duplicates_unbuild - removed == 0):
                         raise UserError(message)
                 # Check presence of same sn in current production
                 duplicates = co_prod_move_lines.filtered(lambda ml: ml.qty_done and ml.lot_id == move_line.lot_id) - move_line

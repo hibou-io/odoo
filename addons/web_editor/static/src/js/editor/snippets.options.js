@@ -668,16 +668,6 @@ const ButtonUserValueWidget = UserValueWidget.extend({
     /**
      * @override
      */
-    start: function (parent, title, options) {
-        if (this.options && this.options.childNodes) {
-            this.options.childNodes.forEach(node => this.containerEl.appendChild(node));
-        }
-
-        return this._super(...arguments);
-    },
-    /**
-     * @override
-     */
     async willStart() {
         await this._super(...arguments);
         if (this.options.dataAttributes.activeImg) {
@@ -689,10 +679,23 @@ const ButtonUserValueWidget = UserValueWidget.extend({
      */
     _makeDescriptive() {
         const $el = this._super(...arguments);
+        if (this.imgEl) {
+            $el[0].classList.add('o_we_icon_button');
+        }
         if (this.activeImgEl) {
             this.containerEl.appendChild(this.activeImgEl);
         }
         return $el;
+    },
+    /**
+     * @override
+     */
+    start: function (parent, title, options) {
+        if (this.options && this.options.childNodes) {
+            this.options.childNodes.forEach(node => this.containerEl.appendChild(node));
+        }
+
+        return this._super(...arguments);
     },
 
     //--------------------------------------------------------------------------
@@ -4197,6 +4200,10 @@ registry.sizing = SnippetOptionWidget.extend({
             $body.on('mouseup', bodyMouseUp);
         });
 
+        _.each(resizeValues, (value, key) => {
+            this.$handles.filter('.' + key).toggleClass('readonly', !value);
+        });
+
         return def;
     },
     /**
@@ -4204,12 +4211,6 @@ registry.sizing = SnippetOptionWidget.extend({
      */
     onFocus: function () {
         this._onResize();
-    },
-    /**
-     * @override
-     */
-    onBlur: function () {
-        this.$handles.addClass('readonly');
     },
 
     //--------------------------------------------------------------------------
@@ -4222,16 +4223,6 @@ registry.sizing = SnippetOptionWidget.extend({
     setTarget: function () {
         this._super(...arguments);
         this._onResize();
-    },
-    /**
-     * @override
-     */
-    updateUI: async function () {
-        await this._super(...arguments);
-        const resizeValues = this._getSize();
-        _.each(resizeValues, (value, key) => {
-            this.$handles.filter('.' + key).toggleClass('readonly', !value);
-        });
     },
 
     //--------------------------------------------------------------------------

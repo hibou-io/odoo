@@ -1175,7 +1175,7 @@ QUnit.test('open channel from active_id as channel id', async function (assert) 
 
 QUnit.test('basic rendering of message', async function (assert) {
     // AKU TODO: should be in message-only tests
-    assert.expect(14);
+    assert.expect(15);
 
     // channel expected to be rendered, with a random unique id that will be referenced in the test
     this.data['mail.channel'].records.push({ id: 20 });
@@ -1254,8 +1254,8 @@ QUnit.test('basic rendering of message', async function (assert) {
     );
     assert.strictEqual(
         message.querySelectorAll(`:scope .o_MessageActionList_action`).length,
-        2,
-        "should have 2 actions in action list of message"
+        3,
+        "should have 3 actions in action list of message"
     );
     assert.strictEqual(
         message.querySelectorAll(`:scope .o_MessageActionList_actionStar`).length,
@@ -1266,6 +1266,11 @@ QUnit.test('basic rendering of message', async function (assert) {
         document.body,
         '.o_MessageActionList_actionReaction',
         "should have action to add a reaction"
+    );
+    assert.containsOnce(
+        message,
+        '.o_MessageActionList_actionReply',
+        "should have action to reply to message"
     );
     assert.strictEqual(
         message.querySelectorAll(`:scope .o_Message_content`).length,
@@ -3064,15 +3069,16 @@ QUnit.test('receive new needaction messages', async function (assert) {
 
     // simulate receiving a new needaction message
     await afterNextRender(() => {
-        const data = {
-            body: "not empty",
-            id: 100,
-            needaction_partner_ids: [3],
-            model: 'res.partner',
-            res_id: 20,
-        };
-        const notifications = [[['my-db', 'ir.needaction', 3], data]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.message/inbox',
+            payload: {
+                body: "not empty",
+                id: 100,
+                needaction_partner_ids: [3],
+                model: 'res.partner',
+                res_id: 20,
+            },
+        }]);
     });
     assert.ok(
         document.querySelector(`
@@ -3106,15 +3112,16 @@ QUnit.test('receive new needaction messages', async function (assert) {
 
     // simulate receiving another new needaction message
     await afterNextRender(() => {
-        const data2 = {
-            body: "not empty",
-            id: 101,
-            needaction_partner_ids: [3],
-            model: 'res.partner',
-            res_id: 20,
-        };
-        const notifications2 = [[['my-db', 'ir.needaction', 3], data2]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications2);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.message/inbox',
+            payload: {
+                body: "not empty",
+                id: 101,
+                needaction_partner_ids: [3],
+                model: 'res.partner',
+                res_id: 20,
+            },
+        }]);
     });
     assert.strictEqual(
         document.querySelector(`
@@ -3649,13 +3656,17 @@ QUnit.test('receive new chat message: out of odoo focus (notification, channel)'
 
     // simulate receiving a new message with odoo focused
     await afterNextRender(() => {
-        const messageData = {
-            id: 126,
-            model: 'mail.channel',
-            res_id: 20,
-        };
-        const notifications = [[['my-db', 'mail.channel', 20], messageData]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.channel/new_message',
+            payload: {
+                id: 20,
+                message: {
+                    id: 126,
+                    model: 'mail.channel',
+                    res_id: 20,
+                },
+            },
+        }]);
     });
     assert.verifySteps(['set_title_part']);
 });
@@ -3687,13 +3698,17 @@ QUnit.test('receive new chat message: out of odoo focus (notification, chat)', a
 
     // simulate receiving a new message with odoo focused
     await afterNextRender(() => {
-        const messageData = {
-            id: 126,
-            model: 'mail.channel',
-            res_id: 10,
-        };
-        const notifications = [[['my-db', 'mail.channel', 10], messageData]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.channel/new_message',
+            payload: {
+                id: 10,
+                message: {
+                    id: 126,
+                    model: 'mail.channel',
+                    res_id: 10,
+                },
+            },
+        }]);
     });
     assert.verifySteps(['set_title_part']);
 });
@@ -3738,37 +3753,49 @@ QUnit.test('receive new chat messages: out of odoo focus (tab title)', async fun
 
     // simulate receiving a new message in chat 20 with odoo focused
     await afterNextRender(() => {
-        const messageData1 = {
-            id: 126,
-            model: 'mail.channel',
-            res_id: 20,
-        };
-        const notifications1 = [[['my-db', 'mail.channel', 20], messageData1]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications1);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.channel/new_message',
+            payload: {
+                id: 20,
+                message: {
+                    id: 126,
+                    model: 'mail.channel',
+                    res_id: 20,
+                },
+            },
+        }]);
     });
     assert.verifySteps(['set_title_part']);
 
     // simulate receiving a new message in chat 10 with odoo focused
     await afterNextRender(() => {
-        const messageData2 = {
-            id: 127,
-            model: 'mail.channel',
-            res_id: 10,
-        };
-        const notifications2 = [[['my-db', 'mail.channel', 10], messageData2]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications2);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.channel/new_message',
+            payload: {
+                id: 10,
+                message: {
+                    id: 127,
+                    model: 'mail.channel',
+                    res_id: 10,
+                },
+            },
+        }]);
     });
     assert.verifySteps(['set_title_part']);
 
     // simulate receiving another new message in chat 10 with odoo focused
     await afterNextRender(() => {
-        const messageData3 = {
-            id: 128,
-            model: 'mail.channel',
-            res_id: 10,
-        };
-        const notifications3 = [[['my-db', 'mail.channel', 10], messageData3]];
-        this.widget.call('bus_service', 'trigger', 'notification', notifications3);
+        this.widget.call('bus_service', 'trigger', 'notification', [{
+            type: 'mail.channel/new_message',
+            payload: {
+                id: 10,
+                message: {
+                    id: 128,
+                    model: 'mail.channel',
+                    res_id: 10,
+                },
+            },
+        }]);
     });
     assert.verifySteps(['set_title_part']);
 });
