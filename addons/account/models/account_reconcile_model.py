@@ -276,17 +276,27 @@ class AccountReconcileModel(models.Model):
         '''
         self.ensure_one()
         balance = base_line_dict['balance']
+        tax_type = tax.type_tax_use
+        is_refund = (tax_type == 'sale' and balance > 0) or (tax_type == 'purchase' and balance < 0)
 
-        res = tax.compute_all(balance)
+        res = tax.compute_all(balance, is_refund=is_refund)
+
+        if (tax_type == 'sale' and not is_refund) or (tax_type == 'purchase' and is_refund):
+            base_tags = self.env['account.account.tag'].browse(res['base_tags'])
+            res['base_tags'] = self.env['account.move.line']._revert_signed_tags(base_tags).ids
+
+            for tax_result in res['taxes']:
+                tax_tags = self.env['account.account.tag'].browse(tax_result['tag_ids'])
+                tax_result['tag_ids'] = self.env['account.move.line']._revert_signed_tags(tax_tags).ids
 
         new_aml_dicts = []
         for tax_res in res['taxes']:
             tax = self.env['account.tax'].browse(tax_res['id'])
             balance = tax_res['amount']
-
+            name = ' '.join([x for x in [base_line_dict.get('name', ''), tax_res['name']] if x])
             new_aml_dicts.append({
                 'account_id': tax_res['account_id'] or base_line_dict['account_id'],
-                'name': tax_res['name'],
+                'name': name,
                 'partner_id': base_line_dict.get('partner_id'),
                 'balance': balance,
                 'debit': balance > 0 and balance or 0,
@@ -336,8 +346,11 @@ class AccountReconcileModel(models.Model):
                 match = re.search(line.amount_string, st_line.payment_ref)
                 if match:
                     sign = 1 if residual_balance > 0.0 else -1
-                    extracted_balance = float(re.sub(r'\D' + self.decimal_separator, '', match.group(1)).replace(self.decimal_separator, '.'))
-                    balance = copysign(extracted_balance * sign, residual_balance)
+                    try:
+                        extracted_balance = float(re.sub(r'\D' + self.decimal_separator, '', match.group(1)).replace(self.decimal_separator, '.'))
+                        balance = copysign(extracted_balance * sign, residual_balance)
+                    except ValueError:
+                        balance = 0
                 else:
                     balance = 0
             else:
@@ -353,6 +366,7 @@ class AccountReconcileModel(models.Model):
                 'analytic_account_id': line.analytic_account_id.id,
                 'analytic_tag_ids': [(6, 0, line.analytic_tag_ids.ids)],
                 'reconcile_model_id': self.id,
+                'journal_id': line.journal_id.id,
             }
             lines_vals_list.append(writeoff_line)
 

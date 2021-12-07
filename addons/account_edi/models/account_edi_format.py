@@ -52,6 +52,18 @@ class AccountEdiFormat(models.Model):
     # Export method to override based on EDI Format
     ####################################################
 
+    def _get_invoice_edi_content(self, move):
+        ''' Create a bytes literal of the file content representing the invoice - to be overridden by the EDI Format
+        :returns:       bytes literal of the content generated (typically XML).
+        '''
+        return b''
+
+    def _get_payment_edi_content(self, move):
+        ''' Create a bytes literal of the file content representing the payment - to be overridden by the EDI Format
+        :returns:       bytes literal of the content generated (typically XML).
+        '''
+        return b''
+
     def _is_required_for_invoice(self, invoice):
         """ Indicate if this EDI must be generated for the invoice passed as parameter.
 
@@ -105,6 +117,7 @@ class AccountEdiFormat(models.Model):
         :returns:   A dictionary {'name': name, 'datas': datas} or False if there are no values to embed.
         * name:     The name of the file.
         * datas:    The bytes ot the file.
+        To remove in master
         """
         self.ensure_one()
         attachment = invoice._get_edi_attachment(self)
@@ -275,6 +288,17 @@ class AccountEdiFormat(models.Model):
         self.ensure_one()
         return self.env['account.move']
 
+    def _prepare_invoice_report(self, pdf_writer, edi_document):
+        """
+        Prepare invoice report to be printed.
+        :param pdf_writer: The pdf writer with the invoice pdf content loaded.
+        :param edi_document: The edi document to be added to the pdf file.
+        """
+        # TO OVERRIDE
+        self.ensure_one()
+        if self._is_embedding_to_invoice_pdf_needed() and edi_document.attachment_id:
+            pdf_writer.embed_odoo_attachment(edi_document.attachment_id)
+
     ####################################################
     # Export Internal methods (not meant to be overridden)
     ####################################################
@@ -286,20 +310,15 @@ class AccountEdiFormat(models.Model):
         :param invoice: the invoice to generate the EDI from.
         :returns: the same pdf_content with the EDI of the invoice embed in it.
         """
-        attachments = []
-        for edi_format in self.filtered(lambda edi_format: edi_format._is_embedding_to_invoice_pdf_needed()):
-            attach = edi_format._get_embedding_to_invoice_pdf_values(invoice)
-            if attach:
-                attachments.append(attach)
-
-        if attachments:
-            # Add the attachments to the pdf file
+        to_embed = invoice.edi_document_ids
+        # Add the attachments to the pdf file
+        if to_embed:
             reader_buffer = io.BytesIO(pdf_content)
             reader = OdooPdfFileReader(reader_buffer, strict=False)
             writer = OdooPdfFileWriter()
             writer.cloneReaderDocumentRoot(reader)
-            for vals in attachments:
-                writer.addAttachment(vals['name'], vals['datas'])
+            for edi_document in to_embed:
+                edi_document.edi_format_id._prepare_invoice_report(writer, edi_document)
             buffer = io.BytesIO()
             writer.write(buffer)
             pdf_content = buffer.getvalue()
@@ -497,7 +516,10 @@ class AccountEdiFormat(models.Model):
             if value is not None:
                 domains.append(domain)
 
-        domain = expression.OR(domains)
+        domain = expression.AND([
+            expression.OR(domains),
+            [('company_id', 'in', [False, self.env.company.id])],
+        ])
         return self.env['res.partner'].search(domain, limit=1)
 
     def _retrieve_product(self, name=None, default_code=None, barcode=None):
@@ -517,7 +539,10 @@ class AccountEdiFormat(models.Model):
             if value is not None:
                 domains.append([domain])
 
-        domain = expression.OR(domains)
+        domain = expression.AND([
+            expression.OR(domains),
+            [('company_id', 'in', [False, self.env.company.id])],
+        ])
         return self.env['product.product'].search(domain, limit=1)
 
     def _retrieve_tax(self, amount, type_tax_use):
@@ -527,12 +552,11 @@ class AccountEdiFormat(models.Model):
         :param type_tax_use:    The type of the tax.
         :returns:               A tax or an empty recordset if not found.
         '''
-        domains = [
-            [('amount', '=', float(amount))],
-            [('type_tax_use', '=', type_tax_use)]
-        ]
-
-        return self.env['account.tax'].search(expression.AND(domains), order='sequence ASC', limit=1)
+        return self.env['account.tax'].search([
+            ('amount', '=', float(amount)),
+            ('type_tax_use', '=', type_tax_use),
+            ('company_id', '=', self.env.company.id),
+        ], limit=1)
 
     def _retrieve_currency(self, code):
         '''Search all currencies and find one that matches the code.

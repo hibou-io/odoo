@@ -761,6 +761,9 @@ class Task(models.Model):
             return [fn(n) for day, fn in DAYS.items() if self[day]]
         return [DAYS.get(self.repeat_weekday)(n)]
 
+    def _get_recurrence_start_date(self):
+        return fields.Date.today()
+
     @api.depends(
         'recurring_task', 'repeat_interval', 'repeat_unit', 'repeat_type', 'repeat_until',
         'repeat_number', 'repeat_on_month', 'repeat_on_year', 'mon', 'tue', 'wed', 'thu', 'fri',
@@ -768,7 +771,7 @@ class Task(models.Model):
     def _compute_recurrence_message(self):
         self.recurrence_message = False
         for task in self.filtered(lambda t: t.recurring_task and t._is_recurrence_valid()):
-            date = fields.Date.today()
+            date = task._get_recurrence_start_date()
             number_occurrences = min(5, task.repeat_number if task.repeat_type == 'after' else 5)
             delta = task.repeat_interval if task.repeat_unit == 'day' else 1
             recurring_dates = self.env['project.task.recurrence']._get_next_recurring_dates(
@@ -1219,11 +1222,17 @@ class Task(models.Model):
         self.ensure_one()
 
         project_user_group_id = self.env.ref('project.group_project_user').id
+        project_manager_group_id = self.env.ref('project.group_project_manager').id
 
         group_func = lambda pdata: pdata['type'] == 'user' and project_user_group_id in pdata['groups']
         if self.project_id.privacy_visibility == 'followers':
             allowed_user_ids = self.project_id.allowed_internal_user_ids.partner_id.ids
-            group_func = lambda pdata: pdata['type'] == 'user' and project_user_group_id in pdata['groups'] and pdata['id'] in allowed_user_ids
+            group_func = lambda pdata:\
+                pdata['type'] == 'user'\
+                and (
+                        project_manager_group_id in pdata['groups']\
+                        or (project_user_group_id in pdata['groups'] and pdata['id'] in allowed_user_ids)
+                )
         new_group = ('group_project_user', group_func, {})
 
         if not self.user_id and not self.stage_id.fold:
@@ -1290,6 +1299,8 @@ class Task(models.Model):
         task = super(Task, self.with_context(create_context)).message_new(msg, custom_values=defaults)
         email_list = task.email_split(msg)
         partner_ids = [p.id for p in self.env['mail.thread']._mail_find_partner_from_emails(email_list, records=task, force_create=False) if p]
+        customer_ids = [p.id for p in self.env['mail.thread']._mail_find_partner_from_emails(tools.email_split(defaults['email_from']), records=task) if p]
+        partner_ids += customer_ids
         task.message_subscribe(partner_ids)
         return task
 

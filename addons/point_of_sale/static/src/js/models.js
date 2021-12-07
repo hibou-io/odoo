@@ -67,6 +67,7 @@ exports.PosModel = Backbone.Model.extend({
         this.config = null;
         this.units = [];
         this.units_by_id = {};
+        this.uom_unit_id = null;
         this.default_pricelist = null;
         this.order_sequence = 1;
         window.posmodel = this;
@@ -208,6 +209,13 @@ exports.PosModel = Backbone.Model.extend({
             _.each(units, function(unit){
                 self.units_by_id[unit.id] = unit;
             });
+        }
+    },{
+        model:  'ir.model.data',
+        fields: ['res_id'],
+        domain: function(){ return [['name', '=', 'product_uom_unit']]; },
+        loaded: function(self,unit){
+            self.uom_unit_id = unit[0].res_id;
         }
     },{
         model:  'res.partner',
@@ -1187,7 +1195,7 @@ exports.PosModel = Backbone.Model.extend({
         }
 
         if(parsed_code.type === 'price'){
-            selectedOrder.add_product(product, {price:parsed_code.value});
+            selectedOrder.add_product(product, {price:parsed_code.value, extras:{price_manually_set: true}});
         }else if(parsed_code.type === 'weight'){
             selectedOrder.add_product(product, {quantity:parsed_code.value, merge:false});
         }else if(parsed_code.type === 'discount'){
@@ -1406,6 +1414,10 @@ exports.PosModel = Backbone.Model.extend({
     getCurrencySymbol() {
         return this.currency ? this.currency.symbol : '$';
     },
+
+    htmlToImgLetterRendering() {
+        return false;
+    },
 });
 
 /**
@@ -1545,7 +1557,7 @@ exports.Product = Backbone.Model.extend({
     // ORM. After that they are added in this order to the pricelists.
     get_price: function(pricelist, quantity, price_extra){
         var self = this;
-        var date = moment().startOf('day');
+        var date = moment();
 
         // In case of nested pricelists, it is necessary that all pricelists are made available in
         // the POS. Display a basic alert to the user in this case.
@@ -1929,6 +1941,7 @@ exports.Orderline = Backbone.Model.extend({
             id: this.id,
             quantity:           this.get_quantity(),
             unit_name:          this.get_unit().name,
+            is_in_unit:         this.get_unit().id == this.pos.uom_unit_id,
             price:              this.get_unit_display_price(),
             discount:           this.get_discount(),
             product_name:       this.get_product().display_name,
@@ -2112,11 +2125,18 @@ exports.Orderline = Backbone.Model.extend({
         else
             var price_include = !price_exclude;
         if (tax.amount_type === 'fixed') {
-            var sign_base_amount = Math.sign(base_amount) || 1;
-            // Since base amount has been computed with quantity
-            // we take the abs of quantity
-            // Same logic as bb72dea98de4dae8f59e397f232a0636411d37ce
-            return tax.amount * sign_base_amount * Math.abs(quantity);
+            // Use sign on base_amount and abs on quantity to take into account the sign of the base amount,
+            // which includes the sign of the quantity and the sign of the price_unit
+            // Amount is the fixed price for the tax, it can be negative
+            // Base amount included the sign of the quantity and the sign of the unit price and when
+            // a product is returned, it can be done either by changing the sign of quantity or by changing the
+            // sign of the price unit.
+            // When the price unit is equal to 0, the sign of the quantity is absorbed in base_amount then
+            // a "else" case is needed.
+            if (base_amount)
+                return Math.sign(base_amount) * Math.abs(quantity) * tax.amount;
+            else
+                return quantity * tax.amount;
         }
         if (tax.amount_type === 'percent' && !price_include){
             return base_amount * tax.amount / 100;
@@ -2452,6 +2472,7 @@ exports.Paymentline = Backbone.Model.extend({
     init_from_JSON: function(json){
         this.amount = json.amount;
         this.payment_method = this.pos.payment_methods_by_id[json.payment_method_id];
+        this.can_be_reversed = json.can_be_reversed;
         this.name = this.payment_method.name;
         this.payment_status = json.payment_status;
         this.ticket = json.ticket;
@@ -2535,6 +2556,7 @@ exports.Paymentline = Backbone.Model.extend({
             payment_method_id: this.payment_method.id,
             amount: this.get_amount(),
             payment_status: this.payment_status,
+            can_be_reversed: this.can_be_resersed,
             ticket: this.ticket,
             card_type: this.card_type,
             cardholder_name: this.cardholder_name,
