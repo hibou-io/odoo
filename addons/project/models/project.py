@@ -674,35 +674,9 @@ class Project(models.Model):
         }
 
     def _get_tasks_analysis(self):
-        self.ensure_one()
-        counts = self._get_tasks_analysis_counts(updated=True)
-        data = [{
-            'name': _("Open Tasks"),
-            'action': {
-                'action': "project.action_project_task_user_tree",
-                'additional_context': json.dumps({
-                    'search_default_project_id': self.id,
-                    'active_id': self.id,
-                    'search_default_open_tasks': True,
-                    'search_default_Stage': True,
-                }),
-            },
-            'value': counts['open_tasks_count']
-        }, {
-            'name': _("Updated (Last 30 Days)"),
-            'action': {
-                'action': "project.action_project_task_burndown_chart_report",
-                'additional_context': json.dumps({
-                    'search_default_project_id': self.id,
-                    'active_id': self.id,
-                    'search_default_last_month': 1,
-                    'graph_mode': 'bar'
-                }),
-            },
-            'value': counts['updated_tasks_count']
-        }]
+        # Deprecated
         return {
-            'data': data,
+            'data': [],
         }
 
     def _get_milestones(self):
@@ -772,23 +746,8 @@ class Project(models.Model):
         return buttons
 
     def _get_tasks_analysis_counts(self, created=False, updated=False):
-        tasks = self.env['project.task'].search([('display_project_id', '=', self.id)])
-        open_tasks_count = created_tasks_count = updated_tasks_count = 0
-        tasks_count = len(tasks)
-        thirty_days_ago = datetime.combine(fields.Date.context_today(self) + timedelta(days=-30), datetime.min.time())
-        for t in tasks:
-            if not t.stage_id.fold and not t.stage_id.is_closed:
-                open_tasks_count += 1
-            if created and t.create_date > thirty_days_ago:
-                created_tasks_count += 1
-            if updated and t.write_date > thirty_days_ago:
-                updated_tasks_count += 1
-        return dict(
-            open_tasks_count=open_tasks_count,
-            created_tasks_count=created_tasks_count,
-            updated_tasks_count=updated_tasks_count,
-            tasks_count=tasks_count
-        )
+        # Deprecated
+        return {}
 
     # ---------------------------------------------------
     #  Business Methods
@@ -959,7 +918,7 @@ class Task(models.Model):
         help="Sum of the time planned of all the sub-tasks linked to this task. Usually less than or equal to the initially planned time of this task.")
     # Tracking of this field is done in the write function
     user_ids = fields.Many2many('res.users', relation='project_task_user_rel', column1='task_id', column2='user_id',
-        string='Assignees', default=lambda self: self.env.user)
+        string='Assignees', default=lambda self: self.env.user, context={'active_test': False})
     # User names displayed in project sharing views
     portal_user_names = fields.Char(compute='_compute_portal_user_names', compute_sudo=True, search='_search_portal_user_names')
     # Second Many2many containing the actual personal stage for the current user
@@ -1676,6 +1635,7 @@ class Task(models.Model):
         # The sudo is required for a portal user as the record creation
         # requires the read access on other models, as mail.template
         # in order to compute the field tracking
+        was_in_sudo = self.env.su
         if is_portal_user:
             ctx = {
                 key: value for key, value in self.env.context.items()
@@ -1686,7 +1646,10 @@ class Task(models.Model):
             self = self.with_context(ctx).sudo()
         tasks = super(Task, self).create(vals_list)
         tasks._populate_missing_personal_stages()
-        if is_portal_user:
+        self._task_message_auto_subscribe_notify({task: task.user_ids - self.env.user for task in tasks})
+
+        # in case we were already in sudo, we don't check the rights.
+        if is_portal_user and not was_in_sudo:
             # since we use sudo to create tasks, we need to check
             # if the portal user could really create the tasks based on the ir rule.
             tasks.with_user(self.env.user).check_access_rule('create')
@@ -1753,6 +1716,9 @@ class Task(models.Model):
         if portal_can_write:
             tasks = tasks.sudo()
 
+        # Track user_ids to send assignment notifications
+        old_user_ids = {t: t.user_ids for t in self}
+
         # X2Many Field Tracking
         # Extract to a separate function if necessary
         x2m_tracked_fields = {'user_ids', 'depend_on_ids'}
@@ -1788,6 +1754,8 @@ class Task(models.Model):
                             old_value, new_value, field, {'type': 'char', 'string': field_desc}, 100, self._name)))
                 if tracking_value_ids:
                     task._message_log(tracking_value_ids=tracking_value_ids)
+
+        self._task_message_auto_subscribe_notify({task: task.user_ids - old_user_ids[task] - self.env.user for task in self})
 
         if 'user_ids' in vals:
             tasks._populate_missing_personal_stages()
@@ -1843,14 +1811,61 @@ class Task(models.Model):
     # Mail gateway
     # ---------------------------------------------------
 
+    @api.model
+    def _task_message_auto_subscribe_notify(self, users_per_task):
+        # Utility method to send assignation notification upon writing/creation.
+        template_id = self.env['ir.model.data']._xmlid_to_res_id('project.project_message_user_assigned', raise_if_not_found=False)
+        if not template_id:
+            return
+        view = self.env['ir.ui.view'].browse(template_id)
+        task_model_description = self.env['ir.model']._get(self._name).display_name
+        for task, users in users_per_task.items():
+            if not users:
+                continue
+            values = {
+                'object': task,
+                'model_description': task_model_description,
+                'access_link': task._notify_get_action_link('view'),
+            }
+            for user in users:
+                values.update(assignee_name=user.sudo().name)
+                assignation_msg = view._render(values, engine='ir.qweb', minimal_qcontext=True)
+                assignation_msg = self.env['mail.render.mixin']._replace_local_links(assignation_msg)
+                task.message_notify(
+                    subject=_('You have been assigned to %s', task.display_name),
+                    body=assignation_msg,
+                    partner_ids=user.partner_id.ids,
+                    record_name=task.display_name,
+                    email_layout_xmlid='mail.mail_notification_light',
+                    model_description=task_model_description,
+                )
+
+    def _message_auto_subscribe_followers(self, updated_values, default_subtype_ids):
+        if 'user_ids' not in updated_values:
+            return []
+        # Since the changes to user_ids becoming a m2m, the default implementation of this function
+        #  could not work anymore, override the function to keep the functionality.
+        new_followers = []
+        # Normalize input to tuple of ids
+        value = self._fields['user_ids'].convert_to_cache(updated_values.get('user_ids', []), self.env['project.task'], validate=False)
+        users = self.env['res.users'].browse(value)
+        for user in users:
+            try:
+                if user.partner_id:
+                    # The you have been assigned notification is handled separately
+                    new_followers.append((user.partner_id.id, default_subtype_ids, False))
+            except:
+                pass
+        return new_followers
+
     def _mail_track(self, tracked_fields, initial_values):
         result = super()._mail_track(tracked_fields, initial_values)
         changes, tracking_value_ids = result
         # Track changes on depending tasks
         depends_tracked_fields = self._get_depends_tracked_fields()
         depends_changes = changes & depends_tracked_fields
-        if depends_changes and self.user_has_groups('project.group_project_task_dependencies') and self.allow_task_dependencies:
-            parent_ids = self.env['project.task'].search([('depend_on_ids', 'in', self.ids)])
+        if depends_changes and self.allow_task_dependencies and self.user_has_groups('project.group_project_task_dependencies'):
+            parent_ids = self.dependent_ids
             if parent_ids:
                 fields_to_ids = self.env['ir.model.fields']._get_ids('project.task')
                 field_ids = [fields_to_ids.get(name) for name in depends_changes]
@@ -1858,7 +1873,7 @@ class Task(models.Model):
                     tracking_values for tracking_values in tracking_value_ids
                     if tracking_values[2]['field'] in field_ids
                 ]
-                subtype = self.env.ref('project.mt_task_dependency_change')
+                subtype = self.env['ir.model.data']._xmlid_to_res_id('project.mt_task_dependency_change')
                 # We want to include the original subtype message coming from the child task
                 # for example when the stage changes the message in the chatter starts with 'Stage Changed'
                 child_subtype = self._track_subtype(dict((col_name, initial_values[col_name]) for col_name in changes))
@@ -1870,7 +1885,7 @@ class Task(models.Model):
                     'child_subtype': child_subtype_info,
                 })
                 for p in parent_ids:
-                    p.message_post(body=body, subtype_id=subtype.id, tracking_value_ids=depends_tracking_value_ids)
+                    p.message_post(body=body, subtype_id=subtype, tracking_value_ids=depends_tracking_value_ids)
         return result
 
     def _track_template(self, changes):
@@ -2079,7 +2094,7 @@ class Task(models.Model):
             action['res_id'] = self.dependent_ids.id
         else:
             action['name'] = _('Dependent Tasks')
-            action['view_mode'] = 'tree,form,kanban,calendar,pivot,graph,gantt,activity,map'
+            action['view_mode'] = 'tree,form,kanban,calendar,pivot,graph,activity'
             action['domain'] = [('depend_on_ids', '=', self.id)]
         return action
 
@@ -2088,7 +2103,7 @@ class Task(models.Model):
             'name': 'Tasks in Recurrence',
             'type': 'ir.actions.act_window',
             'res_model': 'project.task',
-            'view_mode': 'tree,form,kanban,calendar,pivot,graph,gantt,activity,map',
+            'view_mode': 'tree,form,kanban,calendar,pivot,graph,activity',
             'domain': [('recurrence_id', 'in', self.recurrence_id.ids)],
         }
 
@@ -2122,6 +2137,11 @@ class Task(models.Model):
 
     def _rating_get_parent_field_name(self):
         return 'project_id'
+
+    def rating_get_rated_partner_id(self):
+        """ Overwrite since we have user_ids and not user_id """
+        tasks_with_one_user = self.filtered(lambda task: len(task.user_ids) == 1 and task.user_ids.partner_id)
+        return tasks_with_one_user.user_ids.partner_id or self.env['res.partner']
 
     # ---------------------------------------------------
     # Privacy

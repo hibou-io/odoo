@@ -228,7 +228,6 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
             }
             this.wysiwyg.odooEditor.observerActive();
             this.wysiwyg.setValue($codeview.val());
-            this.wysiwyg.odooEditor.historyStep();
         } else {
             this.resizerHandleObserver = new MutationObserver((mutations, observer) => {
                 for (let mutation of mutations) {
@@ -527,8 +526,8 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         $button.css({
             'font-size': '15px',
             position: 'absolute',
-            right: '+5px',
-            top: '+5px',
+            right: odoo.debug && this.nodeOptions.codeview ? '40px' : '5px',
+            top: '5px',
         });
         this.$el.append($button);
         if (odoo.debug && this.nodeOptions.codeview) {

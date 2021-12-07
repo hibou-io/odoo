@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 15.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-05 10:53+0000\n"
+"POT-Creation-Date: 2021-11-16 13:18+0000\n"
 "PO-Revision-Date: 2021-09-14 12:25+0000\n"
 "Last-Translator: 敬雲 林 <chingyun@yuanchih-consult.com>, 2021\n"
 "Language-Team: Chinese (Taiwan) (https://www.transifex.com/odoo/teams/41243/zh_TW/)\n"
@@ -876,6 +876,7 @@ msgid "Assembling"
 msgstr ""
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 msgid "Assign to Me"
 msgstr "指派給我"
@@ -904,7 +905,10 @@ msgstr "指派給"
 #: model:ir.model.fields,field_description:project.field_project_task_burndown_chart_report__user_ids
 #: model:ir.model.fields,field_description:project.field_report_project_task_user__user_ids
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
+#: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
+#: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_kanban
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_search
+#: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_tree
 #: model_terms:ir.ui.view,arch_db:project.view_task_project_user_search
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 #, python-format
@@ -1007,7 +1011,6 @@ msgstr "阻塞"
 #: model:ir.model.fields.selection,name:project.selection__report_project_task_user__state__blocked
 #: model:project.task,legend_blocked:project.project_task_1
 #: model:project.task,legend_blocked:project.project_task_12
-#: model:project.task,legend_blocked:project.project_task_19
 #: model:project.task,legend_blocked:project.project_task_2
 #: model:project.task,legend_blocked:project.project_task_20
 #: model:project.task,legend_blocked:project.project_task_24
@@ -1066,6 +1069,7 @@ msgstr "燃盡圖"
 #. module: project
 #: model:project.task,legend_done:project.project_task_10
 #: model:project.task,legend_done:project.project_task_11
+#: model:project.task,legend_done:project.project_task_19
 #: model:project.task,legend_done:project.project_task_21
 #: model:project.task,legend_done:project.project_task_22
 #: model:project.task,legend_done:project.project_task_27
@@ -1521,6 +1525,11 @@ msgid "Deadline"
 msgstr "截止日期"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_message_user_assigned
+msgid "Dear"
+msgstr "親愛的"
+
+#. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_month__december
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_month__december
 msgid "December"
@@ -1932,7 +1941,7 @@ msgstr "五"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__fri
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__fri
 msgid "Friday"
-msgstr "週五"
+msgstr "五"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_search
@@ -2704,7 +2713,7 @@ msgstr "一"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__mon
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__mon
 msgid "Monday"
-msgstr "週一"
+msgstr "一"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_unit__month
@@ -2771,6 +2780,7 @@ msgstr "任務名稱"
 #. module: project
 #: model:project.task,legend_blocked:project.project_task_10
 #: model:project.task,legend_blocked:project.project_task_11
+#: model:project.task,legend_blocked:project.project_task_19
 #: model:project.task,legend_blocked:project.project_task_21
 #: model:project.task,legend_blocked:project.project_task_22
 #: model:project.task,legend_blocked:project.project_task_27
@@ -3281,6 +3291,11 @@ msgid "Portal Access URL"
 msgstr "網站入口訪問網址"
 
 #. module: project
+#: model:ir.model.fields,field_description:project.field_project_task__portal_user_names
+msgid "Portal User Names"
+msgstr ""
+
+#. module: project
 #. openerp-web
 #: code:addons/project/static/src/js/project_task_kanban_examples.js:0
 #, python-format
@@ -3326,7 +3341,7 @@ msgstr "盈利能力"
 #: model_terms:ir.ui.view,arch_db:project.project_update_view_kanban
 #: model_terms:ir.ui.view,arch_db:project.project_update_view_tree
 msgid "Progress"
-msgstr "熟練度"
+msgstr "專案進度"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_update__progress_percentage
@@ -3693,7 +3708,6 @@ msgid "Ready for Next Stage"
 msgstr "下一階段就緒"
 
 #. module: project
-#: model:project.task,legend_done:project.project_task_19
 #: model:project.task.type,legend_done:project.project_stage_3
 msgid "Ready to reopen"
 msgstr "準備重新開啟"
@@ -3927,7 +3941,7 @@ msgstr "六"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__sat
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__sat
 msgid "Saturday"
-msgstr "週六"
+msgstr "六"
 
 #. module: project
 #. openerp-web
@@ -4273,7 +4287,7 @@ msgstr "日"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__sun
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__sun
 msgid "Sunday"
-msgstr "週日"
+msgstr "日"
 
 #. module: project
 #. openerp-web
@@ -4689,7 +4703,7 @@ msgstr "四"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__thu
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__thu
 msgid "Thursday"
-msgstr "週四"
+msgstr "四"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
@@ -4813,7 +4827,7 @@ msgstr "二"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__tue
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__tue
 msgid "Tuesday"
-msgstr "週二"
+msgstr "二"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_project__rating_status_period__bimonthly
@@ -4834,6 +4848,11 @@ msgstr "記錄的異常活動的類型。"
 #, python-format
 msgid "Unarchive"
 msgstr "取消歸檔"
+
+#. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
+msgid "Unassign Me"
+msgstr ""
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_search
@@ -4963,6 +4982,11 @@ msgid "User"
 msgstr "使用者"
 
 #. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_message_user_assigned
+msgid "View"
+msgstr "檢視"
+
+#. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 msgid "View Task"
@@ -5015,7 +5039,7 @@ msgstr "三"
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_weekday__wed
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__wed
 msgid "Wednesday"
-msgstr "週三"
+msgstr "三"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_project__rating_status_period__weekly
@@ -5153,6 +5177,17 @@ msgid ""
 "You cannot delete stages containing tasks. You should first delete all of "
 "their tasks."
 msgstr "您不能刪除包含任務的階段。 您應該首先刪除其所有任務。"
+
+#. module: project
+#: code:addons/project/models/project.py:0
+#, python-format
+msgid "You have been assigned to %s"
+msgstr "您已被指派到 %s"
+
+#. module: project
+#: model_terms:ir.ui.view,arch_db:project.project_message_user_assigned
+msgid "You have been assigned to the"
+msgstr "您被指派到"
 
 #. module: project
 #: code:addons/project/models/project.py:0

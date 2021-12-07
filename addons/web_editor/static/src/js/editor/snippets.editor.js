@@ -456,6 +456,10 @@ var SnippetEditor = Widget.extend({
         // and would thus produce a deadlock. Also, this awaited
         // 'activate_snippet' call would allow to remove the 'toggleOverlay' and
         // 'toggleOptions' calls at the start of this function.
+        // TODO also to be checked: this not being awaited, the DOM is removed
+        // first, destroying the related editors and not calling onBlur... to
+        // check if this has always been like this or not and this should be
+        // unit tested.
         const parent = this.$target[0].parentElement;
         const nextSibling = this.$target[0].nextElementSibling;
         const previousSibling = this.$target[0].previousElementSibling;
@@ -487,6 +491,7 @@ var SnippetEditor = Widget.extend({
                         return el.matches(this.layoutElementsSelector);
                     });
                 return isEmpty && !$el.hasClass('oe_structure') && !$el.hasClass('oe_unremovable')
+                    && !$el.parent().hasClass('carousel-item')
                     && (!editor || editor.isTargetParentEditable);
             };
 
@@ -568,7 +573,7 @@ var SnippetEditor = Widget.extend({
         }
 
         if (this.areOptionsShown() === show) {
-            return this._customize$Elements;
+            return null;
         }
 
         // All onFocus before all ui updates as the onFocus of an option might
@@ -834,7 +839,7 @@ var SnippetEditor = Widget.extend({
      * @private
      */
     _onDragAndDropStart: function () {
-        this.wysiwyg.odooEditor.observerUnactive('dragAndDropMoveSnippet');
+        this.options.wysiwyg.odooEditor.observerUnactive('dragAndDropMoveSnippet');
         this.trigger_up('drag_and_drop_start');
         this.options.wysiwyg.odooEditor.automaticStepUnactive();
         var self = this;
@@ -948,7 +953,7 @@ var SnippetEditor = Widget.extend({
         this.$body.removeClass('move-important');
         $clone.remove();
 
-        this.wysiwyg.odooEditor.observerActive('dragAndDropMoveSnippet');
+        this.options.wysiwyg.odooEditor.observerActive('dragAndDropMoveSnippet');
         if (this.dropped) {
             if (prev) {
                 this.$target.insertAfter(prev);
@@ -1563,11 +1568,16 @@ var SnippetsMenu = Widget.extend({
     _activateInsertionZones: function ($selectorSiblings, $selectorChildren) {
         var self = this;
 
-        // If a modal is open, the drop zones must be created only in this modal
-        const $openModal = self.getEditableArea().find('.modal:visible');
-        if ($openModal.length) {
-            $selectorSiblings = $openModal.find($selectorSiblings);
-            $selectorChildren = $openModal.find($selectorChildren);
+        // If a modal or a dropdown is open, the drop zones must be created
+        // only in this element.
+        const $editableArea = self.getEditableArea();
+        let $open = $editableArea.find('.modal:visible');
+        if (!$open.length) {
+            $open = $editableArea.find('.dropdown-menu.show').addBack('.dropdown-menu.show').parent();
+        }
+        if ($open.length) {
+            $selectorSiblings = $open.find($selectorSiblings);
+            $selectorChildren = $open.find($selectorChildren);
         }
 
         // Check if the drop zone should be horizontal or vertical
@@ -1785,7 +1795,8 @@ var SnippetsMenu = Widget.extend({
                 }
                 resolve(null);
             }).then(async editorToEnable => {
-                if (ifInactiveOptions && this._enabledEditorHierarchy.includes(editorToEnable)) {
+                if (!previewMode && this._enabledEditorHierarchy[0] === editorToEnable
+                        || ifInactiveOptions && this._enabledEditorHierarchy.includes(editorToEnable)) {
                     return editorToEnable;
                 }
 
@@ -1802,8 +1813,14 @@ var SnippetsMenu = Widget.extend({
                 for (let i = this.snippetEditors.length; i--;) {
                     const editor = this.snippetEditors[i];
                     editor.toggleOverlay(false, previewMode);
-                    if (!previewMode && !this._enabledEditorHierarchy.includes(editor)) {
-                        await editor.toggleOptions(false);
+                    if (!previewMode) {
+                        const wasShown = !!await editor.toggleOptions(false);
+                        if (wasShown) {
+                            this._updateRightPanelContent({
+                                content: [],
+                                tab: this.tabs.BLOCKS,
+                            });
+                        }
                     }
                 }
                 // ... then enable the right editor or look if some have been
@@ -1836,6 +1853,15 @@ var SnippetsMenu = Widget.extend({
                 }
 
                 return editorToEnable;
+            }).then(editor => {
+                // If a link was clicked, the linktools should be focused after
+                // the right panel is shown to the user.
+                if (this._currentTab === this.tabs.OPTIONS
+                        && this.options.wysiwyg.linkTools
+                        && !this.options.wysiwyg.linkTools.noFocusUrl) {
+                    this.options.wysiwyg.linkTools.focusUrl();
+                }
+                return editor;
             });
         });
     },
@@ -2319,7 +2345,11 @@ var SnippetsMenu = Widget.extend({
                     return dragSnip;
                 },
                 start: function () {
+                    const prom = new Promise(resolve => dragAndDropResolve = () => resolve());
+                    self._mutex.exec(() => prom);
+
                     self.options.wysiwyg.odooEditor.automaticStepUnactive();
+
                     self.$el.find('.oe_snippet_thumbnail').addClass('o_we_already_dragging');
                     self.options.wysiwyg.odooEditor.observerUnactive('dragAndDropCreateSnippet');
 
@@ -2393,9 +2423,6 @@ var SnippetsMenu = Widget.extend({
                     self.draggableComponent.$scrollTarget.on('scroll.scrolling_element', function () {
                         self.$el.trigger('scroll');
                     });
-
-                    const prom = new Promise(resolve => dragAndDropResolve = () => resolve());
-                    self._mutex.exec(() => prom);
                 },
                 stop: async function (ev, ui) {
                     const doc = self.options.wysiwyg.odooEditor.document;
@@ -2424,22 +2451,27 @@ var SnippetsMenu = Widget.extend({
                     }
 
                     self.getEditableArea().find('.oe_drop_zone').droppable('destroy').remove();
+
+                    let $toInsertParent;
+                    let prev;
+                    let next;
+                    if (dropped) {
+                        prev = $toInsert.first()[0].previousSibling;
+                        next = $toInsert.last()[0].nextSibling;
+
+                        $toInsertParent = $toInsert.parent();
+                        $toInsert.detach();
+                    }
+
                     self.options.wysiwyg.odooEditor.observerActive('dragAndDropCreateSnippet');
 
                     if (dropped) {
-                        var prev = $toInsert.first()[0].previousSibling;
-                        var next = $toInsert.last()[0].nextSibling;
-
                         if (prev) {
-                            $toInsert.detach();
                             $toInsert.insertAfter(prev);
                         } else if (next) {
-                            $toInsert.detach();
                             $toInsert.insertBefore(next);
                         } else {
-                            var $parent = $toInsert.parent();
-                            $toInsert.detach();
-                            $parent.prepend($toInsert);
+                            $toInsertParent.prepend($toInsert);
                         }
 
                         var $target = $toInsert;
@@ -2491,7 +2523,9 @@ var SnippetsMenu = Widget.extend({
                         });
                     } else {
                         $toInsert.remove();
-                        dragAndDropResolve();
+                        if (dragAndDropResolve) {
+                            dragAndDropResolve();
+                        }
                         self.$el.find('.oe_snippet_thumbnail').removeClass('o_we_already_dragging');
                     }
                 },
