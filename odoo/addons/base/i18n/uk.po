@@ -18425,7 +18425,7 @@ msgstr "Джерсі "
 #: model:ir.model.fields,field_description:base.field_res_partner__function
 #: model:ir.model.fields,field_description:base.field_res_users__function
 msgid "Job Position"
-msgstr "Вакансія"
+msgstr "Посада"
 
 #. module: base
 #: model:res.country,name:base.jo
@@ -23116,6 +23116,20 @@ msgstr "Odoo допоможе вам легко відстежувати всі 
 msgid "Odoo helps you easily track all activities related to a vendor."
 msgstr ""
 "Odoo допоможе вам легко відстежувати всі дії, пов'язані з постачальником."
+
+#. module: base
+#: code:addons/base/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"Odoo is unable to merge the PDFs attached to the following records:\n"
+"%s\n"
+"\n"
+"Please exclude them from the selection to continue. It's possible to still retrieve those PDFs by selecting each of the affected records individually, which will avoid merging."
+msgstr ""
+"Odoo не може об’єднати PDF-файли, додані до наступних записів:\n"
+"%s\n"
+"\n"
+"Щоб продовжити, виключіть їх із вибору. Можна все одно отримати ці PDF-файли, вибравши кожен із порушених записів окремо, що дозволить уникнути злиття."
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_odoo_referral
@@ -27839,6 +27853,12 @@ msgid "The internal user in charge of this contact."
 msgstr "Внутрішній користувач, який відповідає за цей контакт."
 
 #. module: base
+#: code:addons/base/models/res_country.py:106
+#, python-format
+msgid "The layout contains an invalid format key"
+msgstr "Макет містить недійсний ключ формату"
+
+#. module: base
 #: model:ir.model.fields,help:base.field_ir_model__inherited_model_ids
 msgid "The list of models that extends the current model."
 msgstr "Список моделей, що розширюють поточну."
@@ -30313,8 +30333,10 @@ msgstr "Не можна активувати суперкористувача."
 #. module: base
 #: code:addons/base/models/res_partner.py:0
 #, python-format
-msgid "You cannot archive a contact linked to an internal user."
-msgstr "Неможливо архівувати контакт, пов'язаний із внутрішнім користувачем."
+msgid "You cannot archive a contact linked to a portal or internal user."
+msgstr ""
+"Ви не можете архівувати контакт, який пов'язаний з публічним або внутрішнім "
+"користувачем."
 
 #. module: base
 #: code:addons/base/models/res_partner.py:0

@@ -141,6 +141,7 @@ publicWidget.registry.websiteForum = publicWidget.Widget.extend({
                     res_model: 'forum.post',
                     res_id: +window.location.pathname.split('-').pop(),
                 },
+                disableFullMediaDialog: true,
                 disableResizeImage: true,
             };
             if (!hasFullEdit) {
@@ -513,6 +514,24 @@ publicWidget.registry.websiteForumSpam = publicWidget.Widget.extend({
         }).then(function () {
             window.location.reload();
         });
+    },
+});
+
+publicWidget.registry.WebsiteForumBackButton = publicWidget.Widget.extend({
+    selector: '.o_back_button',
+    events: {
+        'click': '_onBackButtonClick',
+    },
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     */
+    _onBackButtonClick() {
+        window.history.back();
     },
 });
 

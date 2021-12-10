@@ -4,6 +4,7 @@ import time
 import math
 import re
 import logging
+import warnings
 
 from odoo.osv import expression
 from odoo.tools.float_utils import float_round as round, float_compare
@@ -137,9 +138,8 @@ class AccountTaxReportLine(models.Model):
                 plus_child_tags.write({'name': '+' + vals['tag_name']})
 
             else:
-                # tag_name was set empty, so we remove the tags
-                self._delete_tags_from_taxes(self.mapped('tag_ids.id'))
-                self.write({'tag_ids': [(2, tag.id, 0) for tag in self.mapped('tag_ids')]})
+                # tag_name was set empty, so we remove the tags that are not shared
+                self._remove_tax_used_only_by_self()
 
         if 'country_id' in vals and self.tag_ids:
             # Writing the country of a tax report line should overwrite the country of its tags
@@ -148,16 +148,26 @@ class AccountTaxReportLine(models.Model):
         return rslt
 
     def unlink(self):
-        self._delete_tags_from_taxes(self.mapped('tag_ids.id'))
+        self._remove_tax_used_only_by_self()
         children = self.mapped('children_line_ids')
         if children:
             children.unlink()
         return super(AccountTaxReportLine, self).unlink()
 
+    def _remove_tax_used_only_by_self(self):
+        """ Deletes and removes from taxes and move lines all the
+        tags from the provided tax report lines that are not linked
+        to any other tax report lines.
+        """
+        all_tags = self.mapped('tag_ids')
+        tags_to_unlink = all_tags.filtered(lambda x: not (x.tax_report_line_ids - self))
+        self.write({'tag_ids': [(3, tag.id, 0) for tag in tags_to_unlink]})
+        self._delete_tags_from_taxes(tags_to_unlink.ids)
+
     def _delete_tags_from_taxes(self, tag_ids_to_delete):
         """ Based on a list of tag ids, removes them first from the
         repartition lines they are linked to, then deletes them
-        from the account move lines.
+        from the account move lines, and finally unlink them.
         """
         if not tag_ids_to_delete:
             # Nothing to do, then!
@@ -172,6 +182,8 @@ class AccountTaxReportLine(models.Model):
 
         self.env['account.move.line'].invalidate_cache(fnames=['tag_ids'])
         self.env['account.tax.repartition.line'].invalidate_cache(fnames=['tag_ids'])
+
+        self.env['account.account.tag'].browse(tag_ids_to_delete).unlink()
 
     @api.constrains('formula', 'tag_name')
     def _validate_formula(self):
@@ -357,10 +369,12 @@ class AccountAccount(models.Model):
             record.opening_credit = opening_credit
 
     def _set_opening_debit(self):
-        self._set_opening_debit_credit(self.opening_debit, 'debit')
+        for record in self:
+            record._set_opening_debit_credit(record.opening_debit, 'debit')
 
     def _set_opening_credit(self):
-        self._set_opening_debit_credit(self.opening_credit, 'credit')
+        for record in self:
+            record._set_opening_debit_credit(record.opening_credit, 'credit')
 
     def _set_opening_debit_credit(self, amount, field):
         """ Generic function called by both opening_debit and opening_credit's
@@ -702,6 +716,7 @@ class AccountJournal(models.Model):
             ('bank', 'Bank'),
             ('general', 'Miscellaneous'),
         ], required=True,
+        inverse='_inverse_type',
         help="Select 'Sale' for customer invoices journals.\n"\
         "Select 'Purchase' for vendor bills journals.\n"\
         "Select 'Cash' or 'Bank' for journals that are used in customer or vendor payments.\n"\
@@ -766,7 +781,7 @@ class AccountJournal(models.Model):
     # alias configuration for journals
     alias_id = fields.Many2one('mail.alias', string='Alias', copy=False)
     alias_domain = fields.Char('Alias domain', compute='_compute_alias_domain', default=lambda self: self.env["ir.config_parameter"].sudo().get_param("mail.catchall.domain"))
-    alias_name = fields.Char('Alias Name', related='alias_id.alias_name', help="It creates draft invoices and bills by sending an email.", readonly=False)
+    alias_name = fields.Char('Alias Name', compute='_compute_alias_name', inverse='_inverse_alias_name', help="It creates draft invoices and bills by sending an email.", readonly=False)
 
     journal_group_ids = fields.Many2many('account.journal.group', domain="[('company_id', '=', company_id)]", string="Journal Groups")
 
@@ -776,10 +791,21 @@ class AccountJournal(models.Model):
         ('code_company_uniq', 'unique (code, name, company_id)', 'The code and name of the journal must be unique per company !'),
     ]
 
+    def _inverse_type(self):
+        for record in self:
+            record._update_mail_alias()
+
     def _compute_alias_domain(self):
         alias_domain = self.env["ir.config_parameter"].sudo().get_param("mail.catchall.domain")
         for record in self:
             record.alias_domain = alias_domain
+
+    @api.depends('alias_id')
+    def _compute_alias_name(self):
+        for record in self:
+            record.alias_name = record.alias_id.alias_name
+            
+    _inverse_alias_name = _inverse_type
 
     # do not depend on 'sequence_id.date_range_ids', because
     # sequence_id._get_current_sequence() may invalidate it!
@@ -933,18 +959,26 @@ class AccountJournal(models.Model):
             name=_("%s (copy)") % (self.name or ''))
         return super(AccountJournal, self).copy(default)
 
-    def _update_mail_alias(self, vals):
-        self.ensure_one()
-        alias_values = self._get_alias_values(type=vals.get('type') or self.type, alias_name=vals.get('alias_name'))
-        if self.alias_id:
-            self.alias_id.write(alias_values)
-        else:
-            self.alias_id = self.env['mail.alias'].with_context(alias_model_name='account.move',
-                alias_parent_model_name='account.journal').create(alias_values)
+    def _update_mail_alias(self, vals=None):
+        if vals is not None:
+            warnings.warn(
+                '`vals` is a deprecated argument of `_update_mail_alias`', 
+                DeprecationWarning, 
+                stacklevel=2
+            )
 
-        if vals.get('alias_name'):
-            # remove alias_name to avoid useless write on alias
-            del(vals['alias_name'])
+        self.ensure_one()
+        if self.type in ('purchase', 'sale'):
+            alias_values = self._get_alias_values(type=self.type, alias_name=self.alias_name)
+            if self.alias_id:
+                self.alias_id.write(alias_values)
+            else:
+                self.alias_id = self.env['mail.alias'].with_context(
+                    alias_model_name='account.move',
+                    alias_parent_model_name='account.journal',
+                ).create(alias_values)
+        elif self.alias_id:
+            self.alias_id.unlink()
 
     def write(self, vals):
         for journal in self:
@@ -980,8 +1014,6 @@ class AccountJournal(models.Model):
                     bank_account = self.env['res.partner.bank'].browse(vals['bank_account_id'])
                     if bank_account.partner_id != company.partner_id:
                         raise UserError(_("The partners of the journal's company and the related bank account mismatch."))
-            if 'alias_name' in vals:
-                journal._update_mail_alias(vals)
             if 'restrict_mode_hash_table' in vals and not vals.get('restrict_mode_hash_table'):
                 journal_entry = self.env['account.move'].search([('journal_id', '=', self.id), ('state', '=', 'posted'), ('secure_sequence_number', '!=', 0)], limit=1)
                 if len(journal_entry) > 0:
@@ -1122,8 +1154,6 @@ class AccountJournal(models.Model):
         if vals.get('type') in ('sale', 'purchase') and vals.get('refund_sequence') and not vals.get('refund_sequence_id'):
             vals.update({'refund_sequence_id': self.sudo()._create_sequence(vals, refund=True).id})
         journal = super(AccountJournal, self.with_context(mail_create_nolog=True)).create(vals)
-        if 'alias_name' in vals:
-            journal._update_mail_alias(vals)
 
         # Create the bank_account_id if necessary
         if journal.type == 'bank' and not journal.bank_account_id and vals.get('bank_acc_number'):
@@ -1400,7 +1430,9 @@ class AccountTax(models.Model):
 
     @api.returns('self', lambda value: value.id)
     def copy(self, default=None):
-        default = dict(default or {}, name=_("%s (Copy)") % self.name)
+        default = dict(default or {})
+        if 'name' not in default:
+            default['name'] = _("%s (Copy)") % self.name
         return super(AccountTax, self).copy(default=default)
 
     def name_get(self):
@@ -1711,7 +1743,7 @@ class AccountTax(models.Model):
                         incl_fixed_amount += quantity * tax.amount * sum_repartition_factor
                     else:
                         # tax.amount_type == other (python)
-                        tax_amount = tax._compute_amount(base, sign * price_unit, quantity, product, partner) * sum_repartition_factor
+                        tax_amount = tax._compute_amount(base, sign * price_unit, abs(quantity), product, partner) * sum_repartition_factor
                         incl_fixed_amount += tax_amount
                         # Avoid unecessary re-computation
                         cached_tax_amounts[i] = tax_amount
@@ -1848,8 +1880,8 @@ class AccountTaxRepartitionLine(models.Model):
     repartition_type = fields.Selection(string="Based On", selection=[('base', 'Base'), ('tax', 'of tax')], required=True, default='tax', help="Base on which the factor will be applied.")
     account_id = fields.Many2one(string="Account", comodel_name='account.account', help="Account on which to post the tax amount")
     tag_ids = fields.Many2many(string="Tax Grids", comodel_name='account.account.tag', domain=[('applicability', '=', 'taxes')], copy=True)
-    invoice_tax_id = fields.Many2one(comodel_name='account.tax', help="The tax set to apply this repartition on invoices. Mutually exclusive with refund_tax_id")
-    refund_tax_id = fields.Many2one(comodel_name='account.tax', help="The tax set to apply this repartition on refund invoices. Mutually exclusive with invoice_tax_id")
+    invoice_tax_id = fields.Many2one(comodel_name='account.tax', ondelete='cascade', help="The tax set to apply this repartition on invoices. Mutually exclusive with refund_tax_id")
+    refund_tax_id = fields.Many2one(comodel_name='account.tax', ondelete='cascade', help="The tax set to apply this repartition on refund invoices. Mutually exclusive with invoice_tax_id")
     tax_id = fields.Many2one(comodel_name='account.tax', compute='_compute_tax_id')
     country_id = fields.Many2one(string="Country", comodel_name='res.country', related='company_id.country_id',  help="Technical field used to restrict tags domain in form view.")
     company_id = fields.Many2one(string="Company", comodel_name='res.company', required=True, default=lambda x: x.env.company, help="The company this repartition line belongs to.")

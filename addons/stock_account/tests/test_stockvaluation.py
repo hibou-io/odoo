@@ -910,7 +910,7 @@ class TestStockValuation(SavepointCase):
         stock_return_picking_action = stock_return_picking.create_returns()
         return_pick = self.env['stock.picking'].browse(stock_return_picking_action['res_id'])
         return_pick.move_lines[0].move_line_ids[0].qty_done = 1.0
-        return_pick.action_done()
+        return_pick.with_user(self.inventory_user).action_done()
 
         self.assertEqual(self.product1.standard_price, 16)
 
@@ -2364,7 +2364,7 @@ class TestStockValuation(SavepointCase):
 
         self.assertAlmostEqual(self.product1.standard_price, 10.0)
 
-    def test_average_perpetual_8(self):
+    def test_average_perpetual_9(self):
         """ When a product has an available quantity of -5, edit an incoming shipment and increase
         the received quantity by 5 units.
         """
