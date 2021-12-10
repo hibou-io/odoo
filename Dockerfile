@@ -1,4 +1,4 @@
-FROM python:3.9.7-slim-bullseye
+FROM python:3.9.9-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
@@ -22,6 +22,9 @@ RUN set -x; \
         libcurl4-openssl-dev libsasl2-dev libldap2-dev libssl-dev libyaml-dev \
         #  pillow
         libjpeg-dev zlib1g-dev \
+        #  Hibou Athene
+        libsecret-1-0 \
+        nodejs \
     #  install postgresql-client from postgres itself to support newer server versions
     && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
@@ -45,10 +48,9 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-# Failing as of 2021-03-15
 # Prime the uszipcode cache.
-# USER 104
-# RUN python -c 'import uszipcode; uszipcode.SearchEngine().by_zipcode('98270');'
+USER 104
+RUN python -c 'import uszipcode; uszipcode.SearchEngine().by_zipcode('98270');'
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
