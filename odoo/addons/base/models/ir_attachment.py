@@ -166,23 +166,26 @@ class IrAttachment(models.Model):
                 fname = "%s/%s" % (dirname, filename)
                 checklist[fname] = os.path.join(dirpath, filename)
 
-        # determine which files to keep among the checklist
-        whitelist = set()
-        for names in cr.split_for_in_conditions(checklist):
-            cr.execute("SELECT store_fname FROM ir_attachment WHERE store_fname IN %s", [names])
-            whitelist.update(row[0] for row in cr.fetchall())
-
-        # remove garbage files, and clean up checklist
+        # Clean up the checklist. The checklist is split in chunks and files are garbage-collected
+        # for each chunk.
         removed = 0
-        for fname, filepath in checklist.items():
-            if fname not in whitelist:
-                try:
-                    os.unlink(self._full_path(fname))
-                    removed += 1
-                except (OSError, IOError):
-                    _logger.info("_file_gc could not unlink %s", self._full_path(fname), exc_info=True)
-            with tools.ignore(OSError):
-                os.unlink(filepath)
+        for names in cr.split_for_in_conditions(checklist):
+            # determine which files to keep among the checklist
+            cr.execute("SELECT store_fname FROM ir_attachment WHERE store_fname IN %s", [names])
+            whitelist = set(row[0] for row in cr.fetchall())
+
+            # remove garbage files, and clean up checklist
+            for fname in names:
+                filepath = checklist[fname]
+                if fname not in whitelist:
+                    try:
+                        os.unlink(self._full_path(fname))
+                        _logger.debug("_file_gc unlinked %s", self._full_path(fname))
+                        removed += 1
+                    except (OSError, IOError):
+                        _logger.info("_file_gc could not unlink %s", self._full_path(fname), exc_info=True)
+                with tools.ignore(OSError):
+                    os.unlink(filepath)
 
         # commit to release the lock
         cr.commit()
@@ -390,11 +393,11 @@ class IrAttachment(models.Model):
         """Override read_group to add res_field=False in domain if not present."""
         if not fields:
             raise AccessError(_("Sorry, you must provide fields to read on attachments"))
+        groupby = [groupby] if isinstance(groupby, str) else groupby
         if any('(' in field for field in fields + groupby):
             raise AccessError(_("Sorry, the syntax 'name:agg(field)' is not available for attachments"))
         if not any(item[0] in ('id', 'res_field') for item in domain):
             domain.insert(0, ('res_field', '=', False))
-        groupby = [groupby] if isinstance(groupby, str) else groupby
         allowed_fields = self._read_group_allowed_fields()
         fields_set = set(field.split(':')[0] for field in fields + groupby)
         if not self.env.is_system() and (not fields or fields_set.difference(allowed_fields)):
@@ -405,7 +408,9 @@ class IrAttachment(models.Model):
     def _search(self, args, offset=0, limit=None, order=None, count=False, access_rights_uid=None):
         # add res_field=False in domain if not present; the arg[0] trick below
         # works for domain items and '&'/'|'/'!' operators too
+        discard_binary_fields_attachments = False
         if not any(arg[0] in ('id', 'res_field') for arg in args):
+            discard_binary_fields_attachments = True
             args.insert(0, ('res_field', '=', False))
 
         ids = super(IrAttachment, self)._search(args, offset=offset, limit=limit, order=order,
@@ -436,8 +441,8 @@ class IrAttachment(models.Model):
                 continue
             # model_attachments = {res_model: {res_id: set(ids)}}
             model_attachments[row['res_model']][row['res_id']].add(row['id'])
-            # Should not retrieve binary fields attachments
-            if row['res_field']:
+            # Should not retrieve binary fields attachments if not explicitly required
+            if discard_binary_fields_attachments and row['res_field']:
                 binary_fields_attachments.add(row['id'])
 
         if binary_fields_attachments:

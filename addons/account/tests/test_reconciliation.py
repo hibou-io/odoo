@@ -1913,12 +1913,15 @@ class TestReconciliationExec(TestReconciliation):
     def test_reconciliation_cash_basis_revert(self):
         company = self.env.ref('base.main_company')
         company.tax_cash_basis_journal_id = self.cash_basis_journal
-        tax_cash_basis10percent = self.tax_cash_basis.copy({'amount': 10})
-        self.tax_waiting_account.reconcile = True
         tax_waiting_account10 = self.tax_waiting_account.copy({
             'name': 'TAX WAIT 10',
             'code': 'TWAIT1',
         })
+        tax_cash_basis10percent = self.tax_cash_basis.copy({
+            'amount': 10,
+            'cash_basis_transition_account_id': tax_waiting_account10.id,
+        })
+        self.tax_waiting_account.reconcile = True
 
         # Purchase
         purchase_move = self.env['account.move'].create({
@@ -2309,7 +2312,7 @@ class TestReconciliationExec(TestReconciliation):
                 'currency_id': self.currency_usd_id,
             }
         ])
-        move_product.post()
+        move_payment.post()
 
         # We are reconciling a move line in currency A with a move line in currency B and putting
         # the rest in a writeoff, this test ensure that the debit/credit value of the writeoff is
