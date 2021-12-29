@@ -11,10 +11,13 @@ class TestAccountPayment(AccountTestInvoicingCommon):
     def setUpClass(cls, chart_template_ref=None):
         super().setUpClass(chart_template_ref=chart_template_ref)
 
-        company_id = cls.company_data['default_journal_bank'].company_id
+        company = cls.company_data['default_journal_bank'].company_id
 
-        cls.payment_debit_account_id = cls.copy_account(company_id.account_journal_payment_debit_account_id)
-        cls.payment_credit_account_id = cls.copy_account(company_id.account_journal_payment_credit_account_id)
+        cls.payment_debit_account_id = cls.copy_account(company.account_journal_payment_debit_account_id)
+        cls.payment_credit_account_id = cls.copy_account(company.account_journal_payment_credit_account_id)
+
+        cls.bank_journal_1 = cls.company_data['default_journal_bank']
+        cls.bank_journal_2 = cls.company_data['default_journal_bank'].copy()
 
         cls.partner_bank_account1 = cls.env['res.partner.bank'].create({
             'acc_number': "0123456789",
@@ -26,13 +29,18 @@ class TestAccountPayment(AccountTestInvoicingCommon):
             'partner_id': cls.partner_a.id,
             'acc_type': 'bank',
         })
-        cls.comp_bank_account = cls.env['res.partner.bank'].create({
+        cls.comp_bank_account1 = cls.env['res.partner.bank'].create({
             'acc_number': "985632147",
             'partner_id': cls.env.company.partner_id.id,
             'acc_type': 'bank',
         })
+        cls.comp_bank_account2 = cls.env['res.partner.bank'].create({
+            'acc_number': "741258963",
+            'partner_id': cls.env.company.partner_id.id,
+            'acc_type': 'bank',
+        })
 
-        company_id.write({
+        company.write({
             'account_journal_payment_debit_account_id': cls.payment_debit_account_id.id,
             'account_journal_payment_credit_account_id': cls.payment_credit_account_id.id
         })
@@ -813,17 +821,85 @@ class TestAccountPayment(AccountTestInvoicingCommon):
             'payment_method_line_id': self.outbound_payment_method_line.id,
         }])
 
-    def test_payment_partner_bank_inbound(self):
-        """ Test the bank account is well recomputed for inbound payments. In that case, the recipient
-        bank account must be the one set on the company.
+    def test_suggested_default_partner_bank(self):
+        """ Ensure the 'partner_bank_id' is well computed on payments. When the payment is inbound, the money must be
+        received by a bank account linked to the company. In case of outbound payment, the bank account must be found
+        on the partner.
         """
         payment = self.env['account.payment'].create({
+            'journal_id': self.bank_journal_1.id,
             'amount': 50.0,
             'payment_type': 'outbound',
             'partner_type': 'supplier',
             'partner_id': self.partner_a.id,
         })
-        self.assertRecordValues(payment, [{'partner_bank_id': self.partner_bank_account1.id}])
+        self.assertRecordValues(payment, [{
+            'available_partner_bank_ids': self.partner_a.bank_ids.ids,
+            'partner_bank_id': self.partner_bank_account1.id,
+        }])
 
         payment.payment_type = 'inbound'
-        self.assertRecordValues(payment, [{'partner_bank_id': self.comp_bank_account.id}])
+        self.assertRecordValues(payment, [{
+            'available_partner_bank_ids': [],
+            'partner_bank_id': False,
+        }])
+
+        self.bank_journal_2.bank_account_id = self.comp_bank_account2
+        # A sequence is automatically added on the first move. We need to clean it before changing the journal.
+        payment.name = False
+        payment.journal_id = self.bank_journal_2
+        self.assertRecordValues(payment, [{
+            'available_partner_bank_ids': self.comp_bank_account2.ids,
+            'partner_bank_id': self.comp_bank_account2.id,
+        }])
+
+    def test_internal_transfer_right_accounts(self):
+        """The purpose of this test is to check that the right accounts are computed when making an internal bank transfer"""
+
+        company = self.env.company
+        transfer_account = company.transfer_account_id
+        bank = self.bank_journal_1
+        bank_2 = self.bank_journal_2
+
+        payment = self.env['account.payment'].create({
+            'is_internal_transfer': True,
+            'payment_type': 'outbound',
+            'amount': 100.0,
+            'journal_id': bank.id,
+            'destination_journal_id': bank_2.id,
+        })
+        payment.action_post()
+
+        self.assertRecordValues(payment.line_ids, [
+            {'account_id': company.account_journal_payment_credit_account_id.id},
+            {'account_id': transfer_account.id},
+        ])
+        self.assertRecordValues(payment.paired_internal_transfer_payment_id.line_ids, [
+            {'account_id': company.account_journal_payment_debit_account_id.id},
+            {'account_id': transfer_account.id},
+        ])
+
+        # We check the behavior when setting specific receipts/payments account on bank journals
+        bank.inbound_payment_method_line_ids.payment_account_id = company.account_journal_payment_debit_account_id.copy({'code': 1001})
+        bank.outbound_payment_method_line_ids.payment_account_id = company.account_journal_payment_credit_account_id.copy({'code': 1002})
+
+        bank_2.inbound_payment_method_line_ids.payment_account_id = company.account_journal_payment_debit_account_id.copy({'code': 2001})
+        bank_2.outbound_payment_method_line_ids.payment_account_id = company.account_journal_payment_credit_account_id.copy({'code': 2002})
+
+        payment = self.env['account.payment'].create({
+            'is_internal_transfer': True,
+            'payment_type': 'outbound',
+            'amount': 100.0,
+            'journal_id': bank.id,
+            'destination_journal_id': bank_2.id,
+        })
+        payment.action_post()
+
+        self.assertRecordValues(payment.line_ids, [
+            {'account_id': bank.outbound_payment_method_line_ids.payment_account_id.id,},
+            {'account_id': transfer_account.id},
+        ])
+        self.assertRecordValues(payment.paired_internal_transfer_payment_id.line_ids, [
+            {'account_id': bank_2.inbound_payment_method_line_ids.payment_account_id.id},
+            {'account_id': transfer_account.id},
+        ])
