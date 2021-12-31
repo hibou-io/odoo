@@ -24,6 +24,9 @@ before_script:
 build:
   stage: build
   script:
+    - apk add git
+    - git submodule sync design-themes
+    - git submodule update --init -- design-themes
     - docker pull $CONTAINER_IMAGE:$RELEASE || true
     - docker build --pull -t $CONTAINER_IMAGE:$RELEASE .
     - docker push $CONTAINER_IMAGE:$RELEASE
