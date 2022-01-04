@@ -17,6 +17,7 @@
 # Hamid Reza Kaveh <hamidrkp@riseup.net>, 2019
 # Hamed Mohammadi <hamed@dehongi.com>, 2021
 # Mohsen Mohammadi <iammohsen.123@gmail.com>, 2021
+# Far Har <fhari1234@gmail.com>, 2021
 # 
 msgid ""
 msgstr ""
@@ -24,7 +25,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:33+0000\n"
 "PO-Revision-Date: 2018-08-24 09:21+0000\n"
-"Last-Translator: Mohsen Mohammadi <iammohsen.123@gmail.com>, 2021\n"
+"Last-Translator: Far Har <fhari1234@gmail.com>, 2021\n"
 "Language-Team: Persian (https://www.transifex.com/odoo/teams/41243/fa/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -316,6 +317,13 @@ msgstr "<strong>مرکز کار</strong>"
 #, python-format
 msgid "A Manufacturing Order is already done or cancelled."
 msgstr "یک سفارش تولید از قبل انجام شده یا لغو شده است."
+
+#. module: mrp
+#: code:addons/mrp/models/stock_warehouse.py:288
+#, python-format
+msgid ""
+"A product with a kit-type bill of materials can not have a reordering rule."
+msgstr ""
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__access_token
@@ -1002,7 +1010,7 @@ msgstr "واحد اندازه گیری پیش فرض"
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_workcenter__resource_calendar_id
 msgid "Define the schedule of resource"
-msgstr ""
+msgstr "تعریف برنامه زمان‌بندی منابع"
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_bom__ready_to_produce
@@ -1290,12 +1298,6 @@ msgid "Followers (Partners)"
 msgstr "پیروان (شرکاء)"
 
 #. module: mrp
-#: code:addons/mrp/models/mrp_bom.py:86
-#, python-format
-msgid "For %s to be a kit, its product type must be 'Consumable'."
-msgstr ""
-
-#. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrporder
 msgid "From"
 msgstr "از"
@@ -1562,7 +1564,7 @@ msgstr ""
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_workcenter_productivity_loss_kanban
 msgid "Is a Blocking Reason?"
-msgstr ""
+msgstr "یک دلیل مسدود کردن است؟"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__public
@@ -3488,14 +3490,6 @@ msgid ""
 msgstr ""
 
 #. module: mrp
-#: code:addons/mrp/models/product.py:30
-#, python-format
-msgid ""
-"The product type of %s must be 'Consumable' because it has at least one kit-"
-"type bill of materials."
-msgstr ""
-
-#. module: mrp
 #: code:addons/mrp/wizard/mrp_product_produce.py:56
 #, python-format
 msgid "The production order for '%s' has no quantity specified."
@@ -3538,6 +3532,8 @@ msgid ""
 "This field is used in order to define in which timezone the resources will "
 "work."
 msgstr ""
+"از این فیلد به منظور تعریف اینکه منابع در کدام منطقه زمانی کار خواهند کرد "
+"استفاده می شود."
 
 #. module: mrp
 #: model:ir.model.fields,help:mrp.field_mrp_workcenter__time_efficiency
@@ -4249,7 +4245,7 @@ msgstr "ساعت های کاری"
 #. module: mrp
 #: model:ir.ui.menu,name:mrp.menu_view_resource_calendar_search_mrp
 msgid "Working Times"
-msgstr ""
+msgstr "زمان‌های کاری"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__working_user_ids
@@ -4285,6 +4281,14 @@ msgstr ""
 #: code:addons/mrp/models/mrp_production.py:657
 #, python-format
 msgid "You can not consume without telling for which lot you consumed it"
+msgstr ""
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:122
+#, python-format
+msgid ""
+"You can not create a kit-type bill of materials for products that have at "
+"least one reordering rule."
 msgstr ""
 
 #. module: mrp

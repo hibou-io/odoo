@@ -20,6 +20,7 @@
 # Vojislav Opačić <vojislav.opacic@gmail.com>, 2019
 # Igor Krizanovic <krizanovic.igor@gmail.com>, 2019
 # Miro Sertić, 2020
+# 0ba0ac30481a756f36528ba6f9a4317e_6443a87 <52eefe24349934c364624ef40611b7a3_1010754>, 2021
 # Bole <bole@dajmi5.com>, 2021
 # 
 msgid ""
@@ -1846,7 +1847,7 @@ msgstr "Datum dospijeća"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_ir_actions_server__activity_date_deadline_range
 msgid "Due Date In"
-msgstr ""
+msgstr "Datum dospijeća u"
 
 #. module: mail
 #. openerp-web
@@ -3093,7 +3094,7 @@ msgstr "Mail"
 #: model:ir.model.fields,field_description:mail.field_mail_mail__mail_activity_type_id
 #: model:ir.model.fields,field_description:mail.field_mail_message__mail_activity_type_id
 msgid "Mail Activity Type"
-msgstr ""
+msgstr "Tip mail aktivnosti"
 
 #. module: mail
 #: model:ir.model,name:mail.model_mail_blacklist
@@ -3282,7 +3283,7 @@ msgstr ""
 #. module: mail
 #: model:ir.model,name:mail.model_base_partner_merge_automatic_wizard
 msgid "Merge Partner Wizard"
-msgstr ""
+msgstr "Čarobnjak za spajanje partnera"
 
 #. module: mail
 #: code:addons/mail/wizard/base_partner_merge.py:13
@@ -4020,6 +4021,18 @@ msgstr "Jedan pratitelj"
 #, python-format
 msgid "Online"
 msgstr "Online"
+
+#. module: mail
+#: code:addons/mail/models/mail_message.py:1052
+#, python-format
+msgid "Only administrators are allowed to export mail message"
+msgstr ""
+
+#. module: mail
+#: code:addons/mail/models/mail_message.py:1043
+#, python-format
+msgid "Only administrators are allowed to use grouped read on message model"
+msgstr ""
 
 #. module: mail
 #: code:addons/mail/models/mail_channel.py:436
@@ -5700,7 +5713,7 @@ msgstr "Ažuriraj zapis"
 #: code:addons/mail/static/src/xml/thread.xml:531
 #, python-format
 msgid "Uploaded"
-msgstr ""
+msgstr "Učitano"
 
 #. module: mail
 #. openerp-web
@@ -5846,7 +5859,7 @@ msgstr ""
 #: code:addons/mail/models/mail_thread.py:752
 #, python-format
 msgid "View %s"
-msgstr ""
+msgstr "Pogledaj %s"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_ir_actions_act_window_view__view_mode
@@ -6018,6 +6031,13 @@ msgstr "Vi ste u privatnom razgovoru sa <b>@%s</b>."
 #, python-format
 msgid "You are in channel <b>#%s</b>."
 msgstr "Vi ste u kanalu <b>#%s</b>."
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/js/attachment_box.js:132
+#, python-format
+msgid "You are not allowed to upload an attachment here."
+msgstr ""
 
 #. module: mail
 #. openerp-web
@@ -6506,7 +6526,7 @@ msgstr "nepoznati odredišni model %s"
 #: code:addons/mail/static/src/js/models/messages/abstract_message.js:52
 #, python-format
 msgid "unnamed"
-msgstr ""
+msgstr "neimenovani"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.message_notification_email

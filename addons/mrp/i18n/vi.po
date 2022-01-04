@@ -10,10 +10,10 @@
 # fanha99 <fanha99@hotmail.com>, 2018
 # Tien Nguyen <tienkt05@gmail.com>, 2018
 # khoibv Mr <kendev2009@gmail.com>, 2018
-# Nancy Momoland <thanhnguyen.icsc@gmail.com>, 2019
+# thanhnguyen.icsc <thanhnguyen.icsc@gmail.com>, 2019
 # Trinh Tran Thi Phuong <trinhttp@trobz.com>, 2019
 # Dung Nguyen Thi <dungnt@trobz.com>, 2019
-# Duy BQ <duybq86@gmail.com>, 2020
+# Duy BQ <duybq86@gmail.com>, 2021
 # 
 msgid ""
 msgstr ""
@@ -21,7 +21,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:33+0000\n"
 "PO-Revision-Date: 2018-08-24 09:21+0000\n"
-"Last-Translator: Duy BQ <duybq86@gmail.com>, 2020\n"
+"Last-Translator: Duy BQ <duybq86@gmail.com>, 2021\n"
 "Language-Team: Vietnamese (https://www.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -323,6 +323,15 @@ msgstr "<strong>Năng lực Sản xuất</strong>"
 #, python-format
 msgid "A Manufacturing Order is already done or cancelled."
 msgstr "Một lệnh sản xuất đã xong hoặc đã bị hủy."
+
+#. module: mrp
+#: code:addons/mrp/models/stock_warehouse.py:288
+#, python-format
+msgid ""
+"A product with a kit-type bill of materials can not have a reordering rule."
+msgstr ""
+"Một sản phẩm với định mức nguyên liệu theo bộ thì không thể có quy tắc cung "
+"ứng."
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__access_token
@@ -1316,12 +1325,6 @@ msgstr "Người theo dõi (Các kênh)"
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Người theo dõi (Các đối tác)"
-
-#. module: mrp
-#: code:addons/mrp/models/mrp_bom.py:86
-#, python-format
-msgid "For %s to be a kit, its product type must be 'Consumable'."
-msgstr ""
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrporder
@@ -3583,14 +3586,6 @@ msgstr ""
 "mọi thứ được xử lý theo thứ tự sản xuất. "
 
 #. module: mrp
-#: code:addons/mrp/models/product.py:30
-#, python-format
-msgid ""
-"The product type of %s must be 'Consumable' because it has at least one kit-"
-"type bill of materials."
-msgstr ""
-
-#. module: mrp
 #: code:addons/mrp/wizard/mrp_product_produce.py:56
 #, python-format
 msgid "The production order for '%s' has no quantity specified."
@@ -4428,6 +4423,16 @@ msgstr "Bạn không thể thay đổi hoạt động sản xuất đã hoàn th
 #, python-format
 msgid "You can not consume without telling for which lot you consumed it"
 msgstr "Bạn không thể tiêu thụ mà không biết bạn đã tiêu thụ lô hàng nào"
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:122
+#, python-format
+msgid ""
+"You can not create a kit-type bill of materials for products that have at "
+"least one reordering rule."
+msgstr ""
+"Bạn không thể tạo Định mức nguyên liệu theo bộ cho sản phẩm khi nó đã tồn "
+"tại một qui tắc cung ứng."
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_bom.py:117

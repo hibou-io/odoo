@@ -12,6 +12,7 @@ from odoo import _, api, fields, models, modules, SUPERUSER_ID, tools
 from odoo.exceptions import UserError, AccessError
 from odoo.osv import expression
 from odoo.tools import groupby, formataddr
+from odoo.tools.misc import clean_context
 
 _logger = logging.getLogger(__name__)
 _image_dataurl = re.compile(r'(data:image/[a-z]+?);base64,([a-z0-9+/\n]{3,}=*)\n*([\'"])(?: data-filename="([^"]*)")?', re.I)
@@ -106,7 +107,7 @@ class Message(models.Model):
     tracking_value_ids = fields.One2many(
         'mail.tracking.value', 'mail_message_id',
         string='Tracking values',
-        groups="base.group_no_one",
+        groups="base.group_system",
         help='Tracked values are stored in a separate model. This field allow to reconstruct '
              'the tracking and to generate statistics on the model.')
     # mail gateway
@@ -961,7 +962,7 @@ class Message(models.Model):
 
         # extract base64 images
         if 'body' in values:
-            Attachments = self.env['ir.attachment']
+            Attachments = self.env['ir.attachment'].with_context(clean_context(self._context))
             data_to_url = {}
             def base64_to_boundary(match):
                 key = match.group(2)
@@ -1036,6 +1037,22 @@ class Message(models.Model):
         ).unlink()
         self._invalidate_documents()
         return super(Message, self).unlink()
+
+    @api.model
+    def _read_group_raw(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
+        if not self.env.user._is_admin():
+            raise AccessError(_("Only administrators are allowed to use grouped read on message model"))
+
+        return super(Message, self)._read_group_raw(
+            domain=domain, fields=fields, groupby=groupby, offset=offset,
+            limit=limit, orderby=orderby, lazy=lazy,
+        )
+
+    def export_data(self, fields_to_export, raw_data=False):
+        if not self.env.user._is_admin():
+            raise AccessError(_("Only administrators are allowed to export mail message"))
+
+        return super(Message, self).export_data(fields_to_export, raw_data)
 
     #------------------------------------------------------
     # Messaging API

@@ -16,9 +16,10 @@
 # 森岡広道 <hiromichi.morioka@pro-spire.co.jp>, 2018
 # Tim Siu Lai <tl@roomsfor.hk>, 2019
 # Hau Dao <hau@quartile.co>, 2020
-# Yoshi Tashiro <tashiro@roomsfor.hk>, 2020
 # Noma Yuki, 2020
 # Shigekazu N. <shigekazu.noka@gmail.com>, 2020
+# Abe Tomohiro <tomohiro@quartile.co>, 2021
+# Yoshi Tashiro (Quartile) <tashiro@roomsfor.hk>, 2021
 # 
 msgid ""
 msgstr ""
@@ -26,7 +27,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-14 07:33+0000\n"
 "PO-Revision-Date: 2018-08-24 09:21+0000\n"
-"Last-Translator: Shigekazu N. <shigekazu.noka@gmail.com>, 2020\n"
+"Last-Translator: Yoshi Tashiro (Quartile) <tashiro@roomsfor.hk>, 2021\n"
 "Language-Team: Japanese (https://www.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -318,6 +319,13 @@ msgid "A Manufacturing Order is already done or cancelled."
 msgstr ""
 
 #. module: mrp
+#: code:addons/mrp/models/stock_warehouse.py:288
+#, python-format
+msgid ""
+"A product with a kit-type bill of materials can not have a reordering rule."
+msgstr ""
+
+#. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_document__access_token
 msgid "Access Token"
 msgstr "アクセストークン"
@@ -504,7 +512,7 @@ msgstr "部品表製品バリアントは、このラインが適用されたフ
 #. module: mrp
 #: model:ir.model,name:mrp.model_report_mrp_report_bom_structure
 msgid "BOM Structure Report"
-msgstr ""
+msgstr "部品表構成レポート"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_bom_line__child_line_ids
@@ -624,7 +632,7 @@ msgstr "部品表構成品"
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrp_bom
 #, python-format
 msgid "BoM Cost"
-msgstr ""
+msgstr "部品表原価"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_move__bom_line_id
@@ -642,7 +650,7 @@ msgstr "部品表項目"
 #: model:ir.actions.report,name:mrp.action_report_bom_structure
 #, python-format
 msgid "BoM Structure"
-msgstr ""
+msgstr "部品表構成"
 
 #. module: mrp
 #. openerp-web
@@ -1290,12 +1298,6 @@ msgstr "フォロワー (チャネル)"
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "フォロワー (取引先)"
-
-#. module: mrp
-#: code:addons/mrp/models/mrp_bom.py:86
-#, python-format
-msgid "For %s to be a kit, its product type must be 'Consumable'."
-msgstr ""
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrporder
@@ -3488,14 +3490,6 @@ msgstr ""
 "この部品表で製造するための操作。工順が指定されている場合、製造オーダは作業オーダを介して実行されます。それ以外の場合は、すべてが製造オーダ自身で処理されます。"
 
 #. module: mrp
-#: code:addons/mrp/models/product.py:30
-#, python-format
-msgid ""
-"The product type of %s must be 'Consumable' because it has at least one kit-"
-"type bill of materials."
-msgstr ""
-
-#. module: mrp
 #: code:addons/mrp/wizard/mrp_product_produce.py:56
 #, python-format
 msgid "The production order for '%s' has no quantity specified."
@@ -4258,7 +4252,7 @@ msgstr "労働時間"
 #. module: mrp
 #: model:ir.ui.menu,name:mrp.menu_view_resource_calendar_search_mrp
 msgid "Working Times"
-msgstr ""
+msgstr "労働時間"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__working_user_ids
@@ -4294,6 +4288,14 @@ msgstr "完了した作業オーダを変更することはできません。"
 #: code:addons/mrp/models/mrp_production.py:657
 #, python-format
 msgid "You can not consume without telling for which lot you consumed it"
+msgstr ""
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:122
+#, python-format
+msgid ""
+"You can not create a kit-type bill of materials for products that have at "
+"least one reordering rule."
 msgstr ""
 
 #. module: mrp
