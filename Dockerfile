@@ -48,11 +48,6 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-# Verified 2021-12-09 still not working
-# Prime the uszipcode cache.
-# USER 104
-# RUN python -c 'import uszipcode; uszipcode.SearchEngine().by_zipcode('98270');'
-
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
 
