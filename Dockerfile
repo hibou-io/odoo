@@ -1,4 +1,4 @@
-FROM python:3.7.9-slim-stretch
+FROM python:3.7.12-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
@@ -18,9 +18,12 @@ RUN set -x; \
         libcurl4-openssl-dev libsasl2-dev libldap2-dev libssl-dev libyaml-dev \
         #  pillow
         libjpeg-dev zlib1g-dev \
+        #  Hibou Athene
+        libsecret-1-0 \
+        nodejs \
     #  install postgresql-client from postgres itself to support newer server versions
     && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
