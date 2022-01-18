@@ -435,6 +435,9 @@ class Project(models.Model):
                 # set the parent to the duplicated task
                 defaults['parent_id'] = old_to_new_tasks.get(task.parent_id.id, False)
             new_task = task.copy(defaults)
+            # If child are created before parent (ex sub_sub_tasks)
+            new_child_ids = [old_to_new_tasks[child.id] for child in task.child_ids if child.id in old_to_new_tasks]
+            tasks.browse(new_child_ids).write({'parent_id': new_task.id})
             old_to_new_tasks[task.id] = new_task.id
             tasks += new_task
 
@@ -740,7 +743,7 @@ class Project(models.Model):
                 'number': format_amount(self.env, self.analytic_account_balance, self.company_id.currency_id),
                 'action_type': 'object',
                 'action': 'action_view_analytic_account_entries',
-                'show': True,
+                'show': bool(self.analytic_account_id),
                 'sequence': 18,
             })
         return buttons
@@ -2066,15 +2069,16 @@ class Task(models.Model):
         action = {
             'res_model': 'project.task',
             'type': 'ir.actions.act_window',
-            'context': {**self._context, 'default_depend_on_ids': [Command.link(self.id)]},
+            'context': {**self._context, 'default_depend_on_ids': [Command.link(self.id)], 'show_project_update': False},
+            'domain': [('depend_on_ids', '=', self.id)],
         }
         if self.dependent_tasks_count == 1:
             action['view_mode'] = 'form'
             action['res_id'] = self.dependent_ids.id
+            action['views'] = [(False, 'form')]
         else:
             action['name'] = _('Dependent Tasks')
             action['view_mode'] = 'tree,form,kanban,calendar,pivot,graph,activity'
-            action['domain'] = [('depend_on_ids', '=', self.id)]
         return action
 
     def action_recurring_tasks(self):
