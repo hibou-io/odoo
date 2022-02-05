@@ -68,6 +68,7 @@ const KEYBOARD_TYPES = { VIRTUAL: 'VIRTUAL', PHYSICAL: 'PHYSICAL', UNKNOWN: 'UKN
 const IS_KEYBOARD_EVENT_UNDO = ev => ev.key === 'z' && (ev.ctrlKey || ev.metaKey);
 const IS_KEYBOARD_EVENT_REDO = ev => ev.key === 'y' && (ev.ctrlKey || ev.metaKey);
 const IS_KEYBOARD_EVENT_BOLD = ev => ev.key === 'b' && (ev.ctrlKey || ev.metaKey);
+const IS_KEYBOARD_EVENT_STRIKETHROUGH = ev => ev.key === '5' && (ev.ctrlKey || ev.metaKey);
 
 const CLIPBOARD_BLACKLISTS = {
     unwrap: ['.Apple-interchange-newline', 'DIV'], // These elements' children will be unwrapped.
@@ -1387,7 +1388,7 @@ export class OdooEditor extends EventTarget {
                 if (hasGradient && hasTextGradientClass) {
                     foreColor = backgroundImage;
                 } else {
-                    foreColor = document.queryCommandValue('foreColor');
+                    foreColor = this.document.queryCommandValue('foreColor');
                 }
             }
             if (!hiliteColor) {
@@ -1469,7 +1470,6 @@ export class OdooEditor extends EventTarget {
         const result = this._protect(() => this._applyRawCommand(...args));
         this.sanitize();
         this.historyStep();
-        this._handleCommandHint();
         return result;
     }
     /**
@@ -1925,7 +1925,14 @@ export class OdooEditor extends EventTarget {
         const range = sel.getRangeAt(0);
         const isSelForward =
             sel.anchorNode === range.startContainer && sel.anchorOffset === range.startOffset;
+        const startRect = range.startContainer.getBoundingClientRect && range.startContainer.getBoundingClientRect();
         const selRect = range.getBoundingClientRect();
+        // In some undetermined circumstance in chrome, the selection rect is
+        // wrongly defined and result with all the values for x, y, width, and
+        // height to be 0. In that case, use the rect of the startContainer if
+        // possible.
+        const isSelectionPotentiallyBugged = [selRect.x, selRect.y, selRect.width, selRect.height].every( x => x === 0 );
+        const correctedSelectionRect = isSelectionPotentiallyBugged && startRect ? startRect : selRect;
         const toolbarWidth = this.toolbar.offsetWidth;
         const toolbarHeight = this.toolbar.offsetHeight;
         const editorRect = this.editable.getBoundingClientRect();
@@ -1935,7 +1942,7 @@ export class OdooEditor extends EventTarget {
         const scrollY = this.document.defaultView.scrollY;
 
         // Get left position.
-        let left = selRect.left + OFFSET;
+        let left = correctedSelectionRect.left + OFFSET;
         // Ensure the toolbar doesn't overflow the editor on the left.
         left = Math.max(OFFSET, left);
         // Ensure the toolbar doesn't overflow the editor on the right.
@@ -1945,11 +1952,11 @@ export class OdooEditor extends EventTarget {
         this.toolbar.style.left = scrollX + left + 'px';
 
         // Get top position.
-        let top = selRect.top - toolbarHeight - OFFSET;
+        let top = correctedSelectionRect.top - toolbarHeight - OFFSET;
         // Ensure the toolbar doesn't overflow the editor on the top.
         if (top < editorTopPos) {
             // Position the toolbar below the selection.
-            top = selRect.bottom + OFFSET;
+            top = correctedSelectionRect.bottom + OFFSET;
             isBottom = true;
         }
         // Ensure the toolbar doesn't overflow the editor on the bottom.
@@ -1959,7 +1966,7 @@ export class OdooEditor extends EventTarget {
         this.toolbar.style.top = scrollY + top + 'px';
 
         // Position the arrow.
-        let arrowLeftPos = (isSelForward ? selRect.right : selRect.left) - left - OFFSET;
+        let arrowLeftPos = (isSelForward && !isSelectionPotentiallyBugged ? correctedSelectionRect.right : correctedSelectionRect.left) - left - OFFSET;
         // Ensure the arrow doesn't overflow the toolbar on the left.
         arrowLeftPos = Math.max(OFFSET, arrowLeftPos);
         // Ensure the arrow doesn't overflow the toolbar on the right.
@@ -2232,6 +2239,11 @@ export class OdooEditor extends EventTarget {
             ev.preventDefault();
             ev.stopPropagation();
             this.execCommand('bold');
+        } else if (IS_KEYBOARD_EVENT_STRIKETHROUGH(ev)) {
+            // Ctrl-5 / Ctrl-shift-(
+            ev.preventDefault();
+            ev.stopPropagation();
+            this.execCommand('strikeThrough');
         }
     }
     /**
@@ -2281,7 +2293,7 @@ export class OdooEditor extends EventTarget {
 
     clean() {
         this.observerUnactive();
-        for (const hint of this.document.querySelectorAll('.oe-hint')) {
+        for (const hint of this.editable.querySelectorAll('.oe-hint')) {
             hint.classList.remove('oe-hint', 'oe-command-temporary-hint');
             hint.removeAttribute('placeholder');
         }
@@ -2767,6 +2779,7 @@ export class OdooEditor extends EventTarget {
                     }
                 }
             }
+            this.historyStep();
         }
     }
     /**

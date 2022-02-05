@@ -243,8 +243,7 @@ class StockQuant(models.Model):
             self = self.sudo()
             res = super(StockQuant, self).write(vals)
             if res and self.env.context.get('inventory_report_mode'):
-                # update context to prevent recursive write call
-                self.with_context({'inventory_report_mode': False}).action_apply_inventory()
+                self.action_apply_inventory()
             return res
         return super(StockQuant, self).write(vals)
 
@@ -297,6 +296,8 @@ class StockQuant(models.Model):
         return action
 
     def action_apply_inventory(self):
+        # Update the context to prevent recursive call from write method
+        self = self.with_context({'inventory_report_mode': False})
         products_tracked_without_lot = []
         for quant in self:
             rounding = quant.product_uom_id.rounding
@@ -963,7 +964,7 @@ class QuantPackage(models.Model):
     _order = 'name'
 
     name = fields.Char(
-        'Package Reference', copy=False, index=True,
+        'Package Reference', copy=False, index=True, required=True,
         default=lambda self: self.env['ir.sequence'].next_by_code('stock.quant.package') or _('Unknown Pack'))
     quant_ids = fields.One2many('stock.quant', 'package_id', 'Bulk Content', readonly=True,
         domain=['|', ('quantity', '!=', 0), ('reserved_quantity', '!=', 0)])
