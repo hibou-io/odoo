@@ -99,7 +99,8 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         }
         var _super = this._super.bind(this);
         this.wysiwyg.odooEditor.clean();
-        return this.wysiwyg.saveModifiedImages(this.$content).then(() => {
+        return this.wysiwyg.saveModifiedImages(this.$content).then(async () => {
+            await this.wysiwyg.preSavePromise;
             this._isDirty = this.wysiwyg.isDirty();
             _super();
         });
@@ -169,7 +170,6 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
      */
     _createWysiwygIntance: async function () {
         this.wysiwyg = await wysiwygLoader.createWysiwyg(this, this._getWysiwygOptions());
-        this.wysiwyg.__extraAssetsForIframe = this.__extraAssetsForIframe || [];
         return this.wysiwyg.appendTo(this.$el).then(() => {
             this.$content = this.wysiwyg.$editable;
             this._onLoadWysiwyg();
