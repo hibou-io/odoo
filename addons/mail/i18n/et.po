@@ -11,14 +11,14 @@
 # Helen Sulaoja <helen@avalah.ee>, 2022
 # Egon Raamat <egon@avalah.ee>, 2022
 # Piia Paurson <piia@avalah.ee>, 2022
-# Martin Trigaux, 2022
 # Arma Gedonsky <armagedonsky@hot.ee>, 2022
 # Andre Roomet <andreroomet@gmail.com>, 2022
-# Eneli Õigus <enelioigus@gmail.com>, 2022
-# Rivo Zängov <eraser@eraser.ee>, 2022
 # Algo Kärp <algokarp@gmail.com>, 2022
 # Triine Aavik <triine@avalah.ee>, 2022
 # Marek Pontus, 2022
+# Martin Trigaux, 2022
+# Eneli Õigus <enelioigus@gmail.com>, 2022
+# Rivo Zängov <eraser@eraser.ee>, 2022
 # 
 msgid ""
 msgstr ""
@@ -26,7 +26,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-24 08:19+0000\n"
 "PO-Revision-Date: 2021-09-14 12:23+0000\n"
-"Last-Translator: Marek Pontus, 2022\n"
+"Last-Translator: Rivo Zängov <eraser@eraser.ee>, 2022\n"
 "Language-Team: Estonian (https://www.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -59,6 +59,14 @@ msgstr ""
 #, python-format
 msgid "%(activity_name)s: %(summary)s assigned to you"
 msgstr "%(activity_name)s: %(summary)s sulle määratud"
+
+#. module: mail
+#: code:addons/mail/models/res_partner.py:0
+#, python-format
+msgid ""
+"%(email)s is not recognized as a valid email. This is required to create a "
+"new customer."
+msgstr ""
 
 #. module: mail
 #: code:addons/mail/wizard/mail_wizard_invite.py:0
@@ -210,6 +218,13 @@ msgstr "(saatja"
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.message_activity_done
 msgid "(originally assigned to"
+msgstr ""
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/models/thread/thread.js:0
+#, python-format
+msgid ", "
 msgstr ""
 
 #. module: mail
@@ -960,6 +975,13 @@ msgid ""
 msgstr ""
 
 #. module: mail
+#: code:addons/mail/models/mail_blacklist.py:0
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid "Are you sure you want to unblacklist this Email Address?"
+msgstr ""
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
@@ -1407,6 +1429,14 @@ msgstr ""
 #, python-format
 msgid "Channel"
 msgstr "Allikas"
+
+#. module: mail
+#: code:addons/mail/models/mail_channel.py:0
+#, python-format
+msgid ""
+"Channel \"%(channel_name)s\" only accepts members of group "
+"\"%(group_name)s\". Forbidden for: %(guest_names)s"
+msgstr ""
 
 #. module: mail
 #: code:addons/mail/models/mail_channel.py:0
@@ -4368,7 +4398,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:mail.field_res_partner__my_activity_date_deadline
 #: model:ir.model.fields,field_description:mail.field_res_users__my_activity_date_deadline
 msgid "My Activity Deadline"
-msgstr ""
+msgstr "Minu tegevuse tähtaeg"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_type__name
@@ -5794,6 +5824,11 @@ msgid "Restrict mail templates and Jinja rendering."
 msgstr ""
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Restrict mail templates edition and QWEB placeholders usage."
+msgstr ""
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tree
 msgid "Retry"
@@ -6003,7 +6038,10 @@ msgid ""
 msgstr ""
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/components/thread_icon/thread_icon.xml:0
 #: model:ir.model.fields.selection,name:mail.selection__mail_channel__public__groups
+#, python-format
 msgid "Selected group of users"
 msgstr "Valitud kasutajarühm"
 
@@ -6054,7 +6092,7 @@ msgstr "Saada kohe"
 #: code:addons/mail/static/src/components/chatter_topbar/chatter_topbar.xml:0
 #, python-format
 msgid "Send a message"
-msgstr ""
+msgstr "Saada sõnum"
 
 #. module: mail
 #. openerp-web
@@ -6478,6 +6516,12 @@ msgstr "Süsteemiteavitus"
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__model_id
 msgid "Targeted model"
 msgstr ""
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_partner__vat
+#: model:ir.model.fields,field_description:mail.field_res_users__vat
+msgid "Tax ID"
+msgstr "KMKR nr"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_activity__has_recommended_activities
@@ -7318,12 +7362,6 @@ msgid ""
 msgstr ""
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_partner__vat
-#: model:ir.model.fields,field_description:mail.field_res_users__vat
-msgid "VAT/Tax ID"
-msgstr ""
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: code:addons/mail/static/src/xml/thread.xml:0
@@ -7515,6 +7553,12 @@ msgid "You are in channel <b>#%s</b>."
 msgstr ""
 
 #. module: mail
+#: code:addons/mail/controllers/discuss.py:0
+#, python-format
+msgid "You are not allowed to upload an attachment here."
+msgstr ""
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/models/discuss_sidebar_category_item/discuss_sidebar_category_item.js:0
 #, python-format
@@ -7586,6 +7630,14 @@ msgstr ""
 msgid ""
 "You cannot use anything else than unaccented latin characters in the alias "
 "address (%s)."
+msgstr ""
+
+#. module: mail
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid ""
+"You do not have the access right to unblacklist emails. Please contact your "
+"administrator."
 msgstr ""
 
 #. module: mail
@@ -8136,7 +8188,7 @@ msgstr ""
 #: code:addons/mail/models/mail_thread.py:0
 #, python-format
 msgid "unknown error"
-msgstr ""
+msgstr "tundmatu tõrge"
 
 #. module: mail
 #: code:addons/mail/models/mail_thread.py:0

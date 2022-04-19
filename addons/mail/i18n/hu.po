@@ -9,13 +9,13 @@
 # Kisrobert <kisrobi@gmail.com>, 2021
 # Tibor Kőnig <konig.tibor@evitalit.hu>, 2021
 # Istvan <leki69@gmail.com>, 2021
-# Tamás Dombos, 2021
 # Martin Trigaux, 2021
 # krnkris, 2021
 # Csaba Tóth <i3rendszerhaz@gmail.com>, 2021
 # Ákos Nagy <akos.nagy@oregional.hu>, 2021
 # gezza <geza.nagy@oregional.hu>, 2021
 # Tamás Németh <ntomasz81@gmail.com>, 2022
+# Tamás Dombos, 2022
 # 
 msgid ""
 msgstr ""
@@ -23,7 +23,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-24 08:19+0000\n"
 "PO-Revision-Date: 2021-09-14 12:23+0000\n"
-"Last-Translator: Tamás Németh <ntomasz81@gmail.com>, 2022\n"
+"Last-Translator: Tamás Dombos, 2022\n"
 "Language-Team: Hungarian (https://www.transifex.com/odoo/teams/41243/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -55,6 +55,14 @@ msgstr ""
 #: code:addons/mail/models/mail_activity.py:0
 #, python-format
 msgid "%(activity_name)s: %(summary)s assigned to you"
+msgstr ""
+
+#. module: mail
+#: code:addons/mail/models/res_partner.py:0
+#, python-format
+msgid ""
+"%(email)s is not recognized as a valid email. This is required to create a "
+"new customer."
 msgstr ""
 
 #. module: mail
@@ -207,6 +215,13 @@ msgstr "(feladó"
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.message_activity_done
 msgid "(originally assigned to"
+msgstr ""
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/models/thread/thread.js:0
+#, python-format
+msgid ", "
 msgstr ""
 
 #. module: mail
@@ -966,6 +981,13 @@ msgstr "Biztos törölni szeretné ezt az üzenetet?"
 msgid ""
 "Are you sure you want to discard %s mail delivery failures? You won't be "
 "able to re-send these mails later!"
+msgstr ""
+
+#. module: mail
+#: code:addons/mail/models/mail_blacklist.py:0
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid "Are you sure you want to unblacklist this Email Address?"
 msgstr ""
 
 #. module: mail
@@ -5860,6 +5882,11 @@ msgid "Restrict mail templates and Jinja rendering."
 msgstr ""
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Restrict mail templates edition and QWEB placeholders usage."
+msgstr ""
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tree
 msgid "Retry"
@@ -6069,7 +6096,10 @@ msgid ""
 msgstr ""
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/components/thread_icon/thread_icon.xml:0
 #: model:ir.model.fields.selection,name:mail.selection__mail_channel__public__groups
+#, python-format
 msgid "Selected group of users"
 msgstr "Kiválasztott felhasználók csoportja"
 
@@ -6548,6 +6578,12 @@ msgstr "Rendszerüzenet"
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__model_id
 msgid "Targeted model"
 msgstr ""
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_partner__vat
+#: model:ir.model.fields,field_description:mail.field_res_users__vat
+msgid "Tax ID"
+msgstr "Adószám"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_activity__has_recommended_activities
@@ -7392,12 +7428,6 @@ msgid ""
 msgstr ""
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_partner__vat
-#: model:ir.model.fields,field_description:mail.field_res_users__vat
-msgid "VAT/Tax ID"
-msgstr ""
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: code:addons/mail/static/src/xml/thread.xml:0
@@ -7666,6 +7696,14 @@ msgstr ""
 msgid ""
 "You cannot use anything else than unaccented latin characters in the alias "
 "address (%s)."
+msgstr ""
+
+#. module: mail
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid ""
+"You do not have the access right to unblacklist emails. Please contact your "
+"administrator."
 msgstr ""
 
 #. module: mail

@@ -2304,6 +2304,17 @@ msgid "It has already been unblocked."
 msgstr "Ya ha sido desbloqueado."
 
 #. module: mrp
+#: code:addons/mrp/models/mrp_workorder.py:0
+#, python-format
+msgid ""
+"It is not possible to unplan one single Work Order. You should unplan the "
+"Manufacturing Order instead in order to unplan all the linked operations."
+msgstr ""
+"No es posible anular la planeación de una sola orden de trabajo. En su "
+"lugar, debe anular la planeación de la orden de fabricación para anular la "
+"todas las operaciones vinculadas."
+
+#. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__is_planned
 msgid "Its Operations are Planned"
 msgstr "Sus operaciones están planeadas"
@@ -4575,6 +4586,18 @@ msgstr ""
 "La fecha de finalización planeada de la orden de trabajo no puede ser "
 "anterior a la fecha de inicio planeada, corríjala para guardar la orden de "
 "trabajo."
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"The product has already been used at least once, editing its structure may "
+"lead to undesirable behaviours. You should rather archive the product and "
+"create a new one with a new bill of materials."
+msgstr ""
+"El producto ya se usó al menos una vez, editar su estructura puede llevar a "
+"comportamientos no deseados. Archive el producto y cree uno nuevo con una "
+"nueva lista de materiales."
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_production.py:0

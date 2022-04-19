@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 
 from odoo import _, api, fields, tools, models
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import OrderedSet
+from odoo.tools import OrderedSet, groupby
 from odoo.tools.float_utils import float_compare, float_is_zero, float_round
 from odoo.addons.base.models.ir_model import MODULE_UNINSTALL_FLAG
 
@@ -202,10 +202,35 @@ class StockMoveLine(models.Model):
         if not self.id and self.user_has_groups('stock.group_stock_multi_locations') and self.product_id and self.qty_done:
             qty_done = self.product_uom_id._compute_quantity(self.qty_done, self.product_id.uom_id)
             default_dest_location = self._get_default_dest_location()
-            additional_qty = self._get_putaway_additional_qty()
-            self.location_dest_id = default_dest_location._get_putaway_strategy(
+            self.location_dest_id = default_dest_location.with_context(exclude_sml_ids=self.ids)._get_putaway_strategy(
                 self.product_id, quantity=qty_done, package=self.result_package_id,
-                packaging=self.move_id.product_packaging_id, additional_qty=additional_qty)
+                packaging=self.move_id.product_packaging_id)
+
+    def _apply_putaway_strategy(self):
+        for package, smls in groupby(self, lambda sml: sml.result_package_id):
+            smls = self.env['stock.move.line'].concat(*smls)
+            excluded_smls = smls
+            if package.package_type_id:
+                best_loc = smls.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls.ids)._get_putaway_strategy(self.env['product.product'], package=package)
+                smls.location_dest_id = smls.package_level_id.location_dest_id = best_loc
+            elif package:
+                used_locations = set()
+                for sml in smls:
+                    if len(used_locations) > 1:
+                        break
+                    sml.location_dest_id = sml.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls.ids)._get_putaway_strategy(sml.product_id, quantity=sml.product_uom_qty)
+                    excluded_smls -= sml
+                    used_locations.add(sml.location_dest_id)
+                if len(used_locations) > 1:
+                    smls.location_dest_id = smls.move_id.location_dest_id
+                else:
+                    smls.package_level_id.location_dest_id = smls.location_dest_id
+            else:
+                for sml in smls:
+                    sml.location_dest_id = sml.move_id.location_dest_id.with_context(exclude_sml_ids=excluded_smls.ids)._get_putaway_strategy(
+                        sml.product_id, quantity=sml.product_uom_qty, packaging=sml.move_id.product_packaging_id,
+                    )
+                    excluded_smls -= sml
 
     def _get_default_dest_location(self):
         if not self.user_has_groups('stock.group_stock_storage_categories'):
@@ -726,7 +751,7 @@ class StockMoveLine(models.Model):
 
         def get_aggregated_properties(move_line=False, move=False):
             move = move or move_line.move_id
-            uom = move_line and move_line.product_uom_id or move.product_uom
+            uom = move.product_uom or move_line.product_uom_id
             name = move.product_id.display_name
             description = move.description_picking
             if description == name or description == move.product_id.name:
@@ -743,36 +768,46 @@ class StockMoveLine(models.Model):
             pickings = pickings.backorder_ids
 
         for move_line in self:
+            if kwargs.get('except_package') and move_line.result_package_id:
+                continue
             line_key, name, description, uom = get_aggregated_properties(move_line=move_line)
 
+            qty_done = move_line.product_uom_id._compute_quantity(move_line.qty_done, uom)
             if line_key not in aggregated_move_lines:
-                qty_ordered = move_line.move_id.product_uom_qty
-                if backorders:
+                qty_ordered = None
+                if backorders and not kwargs.get('strict'):
+                    qty_ordered = move_line.move_id.product_uom_qty
                     # Filters on the aggregation key (product, description and uom) to add the
                     # quantities delayed to backorders to retrieve the original ordered qty.
                     following_move_lines = backorders.move_line_ids.filtered(
                         lambda ml: get_aggregated_properties(move=ml.move_id)[0] == line_key
                     )
                     qty_ordered += sum(following_move_lines.move_id.mapped('product_uom_qty'))
+                    # Remove the done quantities of the other move lines of the stock move
+                    previous_move_lines = move_line.move_id.move_line_ids.filtered(
+                        lambda ml: get_aggregated_properties(move=ml.move_id)[0] == line_key and ml.id != move_line.id
+                    )
+                    qty_ordered -= sum(map(lambda m: m.product_uom_id._compute_quantity(m.qty_done, uom), previous_move_lines))
                 aggregated_move_lines[line_key] = {'name': name,
                                                    'description': description,
-                                                   'qty_done': move_line.qty_done,
-                                                   'qty_ordered': qty_ordered,
+                                                   'qty_done': qty_done,
+                                                   'qty_ordered': qty_ordered or qty_done,
                                                    'product_uom': uom.name,
                                                    'product_uom_rec': uom,
                                                    'product': move_line.product_id}
             else:
-                aggregated_move_lines[line_key]['qty_done'] += move_line.qty_done
+                aggregated_move_lines[line_key]['qty_ordered'] += qty_done
+                aggregated_move_lines[line_key]['qty_done'] += qty_done
 
         # Does the same for empty move line to retrieve the ordered qty. for partially done moves
         # (as they are splitted when the transfer is done and empty moves don't have move lines).
         if kwargs.get('strict'):
             return aggregated_move_lines
         pickings = (self.picking_id | backorders)
-        for empty_move in pickings.move_lines.filtered(
-            lambda m: m.state == "cancel" and m.product_uom_qty
-            and float_is_zero(m.quantity_done, precision_rounding=m.product_uom.rounding)
-        ):
+        for empty_move in pickings.move_lines:
+            if not (empty_move.state == "cancel" and empty_move.product_uom_qty
+                    and float_is_zero(empty_move.quantity_done, precision_rounding=empty_move.product_uom.rounding)):
+                continue
             line_key, name, description, uom = get_aggregated_properties(move=empty_move)
 
             if line_key not in aggregated_move_lines:

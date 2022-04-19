@@ -2343,7 +2343,7 @@ class AccountMove(models.Model):
 
     def _creation_subtype(self):
         # OVERRIDE
-        if self.move_type in ('out_invoice', 'out_refund', 'out_receipt'):
+        if self.move_type in ('out_invoice', 'out_receipt'):
             return self.env.ref('account.mt_invoice_created')
         else:
             return super(AccountMove, self)._creation_subtype()
@@ -2425,11 +2425,11 @@ class AccountMove(models.Model):
                 values['total_amount_currency'] += sign * line.amount_currency
                 values['total_residual_currency'] += sign * line.amount_residual_currency
 
-            elif line.tax_line_id.tax_exigibility == 'on_payment' and not line.reconciled:
+            elif line.tax_line_id.tax_exigibility == 'on_payment':
                 values['to_process_lines'].append(('tax', line))
                 currencies.add(line.currency_id)
 
-            elif 'on_payment' in line.tax_ids.mapped('tax_exigibility') and not line.reconciled:
+            elif 'on_payment' in line.tax_ids.mapped('tax_exigibility'):
                 values['to_process_lines'].append(('base', line))
                 currencies.add(line.currency_id)
 
@@ -2682,7 +2682,7 @@ class AccountMove(models.Model):
             amount_currency = -line_vals.get('amount_currency', 0.0)
             balance = line_vals['credit'] - line_vals['debit']
 
-            if 'tax_tag_invert' in line_vals:
+            if 'tax_tag_invert' in line_vals and not self.tax_cash_basis_origin_move_id:
                 # This is an editable computed field; we want to it recompute itself
                 del line_vals['tax_tag_invert']
 
@@ -3497,6 +3497,19 @@ class AccountMove(models.Model):
                     del context
                 move.narration = narration or False
 
+    def _notify_get_groups(self, msg_vals=None):
+        """ Give access button to users and portal customer as portal is integrated
+        in account. Customer and portal group have probably no right to see
+        the document so they don't have the access button. """
+        groups = super(AccountMove, self)._notify_get_groups(msg_vals=msg_vals)
+
+        self.ensure_one()
+        if self.move_type != 'entry':
+            for group_name, _group_method, group_data in groups:
+                if group_name == 'portal_customer':
+                    group_data['has_button_access'] = True
+
+        return groups
 
 class AccountMoveLine(models.Model):
     _name = "account.move.line"
@@ -3742,67 +3755,21 @@ class AccountMoveLine(models.Model):
 
         if not self.product_id:
             return 0.0
-
-        company = self.move_id.company_id
-        currency = self.move_id.currency_id
-        company_currency = company.currency_id
-        product_uom = self.product_id.uom_id
-        fiscal_position = self.move_id.fiscal_position_id
-        is_refund_document = self.move_id.move_type in ('out_refund', 'in_refund')
-        move_date = self.move_id.date or fields.Date.context_today(self)
-
         if self.move_id.is_sale_document(include_receipts=True):
-            product_price_unit = self.product_id.lst_price
-            product_taxes = self.product_id.taxes_id
+            document_type = 'sale'
         elif self.move_id.is_purchase_document(include_receipts=True):
-            product_price_unit = self.product_id.standard_price
-            product_taxes = self.product_id.supplier_taxes_id
+            document_type = 'purchase'
         else:
-            return 0.0
-        product_taxes = product_taxes.filtered(lambda tax: tax.company_id == company)
+            document_type = 'other'
 
-        # Apply unit of measure.
-        if self.product_uom_id and self.product_uom_id != product_uom:
-            product_price_unit = product_uom._compute_price(product_price_unit, self.product_uom_id)
-
-        # Apply fiscal position.
-        if product_taxes and fiscal_position:
-            product_taxes_after_fp = fiscal_position.map_tax(product_taxes)
-
-            if set(product_taxes.ids) != set(product_taxes_after_fp.ids):
-                flattened_taxes_before_fp = product_taxes._origin.flatten_taxes_hierarchy()
-                if any(tax.price_include for tax in flattened_taxes_before_fp):
-                    taxes_res = flattened_taxes_before_fp.compute_all(
-                        product_price_unit,
-                        quantity=1.0,
-                        currency=company_currency,
-                        product=self.product_id,
-                        partner=self.partner_id,
-                        is_refund=is_refund_document,
-                    )
-                    product_price_unit = company_currency.round(taxes_res['total_excluded'])
-
-                flattened_taxes_after_fp = product_taxes_after_fp._origin.flatten_taxes_hierarchy()
-                if any(tax.price_include for tax in flattened_taxes_after_fp):
-                    taxes_res = flattened_taxes_after_fp.compute_all(
-                        product_price_unit,
-                        quantity=1.0,
-                        currency=company_currency,
-                        product=self.product_id,
-                        partner=self.partner_id,
-                        is_refund=is_refund_document,
-                        handle_price_include=False,
-                    )
-                    for tax_res in taxes_res['taxes']:
-                        tax = self.env['account.tax'].browse(tax_res['id'])
-                        if tax.price_include:
-                            product_price_unit += tax_res['amount']
-
-        # Apply currency rate.
-        if currency and currency != company_currency:
-            product_price_unit = company_currency._convert(product_price_unit, currency, company, move_date)
-
-        return product_price_unit
+        return self.product_id._get_tax_included_unit_price(
+            self.move_id.company_id,
+            self.move_id.currency_id,
+            self.move_id.date,
+            document_type,
+            fiscal_position=self.move_id.fiscal_position_id,
+            product_uom=self.product_uom_id
+        )
 
     def _get_computed_account(self):
         self.ensure_one()
@@ -3943,8 +3910,7 @@ class AccountMoveLine(models.Model):
 
         # Compute 'price_total'.
         if taxes:
-            force_sign = -1 if move_type in ('out_invoice', 'in_refund', 'out_receipt') else 1
-            taxes_res = taxes._origin.with_context(force_sign=force_sign).compute_all(line_discount_price_unit,
+            taxes_res = taxes._origin.with_context(force_sign=1).compute_all(line_discount_price_unit,
                 quantity=quantity, currency=currency, product=product, partner=partner, is_refund=move_type in ('out_refund', 'in_refund'))
             res['price_subtotal'] = taxes_res['total_excluded']
             res['price_total'] = taxes_res['total_included']
@@ -4077,8 +4043,9 @@ class AccountMoveLine(models.Model):
                 'discount': 0.0,
                 'price_unit': amount_currency / (quantity or 1.0),
             }
-        elif not discount_factor:
-            # balance of line is 0, but discount  == 100% so we display the normal unit_price
+        elif not discount_factor or not amount_currency:
+            # balance of line is 0, but discount == 100% or taxes (price included) == 100%,
+            # so we display the normal unit_price
             vals = {}
         else:
             # balance is 0, so unit price is 0 as well
@@ -4118,6 +4085,16 @@ class AccountMoveLine(models.Model):
             return (tax_type == 'sale' and self.debit) or (tax_type == 'purchase' and self.credit)
 
         return self.move_id.move_type in ('in_refund', 'out_refund')
+
+    def _get_invoiced_qty_per_product(self):
+        qties = defaultdict(float)
+        for aml in self:
+            qty = aml.product_uom_id._compute_quantity(aml.quantity, aml.product_id.uom_id)
+            if aml.move_id.move_type == 'out_invoice':
+                qties[aml.product_id] += qty
+            elif aml.move_id.move_type == 'out_refund':
+                qties[aml.product_id] -= qty
+        return qties
 
     # -------------------------------------------------------------------------
     # ONCHANGE METHODS
@@ -4789,6 +4766,17 @@ class AccountMoveLine(models.Model):
             result.append((line.id, name))
         return result
 
+    @api.model
+    def invalidate_cache(self, fnames=None, ids=None):
+        # Invalidate cache of related moves
+        if fnames is None or 'move_id' in fnames:
+            field = self._fields['move_id']
+            lines = self.env.cache.get_records(self, field) if ids is None else self.browse(ids)
+            move_ids = {id_ for id_ in self.env.cache.get_values(lines, field) if id_}
+            if move_ids:
+                self.env['account.move'].invalidate_cache(ids=move_ids)
+        return super().invalidate_cache(fnames=fnames, ids=ids)
+
     # -------------------------------------------------------------------------
     # TRACKING METHODS
     # -------------------------------------------------------------------------
@@ -4820,6 +4808,12 @@ class AccountMoveLine(models.Model):
 
         :return: A recordset of account.partial.reconcile.
         '''
+        def fix_remaining_cent(currency, abs_residual, partial_amount):
+            if abs_residual - currency.rounding <= partial_amount <= abs_residual + currency.rounding:
+                return abs_residual
+            else:
+                return partial_amount
+
         debit_lines = iter(self.filtered(lambda line: line.balance > 0.0 or line.amount_currency > 0.0))
         credit_lines = iter(self.filtered(lambda line: line.balance < 0.0 or line.amount_currency < 0.0))
         debit_line = None
@@ -4910,11 +4904,21 @@ class AccountMoveLine(models.Model):
                     credit_line.company_id,
                     credit_line.date,
                 )
+                min_debit_amount_residual_currency = fix_remaining_cent(
+                    debit_line.currency_id,
+                    debit_amount_residual_currency,
+                    min_debit_amount_residual_currency,
+                )
                 min_credit_amount_residual_currency = debit_line.company_currency_id._convert(
                     min_amount_residual,
                     credit_line.currency_id,
                     debit_line.company_id,
                     debit_line.date,
+                )
+                min_credit_amount_residual_currency = fix_remaining_cent(
+                    credit_line.currency_id,
+                    -credit_amount_residual_currency,
+                    min_credit_amount_residual_currency,
                 )
 
             debit_amount_residual -= min_amount_residual
@@ -5057,7 +5061,7 @@ class AccountMoveLine(models.Model):
                         'credit': line.credit,
                     }
 
-                    if caba_treatment == 'tax':
+                    if caba_treatment == 'tax' and not line.reconciled:
                         # Tax line.
                         grouping_key = self.env['account.partial.reconcile']._get_cash_basis_tax_line_grouping_key_from_record(line)
                         if grouping_key in account_vals_to_fix:
@@ -5569,6 +5573,7 @@ class AccountMoveLine(models.Model):
         # Force the values of the move line in the context to avoid issues
         ctx = dict(self.env.context)
         ctx.pop('active_id', None)
+        ctx.pop('default_journal_id', None)
         ctx['active_ids'] = self.ids
         ctx['active_model'] = 'account.move.line'
         action['context'] = ctx

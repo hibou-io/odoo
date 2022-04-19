@@ -395,18 +395,20 @@ class AccountPayment(models.Model):
         for pay in self:
             pay.partner_bank_id = pay.available_partner_bank_ids[:1]._origin
 
-    @api.depends('partner_id', 'destination_account_id', 'journal_id')
+    @api.depends('partner_id', 'journal_id', 'destination_journal_id')
     def _compute_is_internal_transfer(self):
         for payment in self:
-            payment.is_internal_transfer = payment.partner_id and payment.partner_id == payment.journal_id.company_id.partner_id
+            payment.is_internal_transfer = payment.partner_id \
+                                           and payment.partner_id == payment.journal_id.company_id.partner_id \
+                                           and payment.destination_journal_id
 
-    @api.depends('payment_type', 'journal_id')
+    @api.depends('available_payment_method_line_ids')
     def _compute_payment_method_line_id(self):
         ''' Compute the 'payment_method_line_id' field.
-        This field is not computed in '_compute_payment_method_fields' because it's a stored editable one.
+        This field is not computed in '_compute_payment_method_line_fields' because it's a stored editable one.
         '''
         for pay in self:
-            available_payment_method_lines = pay.journal_id._get_available_payment_method_lines(pay.payment_type)
+            available_payment_method_lines = pay.available_payment_method_line_ids
 
             # Select the first available one by default.
             if pay.payment_method_line_id in available_payment_method_lines:
@@ -420,7 +422,7 @@ class AccountPayment(models.Model):
     def _compute_payment_method_line_fields(self):
         for pay in self:
             pay.available_payment_method_line_ids = pay.journal_id._get_available_payment_method_lines(pay.payment_type)
-            to_exclude = self._get_payment_method_codes_to_exclude()
+            to_exclude = pay._get_payment_method_codes_to_exclude()
             if to_exclude:
                 pay.available_payment_method_line_ids = pay.available_payment_method_line_ids.filtered(lambda x: x.code not in to_exclude)
             if pay.payment_method_line_id.id not in pay.available_payment_method_line_ids.ids:

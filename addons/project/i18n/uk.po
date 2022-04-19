@@ -27,7 +27,7 @@ msgstr ""
 #: code:addons/project/static/src/project_sharing/components/chatter.xml:0
 #, python-format
 msgid "!!widget.options.res_id && widget.get('messages') || []"
-msgstr ""
+msgstr "!!widget.options.res_id && widget.get('messages') || []"
 
 #. module: project
 #. openerp-web
@@ -60,7 +60,7 @@ msgstr "\"Сьогодні\""
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__collaborator_count
 msgid "# Collaborators"
-msgstr ""
+msgstr "К-сть співучасників"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__rating_count
@@ -97,28 +97,28 @@ msgstr "%s Використовуйте %s іконку для організа�
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "(+ %(child_count)s tasks)"
-msgstr ""
+msgstr "(+ %(child_count)s завдання)"
 
 #. module: project
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "(+ 1 task)"
-msgstr ""
+msgstr "(+ 1 завдання)"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.milestone_deadline
 msgid "(due"
-msgstr ""
+msgstr "(належний"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "(last project update),"
-msgstr ""
+msgstr "(останнє оновлення проекту),"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.milestone_deadline
 msgid "- reached on"
-msgstr ""
+msgstr "- досягнуто"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_day__10
@@ -278,6 +278,8 @@ msgid ""
 "<br/>\n"
 "                                            <span class=\"fa fa-lock text-muted\"/><span class=\"text-muted\"> Private</span>"
 msgstr ""
+"<br/>\n"
+"                                            <span class=\"fa fa-lock text-muted\"/><span class=\"text-muted\"> Приватний</span>"
 
 #. module: project
 #: model:mail.template,body_html:project.rating_project_request_email_template
@@ -345,6 +347,68 @@ msgid ""
 "</div>\n"
 "            "
 msgstr ""
+"<div>\n"
+"    <t t-set=\"access_token\" t-value=\"object.rating_get_access_token()\"/>\n"
+"    <t t-set=\"partner\" t-value=\"object.rating_get_partner_id()\"/>\n"
+"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"width:100%; margin:0px auto;\">\n"
+"    <tbody>\n"
+"        <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"            <t t-if=\"partner.name\">\n"
+"                Вітаємо <t t-out=\"partner.name or ''\">Brandon Freeman</t>,<br/><br/>\n"
+"            </t>\n"
+"            <t t-else=\"\">\n"
+"                Вітаємо,<br/><br/>\n"
+"            </t>\n"
+"            Знайдіть час, щоби оцінити наші послуги по завданню \"<strong t-out=\"object.name or ''\">Планування та бюджетування</strong>\"\n"
+"            <t t-if=\"object.rating_get_rated_partner_id().name\">\n"
+"                призначене <strong t-out=\"object.rating_get_rated_partner_id().name or ''\">Mitchell Admin</strong>.<br/>\n"
+"            </t>\n"
+"            <t t-else=\"\">\n"
+"                .<br/>\n"
+"            </t>\n"
+"        </td></tr>\n"
+"        <tr><td style=\"text-align: center;\">\n"
+"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" summary=\"o_mail_notification\" style=\"width:100%; margin: 32px 0px 32px 0px;\">\n"
+"                <tr><td style=\"font-size: 13px;\">\n"
+"                    <strong>Скажіть нам, що ви думаєте про наші послуги</strong><br/>\n"
+"                    <span style=\"text-color: #888888\">(натисніть на один зі смайлів)</span>\n"
+"                </td></tr>\n"
+"                <tr><td style=\"font-size: 13px;\">\n"
+"                    <table style=\"width:100%;text-align:center;margin-top:2rem;\">\n"
+"                        <tr>\n"
+"                            <td>\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/5\">\n"
+"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                </a>\n"
+"                            </td>\n"
+"                            <td>\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/3\">\n"
+"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                </a>\n"
+"                            </td>\n"
+"                            <td>\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/1\">\n"
+"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                </a>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </table>\n"
+"                </td></tr>\n"
+"            </table>\n"
+"        </td></tr>\n"
+"        <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"            Дякуємо за ваш відгук. Це допомагає нам розвиватися.\n"
+"            <t t-if=\"object.project_id.rating_status == 'stage'\">\n"
+"                <br/><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; color: #454748;\">Це опитування клієнтів надіслано, оскільки ваше завдання переміщено на стадію<b t-out=\"object.stage_id.name or ''\">В процесі</b></span>\n"
+"            </t>\n"
+"            <t t-if=\"object.project_id.rating_status == 'periodic'\">\n"
+"                <br/><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; color: #454748;\">Це опитування буде надсилатися <b t-out=\"object.project_id.rating_status_period or ''\">Щотижня</b> поки завдання буде на етапі <b t-out=\"object.stage_id.name or ''\">В процесі</b>.</span>\n"
+"            </t>\n"
+"        </td></tr>\n"
+"    </tbody>\n"
+"    </table>\n"
+"</div>\n"
+"            "
 
 #. module: project
 #: model:mail.template,body_html:project.mail_template_data_project_task
@@ -362,6 +426,18 @@ msgid ""
 "</div>\n"
 "        "
 msgstr ""
+"<div>\n"
+"    Шановний <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</t>,<br/>\n"
+"    Дякуємо за ваш запит.<br/>\n"
+"   Дайте знати, якщо у вас виникнуть запитання.\n"
+"    <br/><br/>\n"
+"    Дякуємо,\n"
+"    <t t-if=\"user.signature\">\n"
+"        <br/>\n"
+"        <t t-out=\"user.signature or ''\">--<br/>Mitchell Admin</t>\n"
+"    </t>\n"
+"</div>\n"
+"        "
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
@@ -374,6 +450,8 @@ msgid ""
 "<i class=\"fa fa-long-arrow-right mx-2 oe_edit_only\" aria-label=\"Arrow icon\" title=\"Arrow\"/>\n"
 "                                <i class=\"fa fa-long-arrow-right mx-2 oe_read_only\" aria-label=\"Arrow icon\" title=\"Arrow\" attrs=\"{'invisible': [('date_start', '=', False), ('date', '=', False)]}\"/>"
 msgstr ""
+"<i class=\"fa fa-long-arrow-right mx-2 oe_edit_only\" aria-label=\"Arrow icon\" title=\"Arrow\"/>\n"
+"                                <i class=\"fa fa-long-arrow-right mx-2 oe_read_only\" aria-label=\"Arrow icon\" title=\"Arrow\" attrs=\"{'invisible': [('date_start', '=', False), ('date', '=', False)]}\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
@@ -399,6 +477,8 @@ msgid ""
 "<i class=\"o_project_task_project_field text-danger\" attrs=\"{'invisible': "
 "[('project_id', '!=', False)]}\">Private</i>"
 msgstr ""
+"<i class=\"o_project_task_project_field text-danger\" attrs=\"{'invisible': "
+"[('project_id', '!=', False)]}\">Приватний</i>"
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -409,7 +489,7 @@ msgstr "<p><em>Кількість завдань: %(tasks_count)s</em></p>"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_task
 msgid "<small class=\"text-right\">Stage:</small>"
-msgstr ""
+msgstr "<small class=\"text-right\">Етап:</small>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
@@ -423,7 +503,7 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
 msgid "<span class=\"fa fa-clock-o mr-2\" title=\"Dates\"/>"
-msgstr ""
+msgstr "<span class=\"fa fa-clock-o mr-2\" title=\"Dates\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
@@ -431,11 +511,13 @@ msgid ""
 "<span class=\"fa fa-envelope-o mr-2\" aria-label=\"Domain Alias\" "
 "title=\"Domain Alias\"/>"
 msgstr ""
+"<span class=\"fa fa-envelope-o mr-2\" aria-label=\"Domain Alias\" "
+"title=\"Domain Alias\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
 msgid "<span class=\"fa fa-user mr-2\" aria-label=\"Partner\" title=\"Partner\"/>"
-msgstr ""
+msgstr "<span class=\"fa fa-user mr-2\" aria-label=\"Partner\" title=\"Partner\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -444,6 +526,9 @@ msgid ""
 "                                    Collaborators\n"
 "                                </span>"
 msgstr ""
+"<span class=\"o_stat_text\">\n"
+"                                    Співучасники\n"
+"                                </span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -463,6 +548,9 @@ msgid ""
 "                                    Milestones\n"
 "                                </span>"
 msgstr ""
+"<span class=\"o_stat_text\">\n"
+"                                    Віхи\n"
+"                                </span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -471,11 +559,14 @@ msgid ""
 "                                Burndown Chart\n"
 "                            </span>"
 msgstr ""
+"<span class=\"o_stat_text\">\n"
+"                                Діаграма вигорання\n"
+"                            </span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 msgid "<span class=\"o_stat_text\">Blocking</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Блокування</span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -494,6 +585,9 @@ msgid ""
 "                                        <span class=\"font-weight-bold oe_read_only\" attrs=\"{'invisible': [('alias_name', '=', False)]}\">Create tasks by sending an email to </span>\n"
 "                                        <span class=\"font-weight-bold oe_edit_only\">Create tasks by sending an email to </span>"
 msgstr ""
+"<span class=\"oe_read_only\" attrs=\"{'invisible': [('alias_name', '!=', False)]}\">Створюйте завдання, надсилаючи електронний лист </span>\n"
+"                                        <span class=\"font-weight-bold oe_read_only\" attrs=\"{'invisible': [('alias_name', '=', False)]}\">Створюйте завдання, надсилаючи електронний лист </span>\n"
+"                                        <span class=\"font-weight-bold oe_edit_only\">Створюйте завдання, надсилаючи електронний лист </span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_delete_wizard_form
@@ -527,7 +621,7 @@ msgstr "<strong class=\"d-block mb-2\">Прикріплення</strong>"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_task
 msgid "<strong>Assignees</strong>"
-msgstr ""
+msgstr "<strong>Виконавці</strong>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_task
@@ -552,7 +646,7 @@ msgstr "<strong>Повідомлення та історія зв'язку</stro
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_task_planned_hours_template
 msgid "<strong>Planned Hours:</strong>"
-msgstr ""
+msgstr "<strong>Заплановані години:</strong>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_task
@@ -562,12 +656,12 @@ msgstr "<strong>Проект:</strong>"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "<u>Milestones</u>"
-msgstr ""
+msgstr "<u>Віхи</u>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "=&gt;"
-msgstr ""
+msgstr "=&gt;"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_defaults
@@ -584,11 +678,13 @@ msgid ""
 "A collaborator cannot be selected more than once in the project sharing "
 "access. Please remove duplicate(s) and try again."
 msgstr ""
+"Співробітника можна вибрати більше одного разу в доступі до проекту. Будь "
+"ласка, видаліть дублікати та повторіть спробу."
 
 #. module: project
 #: model:ir.model.constraint,message:project.constraint_project_task_user_rel_project_personal_stage_unique
 msgid "A task can only have a single personal stage per user."
-msgstr ""
+msgstr "Завдання може мати лише один персональний етап на одного користувача."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -663,7 +759,7 @@ msgstr "Типи дії"
 #: code:addons/project/static/src/xml/project_templates.xml:0
 #, python-format
 msgid "Add Milestone"
-msgstr ""
+msgstr "Додати віху"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.task_type_edit
@@ -690,7 +786,7 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_view_form
 msgid "Add contacts to share the project..."
-msgstr ""
+msgstr "Додайти контакти, щоби поділитися проектом..."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_share_wizard__note
@@ -802,6 +898,10 @@ msgid ""
 "an analytic account to record cost and revenue on your task. If empty, the "
 "analytic account of the project will be used."
 msgstr ""
+"Аналітичний рахунок, з яким пов’язано це завдання для фінансового "
+"менеджменту. Використовуйте аналітичний обліковий запис, щоб записувати "
+"витрати та прибуток від вашого завдання. Якщо порожній, буде використаний "
+"аналітичний рахунок проекту."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
@@ -858,17 +958,17 @@ msgstr "Ви впевнені, що хочете продовжити?"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_task_type_delete_wizard
 msgid "Are you sure you want to delete those stages ?"
-msgstr "Ви впевненя, що хочете видалити ті етапи?"
+msgstr "Ви впевнені, що хочете видалити ті етапи?"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
 msgid "Arrow"
-msgstr ""
+msgstr "Стрілка"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
 msgid "Arrow icon"
-msgstr ""
+msgstr "Іконка стрілки"
 
 #. module: project
 #. openerp-web
@@ -886,12 +986,12 @@ msgstr "Призначити мені"
 #. module: project
 #: model_terms:ir.ui.view,help:project.project_sharing_project_task_view_kanban
 msgid " assignee"
-msgstr ""
+msgstr "виконавець"
 
 #. module: project
 #: model_terms:ir.ui.view,help:project.project_sharing_project_task_view_kanban
 msgid " assignees"
-msgstr ""
+msgstr "виконавці"
 
 #. module: project
 #. openerp-web
@@ -942,7 +1042,7 @@ msgstr "Дата призначення"
 #: model:ir.model.fields.selection,name:project.selection__project_project__last_update_status__at_risk
 #: model:ir.model.fields.selection,name:project.selection__project_update__status__at_risk
 msgid "At Risk"
-msgstr ""
+msgstr "З ризиком"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.task_type_edit
@@ -950,6 +1050,8 @@ msgid ""
 "At each stage, employees can block tasks or mark them as ready for the next step.\n"
 "                                    You can customize here the labels for each state."
 msgstr ""
+"На кожному етапі співробітники можуть блокувати завдання або позначати їх як готові до наступного кроку.\n"
+"                                    Тут можна налаштувати мітки для кожного стану."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__message_attachment_count
@@ -962,7 +1064,7 @@ msgstr "Кількість прикріплень"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__attachment_ids
 msgid "Attachments that don't come from a message."
-msgstr ""
+msgstr "Вкладення, які не надходять із повідомлення."
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_month__august
@@ -993,6 +1095,9 @@ msgid ""
 " * Good feedback from the customer will update the kanban state to 'ready for the new stage' (green bullet).\n"
 " * Neutral or bad feedback will set the kanban state to 'blocked' (red bullet).\n"
 msgstr ""
+"Автоматично змінюйте стан канбану, коли клієнт відповідає на відгук для цього етапу.\n"
+" * Хороший відгук від клієнта оновить стан канбану до «готовий до нового етапу» (зелена мітка).\n"
+" * Нейтральний або поганий зворотній зв’язок встановить стан канбану на «заблокований» (червона мітка).\n"
 
 #. module: project
 #. openerp-web
@@ -1055,7 +1160,7 @@ msgstr "Заблоковано"
 #: model:ir.model.fields,field_description:project.field_project_task__depend_on_ids
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 msgid "Blocked By"
-msgstr ""
+msgstr "Заблоковано"
 
 #. module: project
 #. openerp-web
@@ -1074,7 +1179,7 @@ msgstr "Мозковий штурм"
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
 #, python-format
 msgid "Burndown Chart"
-msgstr ""
+msgstr "Діаграма вигорання"
 
 #. module: project
 #: model:project.task,legend_done:project.project_task_10
@@ -1124,7 +1229,7 @@ msgstr "Перевірте, чи контакт є компанією, інак�
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__child_text
 msgid "Child Text"
-msgstr ""
+msgstr "Дочірній текст"
 
 #. module: project
 #. openerp-web
@@ -1134,6 +1239,8 @@ msgid ""
 "Choose a <b>name</b> for your project. <i>It can be anything you want: the name of a customer,\n"
 "     of a product, of a team, of a construction site, etc.</i>"
 msgstr ""
+"Оберіть <b>назву</b> вашого проекту. <i>Це може бути що завгодно: ім’я клієнта,\n"
+"     назва товару, команди, сайту тощо.</i>"
 
 #. module: project
 #. openerp-web
@@ -1209,6 +1316,10 @@ msgid ""
 " who print the t-shirt. Organize priorities amongst orders using the %s "
 "icon. %s"
 msgstr ""
+"Спілкуйтеся з клієнтами щодо завдання за допомогою електронного шлюзу. "
+"Додайте дизайн логотипу до завдання, щоб інформація надходила від дизайнерів"
+" до працівників, які друкують футболку. Організуйте пріоритети серед "
+"замовлень за допомогою %s іконки. %s"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__company_id
@@ -1230,7 +1341,7 @@ msgstr "Налаштування"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
 msgid "Configure Stages"
-msgstr ""
+msgstr "Налаштуйте етапи"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_task_type_delete_confirmation_wizard
@@ -1267,7 +1378,7 @@ msgstr "Контакт"
 #: code:addons/project/static/src/js/project_list.js:0
 #, python-format
 msgid "Continue Recurrence"
-msgstr ""
+msgstr "Продовжити повторення"
 
 #. module: project
 #. openerp-web
@@ -1477,7 +1588,7 @@ msgstr "Дата"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_burndown_chart_report__date_group_by
 msgid "Date Group By"
-msgstr ""
+msgstr "Дата Групуати за"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_on_month__date
@@ -1578,6 +1689,11 @@ msgid ""
 "- Invited portal users and all employees: employees may see everything.   Invited portal users may see project and tasks followed by.\n"
 "   them or by someone of their company."
 msgstr ""
+"Визначає видимість завдань проекту:\n"
+"- Запрошені співробітники: співробітники можуть бачити лише проект і завдання, на які він підписаний.\n"
+"- Усі співробітники: співробітники можуть бачити всі проекти та завдання.\n"
+"- Запрошені користувачі порталу та всі співробітники: співробітники можуть бачити все. Запрошені користувачі порталу можуть побачити проект і завдання, на який він підписаний.\n"
+"  ними або кимось із їхньої компанії."
 
 #. module: project
 #: model:ir.actions.server,name:project.unlink_project_action
@@ -1591,7 +1707,7 @@ msgstr "Видалити"
 #: code:addons/project/static/src/xml/project_templates.xml:0
 #, python-format
 msgid "Delete Milestone"
-msgstr ""
+msgstr "Видалити віху"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_delete_wizard_form
@@ -1619,7 +1735,7 @@ msgstr "Доставлено"
 #: model:ir.model.fields,field_description:project.field_project_task__dependent_tasks_count
 #, python-format
 msgid "Dependent Tasks"
-msgstr ""
+msgstr "Залежні завдання"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__description
@@ -1646,7 +1762,7 @@ msgstr "Дизайн"
 #: model_terms:ir.ui.view,arch_db:project.edit_project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
 msgid "Determine the order in which to perform tasks"
-msgstr ""
+msgstr "Визначте порядок виконання завдань"
 
 #. module: project
 #. openerp-web
@@ -1687,7 +1803,7 @@ msgstr "Відмінити"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_share_wizard__display_access_mode
 msgid "Display Access Mode"
-msgstr ""
+msgstr "Відображати режим доступу"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_collaborator__display_name
@@ -1712,7 +1828,7 @@ msgstr "Відобразити назву"
 #: model:ir.model.fields,field_description:project.field_project_task__display_project_id
 #: model:ir.model.fields,field_description:project.field_project_task_burndown_chart_report__display_project_id
 msgid "Display Project"
-msgstr ""
+msgstr "Відображати проект"
 
 #. module: project
 #: code:addons/project/models/digest.py:0
@@ -1759,7 +1875,7 @@ msgstr "Спадне меню"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_milestone_view_form
 msgid "E.g: Product Launch"
-msgstr ""
+msgstr "Напр.: Запуск товару"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_share_wizard__access_mode__edit
@@ -1832,13 +1948,13 @@ msgstr "Кінцева дата"
 #. module: project
 #: model:ir.model.constraint,message:project.constraint_project_project_project_date_greater
 msgid "Error! Project start date must be before project end date."
-msgstr ""
+msgstr "Помилка! Дата початку проекту має передувати даті завершення проекту."
 
 #. module: project
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "Error! You cannot create a recursive hierarchy of tasks."
-msgstr ""
+msgstr "Помилка! Ви не можете створити рекурсивну ієрархію завдань."
 
 #. module: project
 #. openerp-web
@@ -1849,6 +1965,9 @@ msgid ""
 " all documents or links to the task directly, to have all research "
 "information centralized. %s"
 msgstr ""
+"Кожен може запропонувати ідеї, а найкращі редактор відзначає як %s. Додайте "
+"всі документи або посилання безпосередньо до завдання, щоб усю дослідницьку "
+"інформацію було централізовано. %s"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__date
@@ -1881,6 +2000,11 @@ msgid ""
 "review the %s column to move important tasks %s. Every Monday, you review "
 "the %s column. %s"
 msgstr ""
+"Легко наповнюйте папку \"Вхідні\" за допомогою шлюзу електронної пошти. "
+"Періодично переглядайте папку \"Вхідні\" та плануйте виконання завдань, "
+"переміщуючи їх на інші етапи. Кожного дня, ви робите огляд %s колонки, щоби "
+"перемістити важливі завдання %s. Кожного понеділка, ви робите огляд %s "
+"колонки. %s"
 
 #. module: project
 #. openerp-web
@@ -1918,7 +2042,7 @@ msgstr "Додано"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form_extended
 msgid "Followed Projects"
-msgstr ""
+msgstr "Проекти, на які ви підписані"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__message_follower_ids
@@ -1978,6 +2102,8 @@ msgid ""
 "Get a snapshot of the status of your project and share its progress with key"
 " stakeholders."
 msgstr ""
+"Отримайте огляд стану вашого проекту та поділіться його прогресом з "
+"ключовими зацікавленими сторонами."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -2081,11 +2207,16 @@ msgid ""
 "\n"
 "Don't forget to set up the email templates on the stages for which you want to get customer feedback."
 msgstr ""
+"Як отримати відгуки клієнтів?\n"
+"- Оцінка при зміні етапу: електронний лист буде надіслано, коли завдання буде перенесено на інший етап.\n"
+"- Періодична оцінка: періодично надсилатиметься електронний лист.\n"
+"\n"
+"Не забудьте налаштувати шаблони електронних листів на етапах, для яких ви хочете отримати відгуки клієнтів."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "How’s this project going?"
-msgstr ""
+msgstr "Як просувається цей проект?"
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -2184,6 +2315,8 @@ msgid ""
 "If set, an email will be sent to the customer when the project reaches this "
 "step."
 msgstr ""
+"Якщо налаштовано, клієнту буде надіслано електронний лист, коли проект "
+"досягне цього кроку."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task_type__mail_template_id
@@ -2191,6 +2324,8 @@ msgid ""
 "If set, an email will be sent to the customer when the task or issue reaches"
 " this step."
 msgstr ""
+"Якщо налаштовано, клієнту буде надіслано електронний лист, коли завдання або"
+" проблема досягнуть цього кроку."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_bounced_content
@@ -2311,7 +2446,7 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_view_form
 msgid "Invite People"
-msgstr ""
+msgstr "Запросіть людей"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_project__privacy_visibility__followers
@@ -2321,17 +2456,17 @@ msgstr "Залучені співробітники"
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_project__privacy_visibility__portal
 msgid "Invited portal users and all employees"
-msgstr ""
+msgstr "Запрошені користувачі порталу та всі співробітники"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__is_deadline_exceeded
 msgid "Is Deadline Exceeded"
-msgstr ""
+msgstr "Чи перевищено термін"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__is_deadline_future
 msgid "Is Deadline Future"
-msgstr ""
+msgstr "Майбутній дедлайн"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__message_is_follower
@@ -2344,7 +2479,7 @@ msgstr "Стежить"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__is_private
 msgid "Is Private"
-msgstr ""
+msgstr "Приватний"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__partner_is_company
@@ -2361,7 +2496,7 @@ msgstr "Версія проблеми"
 #: code:addons/project/static/src/js/project_list.js:0
 #, python-format
 msgid "It seems that some tasks are part of a recurrence."
-msgstr ""
+msgstr "Здається, що деякі завдання є частиною повторюваності."
 
 #. module: project
 #. openerp-web
@@ -2369,7 +2504,7 @@ msgstr ""
 #: code:addons/project/static/src/js/project_list.js:0
 #, python-format
 msgid "It seems that this task is part of a recurrence."
-msgstr ""
+msgstr "Здається, що це завдання є частиною повторення."
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_month__january
@@ -2477,12 +2612,12 @@ msgstr "Останнє оновлення"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__last_update_color
 msgid "Last Update Color"
-msgstr ""
+msgstr "Колір останнього оновлення"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__last_update_status
 msgid "Last Update Status"
-msgstr ""
+msgstr "Статус останнього оновлення"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__write_date
@@ -2579,6 +2714,7 @@ msgid ""
 "Let's go back to the <b>kanban view</b> to have an overview of your next "
 "tasks."
 msgstr ""
+"Поверніться на <b>перегляд канбану</b>, щоб оглянути ваше наступне завдання."
 
 #. module: project
 #. openerp-web
@@ -2591,7 +2727,7 @@ msgstr "Почніть роботу над вашим завданням."
 #: model_terms:ir.actions.act_window,help:project.rating_rating_action_project_report
 #: model_terms:ir.actions.act_window,help:project.rating_rating_action_task
 msgid "Let's wait for your customers to manifest themselves."
-msgstr "Давайте почекаємо, поки ваші з'являться клієнти."
+msgstr "Давайте почекаємо, поки з'являться ваші клієнти."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_share_wizard__share_link
@@ -2715,12 +2851,12 @@ msgstr "Повідомлення"
 #: model:ir.model.fields,field_description:project.field_project_project__milestone_ids
 #, python-format
 msgid "Milestone"
-msgstr ""
+msgstr "Віха"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__milestone_count
 msgid "Milestone Count"
-msgstr ""
+msgstr "Підрахунок віх"
 
 #. module: project
 #. openerp-web
@@ -2728,7 +2864,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:project.project_milestone_all
 #, python-format
 msgid "Milestones"
-msgstr ""
+msgstr "Віхи"
 
 #. module: project
 #. openerp-web
@@ -2765,7 +2901,7 @@ msgstr "Дедлайн моєї дії"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form_extended
 msgid "My Favorite Projects"
-msgstr ""
+msgstr "Мої проекти у закладках"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_filter
@@ -2804,12 +2940,12 @@ msgstr "Назва"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_update__name_cropped
 msgid "Name Cropped"
-msgstr ""
+msgstr "Назва обрізана"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
 msgid "Name of the tasks"
-msgstr ""
+msgstr "Назва завдань"
 
 #. module: project
 #: model:project.task,legend_blocked:project.project_task_10
@@ -2851,7 +2987,7 @@ msgstr "Новий"
 #: code:addons/project/static/src/js/right_panel/project_utils.js:0
 #, python-format
 msgid "New Milestone"
-msgstr ""
+msgstr "Нова віха"
 
 #. module: project
 #. openerp-web
@@ -2919,7 +3055,7 @@ msgstr "Тип наступної дії"
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "Next Occurrences:"
-msgstr ""
+msgstr "Наступні випадки:"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_recurrence__next_recurrence_date
@@ -2951,7 +3087,7 @@ msgstr "Ще немає даних!"
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_milestone_all
 msgid "No milestones found. Let's create one!"
-msgstr ""
+msgstr "Не знайдено жодної віхи. Створіть її!"
 
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.open_view_project_all
@@ -2982,7 +3118,7 @@ msgstr "Не знайдено завдання. Створіть його!"
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_update_all_action
 msgid "No updates found. Let's create one!"
-msgstr ""
+msgstr "Не знадено жодних оновлень. Створіть його!"
 
 #. module: project
 #: code:addons/project/controllers/portal.py:0
@@ -3024,12 +3160,12 @@ msgstr "Кількість повторень"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_type_delete_wizard__tasks_count
 msgid "Number of Tasks"
-msgstr ""
+msgstr "Кількість завдань"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_recurrence__recurrence_left
 msgid "Number of Tasks Left to Create"
-msgstr ""
+msgstr "Кількість залишених завдань до створення"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_report_project_task_user__working_days_close
@@ -3098,12 +3234,12 @@ msgstr "Жовтень"
 #: model:ir.model.fields.selection,name:project.selection__project_project__last_update_status__off_track
 #: model:ir.model.fields.selection,name:project.selection__project_update__status__off_track
 msgid "Off Track"
-msgstr ""
+msgstr "Не в порядку"
 
 #. module: project
 #: model:project.project,name:project.project_project_1
 msgid "Office Design"
-msgstr ""
+msgstr "Офісний дизайн"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_delete_wizard_form
@@ -3127,7 +3263,7 @@ msgstr "На утриманні"
 #: model:ir.model.fields.selection,name:project.selection__project_project__last_update_status__on_track
 #: model:ir.model.fields.selection,name:project.selection__project_update__status__on_track
 msgid "On Track"
-msgstr ""
+msgstr "В порядку"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_project__rating_status_period__monthly
@@ -3148,7 +3284,7 @@ msgstr "Відкрити завдання"
 #: model_terms:ir.ui.view,arch_db:project.project_task_burndown_chart_report_view_search
 #: model_terms:ir.ui.view,arch_db:project.view_task_project_user_search
 msgid "Open tasks"
-msgstr ""
+msgstr "Відкриті завдання"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_force_thread_id
@@ -3179,6 +3315,9 @@ msgid ""
 "Override the default value displayed for the blocked state for kanban "
 "selection when the task or issue is in that stage."
 msgstr ""
+"Замініть значення за замовчуванням, яке відображається для заблокованого "
+"стану для вибору канбану, коли завдання або проблема знаходяться на цьому "
+"етапі."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__legend_done
@@ -3187,6 +3326,8 @@ msgid ""
 "Override the default value displayed for the done state for kanban selection"
 " when the task or issue is in that stage."
 msgstr ""
+"Замініть значення за замовчуванням, що відображається для стану завершення "
+"для вибору канбану, коли завдання або проблема знаходяться на цьому етапі."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__legend_normal
@@ -3195,6 +3336,8 @@ msgid ""
 "Override the default value displayed for the normal state for kanban "
 "selection when the task or issue is in that stage."
 msgstr ""
+"Замінити значення за замовчуванням, що відображається для нормального стану "
+"для вибору канбану, коли завдання або проблема знаходяться на цьому етапі."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__alias_user_id
@@ -3251,28 +3394,28 @@ msgstr "Відсоток задоволених оцінювань за оста
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_project__rating_status__periodic
 msgid "Periodic rating"
-msgstr ""
+msgstr "Періодичне оцінювання"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__personal_stage_type_ids
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Personal Stage"
-msgstr ""
+msgstr "Персональний етап"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__personal_stage_id
 msgid "Personal Stage State"
-msgstr ""
+msgstr "Статус персонального етапу"
 
 #. module: project
 #: model:ir.model,name:project.model_project_task_stage_personal
 msgid "Personal Task Stage"
-msgstr ""
+msgstr "Етап персонального завдання"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__personal_stage_type_id
 msgid "Personal User Stage"
-msgstr ""
+msgstr "Персональний етап користувача"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__partner_phone
@@ -3333,7 +3476,7 @@ msgstr "URL доступу до порталу"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__portal_user_names
 msgid "Portal User Names"
-msgstr ""
+msgstr "Імена портальних користувачів"
 
 #. module: project
 #. openerp-web
@@ -3430,18 +3573,18 @@ msgstr "Проект"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__project_analytic_account_id
 msgid "Project Analytic Account"
-msgstr ""
+msgstr "Аналітичний рахунок проекту"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_collaborator_view_form
 msgid "Project Collaborator"
-msgstr ""
+msgstr "Співучасник проекту "
 
 #. module: project
 #: model:ir.actions.act_window,name:project.project_collaborator_action
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_access_view_tree
 msgid "Project Collaborators"
-msgstr ""
+msgstr "Співучасники проекту"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_account_analytic_account__project_count
@@ -3466,7 +3609,7 @@ msgstr "Керівник проекту"
 #. module: project
 #: model:ir.model,name:project.model_project_milestone
 msgid "Project Milestone"
-msgstr ""
+msgstr "Віха проекту"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -3478,28 +3621,28 @@ msgstr "Назва проекту"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_collaborator__project_id
 msgid "Project Shared"
-msgstr ""
+msgstr "Проектом поділилися"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.project_sharing_project_task_action
 #: model:ir.model,name:project.model_project_share_wizard
 msgid "Project Sharing"
-msgstr ""
+msgstr "Спільний доступ до проекту"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
 msgid "Project Sharing: Task"
-msgstr ""
+msgstr "Спільний доступ до проекту: Завдання"
 
 #. module: project
 #: model:ir.model,name:project.model_project_project_stage
 msgid "Project Stage"
-msgstr ""
+msgstr "Етап проекту"
 
 #. module: project
 #: model:mail.message.subtype,name:project.mt_project_stage_change
 msgid "Project Stage Changed"
-msgstr ""
+msgstr "Етап проекту змінено"
 
 #. module: project
 #: model:ir.model,name:project.model_project_task_type_delete_wizard
@@ -3511,7 +3654,7 @@ msgstr "Помічник видалення етапу проекту"
 #: model:ir.model.fields,field_description:project.field_res_config_settings__group_project_stages
 #: model:ir.ui.menu,name:project.menu_project_config_project_stage
 msgid "Project Stages"
-msgstr ""
+msgstr "Етапи проекту"
 
 #. module: project
 #: model:ir.model,name:project.model_project_tags
@@ -3527,13 +3670,13 @@ msgstr "Завдання проекту"
 #: model:ir.model,name:project.model_project_update
 #: model_terms:ir.ui.view,arch_db:project.project_update_view_form
 msgid "Project Update"
-msgstr ""
+msgstr "Оновлення проекту"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.project_update_all_action
 #: model_terms:ir.ui.view,arch_db:project.project_view_kanban_inherit_project
 msgid "Project Updates"
-msgstr ""
+msgstr "Оновлення проекту"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__project_privacy_visibility
@@ -3615,7 +3758,7 @@ msgstr "Щоквартально"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Rated Tasks"
-msgstr ""
+msgstr "Оцінені завдання"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.rating_rating_action_view_project_rating
@@ -3771,7 +3914,7 @@ msgstr "Причина оцінювання"
 #. module: project
 #: model:mail.template,subject:project.mail_template_data_project_task
 msgid "Reception of {{ object.name }}"
-msgstr ""
+msgstr "Реєстрація {{ object.name }}"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_share_wizard__partner_ids
@@ -3833,7 +3976,7 @@ msgstr "Відхилено"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_share_wizard__resource_ref
 msgid "Related Document"
-msgstr ""
+msgstr "Пов'язаний документ"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_share_wizard__res_id
@@ -3848,7 +3991,7 @@ msgstr "Пов'язана модель документа"
 #. module: project
 #: model:project.project,name:project.project_project_3
 msgid "Renovations"
-msgstr ""
+msgstr "Оновлення"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__repeat_day
@@ -3939,7 +4082,7 @@ msgstr "Пошук"
 #. module: project
 #: model:project.project,name:project.project_project_2
 msgid "Research & Development"
-msgstr ""
+msgstr "Пошук і розробка"
 
 #. module: project
 #. openerp-web
@@ -4015,7 +4158,7 @@ msgstr "Пошук проектів"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_view_search
 msgid "Search Update"
-msgstr ""
+msgstr "Пошук оновлень"
 
 #. module: project
 #: code:addons/project/controllers/portal.py:0
@@ -4027,7 +4170,7 @@ msgstr "Пошук у всьому"
 #: code:addons/project/controllers/portal.py:0
 #, python-format
 msgid "Search in Assignees"
-msgstr ""
+msgstr "Шукати у виконавцях"
 
 #. module: project
 #: code:addons/project/controllers/portal.py:0
@@ -4039,7 +4182,7 @@ msgstr "Пошук у повідомленнях"
 #: code:addons/project/controllers/portal.py:0
 #, python-format
 msgid "Search in Priority"
-msgstr ""
+msgstr "Шукати в пріоритетах"
 
 #. module: project
 #: code:addons/project/controllers/portal.py:0
@@ -4051,7 +4194,7 @@ msgstr "Пошук у проектах"
 #: code:addons/project/controllers/portal.py:0
 #, python-format
 msgid "Search in Ref"
-msgstr ""
+msgstr "Пошук у Реф."
 
 #. module: project
 #: code:addons/project/controllers/portal.py:0
@@ -4063,7 +4206,7 @@ msgstr "Пошук в етапах"
 #: code:addons/project/controllers/portal.py:0
 #, python-format
 msgid "Search in Status"
-msgstr ""
+msgstr "Шукати у Сатусі"
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_week__second
@@ -4125,23 +4268,23 @@ msgstr "Поділитися"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
 msgid "Share Editable"
-msgstr ""
+msgstr "Поділитися з можливістю редагування"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.project_share_wizard_action
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_view_form
 msgid "Share Project"
-msgstr ""
+msgstr "Поділитися проектом"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
 msgid "Share Readonly"
-msgstr ""
+msgstr "Поділитися лише для читання"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__is_favorite
 msgid "Show Project on Dashboard"
-msgstr ""
+msgstr "Показати Проект на Панелі приладів"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
@@ -4151,7 +4294,7 @@ msgstr "Показати всі записи, які мають дату нас�
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "Since"
-msgstr ""
+msgstr "З"
 
 #. module: project
 #. openerp-web
@@ -4197,7 +4340,7 @@ msgstr "Спринт виконано"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "Sprint Summary"
-msgstr ""
+msgstr "Підсумок спринта"
 
 #. module: project
 #. openerp-web
@@ -4237,7 +4380,7 @@ msgstr "Опис стадій та підказки"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_type__user_id
 msgid "Stage Owner"
-msgstr ""
+msgstr "Власник етапу"
 
 #. module: project
 #: model:mail.message.subtype,description:project.mt_task_stage
@@ -4301,12 +4444,12 @@ msgstr ""
 #: code:addons/project/static/src/js/project_list.js:0
 #, python-format
 msgid "Stop Recurrence"
-msgstr ""
+msgstr "Зупинити повторення"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__subtask_count
 msgid "Sub-task Count"
-msgstr ""
+msgstr "Підрахунок підзавдань"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__allow_subtasks
@@ -4328,6 +4471,8 @@ msgid ""
 "Sum of the time planned of all the sub-tasks linked to this task. Usually "
 "less than or equal to the initially planned time of this task."
 msgstr ""
+"Сума запланованого часу всіх підзадач, пов’язаних із цим завданням. Зазвичай"
+" менше або дорівнює спочатку запланованому часу виконання цього завдання."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__sun
@@ -4402,7 +4547,7 @@ msgstr "Підрахунок завдань"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__task_count_with_subtasks
 msgid "Task Count With Subtasks"
-msgstr ""
+msgstr "Кількість завдань із підзадачами"
 
 #. module: project
 #: model:mail.message.subtype,description:project.mt_task_new
@@ -4422,7 +4567,7 @@ msgstr "Залежності завдання"
 #: model:mail.message.subtype,name:project.mt_project_task_dependency_change
 #: model:mail.message.subtype,name:project.mt_task_dependency_change
 msgid "Task Dependency Changes"
-msgstr ""
+msgstr "Зміни залежностей завдань"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_res_config_settings__module_hr_timesheet
@@ -4463,7 +4608,7 @@ msgstr "Змінено стадію завдання"
 #: model:ir.actions.act_window,name:project.open_task_type_form_domain
 #: model:ir.ui.menu,name:project.menu_project_config_project
 msgid "Task Stages"
-msgstr ""
+msgstr "Етапи завдань"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_quick_create_task_form
@@ -4508,12 +4653,12 @@ msgstr "Завдання:"
 #. module: project
 #: model:mail.template,name:project.rating_project_request_email_template
 msgid "Task: Rating Request"
-msgstr ""
+msgstr "Завдання: Запит на оцінювання"
 
 #. module: project
 #: model:mail.template,name:project.mail_template_data_project_task
 msgid "Task: Reception Acknowledgment"
-msgstr ""
+msgstr "Завдання: Підтвердження отримання"
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -4566,7 +4711,7 @@ msgstr "Завдання в процесі"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_project_user_search
 msgid "Tasks Late"
-msgstr ""
+msgstr "протерміновані завдання"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
@@ -4600,22 +4745,22 @@ msgstr "Тест"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__personal_stage_id
 msgid "The current user's personal stage."
-msgstr ""
+msgstr "Особистий етап поточного користувача."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__personal_stage_type_id
 msgid "The current user's personal task stage."
-msgstr ""
+msgstr "Етап особистого завдання поточного користувача."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "The following milestone has been added:"
-msgstr ""
+msgstr "Додано наступний етап:"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "The following milestones have been added:"
-msgstr ""
+msgstr "Додано такі етапи:"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_model_id
@@ -4680,7 +4825,7 @@ msgstr ""
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "There are no more occurrences."
-msgstr ""
+msgstr "Більше випадків немає."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_projects
@@ -4746,7 +4891,7 @@ msgstr ""
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project_stage__fold
 msgid "This stage is folded in the kanban view."
-msgstr ""
+msgstr "Цей етап згорнутий у перегляді канбану."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.task_type_edit
@@ -4764,7 +4909,7 @@ msgstr "Це завдання"
 msgid ""
 "This will archive the stages and all the tasks they contain from the "
 "following projects:"
-msgstr "Це архівує етапи та всі завдання, які є наних, з наступних проектів:"
+msgstr "Це архівує етапи та всі завдання, які є на них, з наступних проектів:"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__thu
@@ -4806,7 +4951,7 @@ msgstr "Звертання"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_view_form
 msgid "Title of the Update"
-msgstr ""
+msgstr "Заголовок оновлення"
 
 #. module: project
 #: model:project.project.stage,name:project.project_project_stage_0
@@ -4828,6 +4973,8 @@ msgid ""
 "To get things done, use activities and status on tasks.<br>\n"
 "                    Chat in real-time or by email to collaborate efficiently."
 msgstr ""
+"Щоб виконувати завдання, використовуйте дії та статус у завданнях.<br>\n"
+"                    Спілкуйтеся в чаті в режимі реального часу або електронною поштою, щоб ефективно співпрацювати."
 
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_sharing_project_task_action
@@ -4835,7 +4982,7 @@ msgid ""
 "To get things done, use activities and status on tasks.<br>\n"
 "                Chat in real time or by email to collaborate efficiently."
 msgstr ""
-"Щоб виконувати завдання вчасно, використовуйте дії статуси на завданнях.<br>\n"
+"Щоб виконувати завдання вчасно, використовуйте дії та статуси на завданнях.<br>\n"
 "                Спілкуйтеся в реальному часі або через email для ефективної співпраці."
 
 #. module: project
@@ -4866,22 +5013,24 @@ msgstr "Відстежуйте задоволеність клієнтів за 
 #, python-format
 msgid "Track major progress points that must be reached to achieve success."
 msgstr ""
+"Відстежуйте основні точки прогресу, яких необхідно досягти, щоб досягти "
+"успіху."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
 msgid "Track the costs and revenues linked to your projects"
-msgstr ""
+msgstr "Відстежуйте витрати та доходи, пов’язані з вашими проектами"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
 msgid "Track the progress of your projects"
-msgstr ""
+msgstr "Слідкуйте за виконанням вашого проекту"
 
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_project_stage_configure
 msgid ""
 "Track the progress of your projects from their creation to their closing."
-msgstr ""
+msgstr "Відстежуйте хід ваших проектів від їх створення до закриття."
 
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.open_task_type_form
@@ -4929,7 +5078,7 @@ msgstr "Розархівувати"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
 msgid "Unassign Me"
-msgstr ""
+msgstr "Зняти з мене призначення"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_search
@@ -4981,7 +5130,7 @@ msgstr "Оновити"
 #: code:addons/project/static/src/js/project_task_kanban_examples.js:0
 #, python-format
 msgid "Use %s and %s bullets to indicate the status of a task. %s"
-msgstr ""
+msgstr "Використовуйте %s та мітки %s для визначення статусу завдання. %s"
 
 #. module: project
 #. openerp-web
@@ -4993,7 +5142,7 @@ msgstr "Використовуйте <b>дії</b>, щоб організува�
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__alias_enabled
 msgid "Use Email Alias"
-msgstr ""
+msgstr "Використовуйте псевдонім електронної пошти"
 
 #. module: project
 #: model:res.groups,name:project.group_project_rating
@@ -5008,7 +5157,7 @@ msgstr "Використовуйте повторювані завдання"
 #. module: project
 #: model:res.groups,name:project.group_project_stages
 msgid "Use Stages on Project"
-msgstr ""
+msgstr "Використовуйте етапи на проекті"
 
 #. module: project
 #: model:res.groups,name:project.group_subtask_project
@@ -5018,7 +5167,7 @@ msgstr "Використовуйте підзавдання"
 #. module: project
 #: model:res.groups,name:project.group_project_task_dependencies
 msgid "Use Task Dependencies"
-msgstr ""
+msgstr "Використовуйте залежності завдання"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__label_tasks
@@ -5035,7 +5184,7 @@ msgstr "Використовуйте це для свого проекту"
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_tags_action
 msgid "Use tags to categorize your tasks."
-msgstr ""
+msgstr "Використовуйте теги, щоб класифікувати свої завдання."
 
 #. module: project
 #. openerp-web
@@ -5045,6 +5194,8 @@ msgid ""
 "Use the chatter to <b>send emails</b> and communicate efficiently with your customers. \n"
 "    Add new people to the followers' list to make them aware of the main changes about this task."
 msgstr ""
+"Використовуйте чаттер для <b>надсилання електронного листа</b> та ефективно комунікуйте з вашими клієнтами. \n"
+"    Додайте нових людей до списку підписників, щоб вони дізналися про основні зміни цього завдання."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_stage_personal__user_id
@@ -5061,7 +5212,7 @@ msgstr "Перегляд"
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_project_task_view_form
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 msgid "View Task"
-msgstr ""
+msgstr "Переглянути завдання"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__privacy_visibility
@@ -5201,7 +5352,7 @@ msgstr ""
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "You cannot %s %s fields in task."
-msgstr ""
+msgstr "Ви не можете %s %s поля у завданні."
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -5209,6 +5360,7 @@ msgstr ""
 msgid ""
 "You cannot archive recurring tasks. Please disable the recurrence first."
 msgstr ""
+"Ви не можете архівувати повторювані завдання. Спершу вимкніть повторення."
 
 #. module: project
 #: code:addons/project/models/analytic_account.py:0
@@ -5217,12 +5369,14 @@ msgid ""
 "You cannot change the company of an analytic account if it is related to a "
 "project."
 msgstr ""
+"Ви не можете змінити компанію аналітичного облікового запису, якщо він "
+"пов’язаний з проектом."
 
 #. module: project
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "You cannot create cyclic dependency."
-msgstr ""
+msgstr "Ви не можете створити циклічну залежність."
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -5240,6 +5394,7 @@ msgstr ""
 msgid ""
 "You cannot delete recurring tasks. Please disable the recurrence first."
 msgstr ""
+"Ви не можете видалити повторювані завдання. Спершу вимкніть повторення."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_task_type_delete_wizard
@@ -5274,13 +5429,13 @@ msgstr "Ви були призначені на"
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "You have not write access of %s field."
-msgstr ""
+msgstr "У вас немає доступу писати в полі %s."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_sharing_quick_create_task_form
 #: model_terms:ir.ui.view,arch_db:project.quick_create_task_form
 msgid "e.g. New Design"
-msgstr ""
+msgstr "напр. Новий дизайн"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_project_view_form_simplified
@@ -5295,7 +5450,7 @@ msgstr "напр., офісна вечірка"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
 msgid "for customer:"
-msgstr ""
+msgstr "для клієнта:"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
@@ -5305,7 +5460,7 @@ msgstr "для проекту:"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
 msgid "in priority:"
-msgstr ""
+msgstr "в пріоритеті:"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
@@ -5315,7 +5470,7 @@ msgstr "на етапі:"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
 msgid "in status:"
-msgstr ""
+msgstr "в статусі:"
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -5326,12 +5481,12 @@ msgstr "завдання"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "the deadline of the following milestone has been updated:"
-msgstr ""
+msgstr "оновлено кінцевий термін наступного етапу:"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "the deadline of the following milestones has been updated:"
-msgstr ""
+msgstr "оновлено кінцевий термін наступних етапів:"
 
 #. module: project
 #. openerp-web
@@ -5343,4 +5498,4 @@ msgstr "вірно"
 #. module: project
 #: model:mail.template,subject:project.rating_project_request_email_template
 msgid "{{ object.project_id.company_id.name }}: Satisfaction Survey"
-msgstr ""
+msgstr "{{ object.project_id.company_id.name }}: Опитування вдоволеності"

@@ -3,7 +3,6 @@
 # 	* stock
 # 
 # Translators:
-# Martin Trigaux, 2021
 # Niccolò Lubello <nlubello@gmail.com>, 2021
 # Vortex Storm <vortexstorm@protonmail.com>, 2021
 # Léonie Bouchat <lbo@odoo.com>, 2021
@@ -11,6 +10,7 @@
 # Stefano Consolaro <stefano.consolaro@mymage.it>, 2022
 # Sergio Zanchetta <primes2h@gmail.com>, 2022
 # Friederike Fasterling-Nesselbosch, 2022
+# Martin Trigaux, 2022
 # 
 msgid ""
 msgstr ""
@@ -18,7 +18,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-16 13:18+0000\n"
 "PO-Revision-Date: 2021-09-14 12:26+0000\n"
-"Last-Translator: Friederike Fasterling-Nesselbosch, 2022\n"
+"Last-Translator: Martin Trigaux, 2022\n"
 "Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -652,7 +652,7 @@ msgstr "<strong>Collo</strong>"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_picking
 msgid "<strong>Product Barcode</strong>"
-msgstr "<strong>Codice a barre prodotto</strong>"
+msgstr "<strong>Barcode prodotto</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_delivery_document
@@ -715,7 +715,7 @@ msgstr "? Ciò potrebbe portare a incongruenze nel magazzino."
 #. module: stock
 #: model:ir.model.constraint,message:stock.constraint_stock_package_type_barcode_uniq
 msgid "A barcode can only be assigned to one package type !"
-msgstr "Un codice a barre può essere assegnato a un solo tipo di imballaggio!"
+msgstr "Un barcode può essere assegnato a un solo tipo di imballaggio!"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
@@ -1191,22 +1191,22 @@ msgstr "Ordini residui"
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__barcode
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Barcode"
-msgstr "Codice a barre"
+msgstr "Barcode"
 
 #. module: stock
 #: model:ir.ui.menu,name:stock.menu_wms_barcode_nomenclature_all
 msgid "Barcode Nomenclatures"
-msgstr "Nomenclature codice a barre"
+msgstr "Nomenclature barcode"
 
 #. module: stock
 #: model:ir.model,name:stock.model_barcode_rule
 msgid "Barcode Rule"
-msgstr "Regola codice a barre"
+msgstr "Regola barcode"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_stock_barcode
 msgid "Barcode Scanner"
-msgstr "Lettore codice a barre"
+msgstr "Lettore barcode"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_stock_picking_batch
@@ -2172,6 +2172,12 @@ msgid ""
 "Closet location: products/lots closest to the target location will be moved out first.\n"
 "FEFO: products/lots with the closest removal date will be moved out first (the availability of this method depends on the \"Expiration Dates\" setting)."
 msgstr ""
+"Definisce il metodo predefinito utilizzato per suggerire la posizione esatta (scaffale) da dove prendere i prodotti, quale lotto ecc. per questa posizione. Questo metodo può essere applicato a livello di categoria di prodotto, e viene effettuato un fallback sulle ubicazioni madri se nessuno è impostato qui.\n"
+"\n"
+"FIFO: i prodotti/lotti che sono stati immagazzinati per primi saranno spostati per primi.\n"
+"LIFO: i prodotti/lotti che sono stati immagazzinati per ultimi saranno spostati per primi.\n"
+"Closest location: i prodotti/lotti più vicini alla posizione di destinazione saranno spostati per primi.\n"
+"FEFO: i prodotti/lotti con la data di rimozione più vicina saranno spostati per primi (la disponibilità di questo metodo dipende dall'impostazione \"Date di scadenza\")."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__delay_alert_date
@@ -3374,6 +3380,12 @@ msgid "Immediate transfer?"
 msgstr "Trasferimento immediato?"
 
 #. module: stock
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid "Import"
+msgstr "Importa"
+
+#. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__in_type_id
 msgid "In Type"
 msgstr "Tipologia in ingresso"
@@ -4064,7 +4076,7 @@ msgstr "Ubicazione"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_location_barcode
 msgid "Location Barcode"
-msgstr "Codice a barre ubicazione"
+msgstr "Posizione Barcode"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location__name
@@ -4711,6 +4723,12 @@ msgid "No stock move found"
 msgstr "Nessun movimento di magazzino trovato"
 
 #. module: stock
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid "No Stock On Hand"
+msgstr ""
+
+#. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_picking_form
 #: model_terms:ir.actions.act_window,help:stock.action_picking_tree_all
 #: model_terms:ir.actions.act_window,help:stock.action_picking_tree_backorder
@@ -5160,17 +5178,17 @@ msgstr "Collo"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_quant_package_barcode_small
 msgid "Package Barcode (PDF)"
-msgstr "Codice a barre del collo (PDF)"
+msgstr "Barcode del pacchetto (PDF)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.label_package_template
 msgid "Package Barcode (ZPL)"
-msgstr "Codice a barre del collo (ZPL)"
+msgstr "Barcode del pacchetto (ZPL)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_quant_package_barcode
 msgid "Package Barcode with Content"
-msgstr "Codice a barre del collo con contenuto"
+msgstr "Barcode della confezione con contenuto"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_storage_category__package_capacity_ids
@@ -5449,6 +5467,14 @@ msgid "Preferred route"
 msgstr "Percorso preferito"
 
 #. module: stock
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid ""
+"Press the CREATE button to define quantity for each product in your stock or"
+" import them from a spreadsheet throughout Favorites"
+msgstr ""
+
+#. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 msgid "Print"
 msgstr "Stampa"
@@ -5486,7 +5512,7 @@ msgstr "Trattare a questa data per essere in tempo"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Process operations faster with barcodes"
-msgstr "Elabora più velocemente le operazioni con i codici a barre"
+msgstr "Elabora più velocemente le operazioni con i barcode"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -6896,6 +6922,12 @@ msgid ""
 "Closet location: products/lots closest to the target location will be moved out first.\n"
 "FEFO: products/lots with the closest removal date will be moved out first (the availability of this method depends on the \"Expiration Dates\" setting)."
 msgstr ""
+"Imposta una strategia di rimozione specifica che sarà utilizzata indipendentemente dalla posizione di origine per questa categoria di prodotti.\n"
+"\n"
+"FIFO: i prodotti/lotti che sono stati immagazzinati per primi saranno spostati per primi.\n"
+"LIFO: i prodotti/lotti che sono stati immagazzinati per ultimi saranno spostati per primi.\n"
+"Posizione più vicina: i prodotti/lotti più vicini alla posizione di destinazione saranno spostati per primi.\n"
+"FEFO: i prodotti/lotti con la data di rimozione più vicina saranno spostati per primi (la disponibilità di questo metodo dipende dall'impostazione \"Date di scadenza\")."
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -7628,6 +7660,9 @@ msgid ""
 "\n"
 "Is this expected? For example this can occur if a delivery operation is validated before its corresponding receipt operation is validated. In this case the issue will be solved automatically once all steps are completed. Otherwise, the serial number should be corrected to prevent inconsistent data."
 msgstr ""
+"Il numero di serie (%s) è già usato in queste posizioni: %s.\n"
+"\n"
+"È previsto? Per esempio, questo può accadere se un'operazione di consegna è convalidata prima che la sua corrispondente operazione di ricezione sia convalidata. In questo caso il problema si risolve automaticamente una volta che tutti i passi sono stati completati. Altrimenti, il numero di serie dovrebbe essere corretto per evitare dati incoerenti."
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -7642,7 +7677,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.constraint,message:stock.constraint_stock_location_barcode_company_uniq
 msgid "The barcode for a location must be unique per company !"
-msgstr "Il codice a barre di una ubicazione deve essere univoco per azienda."
+msgstr "Il barcode di una ubicazione deve essere univoco per azienda."
 
 #. module: stock
 #: model_terms:res.company,invoice_terms_html:stock.res_company_1
@@ -7878,6 +7913,14 @@ msgid "There's no product move yet"
 msgstr "Ancora nessun movimento di prodotto"
 
 #. module: stock
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid ""
+"This analysis gives you an overview of the current stock level of your "
+"products."
+msgstr ""
+
+#. module: stock
 #: model:ir.model.fields,help:stock.field_stock_rule__name
 msgid "This field will fill the packing origin and the name of its moves"
 msgstr ""
@@ -8093,7 +8136,7 @@ msgstr ""
 #: model:digest.tip,name:stock.digest_tip_stock_0
 #: model_terms:digest.tip,tip_description:stock.digest_tip_stock_0
 msgid "Tip: Speed up inventory operations with barcodes"
-msgstr "Consiglio: velocizza le operazioni di inventario con i codici a barre"
+msgstr "Consiglio: velocizza le operazioni di inventario con i barcode"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__location_dest_id
@@ -9352,6 +9395,15 @@ msgstr ""
 "Aggiorni questo documento per riflettere le vostre Condizioni Generali."
 
 #. module: stock
+#: code:addons/stock/models/stock_picking.py:0
+#, python-format
+msgid ""
+"You should not use a planned internal transfer to move some products between"
+" two warehouses. Instead, use an immediate internal transfer or the resupply"
+" route."
+msgstr ""
+
+#. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "You still have ongoing operations for picking types %s in warehouse %s"
@@ -9384,6 +9436,12 @@ msgstr ""
 "Qui sono presenti proposte di rifornimento intelligente basate sulle previsioni di inventario.\n"
 "Scegli la quantità da comprare o da produrre ed avvia gli ordini tramite un clic.\n"
 "Per risparmiare tempo in futuro, imposta le regole come \"automatizzate\"."
+
+#. module: stock
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid "Your stock is currently empty"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__product_label_layout__print_format__zpl

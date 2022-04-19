@@ -15,10 +15,11 @@
 # Leif Persson <leifpz54@gmail.com>, 2021
 # lynnliuying <lynn.liu1971@gmail.com>, 2021
 # Anders Wallenquist <anders.wallenquist@vertel.se>, 2021
-# STefan Rundgren <stefanrundgren@cellglas.com>, 2021
+# 3eec91a23d05c632ffac786ac42b81b8_b6fff7b <8985b7bc57db860af29969457dbb51b3_1018915>, 2021
 # Kim Asplund <kim.asplund@gmail.com>, 2021
 # Martin Trigaux, 2021
-# Chrille Hedberg <hedberg.chrille@gmail.com>, 2021
+# Emanuel Bergsten, 2022
+# Chrille Hedberg <hedberg.chrille@gmail.com>, 2022
 # Simon S, 2022
 # 
 msgid ""
@@ -1706,12 +1707,12 @@ msgstr "Fel"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.exception_on_mo
 msgid "Exception(s) occurred on the manufacturing order(s):"
-msgstr ""
+msgstr "Undantag uppstod på tillverkningsordern:"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.exception_on_mo
 msgid "Exception(s):"
-msgstr ""
+msgstr "Undantag:"
 
 #. module: mrp
 #: code:addons/mrp/wizard/stock_assign_serial_numbers.py:0
@@ -2217,6 +2218,14 @@ msgstr ""
 #: code:addons/mrp/models/mrp_workcenter.py:0
 #, python-format
 msgid "It has already been unblocked."
+msgstr ""
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_workorder.py:0
+#, python-format
+msgid ""
+"It is not possible to unplan one single Work Order. You should unplan the "
+"Manufacturing Order instead in order to unplan all the linked operations."
 msgstr ""
 
 #. module: mrp
@@ -3743,7 +3752,7 @@ msgstr "Reservera"
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_workorder_form_view_inherit
 msgid "Reserved"
-msgstr ""
+msgstr "Reserverad"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__resource_id
@@ -4416,6 +4425,15 @@ msgid ""
 msgstr ""
 
 #. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"The product has already been used at least once, editing its structure may "
+"lead to undesirable behaviours. You should rather archive the product and "
+"create a new one with a new bill of materials."
+msgstr ""
+
+#. module: mrp
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
 msgid "The quantity produced of by-products must be positive."
@@ -4513,6 +4531,11 @@ msgid ""
 "the efficiency factor is 200%, however the expected duration will be 30 "
 "minutes."
 msgstr ""
+"Det här fältet används för att beräkna den förväntade tidsåtgången för en "
+"arbetsorder på det här arbetscentret. Om en arbetsorder till exempel tar en "
+"timme och effektivitetsfaktorn är 100 % är den förväntade tidsåtgången en "
+"timme. Om effektivitetsfaktorn är 200 % kommer den förväntade tidsåtgången "
+"att vara 30 minuter."
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrp_bom_line
@@ -5367,6 +5390,8 @@ msgid ""
 "You can either upload a file from your computer or copy/paste an internet "
 "link to your file."
 msgstr ""
+"Du kan antingen ladda upp en fil från din dator eller ange en URL till din "
+"fil."
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_bom.py:0
@@ -5612,7 +5637,7 @@ msgstr "på"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.exception_on_mo
 msgid "ordered instead of"
-msgstr ""
+msgstr "beställd istället för"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.production_message

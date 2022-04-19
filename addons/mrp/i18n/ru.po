@@ -10,7 +10,7 @@
 # Андрей Гусев <gaussgss@gmail.com>, 2021
 # Sergey Vilizhanin, 2021
 # Ekaterina <nawsikaya@bk.ru>, 2021
-# Ivan Yelizariev // IEL (ellui) <yelizariev@itpp.dev>, 2021
+# Ivan Kropotkin <yelizariev@itpp.dev>, 2021
 # Vasiliy Korobatov <korobatov@gmail.com>, 2021
 # ILMIR <karamov@it-projects.info>, 2021
 # Irina Fedulova <istartlin@gmail.com>, 2021
@@ -1612,7 +1612,7 @@ msgstr "Документация"
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_filter
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_work_order_search
 msgid "Done"
-msgstr "Сделано"
+msgstr "Выполнено"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.view_document_file_kanban_mrp
@@ -2253,6 +2253,14 @@ msgstr "Работает текущий пользователь"
 #, python-format
 msgid "It has already been unblocked."
 msgstr "Это был разблокирован."
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_workorder.py:0
+#, python-format
+msgid ""
+"It is not possible to unplan one single Work Order. You should unplan the "
+"Manufacturing Order instead in order to unplan all the linked operations."
+msgstr ""
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__is_planned
@@ -3860,23 +3868,23 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_filter
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_workorder_form_view_filter
 msgid "Scheduled Date"
-msgstr "Запланированная дата"
+msgstr "Плановая дата начала"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_filter
 msgid "Scheduled Date by Month"
-msgstr "Запланированная дата по месяцам"
+msgstr "Плановая дата по месяцам"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__date_planned_finished
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__date_planned_finished
 msgid "Scheduled End Date"
-msgstr "Запланированная дата окончания"
+msgstr "Плановая дата окончания"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workorder__date_planned_start
 msgid "Scheduled Start Date"
-msgstr "Запланированная дата начала"
+msgstr "Плановая дата начала"
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_workorder.py:0
@@ -4470,6 +4478,15 @@ msgid ""
 msgstr ""
 
 #. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"The product has already been used at least once, editing its structure may "
+"lead to undesirable behaviours. You should rather archive the product and "
+"create a new one with a new bill of materials."
+msgstr ""
+
+#. module: mrp
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
 msgid "The quantity produced of by-products must be positive."
@@ -4678,7 +4695,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:mrp.selection__mrp_production__state__to_close
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_filter
 msgid "To Close"
-msgstr "Закрыть"
+msgstr "Можно закрыть"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_consumption_warning_line__product_expected_qty_uom
@@ -5078,12 +5095,12 @@ msgstr "Ожидание компонентов"
 #. module: mrp
 #: model:ir.model.fields.selection,name:mrp.selection__mrp_workorder__state__pending
 msgid "Waiting for another WO"
-msgstr ""
+msgstr "Ожидание другого задания"
 
 #. module: mrp
 #: model:ir.model.fields.selection,name:mrp.selection__mrp_workorder__state__waiting
 msgid "Waiting for components"
-msgstr ""
+msgstr "Ожидание компонентов"
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_workorder.py:0

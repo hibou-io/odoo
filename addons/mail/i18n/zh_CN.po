@@ -7,7 +7,6 @@
 # niulin lnc. <admin@niulin.net>, 2021
 # Felix Yuen <fyu@odoo.com>, 2021
 # 黎伟杰 <674416404@qq.com>, 2021
-# Jeffery CHEN <jeffery9@gmail.com>, 2021
 # xu aaron, 2021
 # Martin Trigaux, 2021
 # 深圳市耀影科技有限公司_QQ1006399173 <yoayingkeji@yaoying.vip>, 2021
@@ -15,6 +14,9 @@
 # 深圳市耀影科技有限公司QQ1006399173 <web@yaoying.vip>, 2021
 # 深圳市耀影科技有限公司QQ1006399173 <yaoyingkeji@yaoying.vip>, 2021
 # Benson <Benson.Dr@Gmail.com>, 2022
+# Jeffery CHEN <jeffery9@gmail.com>, 2022
+# 智能科技奇客罗方 <alanljj@gmail.com>, 2022
+# as co02 <asco02@163.com>, 2022
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2022
 # 
 msgid ""
@@ -56,6 +58,14 @@ msgstr "\"%s\"需要麦克风访问权限"
 #, python-format
 msgid "%(activity_name)s: %(summary)s assigned to you"
 msgstr "%(activity_name)s: %(summary)s 分配给您"
+
+#. module: mail
+#: code:addons/mail/models/res_partner.py:0
+#, python-format
+msgid ""
+"%(email)s is not recognized as a valid email. This is required to create a "
+"new customer."
+msgstr "%(email)s不是有效的电子邮件。需要创建新的客户。"
 
 #. module: mail
 #: code:addons/mail/wizard/mail_wizard_invite.py:0
@@ -208,6 +218,13 @@ msgstr "(从"
 #: model_terms:ir.ui.view,arch_db:mail.message_activity_done
 msgid "(originally assigned to"
 msgstr "（最初分配给"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/models/thread/thread.js:0
+#, python-format
+msgid ", "
+msgstr ", "
 
 #. module: mail
 #. openerp-web
@@ -989,6 +1006,13 @@ msgid ""
 msgstr "您确定要丢弃%s邮件传递失败吗？ 您以后将无法重新发送这些邮件！"
 
 #. module: mail
+#: code:addons/mail/models/mail_blacklist.py:0
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid "Are you sure you want to unblacklist this Email Address?"
+msgstr "您确定要将此电子邮件地址取消列入黑名单吗？"
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
@@ -1434,6 +1458,14 @@ msgstr "已修改"
 #, python-format
 msgid "Channel"
 msgstr "频道"
+
+#. module: mail
+#: code:addons/mail/models/mail_channel.py:0
+#, python-format
+msgid ""
+"Channel \"%(channel_name)s\" only accepts members of group "
+"\"%(group_name)s\". Forbidden for: %(guest_names)s"
+msgstr "频道“%(channel_name)s”只接受组“%(group_name)s”的成员。禁止：%(guest_names)s"
 
 #. module: mail
 #: code:addons/mail/models/mail_channel.py:0
@@ -3518,7 +3550,7 @@ msgstr "是当前用户还是游客作者"
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__is_mail_template_editor
 #: model:ir.model.fields,field_description:mail.field_mail_composer_mixin__is_mail_template_editor
 msgid "Is Editor"
-msgstr "编辑"
+msgstr "编辑器"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_blacklist__message_is_follower
@@ -5815,6 +5847,11 @@ msgid "Restrict mail templates and Jinja rendering."
 msgstr "限制邮件模板和 Jinja 渲染。"
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Restrict mail templates edition and QWEB placeholders usage."
+msgstr "限制邮件模板版本和 QWEB 占位符的使用。"
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tree
 msgid "Retry"
@@ -6024,7 +6061,10 @@ msgid ""
 msgstr "选择每个邮件上的操作，并在需要时更正EMail地址。修改后的地址将保存在相应的联系人上。"
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/components/thread_icon/thread_icon.xml:0
 #: model:ir.model.fields.selection,name:mail.selection__mail_channel__public__groups
+#, python-format
 msgid "Selected group of users"
 msgstr "选择用户组"
 
@@ -6496,6 +6536,12 @@ msgstr "系统通知"
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__model_id
 msgid "Targeted model"
 msgstr "目标模型"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_partner__vat
+#: model:ir.model.fields,field_description:mail.field_res_users__vat
+msgid "Tax ID"
+msgstr "税ID"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_activity__has_recommended_activities
@@ -7343,12 +7389,6 @@ msgstr ""
 "(@mycompany.odoo.com)。"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_partner__vat
-#: model:ir.model.fields,field_description:mail.field_res_users__vat
-msgid "VAT/Tax ID"
-msgstr "统一编号"
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: code:addons/mail/static/src/xml/thread.xml:0
@@ -7536,6 +7576,12 @@ msgid "You are in channel <b>#%s</b>."
 msgstr "您在频道 <b>#%s</b>"
 
 #. module: mail
+#: code:addons/mail/controllers/discuss.py:0
+#, python-format
+msgid "You are not allowed to upload an attachment here."
+msgstr "您无权在此处上传附件。"
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/models/discuss_sidebar_category_item/discuss_sidebar_category_item.js:0
 #, python-format
@@ -7610,6 +7656,14 @@ msgid ""
 "You cannot use anything else than unaccented latin characters in the alias "
 "address (%s)."
 msgstr "您不能在别名地址中使用除不带重音的拉丁字符之外的任何内容 (%s)."
+
+#. module: mail
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid ""
+"You do not have the access right to unblacklist emails. Please contact your "
+"administrator."
+msgstr "<br>您没有将电子邮件列入黑名单的访问权限。请联系您的管理员。"
 
 #. module: mail
 #: code:addons/mail/models/mail_thread.py:0

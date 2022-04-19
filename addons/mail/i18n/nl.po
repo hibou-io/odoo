@@ -3,10 +3,10 @@
 # 	* mail
 # 
 # Translators:
-# Yenthe Van Ginneken <yenthespam@gmail.com>, 2021
 # Bert Burggraaf, 2021
 # Martin Trigaux, 2021
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2022
+# Yenthe Van Ginneken <yenthespam@gmail.com>, 2022
 # 
 msgid ""
 msgstr ""
@@ -14,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-24 08:19+0000\n"
 "PO-Revision-Date: 2021-09-14 12:23+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2022\n"
+"Last-Translator: Yenthe Van Ginneken <yenthespam@gmail.com>, 2022\n"
 "Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -47,6 +47,16 @@ msgstr "\"%s\" vereist microfoontoegang"
 #, python-format
 msgid "%(activity_name)s: %(summary)s assigned to you"
 msgstr "%(activity_name)s: %(summary)s aan jou toegewezen"
+
+#. module: mail
+#: code:addons/mail/models/res_partner.py:0
+#, python-format
+msgid ""
+"%(email)s is not recognized as a valid email. This is required to create a "
+"new customer."
+msgstr ""
+"%(email)s wordt niet herkend als een geldig e-mailadres. Dit is nodig om een"
+" nieuwe klant aan te maken."
 
 #. module: mail
 #: code:addons/mail/wizard/mail_wizard_invite.py:0
@@ -203,10 +213,17 @@ msgstr "(origineel toegewezen aan"
 
 #. module: mail
 #. openerp-web
+#: code:addons/mail/static/src/models/thread/thread.js:0
+#, python-format
+msgid ", "
+msgstr ", "
+
+#. module: mail
+#. openerp-web
 #: code:addons/mail/static/src/components/composer/composer.xml:0
 #, python-format
 msgid ", enter to"
-msgstr ", stap binnen in"
+msgstr ", enter voor"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.message_notification_email
@@ -1012,6 +1029,13 @@ msgstr ""
 "deze e-mails later niet opnieuw verzenden!"
 
 #. module: mail
+#: code:addons/mail/models/mail_blacklist.py:0
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid "Are you sure you want to unblacklist this Email Address?"
+msgstr "Weet je zeker dat je dit e-mailadres op de blacklist wilt zetten?"
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
@@ -1467,6 +1491,14 @@ msgstr "Gewijzigd"
 #, python-format
 msgid "Channel"
 msgstr "Kanaal"
+
+#. module: mail
+#: code:addons/mail/models/mail_channel.py:0
+#, python-format
+msgid ""
+"Channel \"%(channel_name)s\" only accepts members of group "
+"\"%(group_name)s\". Forbidden for: %(guest_names)s"
+msgstr ""
 
 #. module: mail
 #: code:addons/mail/models/mail_channel.py:0
@@ -5988,6 +6020,13 @@ msgid "Restrict mail templates and Jinja rendering."
 msgstr "Beperk e-mailsjablonen en Jinja-weergave."
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Restrict mail templates edition and QWEB placeholders usage."
+msgstr ""
+"Beperk het gebruik van de e-mailsjablonen en het gebruik van tijdelijke "
+"aanduidingen voor QWEB."
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tree
 msgid "Retry"
@@ -6200,7 +6239,10 @@ msgstr ""
 "overeenkomstige contactpersoon."
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/components/thread_icon/thread_icon.xml:0
 #: model:ir.model.fields.selection,name:mail.selection__mail_channel__public__groups
+#, python-format
 msgid "Selected group of users"
 msgstr "Geselecteerde groep van gebruikers"
 
@@ -6684,6 +6726,12 @@ msgstr "Systeem melding"
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__model_id
 msgid "Targeted model"
 msgstr "Doelmodel"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_partner__vat
+#: model:ir.model.fields,field_description:mail.field_res_users__vat
+msgid "Tax ID"
+msgstr "BTW Nr"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_activity__has_recommended_activities
@@ -7572,12 +7620,6 @@ msgstr ""
 " profiteren van een kant-en-klare e-mailserver (@ mijnbedrijf.odoo.com)."
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_partner__vat
-#: model:ir.model.fields,field_description:mail.field_res_users__vat
-msgid "VAT/Tax ID"
-msgstr "Btw-nummer"
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: code:addons/mail/static/src/xml/thread.xml:0
@@ -7772,6 +7814,12 @@ msgid "You are in channel <b>#%s</b>."
 msgstr "Je bent in kanaal <b>#%s</b>."
 
 #. module: mail
+#: code:addons/mail/controllers/discuss.py:0
+#, python-format
+msgid "You are not allowed to upload an attachment here."
+msgstr "U bent niet gemachtigd om hier bijlages toe te voegen."
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/models/discuss_sidebar_category_item/discuss_sidebar_category_item.js:0
 #, python-format
@@ -7854,6 +7902,16 @@ msgid ""
 msgstr ""
 "Je kunt niets anders gebruiken dan Latijnse tekens zonder accent in het "
 "aliasadres (%s)."
+
+#. module: mail
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid ""
+"You do not have the access right to unblacklist emails. Please contact your "
+"administrator."
+msgstr ""
+"Je heeft geen toegangsrechten om e-mails op de blacklist te zetten. Neem "
+"contact op met de beheerderer."
 
 #. module: mail
 #: code:addons/mail/models/mail_thread.py:0
@@ -8143,7 +8201,7 @@ msgstr "bijv. waar.waar..f"
 #: code:addons/mail/static/src/components/composer/composer.xml:0
 #, python-format
 msgid "escape to"
-msgstr "ontsnap naar"
+msgstr "escape voor"
 
 #. module: mail
 #. openerp-web

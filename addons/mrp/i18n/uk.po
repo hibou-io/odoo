@@ -2282,6 +2282,17 @@ msgid "It has already been unblocked."
 msgstr "Це було розблоковано."
 
 #. module: mrp
+#: code:addons/mrp/models/mrp_workorder.py:0
+#, python-format
+msgid ""
+"It is not possible to unplan one single Work Order. You should unplan the "
+"Manufacturing Order instead in order to unplan all the linked operations."
+msgstr ""
+"Неможливо розпланувати одне робоче замовлення. Натомість вам слід "
+"розпланувати замовлення на виробництво, щоб розпланувати всі пов’язані "
+"операції."
+
+#. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__is_planned
 msgid "Its Operations are Planned"
 msgstr "Ці операції заплановані"
@@ -4548,6 +4559,18 @@ msgid ""
 msgstr ""
 "Запланована кінцева дата робочого замовлення не може бути пріоритетнішою ніж"
 " запланована дата початку. Виправте це, щоби зберегти робоче замовлення."
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"The product has already been used at least once, editing its structure may "
+"lead to undesirable behaviours. You should rather archive the product and "
+"create a new one with a new bill of materials."
+msgstr ""
+"Товар вже використовувався принаймні один раз, редагування його структури "
+"може призвести до небажаної поведінки. Вам краще заархівувати товар і "
+"створити новий з новим переліком матеріалів."
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_production.py:0

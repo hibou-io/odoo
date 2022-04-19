@@ -3,7 +3,7 @@
 # 	* mail
 # 
 # Translators:
-# Martin Trigaux, 2021
+# Martin Trigaux, 2022
 # Alina Lisnenko <alinasemeniuk1@gmail.com>, 2022
 # 
 msgid ""
@@ -47,6 +47,16 @@ msgstr "\"%s\" вимагає доступ до мікрофону"
 #, python-format
 msgid "%(activity_name)s: %(summary)s assigned to you"
 msgstr "%(activity_name)s: %(summary)s призначено вам"
+
+#. module: mail
+#: code:addons/mail/models/res_partner.py:0
+#, python-format
+msgid ""
+"%(email)s is not recognized as a valid email. This is required to create a "
+"new customer."
+msgstr ""
+"%(email)s не розпізнається як дійсна електронна адреса. Це потрібно для "
+"створення нового клієнта."
 
 #. module: mail
 #: code:addons/mail/wizard/mail_wizard_invite.py:0
@@ -200,6 +210,13 @@ msgstr "(від"
 #: model_terms:ir.ui.view,arch_db:mail.message_activity_done
 msgid "(originally assigned to"
 msgstr "(спочатку призначено"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/models/thread/thread.js:0
+#, python-format
+msgid ", "
+msgstr ", "
 
 #. module: mail
 #. openerp-web
@@ -1005,6 +1022,13 @@ msgstr ""
 "надіслати повторно ці листи пізніше!"
 
 #. module: mail
+#: code:addons/mail/models/mail_blacklist.py:0
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid "Are you sure you want to unblacklist this Email Address?"
+msgstr "Ви впевнені, що хочете забрати з чорного списку цю електронну адресу?"
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
 #: code:addons/mail/static/src/js/m2x_avatar_user.js:0
@@ -1458,6 +1482,16 @@ msgstr "Змінено"
 #, python-format
 msgid "Channel"
 msgstr "Канал"
+
+#. module: mail
+#: code:addons/mail/models/mail_channel.py:0
+#, python-format
+msgid ""
+"Channel \"%(channel_name)s\" only accepts members of group "
+"\"%(group_name)s\". Forbidden for: %(guest_names)s"
+msgstr ""
+"Канал \"%(channel_name)s\" приймає тільки членів групи \"%(group_name)s\". "
+"Заборонено для: %(guest_names)s"
 
 #. module: mail
 #: code:addons/mail/models/mail_channel.py:0
@@ -5971,6 +6005,11 @@ msgid "Restrict mail templates and Jinja rendering."
 msgstr "Обмежте шаблони листів і рендеринг Jinja."
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Restrict mail templates edition and QWEB placeholders usage."
+msgstr "Обмежити видання поштових шаблонів і використання заповнювачів QWEB."
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_tree
 msgid "Retry"
@@ -6182,7 +6221,10 @@ msgstr ""
 "необхідно. Змінену адресу буде збережено у відповідному контакті."
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/components/thread_icon/thread_icon.xml:0
 #: model:ir.model.fields.selection,name:mail.selection__mail_channel__public__groups
+#, python-format
 msgid "Selected group of users"
 msgstr "Обрана група користувачів"
 
@@ -6663,6 +6705,12 @@ msgstr "Сповіщення системи"
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__model_id
 msgid "Targeted model"
 msgstr "Цільова модель"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_partner__vat
+#: model:ir.model.fields,field_description:mail.field_res_users__vat
+msgid "Tax ID"
+msgstr "ІПН"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_activity__has_recommended_activities
@@ -7558,12 +7606,6 @@ msgstr ""
 "сервером (@mycompany.odoo.com)."
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_partner__vat
-#: model:ir.model.fields,field_description:mail.field_res_users__vat
-msgid "VAT/Tax ID"
-msgstr "ID ПДВ/податку"
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: code:addons/mail/static/src/xml/thread.xml:0
@@ -7757,6 +7799,12 @@ msgid "You are in channel <b>#%s</b>."
 msgstr "Ви у каналі <b>#%s</b>."
 
 #. module: mail
+#: code:addons/mail/controllers/discuss.py:0
+#, python-format
+msgid "You are not allowed to upload an attachment here."
+msgstr "У вас немає дозволу завантажувати тут прикріплення."
+
+#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/models/discuss_sidebar_category_item/discuss_sidebar_category_item.js:0
 #, python-format
@@ -7839,6 +7887,16 @@ msgid ""
 msgstr ""
 "Ви не можете використовувати нічого, крім ненаголошених латинських символів "
 "в адресі псевдоніма (%s)."
+
+#. module: mail
+#: code:addons/mail/models/mail_thread_blacklist.py:0
+#, python-format
+msgid ""
+"You do not have the access right to unblacklist emails. Please contact your "
+"administrator."
+msgstr ""
+"Ви не маєте права доступу до зняття з чорного списку електронних адрес. "
+"Зверніться до свого адміністратора."
 
 #. module: mail
 #: code:addons/mail/models/mail_thread.py:0

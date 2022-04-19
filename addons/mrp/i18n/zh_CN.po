@@ -6,6 +6,7 @@
 # 黎伟杰 <674416404@qq.com>, 2021
 # Martin Trigaux, 2021
 # xu aaron, 2021
+# Jeffery CHEN <jeffery9@gmail.com>, 2022
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2022
 # 
 msgid ""
@@ -81,7 +82,7 @@ msgstr "# BOM 使用"
 #: code:addons/mrp/models/mrp_routing.py:0
 #, python-format
 msgid "%i work orders"
-msgstr "%i工单"
+msgstr "%i 工单"
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_unbuild.py:0
@@ -258,7 +259,7 @@ msgstr "<span class=\"o_stat_text\">效能</span>"
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_bom_form_view
 msgid "<span class=\"o_stat_text\">Routing<br/>Performance</span>"
-msgstr "<span class=\"o_stat_text\">工艺<br/>绩效  </span>  "
+msgstr "<span class=\"o_stat_text\">工艺<br/>效能  </span>  "
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
@@ -2230,6 +2231,14 @@ msgstr "当前用户正在工作吗？"
 #, python-format
 msgid "It has already been unblocked."
 msgstr "已经解除阻塞"
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_workorder.py:0
+#, python-format
+msgid ""
+"It is not possible to unplan one single Work Order. You should unplan the "
+"Manufacturing Order instead in order to unplan all the linked operations."
+msgstr "无法取消计划一个工单。您应该取消计划制造订单，以便取消计划所有链接的操作。"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production__is_planned
@@ -4439,6 +4448,15 @@ msgid ""
 "The planned end date of the work order cannot be prior to the planned start "
 "date, please correct this to save the work order."
 msgstr "工作订单的计划结束日期不能早于计划开始日期，请更正此日期以保存工单。"
+
+#. module: mrp
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"The product has already been used at least once, editing its structure may "
+"lead to undesirable behaviours. You should rather archive the product and "
+"create a new one with a new bill of materials."
+msgstr "该产品已至少使用过一次，编辑其结构可能会导致不良行为。您应该归档产品并使用新的物料清单创建一个新产品."
 
 #. module: mrp
 #: code:addons/mrp/models/mrp_production.py:0

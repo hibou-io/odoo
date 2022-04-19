@@ -9,10 +9,12 @@
 # 稀饭~~ <wangwhai@qq.com>, 2021
 # xu aaron, 2021
 # wei zhou, 2021
-# Jeffery CHEN <jeffery9@gmail.com>, 2021
 # 深圳市耀影科技有限公司_QQ1006399173, 2021
 # Benson <Benson.Dr@Gmail.com>, 2022
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2022
+# Jeffery CHEN <jeffery9@gmail.com>, 2022
+# Tony Peng <umingpeng@gmail.com>, 2022
+# Dong <dong@freshoo.cn>, 2022
 # 
 msgid ""
 msgstr ""
@@ -20,7 +22,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-02-18 09:52+0000\n"
 "PO-Revision-Date: 2021-09-14 12:18+0000\n"
-"Last-Translator: 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2022\n"
+"Last-Translator: Dong <dong@freshoo.cn>, 2022\n"
 "Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -72,7 +74,7 @@ msgstr "# 已对账应收凭单"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_statements_count
 msgid "# Reconciled Statements"
-msgstr "# 已对账对账单"
+msgstr "# 已对账单"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_chart_template__code_digits
@@ -167,12 +169,12 @@ msgstr "(object._get_report_base_filename())"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_journal
 msgid "- Posted Entries Only"
-msgstr "- 仅发布条目"
+msgstr "- 仅发布分录"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_journal
 msgid "- Posted and Draft Entries"
-msgstr "- 已发布和草稿条目"
+msgstr "- 已发布和草稿分录"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_line_form
@@ -918,12 +920,12 @@ msgstr "<span>应收凭单号码</span>"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
 msgid "<span>New Entry</span>"
-msgstr "<span>新建分录</span>"
+msgstr "<span>新建凭证</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
 msgid "<span>New Invoice</span>"
-msgstr "<span>新建应收凭单</span>"
+msgstr "<span>新建应收单</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
@@ -1326,7 +1328,7 @@ msgstr "科目目标"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "Account Entry"
-msgstr "科目分录"
+msgstr "会计分录"
 
 #. module: account
 #: model:ir.model,name:account.model_account_group
@@ -1525,7 +1527,7 @@ msgstr "会计科目类型"
 #. module: account
 #: model:ir.model,name:account.model_account_unreconcile
 msgid "Account Unreconcile"
-msgstr "科目取消调节"
+msgstr "科目取消对账"
 
 #. module: account
 #: model:ir.model,name:account.model_account_root
@@ -2657,7 +2659,7 @@ msgstr "信息的作者.如果没设置，email_from 可能持有与任何合作
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_reconcile_model_search
 msgid "Auto Reconcile"
-msgstr "自动核销"
+msgstr "自动对账"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -3647,7 +3649,7 @@ msgstr "勾选, 如果您使用的产品和应收凭单价格含税."
 #: model:ir.model.fields,help:account.field_account_account_template__reconcile
 msgid ""
 "Check this option if you want the user to reconcile entries in this account."
-msgstr "勾选此项, 如果您想用户对账核销这科目的分录."
+msgstr "勾选此项, 如果您想用户对账这科目的分录."
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
@@ -4051,7 +4053,7 @@ msgstr "无法装载新的科目表，因为会计科目分录已经存在."
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_reconcile_model_form
 msgid "Counterpart Entries"
-msgstr "对应分录"
+msgstr "对方分录"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account_tag__country_id
@@ -5400,7 +5402,7 @@ msgstr "草稿退款通知"
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "Draft Entry"
-msgstr "分录草稿"
+msgstr "草稿分录"
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
@@ -6144,7 +6146,7 @@ msgstr "从此报告中，您可以概览向客户开具应收凭单的金额. �
 #: model:ir.model,name:account.model_account_full_reconcile
 #: model:ir.model.fields,field_description:account.field_account_partial_reconcile__full_reconcile_id
 msgid "Full Reconcile"
-msgstr "完全核销"
+msgstr "完全对账"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_move_reversal__refund_method__cancel
@@ -6319,13 +6321,13 @@ msgstr "有信息"
 #: model:ir.model.fields,field_description:account.field_account_move__has_reconciled_entries
 #: model:ir.model.fields,field_description:account.field_account_payment__has_reconciled_entries
 msgid "Has Reconciled Entries"
-msgstr "有已核销分录"
+msgstr "有已对账分录"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_partner__has_unreconciled_entries
 #: model:ir.model.fields,field_description:account.field_res_users__has_unreconciled_entries
 msgid "Has Unreconciled Entries"
-msgstr "有未核销分录"
+msgstr "有未对账分录"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
@@ -7140,6 +7142,14 @@ msgstr "结算单和退款通知分配应分别包含一行基数。"
 #: code:addons/account/models/account_tax.py:0
 #, python-format
 msgid ""
+"Invoice and credit note repartition should have at least one tax repartition"
+" line."
+msgstr "发票及贷方票据分摊需至少一个分摊明细行"
+
+#. module: account
+#: code:addons/account/models/account_tax.py:0
+#, python-format
+msgid ""
 "Invoice and credit note distribution should have the same number of lines."
 msgstr "结算单和退款通知分配应具有相同的行数。"
 
@@ -7253,7 +7263,7 @@ msgstr "待验证应收凭单"
 #: model:ir.model.fields,help:account.field_account_payment__reconciled_bill_ids
 #: model:ir.model.fields,help:account.field_account_payment__reconciled_invoice_ids
 msgid "Invoices whose journal items have been reconciled with these payments."
-msgstr "应收凭单日记帐项目已与这些付款对帐核销."
+msgstr "应收凭单日记帐项目已与这些付款对帐对账."
 
 #. module: account
 #: model:ir.actions.report,name:account.account_invoices_without_payment
@@ -7347,7 +7357,7 @@ msgstr "已打印"
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__is_reconciled
 #: model:ir.model.fields,field_description:account.field_account_payment__is_reconciled
 msgid "Is Reconciled"
-msgstr "对账核销"
+msgstr "对账"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__is_rounding_line
@@ -8373,7 +8383,7 @@ msgstr "匹配订单"
 msgid ""
 "Matching number for this line, 'P' if it is only partially reconcile, or the"
 " name of the full reconcile if it exists."
-msgstr "此明细的匹配编号，如果仅部分协调，则为\"P\", 如果存在完全核销，则匹配编号."
+msgstr "此明细的匹配编号，如果仅部分协调，则为\"P\", 如果存在完全对账，则匹配编号."
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_partial_reconcile__max_date
@@ -8979,7 +8989,7 @@ msgid ""
 "                the related sale or purchase invoice(s)."
 msgstr ""
 "Odoo 允许您直接将帐单明细与\n"
-"                 相关的销售或采购购买应收付凭单对帐核销."
+"                 相关的销售或采购购买应收付凭单对帐对账."
 
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.action_bank_statement_tree
@@ -8988,7 +8998,7 @@ msgid ""
 "                the related sale or purchase invoices."
 msgstr ""
 "Odoo 允许您直接将帐单明细与\n"
-"                 相关的销售或采购购买应收付凭单对帐核销."
+"                 相关的销售或采购购买应收付凭单对帐对账."
 
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.res_partner_action_customer
@@ -9526,7 +9536,7 @@ msgstr "部分"
 #. module: account
 #: model:ir.model,name:account.model_account_partial_reconcile
 msgid "Partial Reconcile"
-msgstr "部分核销"
+msgstr "部分对账"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_move_reversal__refund_method__refund
@@ -10015,6 +10025,12 @@ msgstr "请设置一个严格为正的舍入值."
 msgid ""
 "Please set at least one of the match texts to create a partner mapping."
 msgstr "请设置至少一个匹配文本以创建合作伙伴映射."
+
+#. module: account
+#: code:addons/account/models/ir_module_module.py:0
+#, python-format
+msgid "Please update the Invoicing module before continuing."
+msgstr "处理前请更新发票模块"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.bill_preview
@@ -10512,18 +10528,18 @@ msgstr "重计税额明细"
 #. module: account
 #: model:ir.model,name:account.model_account_reconcile_model_line_template
 msgid "Reconcile Model Line Template"
-msgstr "核销模组明细模板"
+msgstr "对账模组明细模板"
 
 #. module: account
 #: model:ir.model,name:account.model_account_reconcile_model_template
 msgid "Reconcile Model Template"
-msgstr "核销模组模板"
+msgstr "对账模组模板"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__reconciled
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_search
 msgid "Reconciled"
-msgstr "已核销"
+msgstr "已对账"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_bill_ids
@@ -10538,17 +10554,17 @@ msgstr "已对账分录"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_invoice_ids
 msgid "Reconciled Invoices"
-msgstr "已核销应收凭单"
+msgstr "已对账应收凭单"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_invoices_type
 msgid "Reconciled Invoices Type"
-msgstr "已核销应收凭单类型"
+msgstr "已对账应收凭单类型"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_statement_ids
 msgid "Reconciled Statements"
-msgstr "已核销对账单"
+msgstr "已对账单"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__reconcile_model_id
@@ -10942,7 +10958,7 @@ msgstr "撤销"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "Reverse Entry"
-msgstr "撤销分录"
+msgstr "反向分录"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_reversal
@@ -12189,7 +12205,7 @@ msgstr "税金现金收付日记帐"
 #: model:ir.model.fields,field_description:account.field_account_tax_repartition_line__use_in_tax_closing
 #: model:ir.model.fields,field_description:account.field_account_tax_repartition_line_template__use_in_tax_closing
 msgid "Tax Closing Entry"
-msgstr "税务结算分录"
+msgstr "税金结业分录"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_tax__amount_type
@@ -13233,6 +13249,18 @@ msgstr ""
 "- 验证: 所有行都已对帐. 没有什么需要处理的了."
 
 #. module: account
+#: code:addons/account/wizard/account_automatic_entry_wizard.py:0
+#, python-format
+msgid "The date of some related entries is protected by a lock date"
+msgstr "日期的关联凭证受一个锁定的日期保护"
+
+#. module: account
+#: code:addons/account/wizard/account_automatic_entry_wizard.py:0
+#, python-format
+msgid "The date selected is protected by a lock date"
+msgstr "选择的日期受一个锁定日期保护"
+
+#. module: account
 #: code:addons/account/models/account_payment_term.py:0
 #, python-format
 msgid "The day of the month used for this term must be strictly positive."
@@ -13536,7 +13564,7 @@ msgstr "此明细的上层税务报表"
 msgid ""
 "The partner has at least one unreconciled debit and credit since last time "
 "the invoices & payments matching was performed."
-msgstr "自动上次这个合作夥伴的应收和应付款完全一致. 这个业务夥伴至少有一个未核销的借方和贷方."
+msgstr "自动上次这个合作夥伴的应收和应付款完全一致. 这个业务夥伴至少有一个未对账的借方和贷方."
 
 #. module: account
 #: code:addons/account/models/account_journal.py:0
@@ -13801,7 +13829,7 @@ msgstr "期初余额与上一个银行对帐单的期末余额<b>不匹配</b>."
 #: code:addons/account/models/account_bank_statement.py:0
 #, python-format
 msgid "The statement line has already been reconciled."
-msgstr "对帐明细已经被核销."
+msgstr "对帐明细已经被对账."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__statement_line_id
@@ -14573,17 +14601,17 @@ msgstr "未读讯息计数"
 #: model_terms:ir.ui.view,arch_db:account.account_unreconcile_view
 #, python-format
 msgid "Unreconcile"
-msgstr "未核销"
+msgstr "未对账"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_unreconcile_view
 msgid "Unreconcile Transactions"
-msgstr "未核销交易"
+msgstr "未对账交易"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "Unreconciled"
-msgstr "未核销"
+msgstr "未对账"
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
@@ -15091,7 +15119,7 @@ msgstr "在会计分录中有错误的借贷值!"
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "You are trying to reconcile some entries that are already reconciled."
-msgstr "您正在核销一些已经被核销的分录."
+msgstr "您正在对账一些已经被对账的分录."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__blocked
@@ -15419,7 +15447,7 @@ msgid ""
 "You cannot do this modification on a reconciled journal entry. You can just change some non legal fields or you must unreconcile first.\n"
 "Journal Entry (id): %s (%s)"
 msgstr ""
-"您不能对已核销的日记帐分录执行此修改. 您可以只更改部分字段，或者必须先取消核销.\n"
+"您不能对已对账的日记帐分录执行此修改. 您可以只更改部分字段，或者必须先取消对账.\n"
 "日记帐分录(id): %s (%s)"
 
 #. module: account

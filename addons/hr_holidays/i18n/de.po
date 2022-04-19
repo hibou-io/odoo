@@ -798,7 +798,7 @@ msgstr "Abgrenzungen"
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave_type__accrual_count
 msgid "Accruals count"
-msgstr ""
+msgstr "Anzahl Rückstellungen"
 
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave__message_needaction
@@ -1171,7 +1171,7 @@ msgstr "Archivierte Abwesenheiten"
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave_accrual_level__action_with_unused_accruals
 msgid "At the end of the calendar year, unused accruals will be"
-msgstr ""
+msgstr "Am Ende des Kalenderjahres werden die nicht genutzten Ansprüche"
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_accrual_plan_view_form
@@ -1771,6 +1771,8 @@ msgid ""
 "Filters only on allocations that belong to an time off type that is 'active'"
 " (active field is True)"
 msgstr ""
+"Filtert nur auf Zuweisungen, die zu einem aktiven Freizeittyp gehören (Feld "
+"'aktiv' ist True)"
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.view_hr_holidays_filter_report
@@ -1778,6 +1780,8 @@ msgid ""
 "Filters only on requests that belong to an time off type that is 'active' "
 "(active field is True)"
 msgstr ""
+"Filtert nur auf Anfragen, die zu einem aktiven Anfragetyp gehören (Feld "
+"'aktiv' ist True)"
 
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave__first_approver_id
@@ -1808,7 +1812,7 @@ msgstr "Erster Monat Tag"
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave_accrual_level__first_month_day_display
 msgid "First Month Day Display"
-msgstr ""
+msgstr "Anzeige des ersten Monatstages"
 
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave__message_follower_ids
@@ -2074,6 +2078,8 @@ msgid ""
 "Immediately: When the date corresponds to the new level, your accrual is automatically computed, granted and you switch to new level\n"
 "                After this accrual's period: When the accrual is complete (a week, a month), and granted, you switch to next level if allocation date corresponds"
 msgstr ""
+"Unmittelbar: Wenn das Datum mit der neuen Stufe übereinstimmt, wird Ihre Kumulierung automatisch berechnet, gewährt und Sie wechseln in die neue Phase.\n"
+"Nach Ablauf der Abgrenzungsperiode: Wenn die Abgrenzung abgeschlossen ist (eine Woche, ein Monat) und bewilligt wurde, wechseln Sie in die nächste Phase, wenn das Zuteilungsdatum übereinstimmt."
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_leave_view_form
@@ -3129,6 +3135,8 @@ msgid ""
 "Specify if this accrual plan can only be used with this Time Off Type.\n"
 "                Leave empty if this accrual plan can be used with any Time Off Type."
 msgstr ""
+"Geben Sie an, ob dieser Kumulationsplan nur mit dieser Freizeitart verwendet werden kann.\n"
+"Leer lassen, wenn dieser Kumulationsplan mit jeder Freizeitart verwendet werden kann."
 
 #. module: hr_holidays
 #: model:ir.model.fields,field_description:hr_holidays.field_hr_leave__date_from
@@ -3264,6 +3272,9 @@ msgid ""
 " field defines the number of days, months or years after which accrual is "
 "used."
 msgstr ""
+"Die Kumulierung beginnt nach einem bestimmten Zeitraum ab dem Eintrittsdatum"
+" des Mitarbeiters. Dieses Feld definiert die Anzahl der Tage, Monate oder "
+"Jahre, nach denen die Rückstellungen verwendet werden."
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave__color
@@ -3379,6 +3390,10 @@ msgid ""
 "to the days allocated to the employee. If you need to change the "
 "configuration of the allocation, cancel and create a new one."
 msgstr ""
+"Diese Zuteilung wurde bereits einmal durchgeführt, eine Änderung hat keinen "
+"Einfluss auf die dem Mitarbeiter zugeteilten Tage. Wenn Sie die "
+"Konfiguration der Zuteilung ändern müssen, brechen Sie diese ab und "
+"erstellen Sie eine neue Zuteilung."
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave__first_approver_id
@@ -3419,6 +3434,7 @@ msgstr ""
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave_accrual_level__start_type
 msgid "This field defines the unit of time after which the accrual starts."
 msgstr ""
+"Dieses Feld definiert die Zeiteinheit, nach der die Rückstellung beginnt."
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave_type__has_valid_allocation
@@ -4070,6 +4086,20 @@ msgstr ""
 #: code:addons/hr_holidays/models/hr_leave.py:0
 #, python-format
 msgid ""
+"You have several allocations for those type and period.\n"
+"Please split your request to fit in their number of days."
+msgstr ""
+
+#. module: hr_holidays
+#: code:addons/hr_holidays/models/hr_leave.py:0
+#, python-format
+msgid "You must be %s\\'s Manager to approve this leave"
+msgstr ""
+
+#. module: hr_holidays
+#: code:addons/hr_holidays/models/hr_leave.py:0
+#, python-format
+msgid ""
 "You must be either %s's manager or Time off Manager to approve this leave"
 msgstr ""
 "Sie müssen entweder %ss Manager oder Abwesenheitsmanager sein um diesen "
@@ -4116,7 +4146,7 @@ msgstr "%(leave_type)s geplant für %(date)s wurde abgelehnt"
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_accrual_level_view_form
 msgid "after allocation date"
-msgstr ""
+msgstr "Nach Zuweisungsdatum"
 
 #. module: hr_holidays
 #: model_terms:ir.ui.view,arch_db:hr_holidays.hr_accrual_plan_view_form
