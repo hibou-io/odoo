@@ -661,6 +661,16 @@ class Module(models.Model):
         self.update_list()
 
         todo = list(self)
+        if 'base' in self.mapped('name'):
+            # If an installed module is only present in the dependency graph through
+            # a new, uninstalled dependency, it will not have been selected yet.
+            # An update of 'base' should also update these modules, and as a consequence,
+            # install the new dependency.
+            todo.extend(self.search([
+                ('state', '=', 'installed'),
+                ('name', '!=', 'studio_customization'),
+                ('id', 'not in', self.ids),
+            ]))
         i = 0
         while i < len(todo):
             module = todo[i]
@@ -962,7 +972,6 @@ class Module(models.Model):
                     [('id', 'not in', excluded_category_ids)],
                 ])
 
-            Module = self.env['ir.module.module']
             records = self.env['ir.module.category'].search_read(domain, ['display_name'], order="sequence")
 
             values_range = OrderedDict()
@@ -975,7 +984,7 @@ class Module(models.Model):
                         kwargs.get('filter_domain', []),
                         [('category_id', 'child_of', record_id), ('category_id', 'not in', excluded_category_ids)]
                     ])
-                    record['__count'] = Module.search_count(model_domain)
+                    record['__count'] = self.env['ir.module.module'].search_count(model_domain)
                 values_range[record_id] = record
 
             return {
