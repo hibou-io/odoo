@@ -443,9 +443,9 @@ class HolidaysAllocation(models.Model):
                 allocation.lastcall = allocation.nextcall
                 allocation.nextcall = nextcall
             if days_added_per_level:
-                number_of_days_to_add = sum(days_added_per_level.values())
+                number_of_days_to_add = allocation.number_of_days + sum(days_added_per_level.values())
                 # Let's assume the limit of the last level is the correct one
-                allocation.write({'number_of_days': min(allocation.number_of_days + number_of_days_to_add, current_level.maximum_leave)})
+                allocation.number_of_days = min(number_of_days_to_add, current_level.maximum_leave + allocation.leaves_taken) if current_level.maximum_leave > 0 else number_of_days_to_add
 
     @api.model
     def _update_accrual(self):
@@ -541,6 +541,11 @@ class HolidaysAllocation(models.Model):
         state_description_values = {elem[0]: elem[1] for elem in self._fields['state']._description_selection(self.env)}
         for holiday in self.filtered(lambda holiday: holiday.state not in ['draft', 'cancel', 'confirm']):
             raise UserError(_('You cannot delete an allocation request which is in %s state.') % (state_description_values.get(holiday.state),))
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_if_no_leaves(self):
+        if any(allocation.holiday_status_id.requires_allocation == 'yes' and allocation.leaves_taken > 0 for allocation in self):
+            raise UserError(_('You cannot delete an allocation request which has some validated leaves.'))
 
     def _get_mail_redirect_suggested_company(self):
         return self.holiday_status_id.company_id
