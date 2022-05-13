@@ -382,6 +382,7 @@ class IrHttp(models.AbstractModel):
         default_filename = False
         if not filename:
             if filename_field in record:
+                default_filename = (filename_field == 'name' and model != 'ir.attachment')
                 filename = record[filename_field]
             if not filename:
                 default_filename = True
@@ -408,7 +409,7 @@ class IrHttp(models.AbstractModel):
         return status, content, filename, mimetype, filehash
 
     def _binary_set_headers(self, status, content, filename, mimetype, unique, filehash=None, download=False):
-        headers = [('Content-Type', mimetype), ('X-Content-Type-Options', 'nosniff')]
+        headers = [('Content-Type', mimetype), ('X-Content-Type-Options', 'nosniff'), ('Content-Security-Policy', "default-src 'none'")]
         # cache
         etag = bool(request) and request.httprequest.headers.get('If-None-Match')
         status = status or 200
@@ -455,7 +456,8 @@ class IrHttp(models.AbstractModel):
         content, headers, status = None, [], None
 
         if record._name == 'ir.attachment':
-            status, content, filename, mimetype, filehash = self._binary_ir_attachment_redirect_content(record, default_mimetype=default_mimetype)
+            status, content, default_filename, mimetype, filehash = self._binary_ir_attachment_redirect_content(record, default_mimetype=default_mimetype)
+            filename = filename or default_filename
         if not content:
             status, content, filename, mimetype, filehash = self._binary_record_content(
                 record, field=field, filename=filename, filename_field=filename_field,

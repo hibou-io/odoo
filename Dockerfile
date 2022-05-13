@@ -34,7 +34,7 @@ RUN set -x; \
     #  install Python Requirements
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
     && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
-    && pip3 install git+git://github.com/OCA/openupgradelib.git \
+    && pip3 install git+https://github.com/OCA/openupgradelib.git \
     #  install wkhtmltox
     && cd /tmp \
     && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
@@ -47,11 +47,6 @@ RUN set -x; \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     ;
-
-# Failing as of 2021-03-15
-# Prime the uszipcode cache.
-# USER 104
-# RUN python -c 'import uszipcode; uszipcode.SearchEngine().by_zipcode('98270');'
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
