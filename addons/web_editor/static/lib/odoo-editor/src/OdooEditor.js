@@ -43,6 +43,7 @@ import {
     isEmptyBlock,
     getUrlsInfosInString,
     URL_REGEX,
+    URL_REGEX_WITH_INFOS,
     isSelectionFormat,
     YOUTUBE_URL_GET_VIDEO_ID,
     unwrapContents,
@@ -195,8 +196,10 @@ export class OdooEditor extends EventTarget {
                 toSanitize: true,
                 isRootEditable: true,
                 placeholder: false,
+                showEmptyElementHint: true,
                 defaultLinkAttributes: {},
                 plugins: [],
+                getReadOnlyAreas: () => [],
                 getContentEditableAreas: () => [],
                 getPowerboxElement: () => {
                     const selection = document.getSelection();
@@ -1626,6 +1629,9 @@ export class OdooEditor extends EventTarget {
                 node.setAttribute('contenteditable', true);
             }
         }
+        for (const node of this.options.getReadOnlyAreas()) {
+            node.setAttribute('contenteditable', false);
+        }
         this.observerActive('_activateContenteditable');
     }
     _stopContenteditable() {
@@ -2279,14 +2285,17 @@ export class OdooEditor extends EventTarget {
             this._lastBeforeInputType === 'insertParagraph';
         if (this.keyboardType === KEYBOARD_TYPES.PHYSICAL || !wasCollapsed) {
             if (ev.inputType === 'deleteContentBackward') {
+                this._compositionStep();
                 this.historyRollback();
                 ev.preventDefault();
                 this._applyCommand('oDeleteBackward');
             } else if (ev.inputType === 'deleteContentForward' || isChromeDeleteforward) {
+                this._compositionStep();
                 this.historyRollback();
                 ev.preventDefault();
                 this._applyCommand('oDeleteForward');
             } else if (ev.inputType === 'insertParagraph' || isChromeInsertParagraph) {
+                this._compositionStep();
                 this.historyRollback();
                 ev.preventDefault();
                 if (this._applyCommand('oEnter') === UNBREAKABLE_ROLLBACK_CODE) {
@@ -2337,17 +2346,37 @@ export class OdooEditor extends EventTarget {
                 // Check for url after user insert a space so we won't transform an incomplete url.
                 if (
                     ev.data &&
-                    ev.data.includes(' ') &&
+                    ev.data === ' ' &&
                     selection &&
-                    selection.anchorNode
-                    && (!this.commandBar._active ||
+                    selection.anchorNode &&
+                    !closestElement(selection.anchorNode).closest('a') &&
+                    selection.anchorNode.nodeType === Node.TEXT_NODE &&
+                    (!this.commandBar._active ||
                         this.commandBar._currentOpenOptions.closeOnSpace !== true)
                 ) {
-                    this._convertUrlInElement(closestElement(selection.anchorNode));
+                    const textSliced = selection.anchorNode.textContent.slice(0, selection.anchorOffset);
+                    const textNodeSplitted = textSliced.split(/\s/);
+
+                    // Remove added space
+                    textNodeSplitted.pop();
+                    const potentialUrl = textNodeSplitted.pop();
+                    const lastWordMatch = potentialUrl.match(URL_REGEX_WITH_INFOS);
+
+                    if (lastWordMatch) {
+                        const matches = getUrlsInfosInString(textSliced);
+                        const match = matches[matches.length - 1];
+                        this._createLinkWithUrlInTextNode(
+                            selection.anchorNode,
+                            match.url,
+                            match.index,
+                            match.length,
+                        );
+                    }
                 }
                 this.sanitize();
                 this.historyStep();
             } else if (ev.inputType === 'insertLineBreak') {
+                this._compositionStep();
                 this.historyRollback();
                 ev.preventDefault();
                 this._applyCommand('oShiftEnter');
@@ -2355,6 +2384,8 @@ export class OdooEditor extends EventTarget {
                 this.sanitize();
                 this.historyStep();
             }
+        } else if (ev.inputType === 'insertCompositionText') {
+            this._fromCompositionText = true;
         }
     }
 
@@ -2510,6 +2541,17 @@ export class OdooEditor extends EventTarget {
     }
 
     /**
+     * @private
+     */
+    _compositionStep() {
+        if (this._fromCompositionText) {
+            this._fromCompositionText = false;
+            this.sanitize();
+            this.historyStep();
+        }
+    }
+
+    /**
      * Returns true if the current selection content is only one ZWS
      *
      * @private
@@ -2631,10 +2673,12 @@ export class OdooEditor extends EventTarget {
             }
         }
 
-        for (const [selector, text] of Object.entries(selectors)) {
-            for (const el of this.editable.querySelectorAll(selector)) {
-                if (!this.options.isHintBlacklisted(el)) {
-                    this._makeHint(el, text);
+        if (this.options.showEmptyElementHint) {
+            for (const [selector, text] of Object.entries(selectors)) {
+                for (const el of this.editable.querySelectorAll(selector)) {
+                    if (!this.options.isHintBlacklisted(el)) {
+                        this._makeHint(el, text);
+                    }
                 }
             }
         }
@@ -2868,36 +2912,6 @@ export class OdooEditor extends EventTarget {
     _onDoumentMouseup() {
         if (this.toolbar) {
             this.toolbar.style.pointerEvents = 'auto';
-        }
-    }
-
-    /**
-     * Convert valid url text into links inside the given element.
-     *
-     * @param {HTMLElement} el
-     */
-    _convertUrlInElement(el) {
-        // We will not replace url inside already existing Link element.
-        if (el.tagName === 'A') {
-            return;
-        }
-
-        for (let child of el.childNodes) {
-            if (child.nodeType === Node.TEXT_NODE && child.length > 3) {
-                const childStr = child.nodeValue;
-                const matches = getUrlsInfosInString(childStr);
-                if (matches.length) {
-                    // We only to take care of the first match.
-                    // The method `_createLinkWithUrlInTextNode` will split the text node,
-                    // the other url matches will then be matched again in the nexts loops of el.childnodes.
-                    this._createLinkWithUrlInTextNode(
-                        child,
-                        matches[0].url,
-                        matches[0].index,
-                        matches[0].length,
-                    );
-                }
-            }
         }
     }
 
