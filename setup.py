@@ -149,7 +149,7 @@ setup(
         'pillow',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
         'psutil',  # windows binary code.google.com/p/psutil/downloads/list
         'psycogreen',
-        'psycopg2 >= 2.2',
+        # 'psycopg2 >= 2.2',
         'python-chart',
         'pydot',
         'pyparsing',
