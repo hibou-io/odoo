@@ -48,8 +48,9 @@ RUN set -x; \
         ;
 
 # Prime the uszipcode cache.
-USER 104
-RUN python -c 'import uszipcode; uszipcode.SearchEngine().by_zipcode('98270');'
+# not working 2022-08-03
+# USER 104
+# RUN python -c 'import uszipcode; uszipcode.SearchEngine().by_zipcode('98270');'
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
