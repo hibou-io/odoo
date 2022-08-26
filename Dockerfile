@@ -22,7 +22,6 @@ RUN set -x; \
         #  Hibou Athene
         libsecret-1-0 \
         nodejs \
-        npm \
     #  install postgresql-client from postgres itself to support newer server versions
     && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
