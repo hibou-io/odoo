@@ -1,4 +1,4 @@
-FROM python:3.7.12-slim-bullseye
+FROM python:3.10-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
@@ -7,9 +7,10 @@ RUN set -x; \
     # Add Odoo User
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
     && apt-get update \
+    && apt-get install -y curl \
+    && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install -y --no-install-recommends \
         zip \
-        curl \
         vim \
         #  for apt-key
         gnupg \
