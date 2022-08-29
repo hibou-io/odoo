@@ -1,4 +1,4 @@
-FROM python:3.9.9-slim-bullseye
+FROM python:3.9-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
@@ -7,9 +7,13 @@ RUN set -x; \
     # Add Odoo User
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
     && apt-get update \
+    && apt-get install -y curl \
+    # setup Node 16 sources \
+    && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
+    # downgrade setuptools to support 2to3 (mainly because of vatnumber and suds-jurko) \
+    && pip install setuptools\<58.0.0 \
     && apt-get install -y --no-install-recommends \
         zip \
-        curl \
         vim \
         #  for openupgrade and Odoo upgrade script
         git \

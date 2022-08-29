@@ -29,7 +29,7 @@ setup(
         'gevent',
         'idna',
         'Jinja2',
-        'lxml',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
+        # 'lxml',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
         'libsass',
         'mako',
         'mock',
