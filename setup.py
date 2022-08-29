@@ -30,7 +30,7 @@ setup(
         'gevent',
         'html2text',
         'Jinja2',
-        'lxml < 4.3.0',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
+        # 'lxml < 4.3.0',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
         'mako',
         'mock',
         'ofxparse',
@@ -59,15 +59,10 @@ setup(
         'xlwt',
         #  Hibou Odoo
         'cachetools <= 2.9.9',  #  used by OCA Connector (e.g. Magento Connector) .. 3.0.0 was tested and not working 2018/12/20
-        'cryptography',
-        'magento',  #  connector_magento
-        'markdown',  #  Hibou Odoo Suite `timesheet_description`
-        'newrelic',  #  Hibou Odoo Suite `newrelic`
         'num2words',  #  odoo core check printing etc.
         'phonenumbers',  #  odoo core
         'pyOpenSSL',
         'pycryptodome',
-        'uszipcode',  # Hibou Odoo Suite `l10n_us_partner_zipcode`, `sale_planner`
         'watchdog',
         'xlrd',  #  read MS Excel files
         'xlwt',  #  write MS Excel files

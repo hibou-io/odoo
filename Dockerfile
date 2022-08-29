@@ -8,7 +8,10 @@ RUN set -x; \
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
     && apt-get update \
     && apt-get install -y curl \
+    # setup Node 16 sources \
     && curl -sL https://deb.nodesource.com/setup_16.x | bash - \
+    # downgrade setuptools to support 2to3 (mainly because of vatnumber and suds-jurko \
+    && pip install setuptools\<58.0.0 \
     && apt-get install -y --no-install-recommends \
         zip \
         vim \
@@ -19,6 +22,8 @@ RUN set -x; \
         libcurl4-openssl-dev libsasl2-dev libldap2-dev libssl-dev libyaml-dev \
         #  pillow
         libjpeg-dev zlib1g-dev \
+        #  lxml
+        libxml2-dev libxslt1-dev \
         #  Hibou Athene
         libsecret-1-0 \
         nodejs \
