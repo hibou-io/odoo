@@ -7,7 +7,7 @@ import pytz
 import markupsafe
 
 from odoo import models, fields, api, _
-from odoo.tools import html_escape
+from odoo.tools import html_escape, float_is_zero
 from odoo.exceptions import AccessError
 from odoo.addons.iap import jsonrpc
 import logging
@@ -290,7 +290,9 @@ class AccountEdiFormat(models.Model):
             This method is call for rounding.
             If anything is wrong with rounding then we quick fix in method
         """
-        return round(amount, precision_digits)
+        value = round(amount, precision_digits)
+        # avoid -0.0
+        return value if value else 0.0
 
     def _get_l10n_in_edi_line_details(self, index, line, line_tax_details, sign):
         """
@@ -302,6 +304,16 @@ class AccountEdiFormat(models.Model):
         }
         """
         tax_details_by_code = self._get_l10n_in_tax_details_by_line_code(line_tax_details.get("tax_details", {}))
+        full_discount_or_zero_quantity = line.discount == 100.00 or float_is_zero(line.quantity, 3)
+        if full_discount_or_zero_quantity:
+            unit_price_in_inr = line.currency_id._convert(
+                line.price_unit,
+                line.company_currency_id,
+                line.company_id,
+                line.date or fields.Date.context_today(self)
+                )
+        else:
+            unit_price_in_inr = ((line.balance / (1 - (line.discount / 100))) / line.quantity) * sign
         return {
             "SlNo": str(index),
             "PrdDesc": line.name.replace("\n", ""),
@@ -310,12 +322,10 @@ class AccountEdiFormat(models.Model):
             "Qty": self._l10n_in_round_value(line.quantity or 0.0, 3),
             "Unit": line.product_uom_id.l10n_in_code and line.product_uom_id.l10n_in_code.split("-")[0] or "OTH",
             # Unit price in company currency and tax excluded so its different then price_unit
-            "UnitPrice": self._l10n_in_round_value(
-                ((line.balance / (1 - (line.discount / 100))) / line.quantity) * sign, 3),
+            "UnitPrice": self._l10n_in_round_value(unit_price_in_inr, 3),
             # total amount is before discount
-            "TotAmt": self._l10n_in_round_value((line.balance / (1 - (line.discount / 100))) * sign),
-            "Discount": self._l10n_in_round_value(
-                ((line.balance / (1 - (line.discount / 100))) - line.balance) * sign),
+            "TotAmt": self._l10n_in_round_value(unit_price_in_inr * line.quantity),
+            "Discount": self._l10n_in_round_value((unit_price_in_inr * line.quantity) * (line.discount / 100)),
             "AssAmt": self._l10n_in_round_value(line.balance * sign),
             "GstRt": self._l10n_in_round_value(tax_details_by_code.get("igst_rate", 0.00) or (
                 tax_details_by_code.get("cgst_rate", 0.00) + tax_details_by_code.get("sgst_rate", 0.00)), 3),
@@ -393,20 +403,28 @@ class AccountEdiFormat(models.Model):
             })
         if saler_buyer.get("buyer_details") != saler_buyer.get("ship_to_details"):
             json_payload.update({
-                "ShipDtls": self._get_l10n_in_edi_partner_details(saler_buyer.get("ship_to_details"))
+                "ShipDtls": self._get_l10n_in_edi_partner_details(saler_buyer.get("ship_to_details"), is_overseas=is_overseas)
             })
         if is_overseas:
             json_payload.update({
                 "ExpDtls": {
-                    "ShipBNo": invoice.l10n_in_shipping_bill_number or "",
-                    "ShipBDt": invoice.l10n_in_shipping_bill_date
-                       and invoice.l10n_in_shipping_bill_date.strftime("%d/%m/%Y") or "",
-                    "Port": invoice.l10n_in_shipping_port_code_id.code or "",
                     "RefClm": tax_details_by_code.get("igst") and "Y" or "N",
                     "ForCur": invoice.currency_id.name,
                     "CntCode": saler_buyer.get("buyer_details").country_id.code or "",
                 }
             })
+            if invoice.l10n_in_shipping_bill_number:
+                json_payload["ExpDtls"].update({
+                    "ShipBNo": invoice.l10n_in_shipping_bill_number,
+                })
+            if invoice.l10n_in_shipping_bill_date:
+                json_payload["ExpDtls"].update({
+                    "ShipBDt": invoice.l10n_in_shipping_bill_date.strftime("%d/%m/%Y"),
+                })
+            if invoice.l10n_in_shipping_port_code_id:
+                json_payload["ExpDtls"].update({
+                    "Port": invoice.l10n_in_shipping_port_code_id.code
+                })
         return json_payload
 
     @api.model

@@ -216,6 +216,23 @@ class WebsiteSale(http.Controller):
             if not qs or qs.lower() in loc:
                 yield {'loc': loc}
 
+    def _get_search_options(
+        self, category=None, attrib_values=None, pricelist=None, min_price=0.0, max_price=0.0, conversion_rate=1, **post
+    ):
+        return {
+            'displayDescription': True,
+            'displayDetail': True,
+            'displayExtraDetail': True,
+            'displayExtraLink': True,
+            'displayImage': True,
+            'allowFuzzy': not post.get('noFuzzy'),
+            'category': str(category.id) if category else None,
+            'min_price': min_price / conversion_rate,
+            'max_price': max_price / conversion_rate,
+            'attrib_values': attrib_values,
+            'display_currency': pricelist.currency_id,
+        }
+
     @http.route([
         '''/shop''',
         '''/shop/page/<int:page>''',
@@ -276,19 +293,15 @@ class WebsiteSale(http.Controller):
         if attrib_list:
             post['attrib'] = attrib_list
 
-        options = {
-            'displayDescription': True,
-            'displayDetail': True,
-            'displayExtraDetail': True,
-            'displayExtraLink': True,
-            'displayImage': True,
-            'allowFuzzy': not post.get('noFuzzy'),
-            'category': str(category.id) if category else None,
-            'min_price': min_price / conversion_rate,
-            'max_price': max_price / conversion_rate,
-            'attrib_values': attrib_values,
-            'display_currency': pricelist.currency_id,
-        }
+        options = self._get_search_options(
+            category=category,
+            attrib_values=attrib_values,
+            pricelist=pricelist,
+            min_price=min_price,
+            max_price=max_price,
+            conversion_rate=conversion_rate,
+            **post
+        )
         # No limit because attributes are obtained from complete product list
         product_count, details, fuzzy_search_term = request.website._search_with_fuzzy("products_only", search,
             limit=None, order=self._get_search_order(post), options=options)
@@ -360,6 +373,7 @@ class WebsiteSale(http.Controller):
         values = {
             'search': fuzzy_search_term or search,
             'original_search': fuzzy_search_term and search,
+            'order': post.get('order', ''),
             'category': category,
             'attrib_values': attrib_values,
             'attrib_set': attrib_set,
@@ -687,6 +701,13 @@ class WebsiteSale(http.Controller):
         # data: values after preprocess
         error = dict()
         error_message = []
+
+        # prevent name change if invoices exist
+        if data.get('partner_id'):
+            partner = request.env['res.partner'].browse(int(data['partner_id']))
+            if partner.exists() and not partner.sudo().can_edit_vat() and 'name' in data and (data['name'] or False) != (partner.name or False):
+                error['name'] = 'error'
+                error_message.append(_('Changing your name is not allowed once invoices have been issued for your account. Please contact us directly for this operation.'))
 
         # Required fields from form
         required_fields = [f for f in (all_form_values.get('field_required') or '').split(',') if f]
@@ -1230,11 +1251,14 @@ class PaymentPortal(payment_portal.PaymentPortal):
         """
         # Check the order id and the access token
         try:
-            self._document_check_access('sale.order', order_id, access_token)
+            order_sudo = self._document_check_access('sale.order', order_id, access_token)
         except MissingError as error:
             raise error
         except AccessError:
-            raise ValidationError("The access token is invalid.")
+            raise ValidationError(_("The access token is invalid."))
+
+        if order_sudo.state == "cancel":
+            raise ValidationError(_("The order has been canceled."))
 
         kwargs.update({
             'reference_prefix': None,  # Allow the reference to be computed based on the order

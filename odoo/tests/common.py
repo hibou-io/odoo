@@ -677,12 +677,12 @@ class BaseCase(unittest.TestCase, metaclass=MetaCase):
     def assertHTMLEqual(self, original, expected):
         return self._assertXMLEqual(original, expected, 'html')
 
-    def profile(self, **kwargs):
+    def profile(self, description='', **kwargs):
         test_method = getattr(self, '_testMethodName', 'Unknown test method')
         if not hasattr(self, 'profile_session'):
             self.profile_session = profiler.make_session(test_method)
         return profiler.Profiler(
-            description='%s %s %s' % (test_method, self.env.user.name, 'warm' if self.warm else 'cold'),
+            description='%s uid:%s %s %s' % (test_method, self.env.user.id, 'warm' if self.warm else 'cold', description),
             db=self.env.cr.dbname,
             profile_session=self.profile_session,
             **kwargs)
@@ -1222,6 +1222,8 @@ class ChromeBrowser():
     def _wait_ready(self, ready_code, timeout=60):
         self._logger.info('Evaluate ready code "%s"', ready_code)
         awaited_result = {'type': 'boolean', 'value': True}
+        # catch errors in ready code to prevent opening error dialogs
+        ready_code = "try { %s } catch {}" % ready_code
         ready_id = self._websocket_send('Runtime.evaluate', params={'expression': ready_code})
         promise_id = None
         last_bad_res = ''
@@ -1624,6 +1626,16 @@ class HttpCase(TransactionCase):
         code = kwargs.pop('code', "odoo.startTour('%s'%s)" % (tour_name, step_delay))
         ready = kwargs.pop('ready', "odoo.__DEBUG__.services['web_tour.tour'].tours['%s'].ready" % tour_name)
         return self.browser_js(url_path=url_path, code=code, ready=ready, **kwargs)
+
+    def profile(self, **kwargs):
+        """
+        for http_case, also patch _get_profiler_context_manager in order to profile all requests
+        """
+        sup = super()
+        _profiler = sup.profile(**kwargs)
+        def route_profiler(request):
+            return sup.profile(description=request.httprequest.full_path)
+        return profiler.Nested(_profiler, patch('odoo.http.Request._get_profiler_context_manager', route_profiler))
 
 
 # kept for backward compatibility

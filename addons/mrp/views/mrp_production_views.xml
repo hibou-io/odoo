@@ -19,7 +19,7 @@
                     <field name="product_id" readonly="1" optional="show"/>
                     <field name="lot_producing_id" optional="hide"/>
                     <field name="bom_id" readonly="1" optional="hide"/>
-                    <field name="activity_ids" string="Next Activity" widget="list_activity" optional="show" nolabel="1"/>
+                    <field name="activity_ids" string="Next Activity" widget="list_activity" optional="show"/>
                     <field name="origin" optional="show"/>
                     <field name="user_id" optional="hide" widget="many2one_avatar_user"/>
                     <field name="components_availability_state" invisible="1" options='{"lazy": true}'/>
@@ -572,7 +572,7 @@
             <field name="view_id" eval="False"/>
             <field name="search_view_id" ref="view_mrp_production_filter"/>
             <field name="domain">[('picking_type_id', '=', active_id)]</field>
-            <field name="context">{}</field>
+            <field name="context">{'default_picking_type_id': active_id}</field>
         </record>
 
         <record id="mrp_production_action_unreserve_tree" model="ir.actions.server">

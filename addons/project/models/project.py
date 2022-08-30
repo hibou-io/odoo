@@ -142,6 +142,11 @@ class ProjectTaskType(models.Model):
             else:
                 stage.disabled_rating_warning = False
 
+    @api.constrains('user_id', 'project_ids')
+    def _check_personal_stage_not_linked_to_projects(self):
+        if any(stage.user_id and stage.project_ids for stage in self):
+            raise UserError(_('A personal stage cannot be linked to a project because it is only visible to its corresponding user.'))
+
     def remove_personal_stage(self):
         """
         Remove a personal stage, tasks using that stage will move to the first
@@ -318,12 +323,17 @@ class Project(models.Model):
         ],
         string='Visibility', required=True,
         default='portal',
-        help="Defines the visibility of the tasks of the project:\n"
-            "- Invited employees: employees may only see the followed project and tasks.\n"
-            "- All employees: employees may see all project and tasks.\n"
-            "- Invited portal users and all employees: employees may see everything."
-            "   Invited portal users may see project and tasks followed by.\n"
-            "   them or by someone of their company.")
+        help="People to whom this project and its tasks will be visible.\n\n"
+            "- Invited internal users: when following a project, internal users will get access to all of its tasks without distinction. "
+            "Otherwise, they will only get access to the specific tasks they are following.\n "
+            "A user with the project > administrator access right level can still access this project and its tasks, even if they are not explicitly part of the followers.\n\n"
+            "- All internal users: all internal users can access the project and all of its tasks without distinction.\n\n"
+            "- Invited portal users and all internal users: all internal users can access the project and all of its tasks without distinction.\n"
+            "When following a project, portal users will get access to all of its tasks without distinction. Otherwise, they will only get access to the specific tasks they are following.\n\n"
+            "When a project is shared in read-only, the portal user is redirected to their portal. They can view the tasks, but not edit them.\n"
+            "When a project is shared in edit, the portal user is redirected to the kanban and list views of the tasks. They can modify a selected number of fields on the tasks.\n\n"
+            "In any case, an internal user with no project access rights can still access a task, "
+            "provided that they are given the corresponding URL (and that they are part of the followers if the project is private).")
     doc_count = fields.Integer(compute='_compute_attached_docs_count', string="Number of documents attached")
     date_start = fields.Date(string='Start Date')
     date = fields.Date(string='Expiration Date', index=True, tracking=True)
@@ -334,7 +344,7 @@ class Project(models.Model):
 
     # Project Sharing fields
     collaborator_ids = fields.One2many('project.collaborator', 'project_id', string='Collaborators', copy=False)
-    collaborator_count = fields.Integer('# Collaborators', compute='_compute_collaborator_count')
+    collaborator_count = fields.Integer('# Collaborators', compute='_compute_collaborator_count', compute_sudo=True)
 
     # rating fields
     rating_request_deadline = fields.Datetime(compute='_compute_rating_request_deadline', store=True)
@@ -483,7 +493,11 @@ class Project(models.Model):
             defaults = self._map_tasks_default_valeus(task, project)
             if task.parent_id:
                 # set the parent to the duplicated task
-                defaults['parent_id'] = old_to_new_tasks.get(task.parent_id.id, False)
+                parent_id = old_to_new_tasks.get(task.parent_id.id, False)
+                defaults['parent_id'] = parent_id
+                if not parent_id:
+                    defaults['project_id'] = project.id if task.display_project_id == self else False
+                    defaults['display_project_id'] = project.id if task.display_project_id == self else False
             elif task.display_project_id == self:
                 defaults['project_id'] = project.id
                 defaults['display_project_id'] = project.id
@@ -1207,7 +1221,7 @@ class Task(models.Model):
                 # In the case no stages have been found, we create the default stages for the user
                 if not stage:
                     stages = self.env['project.task.type'].sudo().with_context(lang=user_id.partner_id.lang, default_project_id=False).create(
-                        self._get_default_personal_stage_create_vals(user_id.id)
+                        self.with_context(lang=user_id.partner_id.lang)._get_default_personal_stage_create_vals(user_id.id)
                     )
                     stage = stages[0]
                 personal_stage_by_user[user_id].sudo().write({'stage_id': stage.id})
@@ -1621,7 +1635,9 @@ class Task(models.Model):
     def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
         fields_list = ([f.split(':')[0] for f in fields] or [])
         if groupby:
-            fields_list += [groupby] if isinstance(groupby, str) else groupby
+            fields_groupby = [groupby] if isinstance(groupby, str) else groupby
+            # only take field name when having ':' e.g 'date_deadline:week' => 'date_deadline'
+            fields_list += [f.split(':')[0] for f in fields_groupby]
         if domain:
             fields_list += [term[0].split('.')[0] for term in domain if isinstance(term, (tuple, list))]
         self._ensure_fields_are_accessible(fields_list)
@@ -1808,7 +1824,7 @@ class Task(models.Model):
 
         # rating on stage
         if 'stage_id' in vals and vals.get('stage_id'):
-            self.filtered(lambda x: x.project_id.rating_active and x.project_id.rating_status == 'stage')._send_task_rating_mail(force_send=True)
+            tasks.filtered(lambda x: x.project_id.rating_active and x.project_id.rating_status == 'stage')._send_task_rating_mail(force_send=True)
         for task in self:
             if task.display_project_id != task.project_id and not task.parent_id:
                 # We must make the display_project_id follow the project_id if no parent_id set

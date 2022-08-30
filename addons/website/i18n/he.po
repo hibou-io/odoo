@@ -14,8 +14,10 @@
 # ZVI BLONDER <ZVIBLONDER@gmail.com>, 2021
 # david danilov, 2021
 # Jonathan Spier, 2022
-# Lilach Gilliam <lilach.gilliam@gmail.com>, 2022
 # Netta Waizer, 2022
+# Lilach Gilliam <lilach.gilliam@gmail.com>, 2022
+# NoaFarkash, 2022
+# Yves Goldberg <admin@ygol.com>, 2022
 # 
 msgid ""
 msgstr ""
@@ -23,7 +25,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-10 06:07+0000\n"
 "PO-Revision-Date: 2021-09-14 12:27+0000\n"
-"Last-Translator: Netta Waizer, 2022\n"
+"Last-Translator: Yves Goldberg <admin@ygol.com>, 2022\n"
 "Language-Team: Hebrew (https://www.transifex.com/odoo/teams/41243/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -244,9 +246,7 @@ msgstr ", .s_searchbar_input"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
 msgid ", .s_website_form"
-msgstr ""
-", .s_website_form\n"
-" "
+msgstr ", .s_website_form"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.show_website_info
@@ -4100,7 +4100,7 @@ msgstr "ערוך תפריט"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.one_page_line
 msgid "Edit code in backend"
-msgstr "ערוך קוד בצד האחורי"
+msgstr "ערוך קוד מתוך המערכת"
 
 #. module: website
 #. openerp-web
@@ -4114,7 +4114,7 @@ msgstr "ערוך embedded code"
 #: model_terms:ir.ui.view,arch_db:website.publish_management
 #: model_terms:ir.ui.view,arch_db:website.user_navbar
 msgid "Edit in backend"
-msgstr "ערוך בצד האחורי"
+msgstr "ערוך מתוך המערכת"
 
 #. module: website
 #. openerp-web
@@ -4945,6 +4945,18 @@ msgstr "מפתח API של גוגל מפות"
 #: model:ir.model.fields,field_description:website.field_website__google_search_console
 msgid "Google Search Console"
 msgstr "קונסולת החיפוש של גוגל"
+
+#. module: website
+#. openerp-web
+#: code:addons/website/static/src/xml/website.backend.xml:0
+#, python-format
+msgid ""
+"Google deprecated both its \"Universal Analytics\" and \"Google Sign-In\" "
+"API. It means that only accounts and keys created before 2020 will be able "
+"to integrate their Analytics dashboard in Odoo (or any other website). This "
+"will be possible only up to mid 2023. After that, those services won't work "
+"anymore, at all."
+msgstr ""
 
 #. module: website
 #: model:ir.model.fields,help:website.field_res_config_settings__google_search_console
@@ -5794,12 +5806,18 @@ msgid "Is not equal to"
 msgstr "האם לא שווה ל"
 
 #. module: website
+#. openerp-web
+#: code:addons/website/static/src/snippets/s_website_form/options.js:0
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
+#, python-format
 msgid "Is not set"
 msgstr "האם לא הוגדר"
 
 #. module: website
+#. openerp-web
+#: code:addons/website/static/src/snippets/s_website_form/options.js:0
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
+#, python-format
 msgid "Is set"
 msgstr "האם הוגדר"
 
@@ -5854,12 +5872,12 @@ msgstr "פריט 2"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_dynamic_snippet_options
 msgid "Items per row"
-msgstr "פריט עבור (פר) שורה"
+msgstr "פריט עבור כל שורה"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.dynamic_snippet_carousel_options_template
 msgid "Items per slide"
-msgstr "פריטים עבור(פר) שקופית"
+msgstr "פריטים עבור כל שקופית"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_menus_logos
@@ -6001,7 +6019,7 @@ msgstr "תאריך התחברות אחרון"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_showcase
 msgid "Last Feature"
-msgstr "תכונה(פיצ'ר) אחרונה"
+msgstr "תכונה אחרונה"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_multi_menus
@@ -6839,6 +6857,15 @@ msgstr "רשתות"
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "New"
 msgstr "חדש"
+
+#. module: website
+#. openerp-web
+#: code:addons/website/static/src/xml/website.backend.xml:0
+#, python-format
+msgid ""
+"New Google Analytics accounts and keys are now using Google Analytics 4 "
+"which, for now, can't be integrated/embed in external websites."
+msgstr ""
 
 #. module: website
 #. openerp-web
@@ -8361,7 +8388,7 @@ msgstr "תפריט שני"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_showcase
 msgid "Second feature"
-msgstr "תכונה(פיצ'ר) שניה"
+msgstr "תכונה שניה"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_features_grid
@@ -8719,7 +8746,7 @@ msgstr "מצגת"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Slogan"
-msgstr "סלוגן(סיסמה)"
+msgstr "סלוגן"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -9422,6 +9449,13 @@ msgid "There is no data currently available."
 msgstr "כרגע אין נתונים זמינים."
 
 #. module: website
+#. openerp-web
+#: code:addons/website/static/src/snippets/s_website_form/options.js:0
+#, python-format
+msgid "There is no field available for this option."
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid ""
 "There is no website available for this company. You could create a new one."
@@ -9571,6 +9605,15 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.report_viewhierarchy_children
 msgid "This view arch has been modified"
 msgstr "קשת התצוגה הזו שונתה"
+
+#. module: website
+#. openerp-web
+#: code:addons/website/static/src/xml/website.backend.xml:0
+#, python-format
+msgid ""
+"Those accounts should now check their Analytics dashboard in the Google "
+"platform directly."
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_image_gallery_options
@@ -11125,7 +11168,7 @@ msgstr "זום פנימה- ימינה"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Zoom Out"
-msgstr "להקטין את התצוגה(זום אאוט)"
+msgstr "להקטין את התצוגה (זום אאוט)"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.cookie_policy
@@ -11330,6 +11373,12 @@ msgstr "לוח בקרה של מסחר אלקטרוני"
 #: model:website.configurator.feature,name:website.feature_module_elearning
 msgid "eLearning"
 msgstr "למידה אלקטרונית"
+
+#. module: website
+#: code:addons/website/controllers/form.py:0
+#, python-format
+msgid "email"
+msgstr ""
 
 #. module: website
 #. openerp-web
@@ -11564,7 +11613,7 @@ msgstr "מציין מיקום"
 #: code:addons/website/static/src/xml/theme_preview.xml:0
 #, python-format
 msgid "pointer to build the perfect page in 7 steps."
-msgstr "מצביע(פוינטר) לבניית הדף המושלם ב-7 שלבים."
+msgstr "מצביע (פוינטר) לבניית הדף המושלם ב-7 שלבים."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets

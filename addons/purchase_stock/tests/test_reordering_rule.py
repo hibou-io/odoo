@@ -656,3 +656,90 @@ class TestReorderingRule(TransactionCase):
             {'product_id': self.product_01.id, 'qty_done': 1.0, 'state': 'done', 'location_dest_id': stock_location.id},
             {'product_id': self.product_01.id, 'qty_done': 2.0, 'state': 'done', 'location_dest_id': sub_location.id},
         ])
+
+    def test_change_of_scheduled_date(self):
+        """
+        A user creates a delivery, an orderpoint is created. Its forecast
+        quantity becomes -1 and the quantity to order is 1. Then the user
+        postpones the scheduled date of the delivery. The quantities of the
+        orderpoint should be reset to zero.
+        """
+        delivery_form = Form(self.env['stock.picking'])
+        delivery_form.partner_id = self.partner
+        delivery_form.picking_type_id = self.env.ref('stock.picking_type_out')
+        with delivery_form.move_ids_without_package.new() as move:
+            move.product_id = self.product_01
+            move.product_uom_qty = 1
+        delivery = delivery_form.save()
+        delivery.action_confirm()
+
+        self.env['report.stock.quantity'].flush()
+        self.env['stock.warehouse.orderpoint']._get_orderpoint_action()
+
+        orderpoint = self.env['stock.warehouse.orderpoint'].search([('product_id', '=', self.product_01.id)])
+        self.assertRecordValues(orderpoint, [
+            {'qty_forecast': -1, 'qty_to_order': 1},
+        ])
+
+        delivery.scheduled_date += td(days=7)
+        orderpoint.invalidate_cache(fnames=['qty_forecast', 'qty_to_order'], ids=orderpoint.ids)
+        orderpoint.product_id.invalidate_cache(fnames=['virtual_available'], ids=orderpoint.product_id.ids)
+
+        self.assertRecordValues(orderpoint, [
+            {'qty_forecast': 0, 'qty_to_order': 0},
+        ])
+
+    def test_decrease_qty_multi_step_receipt(self):
+        """
+        Two-steps receipt. An orderpoint generates a move from Input to Stock
+        with 5 x Product01 and a purchase order to fulfill the need of that SM.
+        Then, the user decreases the qty on the PO and confirms it. The existing
+        SM should be updated and another one should be created (from Vendors to
+        Input, for the PO)
+        """
+        warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
+        warehouse.reception_steps = 'two_steps'
+        input_location_id = warehouse.wh_input_stock_loc_id.id
+        stock_location_id = warehouse.lot_stock_id.id
+        customer_location_id = self.ref('stock.stock_location_customers')
+        supplier_location_id = self.ref('stock.stock_location_suppliers')
+
+        self.product_01.description = 'Super Note'
+
+        op = self.env['stock.warehouse.orderpoint'].create({
+            'name': self.product_01.name,
+            'location_id': stock_location_id,
+            'product_id': self.product_01.id,
+            'product_min_qty': 0,
+            'product_max_qty': 0,
+            'trigger': 'manual',
+        })
+
+        out_move = self.env['stock.move'].create({
+            'name': self.product_01.name,
+            'product_id': self.product_01.id,
+            'product_uom': self.product_01.uom_id.id,
+            'product_uom_qty': 5,
+            'location_id': stock_location_id,
+            'location_dest_id': customer_location_id,
+        })
+        out_move._action_confirm()
+
+        op.action_replenish()
+
+        moves = self.env['stock.move'].search([('id', '!=', out_move.id), ('product_id', '=', self.product_01.id)])
+        self.assertRecordValues(moves, [
+            {'location_id': input_location_id, 'location_dest_id': stock_location_id, 'product_uom_qty': 5}
+        ])
+
+        purchase = self.env['purchase.order'].search([('partner_id', '=', self.partner.id)], order="id desc", limit=1)
+        with Form(purchase) as form:
+            with form.order_line.edit(0) as line:
+                line.product_qty = 4
+        purchase.button_confirm()
+
+        moves = self.env['stock.move'].search([('id', '!=', out_move.id), ('product_id', '=', self.product_01.id)], order='id desc')
+        self.assertRecordValues(moves, [
+            {'location_id': supplier_location_id, 'location_dest_id': input_location_id, 'product_qty': 4},
+            {'location_id': input_location_id, 'location_dest_id': stock_location_id, 'product_qty': 4},
+        ])

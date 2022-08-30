@@ -97,12 +97,20 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
             return this._super();
         }
         var _super = this._super.bind(this);
-        await this.wysiwyg.cleanForSave();
+        // Do not wait for the resolution of the cleanForSave promise to update
+        // the internal value in case this happens during an urgentSave as the
+        // beforeunload event does not play well with asynchronicity. It is
+        // better to have a partially cleared value than to lose changes. When
+        // this function is called outside of an urgentSave context, the full
+        // cleaning is still awaited below and `_super` will reupdate the value.
+        const fullClean = this.wysiwyg.cleanForSave();
         this._setValue(this._getValue());
-        return this.wysiwyg.saveModifiedImages(this.$content).then(() => {
-            this._isDirty = this.wysiwyg.isDirty();
-            _super();
-        });
+        this._isDirty = this.wysiwyg.isDirty();
+        await fullClean;
+        await this.wysiwyg.saveModifiedImages(this.$content);
+        // Update the value to the fully cleaned version.
+        this._setValue(this._getValue());
+        _super();
     },
     /**
      * @override
@@ -222,25 +230,12 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
      */
     _toggleCodeView: function ($codeview) {
         this.wysiwyg.odooEditor.observerUnactive();
-        $codeview.height(this.$content.height());
         $codeview.toggleClass('d-none');
         this.$content.toggleClass('d-none');
         if ($codeview.hasClass('d-none')) {
-            if (this.resizerHandleObserver) {
-                this.resizerHandleObserver.disconnect();
-                delete this.resizerHandleObserver;
-            }
             this.wysiwyg.odooEditor.observerActive();
             this.wysiwyg.setValue($codeview.val());
         } else {
-            this.resizerHandleObserver = new MutationObserver((mutations, observer) => {
-                for (let mutation of mutations) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                        $codeview[0].style.height = this.$content[0].style.height;
-                    }
-                }
-            });
-            this.resizerHandleObserver.observe(this.$content[0], {attributes: true});
             $codeview.val(this.$content.html());
             this.wysiwyg.odooEditor.observerActive();
         }

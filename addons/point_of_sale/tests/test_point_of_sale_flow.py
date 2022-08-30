@@ -1014,3 +1014,112 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         # check the difference line
         diff_line = pos_session.move_id.line_ids.filtered(lambda line: line.name == 'Difference at closing PoS session')
         self.assertAlmostEqual(diff_line.credit, 5.0, msg="Missing amount of 5.0")
+
+    def test_order_refund_picking(self):
+        self.pos_config.open_session_cb(check_coa=False)
+        current_session = self.pos_config.current_session_id
+        current_session.update_stock_at_closing = True
+        # I create a new PoS order with 1 line
+        order = self.PosOrder.create({
+            'company_id': self.env.company.id,
+            'session_id': current_session.id,
+            'partner_id': self.partner1.id,
+            'pricelist_id': self.partner1.property_product_pricelist.id,
+            'lines': [(0, 0, {
+                'name': "OL/0001",
+                'product_id': self.product3.id,
+                'price_unit': 450,
+                'discount': 5.0,
+                'qty': 2.0,
+                'tax_ids': [(6, 0, self.product3.taxes_id.ids)],
+                'price_subtotal': 450 * (1 - 5/100.0) * 2,
+                'price_subtotal_incl': 450 * (1 - 5/100.0) * 2,
+            })],
+            'amount_total': 1710.0,
+            'amount_tax': 0.0,
+            'amount_paid': 0.0,
+            'amount_return': 0.0,
+            'to_invoice': True
+        })
+
+        payment_context = {"active_ids": order.ids, "active_id": order.id}
+        order_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'amount': order.amount_total,
+            'payment_method_id': self.cash_payment_method.id
+        })
+        order_payment.with_context(**payment_context).check()
+
+        # I create a refund
+        refund_action = order.refund()
+        refund = self.PosOrder.browse(refund_action['res_id'])
+
+        payment_context = {"active_ids": refund.ids, "active_id": refund.id}
+        refund_payment = self.PosMakePayment.with_context(**payment_context).create({
+            'amount': refund.amount_total,
+            'payment_method_id': self.cash_payment_method.id,
+        })
+
+        # I click on the validate button to register the payment.
+        refund_payment.with_context(**payment_context).check()
+
+        refund.action_pos_order_invoice()
+        self.assertEqual(refund.picking_count, 1)
+
+    def test_order_with_different_payments_and_refund(self):
+        """
+        Test that all the payments are correctly taken into account when the order contains multiple payments and money refund.
+        In this example, we create an order with two payments for a product of 750$:
+            - one payment of $300 with customer account
+            - one payment of $460 with cash
+        Then, we refund the order with $10, and check that the amount still due is 300$.
+        """
+
+        product5 = self.env['product.product'].create({
+            'name': 'product5',
+            'type': 'product',
+            'categ_id': self.env.ref('product.product_category_all').id,
+        })
+
+        # sell product thru pos
+        self.pos_config.open_session_cb()
+        pos_session = self.pos_config.current_session_id
+        product5_order = {'data':
+          {'amount_paid': 750,
+           'amount_return': 10,
+           'amount_tax': 0,
+           'amount_total': 750,
+           'creation_date': fields.Datetime.to_string(fields.Datetime.now()),
+           'fiscal_position_id': False,
+           'pricelist_id': self.pos_config.available_pricelist_ids[0].id,
+           'lines': [[0, 0, {
+                'discount': 0,
+                'id': 42,
+                'pack_lot_ids': [],
+                'price_unit': 750.0,
+                'product_id': product5.id,
+                'price_subtotal': 750.0,
+                'price_subtotal_incl': 750.0,
+                'tax_ids': [[6, False, []]],
+                'qty': 1,
+            }]],
+           'name': 'Order 12345-123-1234',
+           'partner_id': self.partner1.id,
+           'pos_session_id': pos_session.id,
+           'sequence_number': 2,
+           'statement_ids': [[0, 0, {
+                'amount': 460,
+                'name': fields.Datetime.now(),
+                'payment_method_id': self.cash_payment_method.id
+            }], [0, 0, {
+                'amount': 300,
+                'name': fields.Datetime.now(),
+                'payment_method_id': self.credit_payment_method.id
+            }]],
+           'uid': '12345-123-1234',
+           'user_id': self.env.uid,
+           'to_invoice': True, }
+        }
+        pos_order_id = self.PosOrder.create_from_ui([product5_order])[0]['id']
+        pos_order = self.PosOrder.search([('id', '=', pos_order_id)])
+        #assert account_move amount_residual is 300
+        self.assertEqual(pos_order.account_move.amount_residual, 300)

@@ -3,6 +3,7 @@
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.tests import tagged
 from odoo.tests.common import Form
+from odoo import Command, fields
 
 
 @tagged('post_install', '-at_install')
@@ -395,3 +396,118 @@ class TestPurchaseToInvoice(AccountTestInvoicingCommon):
 
         self.assertEqual(po_b.invoice_ids.company_id, company_b)
         self.assertEqual(po_b.invoice_ids.partner_bank_id, partner_bank_b)
+
+    def test_sequence_invoice_lines_from_multiple_purchases(self):
+        """Test if the invoice lines are sequenced by purchase order when creating an invoice
+           from multiple selected po's"""
+        purchase_orders = self.env['purchase.order']
+
+        for _ in range(3):
+            pol_vals = [
+                (0, 0, {
+                    'name': self.product_order.name,
+                    'product_id': self.product_order.id,
+                    'product_qty': 10.0,
+                    'product_uom': self.product_order.uom_id.id,
+                    'price_unit': self.product_order.list_price,
+                    'taxes_id': False,
+                    'sequence': sequence_number,
+                }) for sequence_number in range(10, 13)]
+            purchase_order = self.env['purchase.order'].with_context(tracking_disable=True).create({
+                'partner_id': self.partner_a.id,
+                'order_line': pol_vals,
+            })
+            purchase_order.button_confirm()
+            purchase_orders |= purchase_order
+
+        action = purchase_orders.action_create_invoice()
+        invoice = self.env['account.move'].browse(action['res_id'])
+
+        expected_purchase = [
+            purchase_orders[0], purchase_orders[0], purchase_orders[0],
+            purchase_orders[1], purchase_orders[1], purchase_orders[1],
+            purchase_orders[2], purchase_orders[2], purchase_orders[2],
+        ]
+        for line in invoice.invoice_line_ids.sorted('sequence'):
+            self.assertEqual(line.purchase_order_id, expected_purchase.pop(0))
+
+    def test_sequence_autocomplete_invoice(self):
+        """Test if the invoice lines are sequenced by purchase order when using the autocomplete
+           feature on a bill to add lines from po's"""
+        purchase_orders = self.env['purchase.order']
+
+        for _ in range(3):
+            pol_vals = [
+                (0, 0, {
+                    'name': self.product_order.name,
+                    'product_id': self.product_order.id,
+                    'product_qty': 10.0,
+                    'product_uom': self.product_order.uom_id.id,
+                    'price_unit': self.product_order.list_price,
+                    'taxes_id': False,
+                    'sequence': sequence_number,
+                }) for sequence_number in range(10, 13)]
+            purchase_order = self.env['purchase.order'].with_context(tracking_disable=True).create({
+                'partner_id': self.partner_a.id,
+                'order_line': pol_vals,
+            })
+            purchase_order.button_confirm()
+            purchase_orders |= purchase_order
+
+        move_form = Form(self.env['account.move'].with_context(default_move_type='in_invoice'))
+        PurchaseBillUnion = self.env['purchase.bill.union']
+        move_form.purchase_vendor_bill_id = PurchaseBillUnion.browse(-purchase_orders[0].id)
+        move_form.purchase_vendor_bill_id = PurchaseBillUnion.browse(-purchase_orders[1].id)
+        move_form.purchase_vendor_bill_id = PurchaseBillUnion.browse(-purchase_orders[2].id)
+        invoice = move_form.save()
+
+        expected_purchase = [
+            purchase_orders[0], purchase_orders[0], purchase_orders[0],
+            purchase_orders[1], purchase_orders[1], purchase_orders[1],
+            purchase_orders[2], purchase_orders[2], purchase_orders[2],
+        ]
+        for line in invoice.invoice_line_ids.sorted('sequence'):
+            self.assertEqual(line.purchase_order_id, expected_purchase.pop(0))
+
+    def test_partial_billing_interaction_with_invoicing_switch_threshold(self):
+        """ Let's say you create a partial bill 'B' for a given PO. Now if you change the
+            'Invoicing Switch Threshold' such that the bill date of 'B' is before the new threshold,
+            the PO should still take bill 'B' into account.
+        """
+        if not self.env['ir.module.module'].search([('name', '=', 'account_accountant'), ('state', '=', 'installed')]):
+            self.skipTest("This test requires the installation of the account_account module")
+
+        purchase_order = self.env['purchase.order'].with_context(tracking_disable=True).create({
+            'partner_id': self.partner_a.id,
+            'order_line': [
+                Command.create({
+                    'name': self.product_deliver.name,
+                    'product_id': self.product_deliver.id,
+                    'product_qty': 20.0,
+                    'product_uom': self.product_deliver.uom_id.id,
+                    'price_unit': self.product_deliver.list_price,
+                    'taxes_id': False,
+                }),
+            ],
+        })
+        line = purchase_order.order_line[0]
+
+        purchase_order.button_confirm()
+        line.qty_received = 10
+        purchase_order.action_create_invoice()
+
+        invoice = purchase_order.invoice_ids
+        invoice.invoice_date = invoice.date
+        invoice.action_post()
+
+        self.assertEqual(line.qty_invoiced, 10)
+
+        self.env['res.config.settings'].create({
+            'invoicing_switch_threshold': fields.Date.add(invoice.invoice_date, days=30),
+        }).execute()
+
+        invoice.invalidate_cache(fnames=['payment_state'])
+
+        self.assertEqual(line.qty_invoiced, 10)
+        line.qty_received = 15
+        self.assertEqual(line.qty_invoiced, 10)
