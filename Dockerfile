@@ -1,5 +1,6 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.7-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
+# Note: internal parts of Odoo are not compatible with python3.8+ (not just libraries)
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
