@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.8-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
