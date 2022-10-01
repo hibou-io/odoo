@@ -29,7 +29,7 @@ setup(
         'gevent',
         'idna',
         'Jinja2',
-        'lxml',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
+#        'lxml',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
         'libsass',
         'mock',
         'ofxparse',
@@ -37,7 +37,7 @@ setup(
         'pillow',  # windows binary http://www.lfd.uci.edu/~gohlke/pythonlibs/
         'polib',
         'psutil',  # windows binary code.google.com/p/psutil/downloads/list
-        'psycopg2 >= 2.2',
+#        'psycopg2 >= 2.2',
         'pydot',
         'pyopenssl',
         'pypdf2',
