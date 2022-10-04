@@ -791,7 +791,14 @@ class YamlInterpreter(object):
         yaml_tag.add_constructors()
 
         is_preceded_by_comment = False
-        for node in yaml.load(yaml_string):
+
+        # Hibou - support newer yaml library
+        # note: must use FullLoader not SafeLoader due to !record tags
+        if hasattr(yaml, 'FullLoader'):
+            yaml_iter = yaml.load(yaml_string, Loader=yaml.FullLoader)
+        else:
+            yaml_iter = yaml.load(yaml_string)
+        for node in yaml_iter:
             is_preceded_by_comment = self._log_node(node, is_preceded_by_comment)
             try:
                 self._process_node(node)
