@@ -1,6 +1,26 @@
 (function (exports, owl) {
     'use strict';
 
+    function _interopNamespace(e) {
+        if (e && e.__esModule) return e;
+        var n = Object.create(null);
+        if (e) {
+            Object.keys(e).forEach(function (k) {
+                if (k !== 'default') {
+                    var d = Object.getOwnPropertyDescriptor(e, k);
+                    Object.defineProperty(n, k, d.get ? d : {
+                        enumerable: true,
+                        get: function () { return e[k]; }
+                    });
+                }
+            });
+        }
+        n["default"] = e;
+        return Object.freeze(n);
+    }
+
+    var owl__namespace = /*#__PURE__*/_interopNamespace(owl);
+
     /**
      * Registry
      *
@@ -237,6 +257,9 @@
     const MENU_ITEM_DISABLED_COLOR = "#CACACA";
     const DEFAULT_COLOR_SCALE_MIDPOINT_COLOR = 0xb6d7a8;
     const LINK_COLOR = "#01666b";
+    const FILTERS_COLOR = "#188038";
+    const BACKGROUND_HEADER_FILTER_COLOR = "#E6F4EA";
+    const BACKGROUND_HEADER_SELECTED_FILTER_COLOR = "#CEEAD6";
     // Color picker
     const COLOR_PICKER_DEFAULTS = [
         "#000000",
@@ -338,6 +361,7 @@
     const CF_ICON_EDGE_LENGTH = 15;
     const PADDING_AUTORESIZE_VERTICAL = 3;
     const PADDING_AUTORESIZE_HORIZONTAL = MIN_CELL_TEXT_MARGIN;
+    const FILTER_ICON_MARGIN = 2;
     // Menus
     const MENU_WIDTH = 250;
     const MENU_ITEM_HEIGHT = 28;
@@ -352,6 +376,7 @@
     const DEFAULT_FONT = "'Roboto', arial";
     // Borders
     const DEFAULT_BORDER_DESC = ["thin", "#000"];
+    const DEFAULT_FILTER_BORDER_DESC = ["thin", FILTERS_COLOR];
     // DateTimeRegex
     const DATETIME_FORMAT = /[ymd:]/;
     // Ranges
@@ -993,6 +1018,10 @@
         const cleanObject = { ...obj };
         Object.keys(cleanObject).forEach((key) => !cleanObject[key] && delete cleanObject[key]);
         return cleanObject;
+    }
+    /** Transform a string to lower case. If the string is undefined, return an empty string */
+    function toLowerCase(str) {
+        return str ? str.toLowerCase() : "";
     }
 
     const colors$1 = [
@@ -1983,6 +2012,55 @@
         return range ? getters.getRangeFromSheetXC(sheetId, range) : undefined;
     }
 
+    /** Methods from Odoo Web Utils  */
+    /**
+     * This function computes a score that represent the fact that the
+     * string contains the pattern, or not
+     *
+     * - If the score is 0, the string does not contain the letters of the pattern in
+     *   the correct order.
+     * - if the score is > 0, it actually contains the letters.
+     *
+     * Better matches will get a higher score: consecutive letters are better,
+     * and a match closer to the beginning of the string is also scored higher.
+     */
+    function fuzzyMatch(pattern, str) {
+        pattern = pattern.toLocaleLowerCase();
+        str = str.toLocaleLowerCase();
+        let totalScore = 0;
+        let currentScore = 0;
+        let len = str.length;
+        let patternIndex = 0;
+        for (let i = 0; i < len; i++) {
+            if (str[i] === pattern[patternIndex]) {
+                patternIndex++;
+                currentScore += 100 + currentScore - i / 200;
+            }
+            else {
+                currentScore = 0;
+            }
+            totalScore = totalScore + currentScore;
+        }
+        return patternIndex === pattern.length ? totalScore : 0;
+    }
+    /**
+     * Return a list of things that matches a pattern, ordered by their 'score' (
+     * higher score first). An higher score means that the match is better. For
+     * example, consecutive letters are considered a better match.
+     */
+    function fuzzyLookup(pattern, list, fn) {
+        const results = [];
+        list.forEach((data) => {
+            const score = fuzzyMatch(pattern, fn(data));
+            if (score > 0) {
+                results.push({ score, elem: data });
+            }
+        });
+        // we want better matches first
+        results.sort((a, b) => b.score - a.score);
+        return results.map((r) => r.elem);
+    }
+
     function createDefaultRows(rowNumber) {
         const rows = [];
         for (let i = 0; i < rowNumber; i++) {
@@ -2194,17 +2272,15 @@
     }
     /**
      * Expand a zone after inserting columns or rows.
+     *
+     * Don't resize the zone if a col/row was added right before/after the row but only move the zone.
      */
     function expandZoneOnInsertion(zone, start, base, position, quantity) {
         const dimension = start === "left" ? "columns" : "rows";
         const baseElement = position === "before" ? base - 1 : base;
         const end = start === "left" ? "right" : "bottom";
         const zoneEnd = zone[end];
-        let shouldIncludeEnd = false;
-        if (zoneEnd) {
-            shouldIncludeEnd = position === "before" ? zoneEnd > baseElement : zoneEnd >= baseElement;
-        }
-        if (zone[start] <= baseElement && shouldIncludeEnd) {
+        if (zone[start] <= baseElement && zoneEnd && zoneEnd > baseElement) {
             return createAdaptedZone(zone, dimension, "RESIZE", quantity);
         }
         if (baseElement < zone[start]) {
@@ -2581,8 +2657,38 @@
     function isFullCol(zone) {
         return zone.bottom === undefined;
     }
+    /** Returns the area of a zone */
     function getZoneArea(zone) {
         return (zone.bottom - zone.top + 1) * (zone.right - zone.left + 1);
+    }
+    /**
+     * Check if the zones are continuous, ie. if they can be merged into a single zone without
+     * including cells outside the zones
+     * */
+    function areZonesContinuous(...zones) {
+        if (zones.length < 2)
+            return true;
+        return recomputeZones(zones.map(zoneToXc), []).length === 1;
+    }
+    /** Return all the columns in the given list of zones */
+    function getZonesCols(zones) {
+        const set = new Set();
+        for (let zone of zones) {
+            for (let col of range(zone.left, zone.right + 1)) {
+                set.add(col);
+            }
+        }
+        return set;
+    }
+    /** Return all the rows in the given list of zones */
+    function getZonesRows(zones) {
+        const set = new Set();
+        for (let zone of zones) {
+            for (let row of range(zone.top, zone.bottom + 1)) {
+                set.add(row);
+            }
+        }
+        return set;
     }
 
     /**
@@ -2629,19 +2735,19 @@
             let x = 0;
             let y = 0;
             switch (direction) {
-                case 0 /* UP */:
+                case 0 /* DIRECTION.UP */:
                     x = 0;
                     y = -rule.current;
                     break;
-                case 1 /* DOWN */:
+                case 1 /* DIRECTION.DOWN */:
                     x = 0;
                     y = rule.current;
                     break;
-                case 2 /* LEFT */:
+                case 2 /* DIRECTION.LEFT */:
                     x = -rule.current;
                     y = 0;
                     break;
-                case 3 /* RIGHT */:
+                case 3 /* DIRECTION.RIGHT */:
                     x = rule.current;
                     y = 0;
                     break;
@@ -2723,6 +2829,9 @@
         "EVALUATE_CELLS",
         "SET_CURRENT_CONTENT",
         "SET_FORMULA_VISIBILITY",
+        "OPEN_CELL_POPOVER",
+        "CLOSE_CELL_POPOVER",
+        "UPDATE_FILTER",
     ]);
     const coreTypes = new Set([
         /** CELLS */
@@ -2771,6 +2880,9 @@
         /** CHART */
         "CREATE_CHART",
         "UPDATE_CHART",
+        /** FILTERS */
+        "CREATE_FILTER_TABLE",
+        "REMOVE_FILTER_TABLE",
     ]);
     function isCoreCommand(cmd) {
         return coreTypes.has(cmd.type);
@@ -2789,7 +2901,7 @@
                 results = [results];
             }
             results = [...new Set(results)];
-            this.reasons = results.filter((result) => result !== 0 /* Success */);
+            this.reasons = results.filter((result) => result !== 0 /* CommandResult.Success */);
         }
         /**
          * Static helper which returns a successful DispatchResult
@@ -2875,15 +2987,20 @@
         CommandResult[CommandResult["MergeOverlap"] = 62] = "MergeOverlap";
         CommandResult[CommandResult["TooManyHiddenElements"] = 63] = "TooManyHiddenElements";
         CommandResult[CommandResult["Readonly"] = 64] = "Readonly";
-        CommandResult[CommandResult["InvalidOffset"] = 65] = "InvalidOffset";
-        CommandResult[CommandResult["InvalidViewportSize"] = 66] = "InvalidViewportSize";
-        CommandResult[CommandResult["InvalidScrollingDirection"] = 67] = "InvalidScrollingDirection";
-        CommandResult[CommandResult["FigureDoesNotExist"] = 68] = "FigureDoesNotExist";
-        CommandResult[CommandResult["InvalidConditionalFormatId"] = 69] = "InvalidConditionalFormatId";
-        CommandResult[CommandResult["InvalidCellPopover"] = 70] = "InvalidCellPopover";
-        CommandResult[CommandResult["EmptyTarget"] = 71] = "EmptyTarget";
-        CommandResult[CommandResult["InvalidFreezeQuantity"] = 72] = "InvalidFreezeQuantity";
-        CommandResult[CommandResult["FrozenPaneOverlap"] = 73] = "FrozenPaneOverlap";
+        CommandResult[CommandResult["InvalidViewportSize"] = 65] = "InvalidViewportSize";
+        CommandResult[CommandResult["InvalidScrollingDirection"] = 66] = "InvalidScrollingDirection";
+        CommandResult[CommandResult["FigureDoesNotExist"] = 67] = "FigureDoesNotExist";
+        CommandResult[CommandResult["InvalidConditionalFormatId"] = 68] = "InvalidConditionalFormatId";
+        CommandResult[CommandResult["InvalidCellPopover"] = 69] = "InvalidCellPopover";
+        CommandResult[CommandResult["EmptyTarget"] = 70] = "EmptyTarget";
+        CommandResult[CommandResult["InvalidFreezeQuantity"] = 71] = "InvalidFreezeQuantity";
+        CommandResult[CommandResult["FrozenPaneOverlap"] = 72] = "FrozenPaneOverlap";
+        CommandResult[CommandResult["ValuesNotChanged"] = 73] = "ValuesNotChanged";
+        CommandResult[CommandResult["InvalidFilterZone"] = 74] = "InvalidFilterZone";
+        CommandResult[CommandResult["FilterOverlap"] = 75] = "FilterOverlap";
+        CommandResult[CommandResult["FilterNotFound"] = 76] = "FilterNotFound";
+        CommandResult[CommandResult["MergeInFilter"] = 77] = "MergeInFilter";
+        CommandResult[CommandResult["NonContinuousTargets"] = 78] = "NonContinuousTargets";
     })(exports.CommandResult || (exports.CommandResult = {}));
 
     var DIRECTION;
@@ -3068,67 +3185,6 @@
         sheet.setAttribute("component", id);
         document.head.appendChild(sheet);
     }
-
-    const ERROR_TOOLTIP_HEIGHT = 40;
-    const ERROR_TOOLTIP_WIDTH = 180;
-    css /* scss */ `
-  .o-error-tooltip {
-    font-size: 13px;
-    background-color: white;
-    border-left: 3px solid red;
-    padding: 10px;
-  }
-`;
-    class ErrorToolTip extends owl.Component {
-    }
-    ErrorToolTip.size = { width: ERROR_TOOLTIP_WIDTH, height: ERROR_TOOLTIP_HEIGHT };
-    ErrorToolTip.template = "o-spreadsheet-ErrorToolTip";
-    ErrorToolTip.components = {};
-    const ErrorToolTipPopoverBuilder = {
-        onHover: (position, getters) => {
-            const cell = getters.getCell(getters.getActiveSheetId(), position.col, position.row);
-            if ((cell === null || cell === void 0 ? void 0 : cell.evaluated.type) === CellValueType.error &&
-                cell.evaluated.error.logLevel > CellErrorLevel.silent) {
-                return {
-                    isOpen: true,
-                    props: { text: cell.evaluated.error.message },
-                    Component: ErrorToolTip,
-                    cellCorner: "TopRight",
-                };
-            }
-            return { isOpen: false };
-        },
-    };
-
-    function getMenuChildren(node, env) {
-        const children = [];
-        for (const child of node.children) {
-            if (typeof child === "function") {
-                children.push(...child(env));
-            }
-            else {
-                children.push(child);
-            }
-        }
-        return children.sort((a, b) => a.sequence - b.sequence);
-    }
-    function getMenuName(node, env) {
-        if (typeof node.name === "function") {
-            return node.name(env);
-        }
-        return node.name;
-    }
-    function getMenuDescription(node) {
-        return node.description ? node.description : "";
-    }
-
-    /**
-     * Return true if the event was triggered from
-     * a child element.
-     */
-    function isChildEvent(parent, ev) {
-        return !!ev.target && parent.contains(ev.target);
-    }
     function getTextDecoration({ strikethrough, underline, }) {
         if (!strikethrough && !underline) {
             return "none";
@@ -3163,6 +3219,362 @@
             .map(([attName, attValue]) => `${attName}: ${attValue};`)
             .join("\n");
         return "\n" + str + "\n";
+    }
+
+    const ERROR_TOOLTIP_HEIGHT = 40;
+    const ERROR_TOOLTIP_WIDTH = 180;
+    css /* scss */ `
+  .o-error-tooltip {
+    font-size: 13px;
+    background-color: white;
+    border-left: 3px solid red;
+    padding: 10px;
+  }
+`;
+    class ErrorToolTip extends owl.Component {
+    }
+    ErrorToolTip.size = { width: ERROR_TOOLTIP_WIDTH, height: ERROR_TOOLTIP_HEIGHT };
+    ErrorToolTip.template = "o-spreadsheet-ErrorToolTip";
+    ErrorToolTip.components = {};
+    const ErrorToolTipPopoverBuilder = {
+        onHover: (position, getters) => {
+            const cell = getters.getCell(getters.getActiveSheetId(), position.col, position.row);
+            if ((cell === null || cell === void 0 ? void 0 : cell.evaluated.type) === CellValueType.error &&
+                cell.evaluated.error.logLevel > CellErrorLevel.silent) {
+                return {
+                    isOpen: true,
+                    props: { text: cell.evaluated.error.message },
+                    Component: ErrorToolTip,
+                    cellCorner: "TopRight",
+                };
+            }
+            return { isOpen: false };
+        },
+    };
+
+    class FilterMenuValueItem extends owl.Component {
+        constructor() {
+            super(...arguments);
+            this.itemRef = owl.useRef("menuValueItem");
+        }
+        setup() {
+            owl.onWillPatch(() => {
+                if (this.props.scrolledTo) {
+                    this.scrollListToSelectedValue();
+                }
+            });
+        }
+        scrollListToSelectedValue() {
+            var _a, _b;
+            if (!this.itemRef.el) {
+                return;
+            }
+            (_b = (_a = this.itemRef.el).scrollIntoView) === null || _b === void 0 ? void 0 : _b.call(_a, {
+                block: this.props.scrolledTo === "bottom" ? "end" : "start",
+            });
+        }
+    }
+    FilterMenuValueItem.template = "o-spreadsheet-FilterMenuValueItem";
+
+    const FILTER_MENU_HEIGHT = 295;
+    const CSS$2 = css /* scss */ `
+  .o-filter-menu {
+    box-sizing: border-box;
+    padding: 8px 16px;
+    height: ${FILTER_MENU_HEIGHT}px;
+    line-height: 1;
+
+    .o-filter-menu-item {
+      display: flex;
+      box-sizing: border-box;
+      height: ${MENU_ITEM_HEIGHT}px;
+      padding: 4px 4px 4px 0px;
+      cursor: pointer;
+      user-select: none;
+
+      &.selected {
+        background-color: rgba(0, 0, 0, 0.08);
+      }
+    }
+
+    input {
+      box-sizing: border-box;
+      margin-bottom: 5px;
+      border: 1px solid #949494;
+      height: 24px;
+      padding-right: 28px;
+    }
+
+    .o-search-icon {
+      right: 5px;
+      top: 4px;
+
+      svg {
+        height: 16px;
+        width: 16px;
+        vertical-align: middle;
+      }
+    }
+
+    .o-filter-menu-actions {
+      display: flex;
+      flex-direction: row;
+      margin-bottom: 4px;
+
+      .o-filter-menu-action-text {
+        cursor: pointer;
+        margin-right: 10px;
+        color: blue;
+        text-decoration: underline;
+      }
+    }
+
+    .o-filter-menu-list {
+      flex: auto;
+      overflow-y: auto;
+      border: 1px solid #949494;
+
+      .o-filter-menu-value {
+        padding: 4px;
+        line-height: 20px;
+        height: 28px;
+        .o-filter-menu-value-checked {
+          width: 20px;
+        }
+      }
+
+      .o-filter-menu-no-values {
+        color: #949494;
+        font-style: italic;
+      }
+    }
+
+    .o-filter-menu-buttons {
+      margin-top: 9px;
+
+      .o-filter-menu-button {
+        border: 1px solid lightgrey;
+        padding: 6px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: 500;
+        line-height: 16px;
+      }
+
+      .o-filter-menu-button-cancel {
+        background: white;
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.08);
+        }
+      }
+
+      .o-filter-menu-button-primary {
+        background-color: #188038;
+        &:hover {
+          background-color: #1d9641;
+        }
+        color: white;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+    }
+  }
+`;
+    class FilterMenu extends owl.Component {
+        constructor() {
+            super(...arguments);
+            this.state = owl.useState({
+                values: [],
+                textFilter: "",
+                selectedValue: undefined,
+            });
+            this.searchBar = owl.useRef("filterMenuSearchBar");
+        }
+        setup() {
+            owl.onWillUpdateProps((nextProps) => {
+                if (!deepEquals(nextProps.filterPosition, this.props.filterPosition)) {
+                    this.state.values = this.getFilterValues(nextProps.filterPosition);
+                }
+            });
+            this.state.values = this.getFilterValues(this.props.filterPosition);
+        }
+        getFilterValues(position) {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const filter = this.env.model.getters.getFilter(sheetId, position.col, position.row);
+            if (!filter) {
+                return [];
+            }
+            const cellValues = (filter.filteredZone ? positions(filter.filteredZone) : [])
+                .filter(({ row }) => !this.env.model.getters.isRowHidden(sheetId, row))
+                .map(({ col, row }) => { var _a; return (_a = this.env.model.getters.getCell(sheetId, col, row)) === null || _a === void 0 ? void 0 : _a.formattedValue; });
+            const filterValues = this.env.model.getters.getFilterValues(sheetId, position.col, position.row);
+            const strValues = [...cellValues, ...filterValues];
+            const normalizedFilteredValues = filterValues.map(toLowerCase);
+            // Set with lowercase values to avoid duplicates
+            const normalizedValues = [...new Set(strValues.map(toLowerCase))];
+            const sortedValues = normalizedValues.sort((val1, val2) => val1.localeCompare(val2, undefined, { numeric: true, sensitivity: "base" }));
+            return sortedValues.map((normalizedValue) => {
+                const checked = normalizedFilteredValues.findIndex((filteredValue) => filteredValue === normalizedValue) ===
+                    -1;
+                return {
+                    checked,
+                    string: strValues.find((val) => toLowerCase(val) === normalizedValue) || "",
+                };
+            });
+        }
+        checkValue(value) {
+            var _a;
+            this.state.selectedValue = value.string;
+            value.checked = !value.checked;
+            (_a = this.searchBar.el) === null || _a === void 0 ? void 0 : _a.focus();
+        }
+        onMouseMove(value) {
+            this.state.selectedValue = value.string;
+        }
+        selectAll() {
+            this.state.values.forEach((value) => (value.checked = true));
+        }
+        clearAll() {
+            this.state.values.forEach((value) => (value.checked = false));
+        }
+        get filterTable() {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const position = this.props.filterPosition;
+            return this.env.model.getters.getFilterTable(sheetId, position.col, position.row);
+        }
+        get displayedValues() {
+            if (!this.state.textFilter) {
+                return this.state.values;
+            }
+            return fuzzyLookup(this.state.textFilter, this.state.values, (val) => val.string);
+        }
+        confirm() {
+            var _a, _b;
+            const position = this.props.filterPosition;
+            this.env.model.dispatch("UPDATE_FILTER", {
+                ...position,
+                sheetId: this.env.model.getters.getActiveSheetId(),
+                values: this.state.values.filter((val) => !val.checked).map((val) => val.string),
+            });
+            (_b = (_a = this.props).onClosed) === null || _b === void 0 ? void 0 : _b.call(_a);
+        }
+        cancel() {
+            var _a, _b;
+            (_b = (_a = this.props).onClosed) === null || _b === void 0 ? void 0 : _b.call(_a);
+        }
+        onKeyDown(ev) {
+            const displayedValues = this.displayedValues;
+            if (displayedValues.length === 0)
+                return;
+            let selectedIndex = undefined;
+            if (this.state.selectedValue !== undefined) {
+                const index = displayedValues.findIndex((val) => val.string === this.state.selectedValue);
+                selectedIndex = index === -1 ? undefined : index;
+            }
+            switch (ev.key) {
+                case "ArrowDown":
+                    if (selectedIndex === undefined) {
+                        selectedIndex = 0;
+                    }
+                    else {
+                        selectedIndex = Math.min(selectedIndex + 1, displayedValues.length - 1);
+                    }
+                    ev.preventDefault();
+                    break;
+                case "ArrowUp":
+                    if (selectedIndex === undefined) {
+                        selectedIndex = displayedValues.length - 1;
+                    }
+                    else {
+                        selectedIndex = Math.max(selectedIndex - 1, 0);
+                    }
+                    ev.preventDefault();
+                    break;
+                case "Enter":
+                    if (selectedIndex !== undefined) {
+                        this.checkValue(displayedValues[selectedIndex]);
+                    }
+                    ev.preventDefault();
+                    break;
+            }
+            this.state.selectedValue =
+                selectedIndex !== undefined ? displayedValues[selectedIndex].string : undefined;
+            if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
+                this.scrollListToSelectedValue(ev.key);
+            }
+        }
+        clearScrolledToValue() {
+            this.state.values.forEach((val) => (val.scrolledTo = undefined));
+        }
+        scrollListToSelectedValue(arrow) {
+            this.clearScrolledToValue();
+            const selectedValue = this.state.values.find((val) => val.string === this.state.selectedValue);
+            if (selectedValue) {
+                selectedValue.scrolledTo = arrow === "ArrowUp" ? "top" : "bottom";
+            }
+        }
+        sortFilterZone(sortDirection) {
+            var _a, _b;
+            const filterPosition = this.props.filterPosition;
+            const filterTable = this.filterTable;
+            if (!filterPosition || !filterTable || !filterTable.contentZone) {
+                return;
+            }
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            this.env.model.dispatch("SORT_CELLS", {
+                sheetId,
+                col: filterPosition.col,
+                row: filterTable.contentZone.top,
+                zone: filterTable.contentZone,
+                sortDirection,
+                sortOptions: { emptyCellAsZero: true, sortHeaders: true },
+            });
+            (_b = (_a = this.props).onClosed) === null || _b === void 0 ? void 0 : _b.call(_a);
+        }
+    }
+    FilterMenu.size = { width: MENU_WIDTH, height: FILTER_MENU_HEIGHT };
+    FilterMenu.template = "o-spreadsheet-FilterMenu";
+    FilterMenu.style = CSS$2;
+    FilterMenu.components = { FilterMenuValueItem };
+    const FilterMenuPopoverBuilder = {
+        onOpen: (position, getters) => {
+            return {
+                isOpen: true,
+                props: { filterPosition: position },
+                Component: FilterMenu,
+                cellCorner: "BottomLeft",
+            };
+        },
+    };
+
+    function getMenuChildren(node, env) {
+        const children = [];
+        for (const child of node.children) {
+            if (typeof child === "function") {
+                children.push(...child(env));
+            }
+            else {
+                children.push(child);
+            }
+        }
+        return children.sort((a, b) => a.sequence - b.sequence);
+    }
+    function getMenuName(node, env) {
+        if (typeof node.name === "function") {
+            return node.name(env);
+        }
+        return node.name;
+    }
+    function getMenuDescription(node) {
+        return node.description ? node.description : "";
+    }
+
+    /**
+     * Return true if the event was triggered from
+     * a child element.
+     */
+    function isChildEvent(parent, ev) {
+        return !!ev.target && parent.contains(ev.target);
     }
     function gridOverlayPosition() {
         const spreadsheetElement = document.querySelector(".o-grid-overlay");
@@ -3328,12 +3740,6 @@
         color: ${MENU_ITEM_DISABLED_COLOR};
         cursor: not-allowed;
       }
-    }
-
-    .o-separator {
-      border-bottom: ${MENU_SEPARATOR_BORDER_WIDTH}px solid #e0e2e4;
-      margin-top: ${MENU_SEPARATOR_PADDING}px;
-      margin-bottom: ${MENU_SEPARATOR_PADDING}px;
     }
   }
 `;
@@ -3863,7 +4269,8 @@
     cellPopoverRegistry
         .add("ErrorToolTip", ErrorToolTipPopoverBuilder)
         .add("LinkCell", LinkCellPopoverBuilder)
-        .add("LinkEditor", LinkEditorPopoverBuilder);
+        .add("LinkEditor", LinkEditorPopoverBuilder)
+        .add("FilterMenu", FilterMenuPopoverBuilder);
 
     /**
      * This registry is intended to map a cell content (raw string) to
@@ -3992,10 +4399,14 @@
             value: cell ? cell.evaluated.value : "",
         };
     }
-    function sortCells(cells, sortDirection) {
+    function sortCells(cells, sortDirection, emptyCellAsZero) {
         const cellsWithIndex = cells.map(convertCell);
-        const emptyCells = cellsWithIndex.filter((x) => x.type === CellValueType.empty);
-        const nonEmptyCells = cellsWithIndex.filter((x) => x.type !== CellValueType.empty);
+        let emptyCells = cellsWithIndex.filter((x) => x.type === CellValueType.empty);
+        let nonEmptyCells = cellsWithIndex.filter((x) => x.type !== CellValueType.empty);
+        if (emptyCellAsZero) {
+            nonEmptyCells.push(...emptyCells.map((emptyCell) => ({ ...emptyCell, type: CellValueType.number, value: 0 })));
+            emptyCells = [];
+        }
         const inverse = sortDirection === "descending" ? -1 : 1;
         return nonEmptyCells
             .sort((left, right) => {
@@ -4070,7 +4481,7 @@
                 });
             }
         }
-        if (result.isCancelledBecause(60 /* InvalidSortZone */)) {
+        if (result.isCancelledBecause(60 /* CommandResult.InvalidSortZone */)) {
             const { col, row } = anchor;
             env.model.selection.selectZone({ cell: { col, row }, zone });
             env.raiseError(_lt("Cannot sort. To sort, select only cells or only merges that have the same size."));
@@ -4080,9 +4491,27 @@
     function interactiveCut(env) {
         const result = env.model.dispatch("CUT");
         if (!result.isSuccessful) {
-            if (result.isCancelledBecause(17 /* WrongCutSelection */)) {
+            if (result.isCancelledBecause(17 /* CommandResult.WrongCutSelection */)) {
                 env.raiseError(_lt("This operation is not allowed with multiple selections."));
             }
+        }
+    }
+
+    const AddFilterInteractiveContent = {
+        filterOverlap: _lt("You cannot create overlapping filters."),
+        nonContinuousTargets: _lt("A filter can only be created on a continuous selection."),
+        mergeInFilter: _lt("You can't create a filter over a range that contains a merge."),
+    };
+    function interactiveAddFilter(env, sheetId, target) {
+        const result = env.model.dispatch("CREATE_FILTER_TABLE", { target, sheetId });
+        if (result.isCancelledBecause(75 /* CommandResult.FilterOverlap */)) {
+            env.raiseError(AddFilterInteractiveContent.filterOverlap);
+        }
+        else if (result.isCancelledBecause(77 /* CommandResult.MergeInFilter */)) {
+            env.raiseError(AddFilterInteractiveContent.mergeInFilter);
+        }
+        else if (result.isCancelledBecause(78 /* CommandResult.NonContinuousTargets */)) {
+            env.raiseError(AddFilterInteractiveContent.nonContinuousTargets);
         }
     }
 
@@ -4094,16 +4523,16 @@
     };
     function handlePasteResult(env, result) {
         if (!result.isSuccessful) {
-            if (result.reasons.includes(18 /* WrongPasteSelection */)) {
+            if (result.reasons.includes(18 /* CommandResult.WrongPasteSelection */)) {
                 env.raiseError(PasteInteractiveContent.wrongPasteSelection);
             }
-            else if (result.reasons.includes(2 /* WillRemoveExistingMerge */)) {
+            else if (result.reasons.includes(2 /* CommandResult.WillRemoveExistingMerge */)) {
                 env.raiseError(PasteInteractiveContent.willRemoveExistingMerge);
             }
-            else if (result.reasons.includes(20 /* WrongFigurePasteOption */)) {
+            else if (result.reasons.includes(20 /* CommandResult.WrongFigurePasteOption */)) {
                 env.raiseError(PasteInteractiveContent.wrongFigurePasteOption);
             }
-            else if (result.reasons.includes(73 /* FrozenPaneOverlap */)) {
+            else if (result.reasons.includes(72 /* CommandResult.FrozenPaneOverlap */)) {
                 env.raiseError(PasteInteractiveContent.frozenPaneOverlap);
             }
         }
@@ -4679,7 +5108,8 @@
                 legendPosition: newLegendPos,
             },
         });
-        env.openSidePanel("ChartPanel", { figureId: id });
+        env.model.dispatch("SELECT_FIGURE", { id });
+        env.openSidePanel("ChartPanel");
     };
     //------------------------------------------------------------------------------
     // Style/Format
@@ -4718,6 +5148,30 @@
     const INSERT_LINK = (env) => {
         let { col, row } = env.model.getters.getPosition();
         env.model.dispatch("OPEN_CELL_POPOVER", { col, row, popoverType: "LinkEditor" });
+    };
+    //------------------------------------------------------------------------------
+    // Filters action
+    //------------------------------------------------------------------------------
+    const FILTERS_CREATE_FILTER_TABLE = (env) => {
+        const sheetId = env.model.getters.getActiveSheetId();
+        const selection = env.model.getters.getSelection().zones;
+        interactiveAddFilter(env, sheetId, selection);
+    };
+    const FILTERS_REMOVE_FILTER_TABLE = (env) => {
+        const sheetId = env.model.getters.getActiveSheetId();
+        env.model.dispatch("REMOVE_FILTER_TABLE", {
+            sheetId,
+            target: env.model.getters.getSelectedZones(),
+        });
+    };
+    const SELECTION_CONTAINS_FILTER = (env) => {
+        const sheetId = env.model.getters.getActiveSheetId();
+        const selectedZones = env.model.getters.getSelectedZones();
+        return env.model.getters.doesZonesContainFilter(sheetId, selectedZones);
+    };
+    const SELECTION_IS_CONTINUOUS = (env) => {
+        const selectedZones = env.model.getters.getSelectedZones();
+        return areZonesContinuous(...selectedZones);
     };
     //------------------------------------------------------------------------------
     // Sorting action
@@ -4942,8 +5396,6 @@
         action: OPEN_CF_SIDEPANEL_ACTION,
     });
 
-    const dashboardMenuRegistry = new MenuItemRegistry();
-
     const rowMenuRegistry = new MenuItemRegistry();
     rowMenuRegistry
         .add("cut", {
@@ -5044,10 +5496,10 @@
             }
             const result = env.model.dispatch("RENAME_SHEET", { sheetId, name });
             if (!result.isSuccessful) {
-                if (result.reasons.includes(10 /* DuplicatedSheetName */)) {
+                if (result.reasons.includes(10 /* CommandResult.DuplicatedSheetName */)) {
                     interactiveRenameSheet(env, sheetId, _lt("A sheet with the name %s already exists. Please select another name.", name));
                 }
-                if (result.reasons.includes(11 /* ForbiddenCharactersInSheetName */)) {
+                if (result.reasons.includes(11 /* CommandResult.ForbiddenCharactersInSheetName */)) {
                     interactiveRenameSheet(env, sheetId, _lt("Some used characters are not allowed in a sheet name (Forbidden characters are %s).", FORBIDDEN_SHEET_CHARS.join(" ")));
                 }
             }
@@ -5122,24 +5574,24 @@
 
     const CfTerms = {
         Errors: {
-            [23 /* InvalidRange */]: _lt("The range is invalid"),
-            [48 /* FirstArgMissing */]: _lt("The argument is missing. Please provide a value"),
-            [49 /* SecondArgMissing */]: _lt("The second argument is missing. Please provide a value"),
-            [50 /* MinNaN */]: _lt("The minpoint must be a number"),
-            [51 /* MidNaN */]: _lt("The midpoint must be a number"),
-            [52 /* MaxNaN */]: _lt("The maxpoint must be a number"),
-            [53 /* ValueUpperInflectionNaN */]: _lt("The first value must be a number"),
-            [54 /* ValueLowerInflectionNaN */]: _lt("The second value must be a number"),
-            [44 /* MinBiggerThanMax */]: _lt("Minimum must be smaller then Maximum"),
-            [47 /* MinBiggerThanMid */]: _lt("Minimum must be smaller then Midpoint"),
-            [46 /* MidBiggerThanMax */]: _lt("Midpoint must be smaller then Maximum"),
-            [45 /* LowerBiggerThanUpper */]: _lt("Lower inflection point must be smaller than upper inflection point"),
-            [55 /* MinInvalidFormula */]: _lt("Invalid Minpoint formula"),
-            [57 /* MaxInvalidFormula */]: _lt("Invalid Maxpoint formula"),
-            [56 /* MidInvalidFormula */]: _lt("Invalid Midpoint formula"),
-            [58 /* ValueUpperInvalidFormula */]: _lt("Invalid upper inflection point formula"),
-            [59 /* ValueLowerInvalidFormula */]: _lt("Invalid lower inflection point formula"),
-            [22 /* EmptyRange */]: _lt("A range needs to be defined"),
+            [23 /* CommandResult.InvalidRange */]: _lt("The range is invalid"),
+            [48 /* CommandResult.FirstArgMissing */]: _lt("The argument is missing. Please provide a value"),
+            [49 /* CommandResult.SecondArgMissing */]: _lt("The second argument is missing. Please provide a value"),
+            [50 /* CommandResult.MinNaN */]: _lt("The minpoint must be a number"),
+            [51 /* CommandResult.MidNaN */]: _lt("The midpoint must be a number"),
+            [52 /* CommandResult.MaxNaN */]: _lt("The maxpoint must be a number"),
+            [53 /* CommandResult.ValueUpperInflectionNaN */]: _lt("The first value must be a number"),
+            [54 /* CommandResult.ValueLowerInflectionNaN */]: _lt("The second value must be a number"),
+            [44 /* CommandResult.MinBiggerThanMax */]: _lt("Minimum must be smaller then Maximum"),
+            [47 /* CommandResult.MinBiggerThanMid */]: _lt("Minimum must be smaller then Midpoint"),
+            [46 /* CommandResult.MidBiggerThanMax */]: _lt("Midpoint must be smaller then Maximum"),
+            [45 /* CommandResult.LowerBiggerThanUpper */]: _lt("Lower inflection point must be smaller than upper inflection point"),
+            [55 /* CommandResult.MinInvalidFormula */]: _lt("Invalid Minpoint formula"),
+            [57 /* CommandResult.MaxInvalidFormula */]: _lt("Invalid Maxpoint formula"),
+            [56 /* CommandResult.MidInvalidFormula */]: _lt("Invalid Midpoint formula"),
+            [58 /* CommandResult.ValueUpperInvalidFormula */]: _lt("Invalid upper inflection point formula"),
+            [59 /* CommandResult.ValueLowerInvalidFormula */]: _lt("Invalid lower inflection point formula"),
+            [22 /* CommandResult.EmptyRange */]: _lt("A range needs to be defined"),
             Unexpected: _lt("The rule is invalid for an unknown reason"),
         },
         ColorScale: _lt("Color scale"),
@@ -5166,20 +5618,20 @@
         Errors: {
             Unexpected: _lt("The chart definition is invalid for an unknown reason"),
             // BASIC CHART ERRORS (LINE | BAR | PIE)
-            [29 /* InvalidDataSet */]: _lt("The dataset is invalid"),
-            [30 /* InvalidLabelRange */]: _lt("Labels are invalid"),
+            [29 /* CommandResult.InvalidDataSet */]: _lt("The dataset is invalid"),
+            [30 /* CommandResult.InvalidLabelRange */]: _lt("Labels are invalid"),
             // SCORECARD CHART ERRORS
-            [31 /* InvalidScorecardKeyValue */]: _lt("The key value is invalid"),
-            [32 /* InvalidScorecardBaseline */]: _lt("The baseline value is invalid"),
+            [31 /* CommandResult.InvalidScorecardKeyValue */]: _lt("The key value is invalid"),
+            [32 /* CommandResult.InvalidScorecardBaseline */]: _lt("The baseline value is invalid"),
             // GAUGE CHART ERRORS
-            [33 /* InvalidGaugeDataRange */]: _lt("The data range is invalid"),
-            [34 /* EmptyGaugeRangeMin */]: _lt("A minimum range limit value is needed"),
-            [35 /* GaugeRangeMinNaN */]: _lt("The minimum range limit value must be a number"),
-            [36 /* EmptyGaugeRangeMax */]: _lt("A maximum range limit value is needed"),
-            [37 /* GaugeRangeMaxNaN */]: _lt("The maximum range limit value must be a number"),
-            [38 /* GaugeRangeMinBiggerThanRangeMax */]: _lt("Minimum range limit must be smaller than maximum range limit"),
-            [39 /* GaugeLowerInflectionPointNaN */]: _lt("The lower inflection point value must be a number"),
-            [40 /* GaugeUpperInflectionPointNaN */]: _lt("The upper inflection point value must be a number"),
+            [33 /* CommandResult.InvalidGaugeDataRange */]: _lt("The data range is invalid"),
+            [34 /* CommandResult.EmptyGaugeRangeMin */]: _lt("A minimum range limit value is needed"),
+            [35 /* CommandResult.GaugeRangeMinNaN */]: _lt("The minimum range limit value must be a number"),
+            [36 /* CommandResult.EmptyGaugeRangeMax */]: _lt("A maximum range limit value is needed"),
+            [37 /* CommandResult.GaugeRangeMaxNaN */]: _lt("The maximum range limit value must be a number"),
+            [38 /* CommandResult.GaugeRangeMinBiggerThanRangeMax */]: _lt("Minimum range limit must be smaller than maximum range limit"),
+            [39 /* CommandResult.GaugeLowerInflectionPointNaN */]: _lt("The lower inflection point value must be a number"),
+            [40 /* CommandResult.GaugeUpperInflectionPointNaN */]: _lt("The upper inflection point value must be a number"),
         },
     };
     const NumberFormatTerms = {
@@ -5203,7 +5655,7 @@
         const sheetId = env.model.getters.getActiveSheetId();
         const cmd = dimension === "COL" ? "FREEZE_COLUMNS" : "FREEZE_ROWS";
         const result = env.model.dispatch(cmd, { sheetId, quantity: base });
-        if (result.isCancelledBecause(62 /* MergeOverlap */)) {
+        if (result.isCancelledBecause(62 /* CommandResult.MergeOverlap */)) {
             env.raiseError(MergeErrorMessage);
         }
     }
@@ -5273,7 +5725,7 @@
         .addChild("sort_range", ["data"], {
         name: _lt("Sort range"),
         sequence: 62,
-        isEnabled: IS_ONLY_ONE_RANGE,
+        isVisible: IS_ONLY_ONE_RANGE,
         separator: true,
     })
         .addChild("sort_ascending", ["data", "sort_range"], {
@@ -5601,6 +6053,19 @@
         sequence: 90,
         action: FORMAT_CLEARFORMAT_ACTION,
         separator: true,
+    })
+        .addChild("add_data_filter", ["data"], {
+        name: _lt("Add Filter"),
+        sequence: 20,
+        action: FILTERS_CREATE_FILTER_TABLE,
+        isVisible: (env) => !SELECTION_CONTAINS_FILTER(env),
+        isEnabled: (env) => SELECTION_IS_CONTINUOUS(env),
+    })
+        .addChild("remove_data_filter", ["data"], {
+        name: _lt("Remove Filter"),
+        sequence: 20,
+        action: FILTERS_REMOVE_FILTER_TABLE,
+        isVisible: SELECTION_CONTAINS_FILTER,
     });
     // Font-sizes
     for (let fs of fontSizes) {
@@ -5824,11 +6289,11 @@
         }
         get isDatasetInvalid() {
             var _a;
-            return !!((_a = this.state.datasetDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(29 /* InvalidDataSet */));
+            return !!((_a = this.state.datasetDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(29 /* CommandResult.InvalidDataSet */));
         }
         get isLabelInvalid() {
             var _a;
-            return !!((_a = this.state.labelsDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(30 /* InvalidLabelRange */));
+            return !!((_a = this.state.labelsDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(30 /* CommandResult.InvalidLabelRange */));
         }
         onUpdateDataSetsHaveTitle(ev) {
             this.props.updateChart({
@@ -6176,23 +6641,23 @@
         if (definition.dataSets) {
             const invalidRanges = definition.dataSets.find((range) => !rangeReference.test(range)) !== undefined;
             if (invalidRanges) {
-                return 29 /* InvalidDataSet */;
+                return 29 /* CommandResult.InvalidDataSet */;
             }
             const zones = definition.dataSets.map(toUnboundedZone);
             if (zones.some((zone) => zone.top !== zone.bottom && isFullRow(zone))) {
-                return 29 /* InvalidDataSet */;
+                return 29 /* CommandResult.InvalidDataSet */;
             }
         }
-        return 0 /* Success */;
+        return 0 /* CommandResult.Success */;
     }
     function checkLabelRange(definition) {
         if (definition.labelRange) {
             const invalidLabels = !rangeReference.test(definition.labelRange || "");
             if (invalidLabels) {
-                return 30 /* InvalidLabelRange */;
+                return 30 /* CommandResult.InvalidLabelRange */;
             }
         }
-        return 0 /* Success */;
+        return 0 /* CommandResult.Success */;
     }
     // ---------------------------------------------------------------------------
     // Scorecard
@@ -6647,20 +7112,20 @@
     });
     function isDataRangeValid(definition) {
         return definition.dataRange && !rangeReference.test(definition.dataRange)
-            ? 33 /* InvalidGaugeDataRange */
-            : 0 /* Success */;
+            ? 33 /* CommandResult.InvalidGaugeDataRange */
+            : 0 /* CommandResult.Success */;
     }
     function checkRangeLimits(check, batchValidations) {
         return batchValidations((definition) => {
             if (definition.sectionRule) {
                 return check(definition.sectionRule.rangeMin, "rangeMin");
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }, (definition) => {
             if (definition.sectionRule) {
                 return check(definition.sectionRule.rangeMax, "rangeMax");
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         });
     }
     function checkInflectionPointsValue(check, batchValidations) {
@@ -6668,47 +7133,47 @@
             if (definition.sectionRule) {
                 return check(definition.sectionRule.lowerInflectionPoint.value, "lowerInflectionPointValue");
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }, (definition) => {
             if (definition.sectionRule) {
                 return check(definition.sectionRule.upperInflectionPoint.value, "upperInflectionPointValue");
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         });
     }
     function checkRangeMinBiggerThanRangeMax(definition) {
         if (definition.sectionRule) {
             if (Number(definition.sectionRule.rangeMin) >= Number(definition.sectionRule.rangeMax)) {
-                return 38 /* GaugeRangeMinBiggerThanRangeMax */;
+                return 38 /* CommandResult.GaugeRangeMinBiggerThanRangeMax */;
             }
         }
-        return 0 /* Success */;
+        return 0 /* CommandResult.Success */;
     }
     function checkEmpty(value, valueName) {
         if (value === "") {
             switch (valueName) {
                 case "rangeMin":
-                    return 34 /* EmptyGaugeRangeMin */;
+                    return 34 /* CommandResult.EmptyGaugeRangeMin */;
                 case "rangeMax":
-                    return 36 /* EmptyGaugeRangeMax */;
+                    return 36 /* CommandResult.EmptyGaugeRangeMax */;
             }
         }
-        return 0 /* Success */;
+        return 0 /* CommandResult.Success */;
     }
     function checkNaN(value, valueName) {
         if (isNaN(value)) {
             switch (valueName) {
                 case "rangeMin":
-                    return 35 /* GaugeRangeMinNaN */;
+                    return 35 /* CommandResult.GaugeRangeMinNaN */;
                 case "rangeMax":
-                    return 37 /* GaugeRangeMaxNaN */;
+                    return 37 /* CommandResult.GaugeRangeMaxNaN */;
                 case "lowerInflectionPointValue":
-                    return 39 /* GaugeLowerInflectionPointNaN */;
+                    return 39 /* CommandResult.GaugeLowerInflectionPointNaN */;
                 case "upperInflectionPointValue":
-                    return 40 /* GaugeUpperInflectionPointNaN */;
+                    return 40 /* CommandResult.GaugeUpperInflectionPointNaN */;
             }
         }
-        return 0 /* Success */;
+        return 0 /* CommandResult.Success */;
     }
     class GaugeChart extends AbstractChart {
         constructor(definition, sheetId, getters) {
@@ -7445,13 +7910,13 @@
     });
     function checkKeyValue(definition) {
         return definition.keyValue && !rangeReference.test(definition.keyValue)
-            ? 31 /* InvalidScorecardKeyValue */
-            : 0 /* Success */;
+            ? 31 /* CommandResult.InvalidScorecardKeyValue */
+            : 0 /* CommandResult.Success */;
     }
     function checkBaseline(definition) {
         return definition.baseline && !rangeReference.test(definition.baseline)
-            ? 32 /* InvalidScorecardBaseline */
-            : 0 /* Success */;
+            ? 32 /* CommandResult.InvalidScorecardBaseline */
+            : 0 /* CommandResult.Success */;
     }
     class ScorecardChart$1 extends AbstractChart {
         constructor(definition, sheetId, getters) {
@@ -7849,7 +8314,7 @@
         }
         get isDataRangeInvalid() {
             var _a;
-            return !!((_a = this.state.dataRangeDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(33 /* InvalidGaugeDataRange */));
+            return !!((_a = this.state.dataRangeDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(33 /* CommandResult.InvalidGaugeDataRange */));
         }
         onDataRangeChanged(ranges) {
             this.dataRange = ranges[0];
@@ -7930,28 +8395,28 @@
         }
         isRangeMinInvalid() {
             var _a, _b, _c;
-            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(34 /* EmptyGaugeRangeMin */)) ||
-                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(35 /* GaugeRangeMinNaN */)) ||
-                ((_c = this.state.sectionRuleDispatchResult) === null || _c === void 0 ? void 0 : _c.isCancelledBecause(38 /* GaugeRangeMinBiggerThanRangeMax */)));
+            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(34 /* CommandResult.EmptyGaugeRangeMin */)) ||
+                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(35 /* CommandResult.GaugeRangeMinNaN */)) ||
+                ((_c = this.state.sectionRuleDispatchResult) === null || _c === void 0 ? void 0 : _c.isCancelledBecause(38 /* CommandResult.GaugeRangeMinBiggerThanRangeMax */)));
         }
         isRangeMaxInvalid() {
             var _a, _b, _c;
-            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(36 /* EmptyGaugeRangeMax */)) ||
-                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(37 /* GaugeRangeMaxNaN */)) ||
-                ((_c = this.state.sectionRuleDispatchResult) === null || _c === void 0 ? void 0 : _c.isCancelledBecause(38 /* GaugeRangeMinBiggerThanRangeMax */)));
+            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(36 /* CommandResult.EmptyGaugeRangeMax */)) ||
+                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(37 /* CommandResult.GaugeRangeMaxNaN */)) ||
+                ((_c = this.state.sectionRuleDispatchResult) === null || _c === void 0 ? void 0 : _c.isCancelledBecause(38 /* CommandResult.GaugeRangeMinBiggerThanRangeMax */)));
         }
         // ---------------------------------------------------------------------------
         // COLOR_SECTION_TEMPLATE
         // ---------------------------------------------------------------------------
         get isLowerInflectionPointInvalid() {
             var _a, _b;
-            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(39 /* GaugeLowerInflectionPointNaN */)) ||
-                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(41 /* GaugeLowerBiggerThanUpper */)));
+            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(39 /* CommandResult.GaugeLowerInflectionPointNaN */)) ||
+                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(41 /* CommandResult.GaugeLowerBiggerThanUpper */)));
         }
         get isUpperInflectionPointInvalid() {
             var _a, _b;
-            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(40 /* GaugeUpperInflectionPointNaN */)) ||
-                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(41 /* GaugeLowerBiggerThanUpper */)));
+            return !!(((_a = this.state.sectionRuleDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(40 /* CommandResult.GaugeUpperInflectionPointNaN */)) ||
+                ((_b = this.state.sectionRuleDispatchResult) === null || _b === void 0 ? void 0 : _b.isCancelledBecause(41 /* CommandResult.GaugeLowerBiggerThanUpper */)));
         }
         updateInflectionPointValue(attr, ev) {
             const sectionRule = deepCopy(this.props.definition.sectionRule);
@@ -8049,11 +8514,11 @@
         }
         get isKeyValueInvalid() {
             var _a;
-            return !!((_a = this.state.keyValueDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(31 /* InvalidScorecardKeyValue */));
+            return !!((_a = this.state.keyValueDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(31 /* CommandResult.InvalidScorecardKeyValue */));
         }
         get isBaselineInvalid() {
             var _a;
-            return !!((_a = this.state.keyValueDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(32 /* InvalidScorecardBaseline */));
+            return !!((_a = this.state.keyValueDispatchResult) === null || _a === void 0 ? void 0 : _a.isCancelledBecause(32 /* CommandResult.InvalidScorecardBaseline */));
         }
         onKeyValueRangeChanged(ranges) {
             this.keyValue = ranges[0];
@@ -8169,21 +8634,41 @@
   }
 `;
     class ChartPanel extends owl.Component {
+        constructor() {
+            super(...arguments);
+            this.shouldUpdateChart = true;
+        }
         get figureId() {
-            return this.props.figureId;
+            return this.state.figureId;
         }
         setup() {
+            const selectedFigureId = this.env.model.getters.getSelectedFigureId();
+            if (!selectedFigureId) {
+                throw new Error(_lt("Cannot open the chart side panel while no chart are selected"));
+            }
             this.state = owl.useState({
                 panel: "configuration",
+                figureId: selectedFigureId,
             });
-            owl.onWillUpdateProps((nextProps) => {
-                if (!this.env.model.getters.isChartDefined(nextProps.figureId)) {
+            owl.onWillUpdateProps(() => {
+                const selectedFigureId = this.env.model.getters.getSelectedFigureId();
+                if (selectedFigureId && selectedFigureId !== this.state.figureId) {
+                    this.state.figureId = selectedFigureId;
+                    this.shouldUpdateChart = false;
+                }
+                else {
+                    this.shouldUpdateChart = true;
+                }
+                if (!this.env.model.getters.isChartDefined(this.figureId)) {
                     this.props.onCloseSidePanel();
                     return;
                 }
             });
         }
         updateChart(updateDefinition) {
+            if (!this.shouldUpdateChart) {
+                return;
+            }
             const definition = {
                 ...this.getChartDefinition(),
                 ...updateDefinition,
@@ -8657,7 +9142,7 @@
             return this.env.model.getters.getConditionalFormats(this.env.model.getters.getActiveSheetId());
         }
         get isRangeValid() {
-            return this.state.errors.includes(22 /* EmptyRange */);
+            return this.state.errors.includes(22 /* CommandResult.EmptyRange */);
         }
         errorMessage(error) {
             return CfTerms.Errors[error] || CfTerms.Errors.Unexpected;
@@ -8719,7 +9204,7 @@
             if (this.state.currentCF) {
                 const invalidRanges = this.state.currentCF.ranges.some((xc) => !xc.match(rangeReference));
                 if (invalidRanges) {
-                    this.state.errors = [23 /* InvalidRange */];
+                    this.state.errors = [23 /* CommandResult.InvalidRange */];
                     return;
                 }
                 const sheetId = this.env.model.getters.getActiveSheetId();
@@ -8875,11 +9360,11 @@
          ****************************************************************************/
         get isValue1Invalid() {
             var _a;
-            return !!((_a = this.state.errors) === null || _a === void 0 ? void 0 : _a.includes(48 /* FirstArgMissing */));
+            return !!((_a = this.state.errors) === null || _a === void 0 ? void 0 : _a.includes(48 /* CommandResult.FirstArgMissing */));
         }
         get isValue2Invalid() {
             var _a;
-            return !!((_a = this.state.errors) === null || _a === void 0 ? void 0 : _a.includes(49 /* SecondArgMissing */));
+            return !!((_a = this.state.errors) === null || _a === void 0 ? void 0 : _a.includes(49 /* CommandResult.SecondArgMissing */));
         }
         toggleStyle(tool) {
             const style = this.state.rules.cellIs.style;
@@ -8896,17 +9381,17 @@
         isValueInvalid(threshold) {
             switch (threshold) {
                 case "minimum":
-                    return (this.state.errors.includes(55 /* MinInvalidFormula */) ||
-                        this.state.errors.includes(47 /* MinBiggerThanMid */) ||
-                        this.state.errors.includes(44 /* MinBiggerThanMax */) ||
-                        this.state.errors.includes(50 /* MinNaN */));
+                    return (this.state.errors.includes(55 /* CommandResult.MinInvalidFormula */) ||
+                        this.state.errors.includes(47 /* CommandResult.MinBiggerThanMid */) ||
+                        this.state.errors.includes(44 /* CommandResult.MinBiggerThanMax */) ||
+                        this.state.errors.includes(50 /* CommandResult.MinNaN */));
                 case "midpoint":
-                    return (this.state.errors.includes(56 /* MidInvalidFormula */) ||
-                        this.state.errors.includes(51 /* MidNaN */) ||
-                        this.state.errors.includes(46 /* MidBiggerThanMax */));
+                    return (this.state.errors.includes(56 /* CommandResult.MidInvalidFormula */) ||
+                        this.state.errors.includes(51 /* CommandResult.MidNaN */) ||
+                        this.state.errors.includes(46 /* CommandResult.MidBiggerThanMax */));
                 case "maximum":
-                    return (this.state.errors.includes(57 /* MaxInvalidFormula */) ||
-                        this.state.errors.includes(52 /* MaxNaN */));
+                    return (this.state.errors.includes(57 /* CommandResult.MaxInvalidFormula */) ||
+                        this.state.errors.includes(52 /* CommandResult.MaxNaN */));
                 default:
                     return false;
             }
@@ -8955,13 +9440,13 @@
         isInflectionPointInvalid(inflectionPoint) {
             switch (inflectionPoint) {
                 case "lowerInflectionPoint":
-                    return (this.state.errors.includes(54 /* ValueLowerInflectionNaN */) ||
-                        this.state.errors.includes(59 /* ValueLowerInvalidFormula */) ||
-                        this.state.errors.includes(45 /* LowerBiggerThanUpper */));
+                    return (this.state.errors.includes(54 /* CommandResult.ValueLowerInflectionNaN */) ||
+                        this.state.errors.includes(59 /* CommandResult.ValueLowerInvalidFormula */) ||
+                        this.state.errors.includes(45 /* CommandResult.LowerBiggerThanUpper */));
                 case "upperInflectionPoint":
-                    return (this.state.errors.includes(53 /* ValueUpperInflectionNaN */) ||
-                        this.state.errors.includes(58 /* ValueUpperInvalidFormula */) ||
-                        this.state.errors.includes(45 /* LowerBiggerThanUpper */));
+                    return (this.state.errors.includes(53 /* CommandResult.ValueUpperInflectionNaN */) ||
+                        this.state.errors.includes(58 /* CommandResult.ValueUpperInvalidFormula */) ||
+                        this.state.errors.includes(45 /* CommandResult.LowerBiggerThanUpper */));
                 default:
                     return true;
             }
@@ -9555,7 +10040,10 @@
             registry.add("edit", {
                 name: _lt("Edit"),
                 sequence: 1,
-                action: () => this.env.openSidePanel("ChartPanel", { figureId: this.props.figure.id }),
+                action: () => {
+                    this.env.model.dispatch("SELECT_FIGURE", { id: this.props.figure.id });
+                    this.env.openSidePanel("ChartPanel");
+                },
             });
             registry.add("copy", {
                 name: _lt("Copy"),
@@ -9584,7 +10072,7 @@
                         id: this.props.figure.id,
                     });
                     if (this.props.sidePanelIsOpen) {
-                        this.env.toggleSidePanel("ChartPanel", { figureId: this.props.figure.id });
+                        this.env.toggleSidePanel("ChartPanel");
                     }
                     this.props.onFigureDeleted();
                 },
@@ -9676,7 +10164,6 @@
             if (timeOutId) {
                 return;
             }
-            const { maxOffsetX, maxOffsetY } = getters.getMaximumSheetOffset();
             const { x: offsetCorrectionX, y: offsetCorrectionY } = getters.getMainViewportCoordinates();
             let { top, left, bottom, right } = getters.getActiveMainViewport();
             let { offsetScrollbarX: offsetX, offsetScrollbarY: offsetY } = getters.getActiveSheetScrollInfo();
@@ -9706,7 +10193,7 @@
                             newTarget = left - 1;
                             break;
                     }
-                    offsetX = Math.min(maxOffsetX, getters.getColDimensions(sheetId, newTarget).start - offsetCorrectionX);
+                    offsetX = getters.getColDimensions(sheetId, newTarget).start - offsetCorrectionX;
                 }
             }
             const y = currentEv.clientY - position.top;
@@ -9732,7 +10219,7 @@
                             newTarget = top + edgeScrollInfoY.direction;
                             break;
                     }
-                    offsetY = Math.min(maxOffsetY, env.model.getters.getRowDimensions(sheetId, newTarget).start - offsetCorrectionY);
+                    offsetY = env.model.getters.getRowDimensions(sheetId, newTarget).start - offsetCorrectionY;
                 }
             }
             cbMouseMove(colIndex, rowIndex, currentEv);
@@ -10062,6 +10549,7 @@
     }
 
     // HELPERS
+    const SORT_TYPES_ORDER = ["number", "string", "boolean", "undefined"];
     function assert(condition, message) {
         if (!condition()) {
             throw new Error(message);
@@ -10107,6 +10595,20 @@
             default:
                 return "";
         }
+    }
+    /** Normalize string by setting it to lowercase and replacing accent letters with plain letters */
+    function normalizeString(str) {
+        return str
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+    }
+    /**
+     * Normalize a value.
+     * If the cell value is a string, this will set it to lowercase and replacing accent letters with plain letters
+     */
+    function normalizeValue(value) {
+        return typeof value === "string" ? normalizeString(value) : value;
     }
     const expectBooleanValueError = (value) => _lt("The function [[FUNCTION_NAME]] expects a boolean value, but '%s' is a text, and cannot be coerced to a number.", value);
     function toBoolean(value) {
@@ -10429,62 +10931,81 @@
     // -----------------------------------------------------------------------------
     // COMMON FUNCTIONS
     // -----------------------------------------------------------------------------
+    function getNormalizedValueFromColumnRange(range, index) {
+        return normalizeValue(range[0][index]);
+    }
+    function getNormalizedValueFromRowRange(range, index) {
+        return normalizeValue(range[index][0]);
+    }
     /**
-     * Perform a dichotomic search and return the index of the nearest match less than
-     * or equal to the target. If all values in the range are greater than the target,
-     * -1 is returned.
-     * If the range is not in sorted order, an incorrect value might be returned.
+     * Perform a dichotomic search on an array and return the index of the nearest match.
      *
-     * Example:
-     * - [3, 6, 10], 3 => 0
-     * - [3, 6, 10], 6 => 1
-     * - [3, 6, 10], 9 => 1
-     * - [3, 6, 10], 42 => 2
-     * - [3, 6, 10], 2 => -1
-     * - [3, undefined, 6, undefined, 10], 9 => 2
-     * - [3, 6, undefined, undefined, undefined, 10], 2 => -1
+     * The array should be sorted, if not an incorrect value might be returned. In the case where multiple
+     * element of the array match the target, the method will return the first match if the array is sorted
+     * in descending order, and the last match if the array is in ascending order.
+     *
+     *
+     * @param data the array in which to search.
+     * @param target the value to search.
+     * @param mode "nextGreater/nextSmaller" : return next greater/smaller value if no exact match is found.
+     * @param sortOrder whether the array is sorted in ascending or descending order.
+     * @param rangeLength the number of elements to consider in the search array.
+     * @param getValueInData function returning the element at index i in the search array.
      */
-    function dichotomicPredecessorSearch(range, target) {
-        if (target === null) {
+    function dichotomicSearch(data, target, mode, sortOrder, rangeLength, getValueInData) {
+        if (target === null || target === undefined) {
             return -1;
         }
         const targetType = typeof target;
-        let valMin = undefined;
-        let valMinIndex = undefined;
+        let matchVal = undefined;
+        let matchValIndex = undefined;
         let indexLeft = 0;
-        let indexRight = range.length - 1;
-        if (typeof range[indexLeft] === targetType && target < range[indexLeft]) {
-            return -1;
-        }
-        if (typeof range[indexRight] === targetType && range[indexRight] <= target) {
-            return indexRight;
-        }
+        let indexRight = rangeLength - 1;
         let indexMedian;
         let currentIndex;
         let currentVal;
         let currentType;
         while (indexRight - indexLeft >= 0) {
-            indexMedian = Math.ceil((indexLeft + indexRight) / 2);
+            indexMedian = Math.floor((indexLeft + indexRight) / 2);
             currentIndex = indexMedian;
-            currentVal = range[currentIndex];
+            currentVal = getValueInData(data, currentIndex);
             currentType = typeof currentVal;
             // 1 - linear search to find value with the same type
             while (indexLeft <= currentIndex && targetType !== currentType) {
                 currentIndex--;
-                currentVal = range[currentIndex];
+                currentVal = getValueInData(data, currentIndex);
                 currentType = typeof currentVal;
             }
+            if (currentType !== targetType || currentVal === undefined) {
+                indexLeft = indexMedian + 1;
+                continue;
+            }
             // 2 - check if value match
-            if (currentType === targetType && currentVal <= target) {
-                if (valMin === undefined ||
-                    valMin < currentVal ||
-                    (valMin === currentVal && valMinIndex < currentIndex)) {
-                    valMin = currentVal;
-                    valMinIndex = currentIndex;
+            if (mode === "strict" && currentVal === target) {
+                matchVal = currentVal;
+                matchValIndex = currentIndex;
+            }
+            else if (mode === "nextSmaller" && currentVal <= target) {
+                if (matchVal === undefined ||
+                    matchVal < currentVal ||
+                    (matchVal === currentVal && sortOrder === "asc" && matchValIndex < currentIndex) ||
+                    (matchVal === currentVal && sortOrder === "desc" && matchValIndex > currentIndex)) {
+                    matchVal = currentVal;
+                    matchValIndex = currentIndex;
                 }
             }
-            // 3 - give new indexs for the Binary search
-            if (currentType === targetType && currentVal > target) {
+            else if (mode === "nextGreater" && currentVal >= target) {
+                if (matchVal === undefined ||
+                    matchVal > currentVal ||
+                    (matchVal === currentVal && sortOrder === "asc" && matchValIndex < currentIndex) ||
+                    (matchVal === currentVal && sortOrder === "desc" && matchValIndex > currentIndex)) {
+                    matchVal = currentVal;
+                    matchValIndex = currentIndex;
+                }
+            }
+            // 3 - give new indexes for the Binary search
+            if ((sortOrder === "asc" && currentVal > target) ||
+                (sortOrder === "desc" && currentVal <= target)) {
                 indexRight = currentIndex - 1;
             }
             else {
@@ -10492,69 +11013,71 @@
             }
         }
         // note that valMinIndex could be 0
-        return valMinIndex !== undefined ? valMinIndex : -1;
+        return matchValIndex !== undefined ? matchValIndex : -1;
     }
     /**
-     * Perform a dichotomic search and return the index of the nearest match more than
-     * or equal to the target. If all values in the range are smaller than the target,
-     * -1 is returned.
-     * If the range is not in sorted order, an incorrect value might be returned.
+     * Perform a linear search and return the index of the match.
+     * -1 is returned if no value is found.
      *
      * Example:
-     * - [10, 6, 3], 3 => 2
-     * - [10, 6, 3], 6 => 1
-     * - [10, 6, 3], 9 => 0
-     * - [10, 6, 3], 42 => -1
-     * - [10, 6, 3], 2 => 2
-     * - [10, undefined, 6, undefined, 3], 9 => 0
-     * - [10, 6, undefined, undefined, undefined, 3], 2 => 5
+     * - [3, 6, 10], 3 => 0
+     * - [3, 6, 10], 6 => 1
+     * - [3, 6, 10], 9 => -1
+     * - [3, 6, 10], 2 => -1
+     *
+     * @param data the array to search in.
+     * @param target the value to search in the array.
+     * @param mode if "strict" return exact match index. "nextGreater" returns the next greater
+     * element from the target and "nextSmaller" the next smaller
+     * @param numberOfValues the number of elements to consider in the search array.
+     * @param getValueInData function returning the element at index i in the search array.
+     * @param reverseSearch if true, search in the array starting from the end.
+
      */
-    function dichotomicSuccessorSearch(range, target) {
-        const targetType = typeof target;
-        let valMax;
-        let valMaxIndex = undefined;
-        let indexLeft = 0;
-        let indexRight = range.length - 1;
-        if (typeof range[indexLeft] === targetType && target > range[indexLeft]) {
+    function linearSearch(data, target, mode, numberOfValues, getValueInData, reverseSearch = false) {
+        if (target === null || target === undefined)
             return -1;
-        }
-        if (typeof range[indexRight] === targetType && range[indexRight] > target) {
-            return indexRight;
-        }
-        let indexMedian;
-        let currentIndex;
-        let currentVal;
-        let currentType;
-        while (indexRight - indexLeft >= 0) {
-            indexMedian = Math.ceil((indexLeft + indexRight) / 2);
-            currentIndex = indexMedian;
-            currentVal = range[currentIndex];
-            currentType = typeof currentVal;
-            // 1 - linear search to find value with the same type
-            while (indexLeft <= currentIndex && targetType !== currentType) {
-                currentIndex--;
-                currentVal = range[currentIndex];
-                currentType = typeof currentVal;
+        const getValue = reverseSearch
+            ? (data, i) => getValueInData(data, numberOfValues - i - 1)
+            : getValueInData;
+        let closestMatch = undefined;
+        let closestMatchIndex = -1;
+        for (let i = 0; i < numberOfValues; i++) {
+            const value = getValue(data, i);
+            if (value === target) {
+                return reverseSearch ? numberOfValues - i - 1 : i;
             }
-            // 2 - check if value match
-            if (currentType === targetType && currentVal >= target) {
-                if (valMax === undefined ||
-                    valMax > currentVal ||
-                    (valMax === currentVal && valMaxIndex > currentIndex)) {
-                    valMax = currentVal;
-                    valMaxIndex = currentIndex;
+            if (mode === "nextSmaller") {
+                if ((!closestMatch && compareCellValues(target, value) >= 0) ||
+                    (compareCellValues(target, value) >= 0 && compareCellValues(value, closestMatch) > 0)) {
+                    closestMatch = value;
+                    closestMatchIndex = i;
                 }
             }
-            // 3 - give new indexs for the Binary search
-            if (currentType === targetType && currentVal <= target) {
-                indexRight = currentIndex - 1;
-            }
-            else {
-                indexLeft = indexMedian + 1;
+            else if (mode === "nextGreater") {
+                if ((!closestMatch && compareCellValues(target, value) <= 0) ||
+                    (compareCellValues(target, value) <= 0 && compareCellValues(value, closestMatch) < 0)) {
+                    closestMatch = value;
+                    closestMatchIndex = i;
+                }
             }
         }
-        // note that valMaxIndex could be 0
-        return valMaxIndex !== undefined ? valMaxIndex : -1;
+        return reverseSearch ? numberOfValues - closestMatchIndex - 1 : closestMatchIndex;
+    }
+    function compareCellValues(left, right) {
+        let typeOrder = SORT_TYPES_ORDER.indexOf(typeof left) - SORT_TYPES_ORDER.indexOf(typeof right);
+        if (typeOrder === 0) {
+            if (typeof left === "string" && typeof right === "string") {
+                typeOrder = left.localeCompare(right);
+            }
+            else if (typeof left === "number" && typeof right === "number") {
+                typeOrder = left - right;
+            }
+            else if (typeof left === "boolean" && typeof right === "boolean") {
+                typeOrder = Number(left) - Number(right);
+            }
+        }
+        return typeOrder;
     }
 
     // -----------------------------------------------------------------------------
@@ -11767,7 +12290,7 @@
         let count = 0;
         visitAny(data, (d) => {
             if (typeof d === "number") {
-                index = dichotomicPredecessorSearch(sortedArray, d);
+                index = dichotomicSearch(sortedArray, d, "nextSmaller", "asc", sortedArray.length, (array, i) => array[i]);
                 sortedArray.splice(index + 1, 0, d);
                 count++;
             }
@@ -12084,7 +12607,7 @@
             let count = 0;
             visitAny([data], (d) => {
                 if (typeof d === "number") {
-                    index = dichotomicPredecessorSearch(largests, d);
+                    index = dichotomicSearch(largests, d, "nextSmaller", "asc", largests.length, (array, i) => array[i]);
                     largests.splice(index + 1, 0, d);
                     count++;
                     if (count > _n) {
@@ -12394,7 +12917,7 @@
             let count = 0;
             visitAny([data], (d) => {
                 if (typeof d === "number") {
-                    index = dichotomicPredecessorSearch(largests, d);
+                    index = dichotomicSearch(largests, d, "nextSmaller", "asc", largests.length, (array, i) => array[i]);
                     largests.splice(index + 1, 0, d);
                     count++;
                     if (count > _n) {
@@ -14373,6 +14896,24 @@
         isExported: true,
     };
     // -----------------------------------------------------------------------------
+    // ISBLANK
+    // -----------------------------------------------------------------------------
+    const ISBLANK = {
+        description: _lt("Whether the referenced cell is empty"),
+        args: args(`value (any, lazy) ${_lt("Reference to the cell that will be checked for emptiness.")}`),
+        returns: ["BOOLEAN"],
+        compute: function (value) {
+            try {
+                const val = value();
+                return val === null;
+            }
+            catch (e) {
+                return false;
+            }
+        },
+        isExported: true,
+    };
+    // -----------------------------------------------------------------------------
     // NA
     // -----------------------------------------------------------------------------
     const NA = {
@@ -14394,6 +14935,7 @@
         ISNONTEXT: ISNONTEXT,
         ISNUMBER: ISNUMBER,
         ISTEXT: ISTEXT,
+        ISBLANK: ISBLANK,
         NA: NA
     });
 
@@ -14463,6 +15005,33 @@
             }
             catch (e) {
                 result = valueIfError();
+            }
+            return result === null || result === undefined ? "" : result;
+        },
+        isExported: true,
+    };
+    // -----------------------------------------------------------------------------
+    // IFNA
+    // -----------------------------------------------------------------------------
+    const IFNA = {
+        description: _lt("Value if it is not an #N/A error, otherwise 2nd argument."),
+        args: args(`
+    value (any, lazy) ${_lt("The value to return if value itself is not #N/A an error.")}
+    value_if_error (any, lazy, default=${_lt("An empty value")}) ${_lt("The value the function returns if value is an #N/A error.")}
+  `),
+        returns: ["ANY"],
+        compute: function (value, valueIfError = () => "") {
+            let result;
+            try {
+                result = value();
+            }
+            catch (e) {
+                if (e.errorType === CellErrorType.NotAvailable) {
+                    result = valueIfError();
+                }
+                else {
+                    result = value();
+                }
             }
             return result === null || result === undefined ? "" : result;
         },
@@ -14557,6 +15126,7 @@
         AND: AND,
         IF: IF,
         IFERROR: IFERROR,
+        IFNA: IFNA,
         IFS: IFS,
         NOT: NOT,
         OR: OR,
@@ -14564,25 +15134,8 @@
     });
 
     const DEFAULT_IS_SORTED = true;
-    /**
-     * Perform a linear search and return the index of the perfect match.
-     * -1 is returned if no value is found.
-     *
-     * Example:
-     * - [3, 6, 10], 3 => 0
-     * - [3, 6, 10], 6 => 1
-     * - [3, 6, 10], 9 => -1
-     * - [3, 6, 10], 2 => -1
-     */
-    function linearSearch(range, target) {
-        for (let i = 0; i < range.length; i++) {
-            if (range[i] === target) {
-                return i;
-            }
-        }
-        // no value is found, -1 is returned
-        return -1;
-    }
+    const DEFAULT_MATCH_MODE = 0;
+    const DEFAULT_SEARCH_MODE = 1;
     // -----------------------------------------------------------------------------
     // COLUMN
     // -----------------------------------------------------------------------------
@@ -14627,15 +15180,15 @@
         returns: ["ANY"],
         compute: function (searchKey, range, index, isSorted = DEFAULT_IS_SORTED) {
             const _index = Math.trunc(toNumber(index));
+            const _searchKey = normalizeValue(searchKey);
             assert(() => 1 <= _index && _index <= range[0].length, _lt("[[FUNCTION_NAME]] evaluates to an out of bounds range."));
             const _isSorted = toBoolean(isSorted);
-            const firstRow = range.map((col) => col[0]);
             let colIndex;
             if (_isSorted) {
-                colIndex = dichotomicPredecessorSearch(firstRow, searchKey);
+                colIndex = dichotomicSearch(range, _searchKey, "nextSmaller", "asc", range.length, getNormalizedValueFromRowRange);
             }
             else {
-                colIndex = linearSearch(firstRow, searchKey);
+                colIndex = linearSearch(range, _searchKey, "strict", range.length, getNormalizedValueFromRowRange);
             }
             assert(() => colIndex > -1, _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey)));
             return range[colIndex][_index - 1];
@@ -14656,9 +15209,13 @@
         compute: function (searchKey, searchArray, resultRange) {
             let nbCol = searchArray.length;
             let nbRow = searchArray[0].length;
+            const _searchKey = normalizeValue(searchKey);
             const verticalSearch = nbRow >= nbCol;
-            const searchRange = verticalSearch ? searchArray[0] : searchArray.map((c) => c[0]);
-            const index = dichotomicPredecessorSearch(searchRange, searchKey);
+            const getElement = verticalSearch
+                ? getNormalizedValueFromColumnRange
+                : getNormalizedValueFromRowRange;
+            const rangeLength = verticalSearch ? nbRow : nbCol;
+            const index = dichotomicSearch(searchArray, _searchKey, "nextSmaller", "asc", rangeLength, getElement);
             assert(() => index >= 0, _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey)));
             if (resultRange === undefined) {
                 return (verticalSearch ? searchArray[nbCol - 1][index] : searchArray[index][nbRow - 1]);
@@ -14689,21 +15246,23 @@
         returns: ["NUMBER"],
         compute: function (searchKey, range, searchType = DEFAULT_SEARCH_TYPE) {
             let _searchType = toNumber(searchType);
+            const _searchKey = normalizeValue(searchKey);
             const nbCol = range.length;
             const nbRow = range[0].length;
             assert(() => nbCol === 1 || nbRow === 1, _lt("The range must be a single row or a single column."));
             let index = -1;
-            const _range = range.flat();
+            const getElement = nbCol === 1 ? getNormalizedValueFromColumnRange : getNormalizedValueFromRowRange;
+            const rangeLen = nbCol === 1 ? range[0].length : range.length;
             _searchType = Math.sign(_searchType);
             switch (_searchType) {
                 case 1:
-                    index = dichotomicPredecessorSearch(_range, searchKey);
+                    index = dichotomicSearch(range, _searchKey, "nextSmaller", "asc", rangeLen, getElement);
                     break;
                 case 0:
-                    index = linearSearch(_range, searchKey);
+                    index = linearSearch(range, _searchKey, "strict", rangeLen, getElement);
                     break;
                 case -1:
-                    index = dichotomicSuccessorSearch(_range, searchKey);
+                    index = dichotomicSearch(range, _searchKey, "nextGreater", "desc", rangeLen, getElement);
                     break;
             }
             assert(() => index >= 0, _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey)));
@@ -14754,18 +15313,68 @@
         returns: ["ANY"],
         compute: function (searchKey, range, index, isSorted = DEFAULT_IS_SORTED) {
             const _index = Math.trunc(toNumber(index));
+            const _searchKey = normalizeValue(searchKey);
             assert(() => 1 <= _index && _index <= range.length, _lt("[[FUNCTION_NAME]] evaluates to an out of bounds range."));
             const _isSorted = toBoolean(isSorted);
-            const firstCol = range[0];
             let rowIndex;
             if (_isSorted) {
-                rowIndex = dichotomicPredecessorSearch(firstCol, searchKey);
+                rowIndex = dichotomicSearch(range, _searchKey, "nextSmaller", "asc", range[0].length, getNormalizedValueFromColumnRange);
             }
             else {
-                rowIndex = linearSearch(firstCol, searchKey);
+                rowIndex = linearSearch(range, _searchKey, "strict", range[0].length, getNormalizedValueFromColumnRange);
             }
             assert(() => rowIndex > -1, _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey)));
             return range[_index - 1][rowIndex];
+        },
+        isExported: true,
+    };
+    // -----------------------------------------------------------------------------
+    // XLOOKUP
+    // -----------------------------------------------------------------------------
+    const XLOOKUP = {
+        description: _lt(`Search a range for a match and return the corresponding item from a second range.`),
+        args: args(`
+      search_key (any) ${_lt("The value to search for.")}
+      lookup_range (any, range) ${_lt("The range to consider for the search. Should be a single column or a single row.")}
+      return_range (any, range) ${_lt("The range containing the return value. Should have the same dimensions as lookup_range.")}
+      if_not_found (any, lazy, optional) ${_lt("If a valid match is not found, return this value.")}
+      match_mode (any, default=${DEFAULT_MATCH_MODE}) ${_lt("(0) Exact match. (-1) Return next smaller item if no match. (1) Return next greater item if no match.")}
+      search_mode (any, default=${DEFAULT_SEARCH_MODE}) ${_lt("(1) Search starting at first item. \
+    (-1) Search starting at last item. \
+    (2) Perform a binary search that relies on lookup_array being sorted in ascending order. If not sorted, invalid results will be returned. \
+    (-2) Perform a binary search that relies on lookup_array being sorted in descending order. If not sorted, invalid results will be returned.\
+    ")}
+
+  `),
+        returns: ["ANY"],
+        compute: function (searchKey, lookupRange, returnRange, defaultValue, matchMode = DEFAULT_MATCH_MODE, searchMode = DEFAULT_SEARCH_MODE) {
+            const _matchMode = Math.trunc(toNumber(matchMode));
+            const _searchMode = Math.trunc(toNumber(searchMode));
+            const _searchKey = normalizeValue(searchKey);
+            assert(() => lookupRange.length === 1 || lookupRange[0].length === 1, _lt("lookup_range should be either a single row or single column."));
+            assert(() => returnRange.length === 1 || returnRange[0].length === 1, _lt("return_range should be either a single row or single column."));
+            assert(() => returnRange.length === lookupRange.length &&
+                returnRange[0].length === lookupRange[0].length, _lt("return_range should have the same dimensions as lookup_range."));
+            assert(() => [-1, 1, -2, 2].includes(_searchMode), _lt("searchMode should be a value in [-1, 1, -2, 2]."));
+            assert(() => [-1, 0, 1].includes(_matchMode), _lt("matchMode should be a value in [-1, 0, 1]."));
+            const getElement = lookupRange.length === 1 ? getNormalizedValueFromColumnRange : getNormalizedValueFromRowRange;
+            const rangeLen = lookupRange.length === 1 ? lookupRange[0].length : lookupRange.length;
+            const mode = _matchMode === 0 ? "strict" : _matchMode === 1 ? "nextGreater" : "nextSmaller";
+            const reverseSearch = _searchMode === -1;
+            let index;
+            if (_searchMode === 2 || _searchMode === -2) {
+                const sortOrder = _searchMode === 2 ? "asc" : "desc";
+                index = dichotomicSearch(lookupRange, _searchKey, mode, sortOrder, rangeLen, getElement);
+            }
+            else {
+                index = linearSearch(lookupRange, _searchKey, mode, rangeLen, getElement, reverseSearch);
+            }
+            if (index !== -1) {
+                return (lookupRange.length === 1 ? returnRange[0][index] : returnRange[index][0]);
+            }
+            const _defaultValue = defaultValue === null || defaultValue === void 0 ? void 0 : defaultValue();
+            assert(() => !!_defaultValue, _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey)));
+            return _defaultValue;
         },
         isExported: true,
     };
@@ -14779,7 +15388,8 @@
         MATCH: MATCH,
         ROW: ROW,
         ROWS: ROWS,
-        VLOOKUP: VLOOKUP
+        VLOOKUP: VLOOKUP,
+        XLOOKUP: XLOOKUP
     });
 
     // -----------------------------------------------------------------------------
@@ -15054,6 +15664,8 @@
     });
 
     const DEFAULT_STARTING_AT = 1;
+    /** Regex matching all the words in a string */
+    const wordRegex = /[A-Za-zÀ-ÖØ-öø-ÿ]+/g;
     // -----------------------------------------------------------------------------
     // CHAR
     // -----------------------------------------------------------------------------
@@ -15067,6 +15679,27 @@
             const _tableNumber = Math.trunc(toNumber(tableNumber));
             assert(() => _tableNumber >= 1, _lt("The table_number (%s) is out of range.", _tableNumber.toString()));
             return String.fromCharCode(_tableNumber);
+        },
+        isExported: true,
+    };
+    // -----------------------------------------------------------------------------
+    // CLEAN
+    // -----------------------------------------------------------------------------
+    const CLEAN = {
+        description: _lt("Remove non-printable characters from a piece of text."),
+        args: args(`
+      text (string) ${_lt("The text whose non-printable characters are to be removed.")}
+  `),
+        returns: ["STRING"],
+        compute: function (text) {
+            const _text = toString(text);
+            let cleanedStr = "";
+            for (const char of _text) {
+                if (char && char.charCodeAt(0) > 31) {
+                    cleanedStr += char;
+                }
+            }
+            return cleanedStr;
         },
         isExported: true,
     };
@@ -15181,6 +15814,44 @@
         returns: ["STRING"],
         compute: function (text) {
             return toString(text).toLowerCase();
+        },
+        isExported: true,
+    };
+    // -----------------------------------------------------------------------------
+    // MID
+    // -----------------------------------------------------------------------------
+    const MID = {
+        description: _lt("A segment of a string."),
+        args: args(`
+      text (string) ${_lt("The string to extract a segment from.")}
+      starting_at  (number) ${_lt("The index from the left of string from which to begin extracting. The first character in string has the index 1.")}
+      extract_length  (number) ${_lt("The length of the segment to extract.")}
+  `),
+        returns: ["STRING"],
+        compute: function (text, starting_at, extract_length) {
+            const _text = toString(text);
+            const _starting_at = toNumber(starting_at);
+            const _extract_length = toNumber(extract_length);
+            assert(() => _starting_at >= 1, _lt("The starting_at argument (%s) must be positive greater than one.", _starting_at.toString()));
+            assert(() => _extract_length >= 0, _lt("The extract_length argument (%s) must be positive or null.", _extract_length.toString()));
+            return _text.slice(_starting_at - 1, _starting_at + _extract_length - 1);
+        },
+        isExported: true,
+    };
+    // -----------------------------------------------------------------------------
+    // PROPER
+    // -----------------------------------------------------------------------------
+    const PROPER = {
+        description: _lt("Capitalizes each word in a specified string."),
+        args: args(`
+  text_to_capitalize (string) ${_lt("The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase.")}
+  `),
+        returns: ["STRING"],
+        compute: function (text) {
+            const _text = toString(text);
+            return _text.replace(wordRegex, (word) => {
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
         },
         isExported: true,
     };
@@ -15346,6 +16017,7 @@
     var text = /*#__PURE__*/Object.freeze({
         __proto__: null,
         CHAR: CHAR,
+        CLEAN: CLEAN,
         CONCATENATE: CONCATENATE,
         EXACT: EXACT,
         FIND: FIND,
@@ -15353,6 +16025,8 @@
         LEFT: LEFT,
         LEN: LEN,
         LOWER: LOWER,
+        MID: MID,
+        PROPER: PROPER,
         REPLACE: REPLACE,
         RIGHT: RIGHT,
         SEARCH: SEARCH,
@@ -16287,7 +16961,9 @@
      * the compiled formula does not depend on their actual value.
      * Both `=A1+1+"2"` and `=A2+2+"3"` are compiled to the exact same function.
      *
-     * A formula `=A1+A2+SUM(2, 2, "2")` have the cache key `=|0|+|1|+SUM(|N0|, |N0|, |S0|)`
+     * Spaces are also ignored to compute the cache key.
+     *
+     * A formula `=A1+A2+SUM(2, 2, "2")` have the cache key `=|0|+|1|+SUM(|N0|,|N0|,|S0|)`
      */
     function compilationCacheKey(tokens, dependencies, constantValues) {
         return concat(tokens.map((token) => {
@@ -16300,6 +16976,8 @@
                 case "REFERENCE":
                 case "INVALID_REFERENCE":
                     return `|${dependencies.indexOf(token.value)}|`;
+                case "SPACE":
+                    return "";
                 default:
                     return token.value;
             }
@@ -16555,7 +17233,7 @@
          * There should not be any side effects in this method.
          */
         allowDispatch(command) {
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         /**
          * This method is useful when a plugin need to perform some action before a
@@ -16593,12 +17271,12 @@
                     if (!Array.isArray(results)) {
                         results = [results];
                     }
-                    const cancelledReasons = results.filter((result) => result !== 0 /* Success */);
+                    const cancelledReasons = results.filter((result) => result !== 0 /* CommandResult.Success */);
                     if (cancelledReasons.length) {
                         return cancelledReasons;
                     }
                 }
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             };
         }
         checkValidations(command, ...validations) {
@@ -16656,7 +17334,7 @@
                         return this.validateSelection(cmd.content.length, cmd.selection.start, cmd.selection.end);
                     }
                     else {
-                        return 0 /* Success */;
+                        return 0 /* CommandResult.Success */;
                     }
                 case "START_EDITION":
                     if (cmd.selection) {
@@ -16665,10 +17343,10 @@
                         return this.validateSelection(content.length, cmd.selection.start, cmd.selection.end);
                     }
                     else {
-                        return 0 /* Success */;
+                        return 0 /* CommandResult.Success */;
                     }
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handleEvent(event) {
@@ -16865,8 +17543,8 @@
         }
         validateSelection(length, start, end) {
             return start >= 0 && start <= length && end >= 0 && end <= length
-                ? 0 /* Success */
-                : 43 /* WrongComposerSelection */;
+                ? 0 /* CommandResult.Success */
+                : 43 /* CommandResult.WrongComposerSelection */;
         }
         onColumnsRemoved(cmd) {
             if (cmd.elements.includes(this.col) && this.mode !== "inactive") {
@@ -18082,6 +18760,96 @@
     GridComposer.template = "o-spreadsheet-GridComposer";
     GridComposer.components = { Composer };
 
+    const { Component: Component$1 } = owl__namespace;
+    const CSS$1 = css /* scss */ `
+  .o-filter-icon {
+    color: ${FILTERS_COLOR};
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: ${ICON_EDGE_LENGTH}px;
+    height: ${ICON_EDGE_LENGTH}px;
+
+    svg {
+      path {
+        fill: ${FILTERS_COLOR};
+      }
+    }
+  }
+  .o-filter-icon:hover {
+    background: ${FILTERS_COLOR};
+    svg {
+      path {
+        fill: white;
+      }
+    }
+  }
+`;
+    class FilterIcon extends Component$1 {
+        get style() {
+            const { x, y } = this.props.position;
+            return `top:${y}px;left:${x}px`;
+        }
+    }
+    FilterIcon.style = CSS$1;
+    FilterIcon.template = "o-spreadsheet-FilterIcon";
+
+    const { Component } = owl__namespace;
+    const CSS = css /* scss */ ``;
+    class FilterIconsOverlay extends Component {
+        getVisibleFilterHeaders() {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const headerPositions = this.env.model.getters.getFilterHeaders(sheetId);
+            return headerPositions.filter((position) => this.isPositionVisible(position.col, position.row));
+        }
+        getFilterHeaderPosition(position) {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const rowDims = this.env.model.getters.getRowDimensionsInViewport(sheetId, position.row);
+            const colDims = this.env.model.getters.getColDimensionsInViewport(sheetId, position.col);
+            // TODO : change this offset when we support vertical cell align
+            const centeringOffset = (rowDims.size - ICON_EDGE_LENGTH) / 2;
+            return {
+                x: colDims.end - ICON_EDGE_LENGTH + this.props.gridPosition.x - FILTER_ICON_MARGIN,
+                y: rowDims.end - ICON_EDGE_LENGTH + this.props.gridPosition.y - centeringOffset,
+            };
+        }
+        isFilterActive(position) {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            return this.env.model.getters.isFilterActive(sheetId, position.col, position.row);
+        }
+        toggleFilterMenu(position) {
+            const activePopoverType = this.env.model.getters.getPersistentPopoverTypeAtPosition(position);
+            if (activePopoverType && activePopoverType === "FilterMenu") {
+                this.env.model.dispatch("CLOSE_CELL_POPOVER");
+                return;
+            }
+            const { col, row } = position;
+            this.env.model.dispatch("OPEN_CELL_POPOVER", {
+                col,
+                row,
+                popoverType: "FilterMenu",
+            });
+        }
+        isPositionVisible(x, y) {
+            const rect = this.env.model.getters.getVisibleRect({
+                left: x,
+                right: x,
+                top: y,
+                bottom: y,
+            });
+            return !(rect.width === 0 || rect.height === 0);
+        }
+    }
+    FilterIconsOverlay.style = CSS;
+    FilterIconsOverlay.template = "o-spreadsheet-FilterIconsOverlay";
+    FilterIconsOverlay.components = {
+        FilterIcon,
+    };
+    FilterIconsOverlay.defaultProps = {
+        gridPosition: { x: 0, y: 0 },
+    };
+
     // -----------------------------------------------------------------------------
     // STYLE
     // -----------------------------------------------------------------------------
@@ -18090,16 +18858,12 @@
     const ACTIVE_BORDER_WIDTH = 2;
     const MIN_FIG_SIZE = 80;
     css /*SCSS*/ `
-  .o-figure-wrapper {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-
   div.o-figure {
     box-sizing: content-box;
     position: absolute;
+    width: 100%;
+    height: 100%;
+
     bottom: 0px;
     right: 0px;
     border: solid ${FIGURE_BORDER_COLOR};
@@ -18116,10 +18880,16 @@
     }
   }
 
-  .o-figure-container {
+  .o-figure-wrapper {
     position: absolute;
     box-sizing: content-box;
 
+    .o-figure-overflow-wrapper {
+      position: absolute;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
     .o-anchor {
       z-index: ${ComponentsImportance.ChartAnchor};
       position: absolute;
@@ -18155,64 +18925,47 @@
     }
   }
 `;
-    class FiguresContainer extends owl.Component {
+    class FigureComponent extends owl.Component {
         constructor() {
             super(...arguments);
             this.figureRegistry = figureRegistry;
+            this.figureRef = owl.useRef("figure");
             this.dnd = owl.useState({
-                figureId: "",
+                isActive: false,
                 x: 0,
                 y: 0,
                 width: 0,
                 height: 0,
             });
         }
-        getVisibleFigures() {
-            const selectedId = this.env.model.getters.getSelectedFigureId();
-            return this.env.model.getters.getVisibleFigures().map((f) => {
-                let figure = f;
-                // Returns current state of drag&drop figure instead of its stored state
-                if (this.dnd.figureId === f.id) {
-                    figure = {
-                        ...f,
-                        x: this.dnd.x,
-                        y: this.dnd.y,
-                        width: this.dnd.width,
-                        height: this.dnd.height,
-                    };
-                }
-                return {
-                    id: f.id,
-                    isSelected: f.id === selectedId,
-                    figure: figure,
-                };
-            });
+        get displayedFigure() {
+            return this.dnd.isActive ? { ...this.props.figure, ...this.dnd } : this.props.figure;
+        }
+        get isSelected() {
+            return this.env.model.getters.getSelectedFigureId() === this.props.figure.id;
         }
         /** Get the current figure size, which is either the stored figure size of the DnD figure size */
-        getFigureSize(info) {
-            const { figure, isSelected } = info;
-            const target = figure.id === (isSelected && this.dnd.figureId) ? this.dnd : figure;
-            const { width, height } = target;
+        getFigureSize() {
+            const { width, height } = this.displayedFigure;
             return { width, height };
         }
-        getFigureSizeWithBorders(info) {
-            const { width, height } = this.getFigureSize(info);
-            const borders = this.getBorderWidth(info) * 2;
+        getFigureSizeWithBorders() {
+            const { width, height } = this.getFigureSize();
+            const borders = this.getBorderWidth() * 2;
             return { width: width + borders, height: height + borders };
         }
-        getBorderWidth(info) {
-            return info.isSelected ? ACTIVE_BORDER_WIDTH : this.env.isDashboard() ? 0 : BORDER_WIDTH;
+        getBorderWidth() {
+            return this.isSelected ? ACTIVE_BORDER_WIDTH : this.env.isDashboard() ? 0 : BORDER_WIDTH;
         }
-        getFigureStyle(info) {
-            const { width, height } = info.figure;
-            return `width:${width}px;height:${height}px;border-width: ${this.getBorderWidth(info)}px;`;
+        getFigureStyle() {
+            const { width, height } = this.displayedFigure;
+            return `width:${width}px;height:${height}px;border-width: ${this.getBorderWidth()}px;`;
         }
-        getContainerStyle(info) {
-            const { figure, isSelected } = info;
-            const target = figure.id === (isSelected && this.dnd.figureId) ? this.dnd : figure;
+        getContainerStyle() {
+            const target = this.displayedFigure;
             const { x: offsetCorrectionX, y: offsetCorrectionY } = this.env.model.getters.getMainViewportCoordinates();
             const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
-            let { width, height } = this.getFigureSizeWithBorders(info);
+            let { width, height } = this.getFigureSizeWithBorders();
             let x, y;
             // Visually, the content of the container is slightly shifted as it includes borders and/or corners.
             // If we want to make assertions on the position of the content, we need to take this shift into account
@@ -18240,19 +18993,18 @@
             if (width < 0 || height < 0) {
                 return `display:none;`;
             }
-            const borderOffset = BORDER_WIDTH - this.getBorderWidth(info);
+            const borderOffset = BORDER_WIDTH - this.getBorderWidth();
             // TODO : remove the +1 once 2951210 is fixed
             return (`top:${y + borderOffset + 1}px;` +
                 `left:${x + borderOffset}px;` +
                 `width:${width}px;` +
                 `height:${height}px;` +
-                `z-index: ${ComponentsImportance.Figure + (info.isSelected ? 1 : 0)}`);
+                `z-index: ${ComponentsImportance.Figure + (this.isSelected ? 1 : 0)}`);
         }
-        getAnchorPosition(anchor, info) {
-            let { width, height } = this.getFigureSizeWithBorders(info);
+        getAnchorPosition(anchor) {
+            let { width, height } = this.getFigureSizeWithBorders();
             const anchorCenteringOffset = (ANCHOR_SIZE - ACTIVE_BORDER_WIDTH) / 2;
-            const { figure, isSelected } = info;
-            const target = figure.id === (isSelected && this.dnd.figureId) ? this.dnd : figure;
+            const target = this.displayedFigure;
             let x = 0;
             let y = 0;
             const { x: offsetCorrectionX, y: offsetCorrectionY } = this.env.model.getters.getMainViewportCoordinates();
@@ -18301,22 +19053,18 @@
             return `visibility:${visibility};top:${y}px; left:${x}px;`;
         }
         setup() {
-            owl.onMounted(() => {
-                // horrible, but necessary
-                // the following line ensures that we render the figures with the correct
-                // viewport.  The reason is that whenever we initialize the grid
-                // component, we do not know yet the actual size of the viewport, so the
-                // first owl rendering is done with an empty viewport.  Only then we can
-                // compute which figures should be displayed, so we have to force a
-                // new rendering
-                this.render();
-            });
+            owl.useEffect((selectedFigureId, thisFigureId, el) => {
+                if (selectedFigureId === thisFigureId) {
+                    el === null || el === void 0 ? void 0 : el.focus();
+                }
+            }, () => [this.env.model.getters.getSelectedFigureId(), this.props.figure.id, this.figureRef.el]);
         }
-        resize(figure, dirX, dirY, ev) {
+        resize(dirX, dirY, ev) {
+            const figure = this.props.figure;
             ev.stopPropagation();
             const initialX = ev.clientX;
             const initialY = ev.clientY;
-            this.dnd.figureId = figure.id;
+            this.dnd.isActive = true;
             this.dnd.x = figure.x;
             this.dnd.y = figure.y;
             this.dnd.width = figure.width;
@@ -18334,7 +19082,7 @@
                 }
             };
             const onMouseUp = (ev) => {
-                this.dnd.figureId = "";
+                this.dnd.isActive = false;
                 const update = {
                     x: this.dnd.x,
                     y: this.dnd.y,
@@ -18353,7 +19101,8 @@
             };
             startDnd(onMouseMove, onMouseUp);
         }
-        onMouseDown(figure, ev) {
+        onMouseDown(ev) {
+            const figure = this.props.figure;
             if (ev.button > 0 || this.env.model.getters.isReadonly()) {
                 // not main button, probably a context menu
                 return;
@@ -18363,14 +19112,14 @@
                 return;
             }
             if (this.props.sidePanelIsOpen) {
-                this.env.openSidePanel("ChartPanel", { figureId: figure.id });
+                this.env.openSidePanel("ChartPanel");
             }
             const position = gridOverlayPosition();
             const { x: offsetCorrectionX, y: offsetCorrectionY } = this.env.model.getters.getMainViewportCoordinates();
             const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
             const initialX = ev.clientX - position.left;
             const initialY = ev.clientY - position.top;
-            this.dnd.figureId = figure.id;
+            this.dnd.isActive = true;
             this.dnd.x = figure.x;
             this.dnd.y = figure.y;
             this.dnd.width = figure.width;
@@ -18396,7 +19145,7 @@
                 this.dnd.y = Math.max(figure.y + deltaY, 0);
             };
             const onMouseUp = (ev) => {
-                this.dnd.figureId = "";
+                this.dnd.isActive = false;
                 this.env.model.dispatch("UPDATE_FIGURE", {
                     sheetId: this.env.model.getters.getActiveSheetId(),
                     id: figure.id,
@@ -18406,7 +19155,8 @@
             };
             startDnd(onMouseMove, onMouseUp);
         }
-        onKeyDown(figure, ev) {
+        onKeyDown(ev) {
+            const figure = this.props.figure;
             switch (ev.key) {
                 case "Delete":
                     this.env.model.dispatch("DELETE_FIGURE", {
@@ -18438,9 +19188,228 @@
             }
         }
     }
+    FigureComponent.template = "o-spreadsheet-FigureComponent";
+    FigureComponent.components = {};
+
+    class FiguresContainer extends owl.Component {
+        getVisibleFigures() {
+            return this.env.model.getters.getVisibleFigures();
+        }
+        setup() {
+            owl.onMounted(() => {
+                // horrible, but necessary
+                // the following line ensures that we render the figures with the correct
+                // viewport.  The reason is that whenever we initialize the grid
+                // component, we do not know yet the actual size of the viewport, so the
+                // first owl rendering is done with an empty viewport.  Only then we can
+                // compute which figures should be displayed, so we have to force a
+                // new rendering
+                this.render();
+            });
+        }
+    }
     FiguresContainer.template = "o-spreadsheet-FiguresContainer";
-    FiguresContainer.components = {};
+    FiguresContainer.components = { FigureComponent };
     figureRegistry.add("chart", { Component: ChartFigure, SidePanelComponent: "ChartPanel" });
+
+    /**
+     * Repeatedly calls a callback function with a time delay between calls.
+     */
+    function useInterval(callback, delay) {
+        let intervalId;
+        const { setInterval, clearInterval } = window;
+        owl.useEffect(() => {
+            intervalId = setInterval(callback, delay);
+            return () => clearInterval(intervalId);
+        }, () => [delay]);
+        return {
+            pause: () => {
+                clearInterval(intervalId);
+                intervalId = undefined;
+            },
+            resume: () => {
+                if (intervalId === undefined) {
+                    intervalId = setInterval(callback, delay);
+                }
+            },
+        };
+    }
+
+    function useCellHovered(env, gridRef, callback) {
+        let hoveredPosition = {
+            col: undefined,
+            row: undefined,
+        };
+        const { Date } = window;
+        let x = 0;
+        let y = 0;
+        let lastMoved = 0;
+        function getPosition() {
+            const col = env.model.getters.getColIndex(x);
+            const row = env.model.getters.getRowIndex(y);
+            return { col, row };
+        }
+        const { pause, resume } = useInterval(checkTiming, 200);
+        function checkTiming() {
+            const { col, row } = getPosition();
+            const delta = Date.now() - lastMoved;
+            if (delta > 300 && (col !== hoveredPosition.col || row !== hoveredPosition.row)) {
+                setPosition(undefined, undefined);
+            }
+            if (delta > 300) {
+                if (col < 0 || row < 0) {
+                    return;
+                }
+                setPosition(col, row);
+            }
+        }
+        function updateMousePosition(e) {
+            x = e.offsetX;
+            y = e.offsetY;
+            lastMoved = Date.now();
+        }
+        function recompute() {
+            const { col, row } = getPosition();
+            if (col !== hoveredPosition.col || row !== hoveredPosition.row) {
+                setPosition(undefined, undefined);
+            }
+        }
+        owl.onMounted(() => {
+            const grid = gridRef.el;
+            grid.addEventListener("mousemove", updateMousePosition);
+            grid.addEventListener("mouseleave", pause);
+            grid.addEventListener("mouseenter", resume);
+            grid.addEventListener("mousedown", recompute);
+        });
+        owl.onWillUnmount(() => {
+            const grid = gridRef.el;
+            grid.removeEventListener("mousemove", updateMousePosition);
+            grid.removeEventListener("mouseleave", pause);
+            grid.removeEventListener("mouseenter", resume);
+            grid.removeEventListener("mousedown", recompute);
+        });
+        function setPosition(col, row) {
+            if (col !== hoveredPosition.col || row !== hoveredPosition.row) {
+                hoveredPosition.col = col;
+                hoveredPosition.row = row;
+                callback({ col, row });
+            }
+        }
+        return hoveredPosition;
+    }
+    function useTouchMove(gridRef, handler, canMoveUp) {
+        let x = null;
+        let y = null;
+        function onTouchStart(ev) {
+            if (ev.touches.length !== 1)
+                return;
+            x = ev.touches[0].clientX;
+            y = ev.touches[0].clientY;
+        }
+        function onTouchEnd() {
+            x = null;
+            y = null;
+        }
+        function onTouchMove(ev) {
+            if (ev.touches.length !== 1)
+                return;
+            // On mobile browsers, swiping down is often associated with "pull to refresh".
+            // We only want this behavior if the grid is already at the top.
+            // Otherwise we only want to move the canvas up, without triggering any refresh.
+            if (canMoveUp()) {
+                ev.preventDefault();
+                ev.stopPropagation();
+            }
+            const currentX = ev.touches[0].clientX;
+            const currentY = ev.touches[0].clientY;
+            handler(x - currentX, y - currentY);
+            x = currentX;
+            y = currentY;
+        }
+        owl.onMounted(() => {
+            gridRef.el.addEventListener("touchstart", onTouchStart);
+            gridRef.el.addEventListener("touchend", onTouchEnd);
+            gridRef.el.addEventListener("touchmove", onTouchMove);
+        });
+        owl.onWillUnmount(() => {
+            gridRef.el.removeEventListener("touchstart", onTouchStart);
+            gridRef.el.removeEventListener("touchend", onTouchEnd);
+            gridRef.el.removeEventListener("touchmove", onTouchMove);
+        });
+    }
+    class GridOverlay extends owl.Component {
+        setup() {
+            this.gridOverlay = owl.useRef("gridOverlay");
+            useCellHovered(this.env, this.gridOverlay, this.props.onCellHovered);
+            owl.useEffect(() => this.props.onGridResized({
+                height: this.gridOverlayEl.clientHeight,
+                width: this.gridOverlayEl.clientWidth,
+            }), () => [this.gridOverlayEl.clientHeight, this.gridOverlayEl.clientWidth]);
+            useTouchMove(this.gridOverlay, this.props.onGridMoved, () => {
+                const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+                return offsetScrollbarY > 0;
+            });
+        }
+        get gridOverlayEl() {
+            if (!this.gridOverlay.el) {
+                throw new Error("GridOverlay el is not defined.");
+            }
+            return this.gridOverlay.el;
+        }
+        onMouseDown(ev) {
+            if (ev.button > 0) {
+                // not main button, probably a context menu
+                return;
+            }
+            const [col, row] = this.getCartesianCoordinates(ev);
+            this.props.onCellClicked(col, row, { shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey });
+        }
+        onDoubleClick(ev) {
+            const [col, row] = this.getCartesianCoordinates(ev);
+            this.props.onCellDoubleClicked(col, row);
+        }
+        onContextMenu(ev) {
+            ev.preventDefault();
+            const [col, row] = this.getCartesianCoordinates(ev);
+            this.props.onCellRightClicked(col, row, { x: ev.clientX, y: ev.clientY });
+        }
+        getCartesianCoordinates(ev) {
+            const colIndex = this.env.model.getters.getColIndex(ev.offsetX);
+            const rowIndex = this.env.model.getters.getRowIndex(ev.offsetY);
+            return [colIndex, rowIndex];
+        }
+    }
+    GridOverlay.template = "o-spreadsheet-GridOverlay";
+    GridOverlay.components = { FiguresContainer };
+    GridOverlay.defaultProps = {
+        onCellHovered: () => { },
+        onCellDoubleClicked: () => { },
+        onCellClicked: () => { },
+        onCellRightClicked: () => { },
+        onGridResized: () => { },
+        onFigureDeleted: () => { },
+        sidePanelIsOpen: false,
+    };
+
+    class GridPopover extends owl.Component {
+        get cellPopover() {
+            const popover = this.env.model.getters.getCellPopover(this.props.hoveredCell);
+            if (!popover.isOpen) {
+                return { isOpen: false };
+            }
+            const coordinates = popover.coordinates;
+            return {
+                ...popover,
+                // transform from the "canvas coordinate system" to the "body coordinate system"
+                coordinates: {
+                    x: coordinates.x + this.props.gridPosition.x,
+                    y: coordinates.y + this.props.gridPosition.y,
+                },
+            };
+        }
+    }
+    GridPopover.template = "o-spreadsheet-GridPopover";
+    GridPopover.components = { Popover };
 
     class AbstractResizer extends owl.Component {
         constructor() {
@@ -18759,7 +19728,7 @@
                 base: this.state.base,
                 elements,
             });
-            if (!result.isSuccessful && result.reasons.includes(2 /* WillRemoveExistingMerge */)) {
+            if (!result.isSuccessful && result.reasons.includes(2 /* CommandResult.WillRemoveExistingMerge */)) {
                 this.env.raiseError(MergeErrorMessage);
             }
         }
@@ -18928,7 +19897,7 @@
                 base: this.state.base,
                 elements,
             });
-            if (!result.isSuccessful && result.reasons.includes(2 /* WillRemoveExistingMerge */)) {
+            if (!result.isSuccessful && result.reasons.includes(2 /* CommandResult.WillRemoveExistingMerge */)) {
                 this.env.raiseError(MergeErrorMessage);
             }
         }
@@ -18993,27 +19962,47 @@
     HeadersOverlay.template = "o-spreadsheet-HeadersOverlay";
     HeadersOverlay.components = { ColResizer, RowResizer };
 
-    /**
-     * Repeatedly calls a callback function with a time delay between calls.
-     */
-    function useInterval(callback, delay) {
-        let intervalId;
-        const { setInterval, clearInterval } = window;
-        owl.useEffect(() => {
-            intervalId = setInterval(callback, delay);
-            return () => clearInterval(intervalId);
-        }, () => [delay]);
-        return {
-            pause: () => {
-                clearInterval(intervalId);
-                intervalId = undefined;
-            },
-            resume: () => {
-                if (intervalId === undefined) {
-                    intervalId = setInterval(callback, delay);
-                }
-            },
+    function useGridDrawing(refName, model, canvasSize) {
+        const canvasRef = owl.useRef(refName);
+        owl.useEffect(() => drawGrid());
+        function drawGrid() {
+            const canvas = canvasRef.el;
+            const dpr = window.devicePixelRatio || 1;
+            const ctx = canvas.getContext("2d", { alpha: false });
+            const thinLineWidth = 0.4 * dpr;
+            const renderingContext = {
+                ctx,
+                dpr,
+                thinLineWidth,
+            };
+            const { width, height } = canvasSize();
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.setAttribute("style", `width:${width}px;height:${height}px;`);
+            // Imagine each pixel as a large square. The whole-number coordinates (0, 1, 2…)
+            // are the edges of the squares. If you draw a one-unit-wide line between whole-number
+            // coordinates, it will overlap opposite sides of the pixel square, and the resulting
+            // line will be drawn two pixels wide. To draw a line that is only one pixel wide,
+            // you need to shift the coordinates by 0.5 perpendicular to the line's direction.
+            // http://diveintohtml5.info/canvas.html#pixel-madness
+            ctx.translate(-CANVAS_SHIFT, -CANVAS_SHIFT);
+            ctx.scale(dpr, dpr);
+            model.drawGrid(renderingContext);
+        }
+    }
+
+    function useWheelHandler(handler) {
+        function normalize(val, deltaMode) {
+            return val * (deltaMode === 0 ? 1 : DEFAULT_CELL_HEIGHT);
+        }
+        const onMouseWheel = (ev) => {
+            const deltaX = normalize(ev.shiftKey ? ev.deltaY : ev.deltaX, ev.deltaMode);
+            const deltaY = normalize(ev.shiftKey ? ev.deltaX : ev.deltaY, ev.deltaMode);
+            handler(deltaX, deltaY);
         };
+        return onMouseWheel;
     }
 
     css /* scss */ `
@@ -19222,7 +20211,7 @@
         Border,
     };
 
-    class ScrollBar {
+    class ScrollBar$1 {
         constructor(el, direction) {
             this.el = el;
             this.direction = direction;
@@ -19240,186 +20229,177 @@
         }
     }
 
+    css /* scss */ `
+  .o-scrollbar {
+    position: absolute;
+    overflow: auto;
+    z-index: ${ComponentsImportance.ScrollBar};
+    background-color: ${BACKGROUND_GRAY_COLOR};
+
+    // &.vertical {
+    //   right: 0;
+    //   bottom: ${SCROLLBAR_WIDTH$1}px;
+    //   width: ${SCROLLBAR_WIDTH$1}px;
+    //   overflow-x: hidden;
+    // }
+    // &.horizontal {
+    //   bottom: 0;
+    //   height: ${SCROLLBAR_WIDTH$1}px;
+    //   right: ${SCROLLBAR_WIDTH$1}px;
+    //   overflow-y: hidden;
+    // }
+    &.corner {
+      right: 0px;
+      bottom: 0px;
+      height: ${SCROLLBAR_WIDTH$1}px;
+      width: ${SCROLLBAR_WIDTH$1}px;
+      border-top: 1px solid #e2e3e3;
+      border-left: 1px solid #e2e3e3;
+    }
+  }
+`;
+    class ScrollBar extends owl.Component {
+        setup() {
+            this.scrollbarRef = owl.useRef("scrollbar");
+            this.scrollbar = new ScrollBar$1(this.scrollbarRef.el, this.props.direction);
+            owl.onMounted(() => {
+                this.scrollbar.el = this.scrollbarRef.el;
+            });
+            // TODO improve useEffect dependencies typing in owl
+            owl.useEffect(() => {
+                if (this.scrollbar.scroll !== this.props.offset) {
+                    this.scrollbar.scroll = this.props.offset;
+                }
+            }, () => [this.scrollbar.scroll, this.props.offset]);
+        }
+        get sizeCss() {
+            return cssPropertiesToCss({
+                width: `${this.props.width}px`,
+                height: `${this.props.height}px`,
+            });
+        }
+        get positionCss() {
+            return cssPropertiesToCss(this.props.position);
+        }
+        onScroll(ev) {
+            if (this.props.offset !== this.scrollbar.scroll) {
+                this.props.onScroll(this.scrollbar.scroll);
+            }
+        }
+    }
+    ScrollBar.template = owl.xml /*xml*/ `
+    <div
+        t-attf-class="o-scrollbar {{props.direction}}"
+        t-on-scroll="onScroll"
+        t-ref="scrollbar"
+        t-att-style="positionCss">
+      <div t-att-style="sizeCss"/>
+    </div>
+  `;
+    ScrollBar.defaultProps = {
+        width: 1,
+        height: 1,
+    };
+
+    class HorizontalScrollBar extends owl.Component {
+        get offset() {
+            return this.env.model.getters.getActiveSheetScrollInfo().offsetScrollbarX;
+        }
+        get width() {
+            return this.env.model.getters.getMainViewportRect().width;
+        }
+        get isDisplayed() {
+            const { xRatio } = this.env.model.getters.getFrozenSheetViewRatio(this.env.model.getters.getActiveSheetId());
+            return xRatio < 1;
+        }
+        get position() {
+            const { x } = this.env.model.getters.getMainViewportRect();
+            return {
+                left: `${this.props.position.left + x}px`,
+                bottom: "0px",
+                right: `${SCROLLBAR_WIDTH$1}px`,
+            };
+        }
+        onScroll(offset) {
+            const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+            this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
+                offsetX: offset,
+                offsetY: offsetScrollbarY, // offsetY is the same
+            });
+        }
+    }
+    HorizontalScrollBar.components = { ScrollBar };
+    HorizontalScrollBar.template = owl.xml /*xml*/ `
+      <ScrollBar
+        t-if="isDisplayed"
+        width="width"
+        position="position"
+        offset="offset"
+        direction="'horizontal'"
+        onScroll.bind="onScroll"
+      />`;
+    HorizontalScrollBar.defaultProps = {
+        position: { left: 0 },
+    };
+
+    class VerticalScrollBar extends owl.Component {
+        get offset() {
+            return this.env.model.getters.getActiveSheetScrollInfo().offsetScrollbarY;
+        }
+        get height() {
+            return this.env.model.getters.getMainViewportRect().height;
+        }
+        get isDisplayed() {
+            const { yRatio } = this.env.model.getters.getFrozenSheetViewRatio(this.env.model.getters.getActiveSheetId());
+            return yRatio < 1;
+        }
+        get position() {
+            const { y } = this.env.model.getters.getMainViewportRect();
+            return {
+                top: `${this.props.position.top + y}px`,
+                right: "0px",
+                bottom: `${SCROLLBAR_WIDTH$1}px`,
+            };
+        }
+        onScroll(offset) {
+            const { offsetScrollbarX } = this.env.model.getters.getActiveSheetScrollInfo();
+            this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
+                offsetX: offsetScrollbarX,
+                offsetY: offset,
+            });
+        }
+    }
+    VerticalScrollBar.components = { ScrollBar };
+    VerticalScrollBar.template = owl.xml /*xml*/ `
+    <ScrollBar
+      t-if="isDisplayed"
+      height="height"
+      position="position"
+      offset="offset"
+      direction="'vertical'"
+      onScroll.bind="onScroll"
+    />`;
+    VerticalScrollBar.defaultProps = {
+        position: { top: 0 },
+    };
+
     const registries$1 = {
         ROW: rowMenuRegistry,
         COL: colMenuRegistry,
         CELL: cellMenuRegistry,
-        DASHBOARD: dashboardMenuRegistry,
     };
     // copy and paste are specific events that should not be managed by the keydown event,
     // but they shouldn't be preventDefault and stopped (else copy and paste events will not trigger)
     // and also should not result in typing the character C or V in the composer
     const keyDownMappingIgnore = ["CTRL+C", "CTRL+V"];
     // -----------------------------------------------------------------------------
-    // Error Tooltip Hook
-    // -----------------------------------------------------------------------------
-    function useCellHovered(env) {
-        const hoveredPosition = owl.useState({});
-        const { Date } = window;
-        const gridRef = owl.useRef("gridOverlay");
-        const vScrollbarRef = owl.useRef("vscrollbar");
-        const hScrollbarRef = owl.useRef("hscrollbar");
-        let x = 0;
-        let y = 0;
-        let lastMoved = 0;
-        function getPosition() {
-            const col = env.model.getters.getColIndex(x);
-            const row = env.model.getters.getRowIndex(y);
-            return { col, row };
-        }
-        const { pause, resume } = useInterval(checkTiming, 200);
-        function checkTiming() {
-            const { col, row } = getPosition();
-            const delta = Date.now() - lastMoved;
-            if (delta > 300 && (col !== hoveredPosition.col || row !== hoveredPosition.row)) {
-                hoveredPosition.col = undefined;
-                hoveredPosition.row = undefined;
-            }
-            if (delta > 300) {
-                if (col < 0 || row < 0) {
-                    return;
-                }
-                hoveredPosition.col = col;
-                hoveredPosition.row = row;
-            }
-        }
-        function updateMousePosition(e) {
-            x = e.offsetX;
-            y = e.offsetY;
-            lastMoved = Date.now();
-        }
-        function recompute() {
-            const { col, row } = getPosition();
-            if (col !== hoveredPosition.col || row !== hoveredPosition.row) {
-                hoveredPosition.col = undefined;
-                hoveredPosition.row = undefined;
-            }
-        }
-        function reset() {
-            hoveredPosition.col = undefined;
-            hoveredPosition.row = undefined;
-        }
-        owl.onMounted(() => {
-            const grid = gridRef.el;
-            grid.addEventListener("mousemove", updateMousePosition);
-            grid.addEventListener("mouseleave", pause);
-            grid.addEventListener("mouseenter", resume);
-            grid.addEventListener("mousedown", recompute);
-            vScrollbarRef.el.addEventListener("scroll", reset);
-            hScrollbarRef.el.addEventListener("scroll", reset);
-        });
-        owl.onWillUnmount(() => {
-            const grid = gridRef.el;
-            grid.removeEventListener("mousemove", updateMousePosition);
-            grid.removeEventListener("mouseleave", pause);
-            grid.removeEventListener("mouseenter", resume);
-            grid.removeEventListener("mousedown", recompute);
-            vScrollbarRef.el.removeEventListener("scroll", reset);
-            hScrollbarRef.el.removeEventListener("scroll", reset);
-        });
-        return hoveredPosition;
-    }
-    function useTouchMove(handler, canMoveUp) {
-        const canvasRef = owl.useRef("canvas");
-        let x = null;
-        let y = null;
-        function onTouchStart(ev) {
-            if (ev.touches.length !== 1)
-                return;
-            x = ev.touches[0].clientX;
-            y = ev.touches[0].clientY;
-        }
-        function onTouchEnd() {
-            x = null;
-            y = null;
-        }
-        function onTouchMove(ev) {
-            if (ev.touches.length !== 1)
-                return;
-            // On mobile browsers, swiping down is often associated with "pull to refresh".
-            // We only want this behavior if the grid is already at the top.
-            // Otherwise we only want to move the canvas up, without triggering any refresh.
-            if (canMoveUp()) {
-                ev.preventDefault();
-                ev.stopPropagation();
-            }
-            const currentX = ev.touches[0].clientX;
-            const currentY = ev.touches[0].clientY;
-            handler(x - currentX, y - currentY);
-            x = currentX;
-            y = currentY;
-        }
-        owl.onMounted(() => {
-            canvasRef.el.addEventListener("touchstart", onTouchStart);
-            canvasRef.el.addEventListener("touchend", onTouchEnd);
-            canvasRef.el.addEventListener("touchmove", onTouchMove);
-        });
-        owl.onWillUnmount(() => {
-            canvasRef.el.removeEventListener("touchstart", onTouchStart);
-            canvasRef.el.removeEventListener("touchend", onTouchEnd);
-            canvasRef.el.removeEventListener("touchmove", onTouchMove);
-        });
-    }
-    // -----------------------------------------------------------------------------
-    // TEMPLATE
-    // -----------------------------------------------------------------------------
-    // -----------------------------------------------------------------------------
-    // STYLE
-    // -----------------------------------------------------------------------------
-    css /* scss */ `
-  .o-grid {
-    position: relative;
-    overflow: hidden;
-    background-color: ${BACKGROUND_GRAY_COLOR};
-
-    > canvas {
-      border-top: 1px solid #e2e3e3;
-      border-bottom: 1px solid #e2e3e3;
-
-      &:focus {
-        outline: none;
-      }
-    }
-    .o-scrollbar {
-      position: absolute;
-      overflow: auto;
-      z-index: ${ComponentsImportance.ScrollBar};
-      background-color: ${BACKGROUND_GRAY_COLOR};
-
-      &.vertical {
-        right: 0;
-        bottom: ${SCROLLBAR_WIDTH$1}px;
-        width: ${SCROLLBAR_WIDTH$1}px;
-        overflow-x: hidden;
-      }
-      &.horizontal {
-        bottom: 0;
-        height: ${SCROLLBAR_WIDTH$1}px;
-        right: ${SCROLLBAR_WIDTH$1}px;
-        overflow-y: hidden;
-      }
-      &.corner {
-        right: 0px;
-        bottom: 0px;
-        height: ${SCROLLBAR_WIDTH$1}px;
-        width: ${SCROLLBAR_WIDTH$1}px;
-        border-top: 1px solid #e2e3e3;
-        border-left: 1px solid #e2e3e3;
-      }
-    }
-
-    .o-grid-overlay {
-      position: absolute;
-      outline: none;
-    }
-  }
-`;
-    // -----------------------------------------------------------------------------
     // JS
     // -----------------------------------------------------------------------------
     class Grid extends owl.Component {
         constructor() {
             super(...arguments);
+            this.HEADER_HEIGHT = HEADER_HEIGHT;
+            this.HEADER_WIDTH = HEADER_WIDTH;
             // this map will handle most of the actions that should happen on key down. The arrow keys are managed in the key
             // down itself
             this.keyDownMapping = {
@@ -19438,6 +20418,12 @@
                         : this.props.onComposerContentFocused();
                 },
                 DELETE: () => {
+                    this.env.model.dispatch("DELETE_CONTENT", {
+                        sheetId: this.env.model.getters.getActiveSheetId(),
+                        target: this.env.model.getters.getSelectedZones(),
+                    });
+                },
+                BACKSPACE: () => {
                     this.env.model.dispatch("DELETE_CONTENT", {
                         sheetId: this.env.model.getters.getActiveSheetId(),
                         target: this.env.model.getters.getSelectedZones(),
@@ -19532,79 +20518,33 @@
                 position: null,
                 menuItems: [],
             });
-            this.vScrollbarRef = owl.useRef("vscrollbar");
-            this.hScrollbarRef = owl.useRef("hscrollbar");
             this.gridRef = owl.useRef("grid");
-            this.gridOverlay = owl.useRef("gridOverlay");
-            this.canvas = owl.useRef("canvas");
-            this.canvasPosition = useAbsolutePosition(this.canvas);
-            this.vScrollbar = new ScrollBar(this.vScrollbarRef.el, "vertical");
-            this.hScrollbar = new ScrollBar(this.hScrollbarRef.el, "horizontal");
-            this.currentSheet = this.env.model.getters.getActiveSheetId();
-            this.clickedCol = 0;
-            this.clickedRow = 0;
-            this.hoveredCell = useCellHovered(this.env);
+            this.canvasPosition = useAbsolutePosition(this.gridRef);
+            this.hoveredCell = owl.useState({ col: undefined, row: undefined });
             owl.useExternalListener(document.body, "cut", this.copy.bind(this, true));
             owl.useExternalListener(document.body, "copy", this.copy.bind(this, false));
             owl.useExternalListener(document.body, "paste", this.paste);
-            useTouchMove(this.moveCanvas.bind(this), () => this.vScrollbar.scroll > 0);
-            owl.onMounted(() => this.initGrid());
-            owl.onPatched(() => {
-                this.drawGrid();
-                this.resizeGrid();
-            });
+            owl.onMounted(() => this.focus());
             this.props.exposeFocus(() => this.focus());
+            useGridDrawing("canvas", this.env.model, () => this.env.model.getters.getSheetViewDimensionWithHeaders());
+            owl.useEffect(() => this.focus(), () => [this.env.model.getters.getActiveSheetId()]);
+            this.onMouseWheel = useWheelHandler((deltaX, deltaY) => {
+                this.moveCanvas(deltaX, deltaY);
+                this.hoveredCell.col = undefined;
+                this.hoveredCell.row = undefined;
+            });
         }
-        initGrid() {
-            this.vScrollbar.el = this.vScrollbarRef.el;
-            this.hScrollbar.el = this.hScrollbarRef.el;
-            this.focus();
-            this.resizeGrid();
-            this.drawGrid();
+        onCellHovered({ col, row }) {
+            this.hoveredCell.col = col;
+            this.hoveredCell.row = row;
         }
-        get gridOverlayStyle() {
+        get gridOverlayDimensions() {
             return `
-      top: ${this.env.isDashboard() ? 0 : HEADER_HEIGHT}px;
-      left: ${this.env.isDashboard() ? 0 : HEADER_WIDTH}px;
-      height: calc(100% - ${this.env.isDashboard() ? 0 : HEADER_HEIGHT}px);
-      width: calc(100% - ${this.env.isDashboard() ? 0 : HEADER_WIDTH}px);
+      top: ${HEADER_HEIGHT}px;
+      left: ${HEADER_WIDTH}px;
+      height: calc(100% - ${HEADER_HEIGHT + SCROLLBAR_WIDTH$1}px);
+      width: calc(100% - ${HEADER_WIDTH + SCROLLBAR_WIDTH$1}px);
     `;
-        }
-        get vScrollbarStyle() {
-            const { y } = this.env.model.getters.getMainViewportRect();
-            const { yRatio } = this.env.model.getters.getFrozenSheetViewRatio(this.env.model.getters.getActiveSheetId());
-            return `
-      ${this.env.isDashboard() || yRatio >= 1 ? "width: 0px;" : ""}
-      top: ${y + (this.env.isDashboard() ? 0 : HEADER_HEIGHT)}px;`;
-        }
-        get hScrollbarStyle() {
-            const { x } = this.env.model.getters.getMainViewportRect();
-            const { xRatio } = this.env.model.getters.getFrozenSheetViewRatio(this.env.model.getters.getActiveSheetId());
-            return `
-      ${this.env.isDashboard() || xRatio >= 1 ? "width: 0px;" : ""}
-      left: ${x + (this.env.isDashboard() ? 0 : HEADER_WIDTH)}px;`;
-        }
-        get cellPopover() {
-            if (this.menuState.isOpen) {
-                return { isOpen: false };
-            }
-            const popover = this.env.model.getters.getCellPopover(this.hoveredCell);
-            if (!popover.isOpen) {
-                return { isOpen: false };
-            }
-            const coordinates = popover.coordinates;
-            return {
-                ...popover,
-                // transform from the "canvas coordinate system" to the "body coordinate system"
-                coordinates: {
-                    x: coordinates.x + this.canvasPosition.x,
-                    y: coordinates.y + this.canvasPosition.y,
-                },
-            };
-        }
-        get activeCellPosition() {
-            const { col, row } = this.env.model.getters.getPosition();
-            return this.env.model.getters.getMainCellPosition(this.env.model.getters.getActiveSheetId(), col, row);
         }
         onClosePopover() {
             this.closeOpenedPopover();
@@ -19612,7 +20552,7 @@
         }
         focus() {
             if (!this.env.model.getters.getSelectedFigureId()) {
-                this.gridOverlay.el.focus();
+                this.gridRef.el.focus();
             }
         }
         get gridEl() {
@@ -19620,45 +20560,6 @@
                 throw new Error("Grid el is not defined.");
             }
             return this.gridRef.el;
-        }
-        getGridBoundingClientRect() {
-            return this.gridEl.getBoundingClientRect();
-        }
-        resizeGrid() {
-            const scrollBarWidth = this.env.isDashboard() ? 0 : SCROLLBAR_WIDTH$1;
-            const currentHeight = this.gridEl.clientHeight - scrollBarWidth;
-            const currentWidth = this.gridEl.clientWidth - scrollBarWidth;
-            const { height: viewportHeight, width: viewportWidth } = this.env.model.getters.getSheetViewDimensionWithHeaders();
-            if (currentHeight != viewportHeight || currentWidth !== viewportWidth) {
-                const { top: gridTop, left: gridLeft } = this.gridEl.getBoundingClientRect();
-                const { top, left } = this.gridOverlay.el.getBoundingClientRect();
-                const gridOffsetX = left - gridLeft;
-                const gridOffsetY = top - gridTop;
-                this.env.model.dispatch("RESIZE_SHEETVIEW", {
-                    width: currentWidth - gridOffsetX,
-                    height: currentHeight - gridOffsetY,
-                    gridOffsetX,
-                    gridOffsetY,
-                });
-            }
-        }
-        onScroll() {
-            const { offsetScrollbarX, offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
-            if (offsetScrollbarX !== this.hScrollbar.scroll ||
-                offsetScrollbarY !== this.vScrollbar.scroll) {
-                const { maxOffsetX, maxOffsetY } = this.env.model.getters.getMaximumSheetOffset();
-                this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-                    offsetX: Math.min(this.hScrollbar.scroll, maxOffsetX),
-                    offsetY: Math.min(this.vScrollbar.scroll, maxOffsetY),
-                });
-            }
-        }
-        checkSheetChanges() {
-            const currentSheet = this.env.model.getters.getActiveSheetId();
-            if (currentSheet !== this.currentSheet) {
-                this.focus();
-                this.currentSheet = currentSheet;
-            }
         }
         getAutofillPosition() {
             const zone = this.env.model.getters.getSelectedZone();
@@ -19678,61 +20579,24 @@
             });
             return !(rect.width === 0 || rect.height === 0);
         }
-        drawGrid() {
-            //reposition scrollbar
-            const { offsetScrollbarX, offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
-            this.hScrollbar.scroll = offsetScrollbarX;
-            this.vScrollbar.scroll = offsetScrollbarY;
-            // check for position changes
-            this.checkSheetChanges();
-            // drawing grid on canvas
-            const canvas = this.canvas.el;
-            const dpr = window.devicePixelRatio || 1;
-            const ctx = canvas.getContext("2d", { alpha: false });
-            const thinLineWidth = 0.4 * dpr;
-            const renderingContext = {
-                ctx,
-                dpr,
-                thinLineWidth,
-            };
-            const { width, height } = this.env.model.getters.getSheetViewDimensionWithHeaders();
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            canvas.setAttribute("style", `width:${width}px;height:${height}px;`);
-            // Imagine each pixel as a large square. The whole-number coordinates (0, 1, 2…)
-            // are the edges of the squares. If you draw a one-unit-wide line between whole-number
-            // coordinates, it will overlap opposite sides of the pixel square, and the resulting
-            // line will be drawn two pixels wide. To draw a line that is only one pixel wide,
-            // you need to shift the coordinates by 0.5 perpendicular to the line's direction.
-            // http://diveintohtml5.info/canvas.html#pixel-madness
-            ctx.translate(-CANVAS_SHIFT, -CANVAS_SHIFT);
-            ctx.scale(dpr, dpr);
-            this.env.model.drawGrid(renderingContext);
+        onGridResized({ height, width }) {
+            this.env.model.dispatch("RESIZE_SHEETVIEW", {
+                width: width,
+                height: height,
+                gridOffsetX: HEADER_WIDTH,
+                gridOffsetY: HEADER_HEIGHT,
+            });
         }
         moveCanvas(deltaX, deltaY) {
-            this.vScrollbar.scroll = this.vScrollbar.scroll + deltaY;
-            this.hScrollbar.scroll = this.hScrollbar.scroll + deltaX;
+            const { offsetScrollbarX, offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
             this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-                offsetX: this.hScrollbar.scroll,
-                offsetY: this.vScrollbar.scroll,
+                offsetX: Math.max(offsetScrollbarX + deltaX, 0),
+                offsetY: Math.max(offsetScrollbarY + deltaY, 0),
             });
         }
         getClientPositionKey(client) {
             var _a, _b, _c;
             return `${client.id}-${(_a = client.position) === null || _a === void 0 ? void 0 : _a.sheetId}-${(_b = client.position) === null || _b === void 0 ? void 0 : _b.col}-${(_c = client.position) === null || _c === void 0 ? void 0 : _c.row}`;
-        }
-        onMouseWheel(ev) {
-            if (ev.ctrlKey) {
-                return;
-            }
-            function normalize(val) {
-                return val * (ev.deltaMode === 0 ? 1 : DEFAULT_CELL_HEIGHT);
-            }
-            const deltaX = ev.shiftKey ? ev.deltaY : ev.deltaX;
-            const deltaY = ev.shiftKey ? ev.deltaX : ev.deltaY;
-            this.moveCanvas(normalize(deltaX), normalize(deltaY));
         }
         isCellHovered(col, row) {
             return this.hoveredCell.col === col && this.hoveredCell.row === row;
@@ -19740,53 +20604,23 @@
         // ---------------------------------------------------------------------------
         // Zone selection with mouse
         // ---------------------------------------------------------------------------
-        /**
-         * Get the coordinates in pixels, with 0,0 being the top left of the grid itself
-         */
-        getCoordinates(ev) {
-            const rect = this.gridOverlay.el.getBoundingClientRect();
-            const x = ev.pageX - rect.left;
-            const y = ev.pageY - rect.top;
-            return [x, y];
-        }
-        getCartesianCoordinates(ev) {
-            const [x, y] = this.getCoordinates(ev);
-            const colIndex = this.env.model.getters.getColIndex(x);
-            const rowIndex = this.env.model.getters.getRowIndex(y);
-            return [colIndex, rowIndex];
-        }
-        onMouseDown(ev) {
-            if (ev.button > 0) {
-                // not main button, probably a context menu
-                return;
-            }
-            if (ev.ctrlKey) {
+        onCellClicked(col, row, { ctrlKey, shiftKey }) {
+            if (ctrlKey) {
                 this.env.model.dispatch("PREPARE_SELECTION_INPUT_EXPANSION");
-            }
-            const [col, row] = this.getCartesianCoordinates(ev);
-            if (col < 0 || row < 0) {
-                return;
-            }
-            this.clickedCol = col;
-            this.clickedRow = row;
-            if (this.env.model.getters.isDashboard()) {
-                this.env.model.selection.selectCell(col, row);
-                return;
             }
             this.closeOpenedPopover();
             if (this.env.model.getters.getEditionMode() === "editing") {
                 this.env.model.dispatch("STOP_EDITION");
             }
-            if (ev.shiftKey) {
+            if (shiftKey) {
                 this.env.model.selection.setAnchorCorner(col, row);
             }
-            else if (ev.ctrlKey) {
+            else if (ctrlKey) {
                 this.env.model.selection.addCellToSelection(col, row);
             }
             else {
                 this.env.model.selection.selectCell(col, row);
             }
-            this.checkSheetChanges();
             let prevCol = col;
             let prevRow = row;
             const onMouseMove = (col, row) => {
@@ -19806,13 +20640,14 @@
             };
             dragAndDropBeyondTheViewport(this.env, onMouseMove, onMouseUp);
         }
-        onDoubleClick(ev) {
-            const [col, row] = this.getCartesianCoordinates(ev);
-            if (this.clickedCol === col && this.clickedRow === row) {
-                const cell = this.env.model.getters.getActiveCell();
-                !cell || cell.isEmpty()
-                    ? this.props.onGridComposerCellFocused()
-                    : this.props.onComposerContentFocused();
+        onCellDoubleClicked(col, row) {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const cell = this.env.model.getters.getCell(sheetId, col, row);
+            if (!cell || cell.isEmpty()) {
+                this.props.onGridComposerCellFocused();
+            }
+            else {
+                this.props.onComposerContentFocused();
             }
         }
         closeOpenedPopover() {
@@ -19845,9 +20680,6 @@
             }
         }
         onKeydown(ev) {
-            if (this.env.isDashboard()) {
-                return;
-            }
             if (ev.key.startsWith("Arrow")) {
                 this.processArrows(ev);
                 return;
@@ -19882,12 +20714,7 @@
         // ---------------------------------------------------------------------------
         // Context Menu
         // ---------------------------------------------------------------------------
-        onCanvasContextMenu(ev) {
-            ev.preventDefault();
-            const [col, row] = this.getCartesianCoordinates(ev);
-            if (col < 0 || row < 0) {
-                return;
-            }
+        onCellRightClicked(col, row, { x, y }) {
             const zones = this.env.model.getters.getSelectedZones();
             const lastZone = zones[zones.length - 1];
             let type = "CELL";
@@ -19904,13 +20731,10 @@
                     type = "ROW";
                 }
             }
-            this.toggleContextMenu(type, ev.clientX, ev.clientY);
+            this.toggleContextMenu(type, x, y);
         }
         toggleContextMenu(type, x, y) {
             this.closeOpenedPopover();
-            if (this.env.model.getters.isDashboard()) {
-                type = "DASHBOARD";
-            }
             this.menuState.isOpen = true;
             this.menuState.position = { x, y };
             this.menuState.menuItems = registries$1[type]
@@ -19961,13 +20785,17 @@
     Grid.template = "o-spreadsheet-Grid";
     Grid.components = {
         GridComposer,
+        GridOverlay,
+        GridPopover,
         HeadersOverlay,
         Menu,
         Autofill,
-        FiguresContainer,
         ClientTag,
         Highlight,
         Popover,
+        VerticalScrollBar,
+        HorizontalScrollBar,
+        FilterIconsOverlay,
     };
 
     /**
@@ -20025,7 +20853,7 @@
                 case CellValueType.text:
                     return true;
                 case CellValueType.number:
-                    return !((_a = this.format) === null || _a === void 0 ? void 0 : _a.match(DATETIME_FORMAT));
+                    return !((_a = this.evaluated.format) === null || _a === void 0 ? void 0 : _a.match(DATETIME_FORMAT));
                 case CellValueType.error:
                 case CellValueType.boolean:
                     return false;
@@ -21858,6 +22686,7 @@
                 panes: sheetOptions
                     ? { xSplit: sheetOptions.pane.xSplit, ySplit: sheetOptions.pane.ySplit }
                     : { xSplit: 0, ySplit: 0 },
+                filterTables: [],
             };
         });
     }
@@ -23887,6 +24716,7 @@
             merges: [],
             conditionalFormats: [],
             figures: [],
+            filterTables: [],
             isVisible: true,
         };
     }
@@ -24462,7 +25292,7 @@
                 case "UPDATE_CELL":
                     return this.checkCellOutOfSheet(cmd.sheetId, cmd.col, cmd.row);
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handle(cmd) {
@@ -24798,9 +25628,9 @@
         checkCellOutOfSheet(sheetId, col, row) {
             const sheet = this.getters.tryGetSheet(sheetId);
             if (!sheet)
-                return 25 /* InvalidSheetId */;
+                return 25 /* CommandResult.InvalidSheetId */;
             const sheetZone = this.getters.getSheetZone(sheetId);
-            return isInside(col, row, sheetZone) ? 0 /* Success */ : 16 /* TargetOutOfSheet */;
+            return isInside(col, row, sheetZone) ? 0 /* CommandResult.Success */ : 16 /* CommandResult.TargetOutOfSheet */;
         }
     }
     CellPlugin.getters = [
@@ -24834,7 +25664,7 @@
                 case "UPDATE_CHART":
                     return this.validateChartDefinition(cmd.definition);
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handle(cmd) {
@@ -25058,7 +25888,7 @@
                 case "MOVE_CONDITIONAL_FORMAT":
                     return this.checkValidReordering(cmd.cfId, cmd.direction, cmd.sheetId);
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             switch (cmd.type) {
@@ -25190,18 +26020,18 @@
         }
         checkValidReordering(cfId, direction, sheetId) {
             if (!this.cfRules[sheetId])
-                return 25 /* InvalidSheetId */;
+                return 25 /* CommandResult.InvalidSheetId */;
             const ruleIndex = this.cfRules[sheetId].findIndex((cf) => cf.id === cfId);
             if (ruleIndex === -1)
-                return 69 /* InvalidConditionalFormatId */;
+                return 68 /* CommandResult.InvalidConditionalFormatId */;
             const cfIndex2 = direction === "up" ? ruleIndex - 1 : ruleIndex + 1;
             if (cfIndex2 < 0 || cfIndex2 >= this.cfRules[sheetId].length) {
-                return 69 /* InvalidConditionalFormatId */;
+                return 68 /* CommandResult.InvalidConditionalFormatId */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkEmptyRange(cmd) {
-            return cmd.ranges.length ? 0 /* Success */ : 22 /* EmptyRange */;
+            return cmd.ranges.length ? 0 /* CommandResult.Success */ : 22 /* CommandResult.EmptyRange */;
         }
         checkCFRule(cmd) {
             const rule = cmd.cf.rule;
@@ -25226,7 +26056,7 @@
                     return this.checkValidations(rule, this.chainValidations(this.checkInflectionPoints(this.checkNaN), this.checkLowerBiggerThanUpper), this.chainValidations(this.checkInflectionPoints(this.checkFormulaCompilation)));
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkOperatorArgsNumber(expectedNumber, operators) {
             if (expectedNumber > 2) {
@@ -25237,14 +26067,14 @@
                     const errors = [];
                     const isEmpty = (value) => value === undefined || value === "";
                     if (expectedNumber >= 1 && isEmpty(rule.values[0])) {
-                        errors.push(48 /* FirstArgMissing */);
+                        errors.push(48 /* CommandResult.FirstArgMissing */);
                     }
                     if (expectedNumber >= 2 && isEmpty(rule.values[1])) {
-                        errors.push(49 /* SecondArgMissing */);
+                        errors.push(49 /* CommandResult.SecondArgMissing */);
                     }
-                    return errors.length ? errors : 0 /* Success */;
+                    return errors.length ? errors : 0 /* CommandResult.Success */;
                 }
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             };
         }
         checkNaN(threshold, thresholdName) {
@@ -25252,43 +26082,43 @@
                 (threshold.value === "" || isNaN(threshold.value))) {
                 switch (thresholdName) {
                     case "min":
-                        return 50 /* MinNaN */;
+                        return 50 /* CommandResult.MinNaN */;
                     case "max":
-                        return 52 /* MaxNaN */;
+                        return 52 /* CommandResult.MaxNaN */;
                     case "mid":
-                        return 51 /* MidNaN */;
+                        return 51 /* CommandResult.MidNaN */;
                     case "upperInflectionPoint":
-                        return 53 /* ValueUpperInflectionNaN */;
+                        return 53 /* CommandResult.ValueUpperInflectionNaN */;
                     case "lowerInflectionPoint":
-                        return 54 /* ValueLowerInflectionNaN */;
+                        return 54 /* CommandResult.ValueLowerInflectionNaN */;
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkFormulaCompilation(threshold, thresholdName) {
             if (threshold.type !== "formula")
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             try {
                 compile(threshold.value || "");
             }
             catch (error) {
                 switch (thresholdName) {
                     case "min":
-                        return 55 /* MinInvalidFormula */;
+                        return 55 /* CommandResult.MinInvalidFormula */;
                     case "max":
-                        return 57 /* MaxInvalidFormula */;
+                        return 57 /* CommandResult.MaxInvalidFormula */;
                     case "mid":
-                        return 56 /* MidInvalidFormula */;
+                        return 56 /* CommandResult.MidInvalidFormula */;
                     case "upperInflectionPoint":
-                        return 58 /* ValueUpperInvalidFormula */;
+                        return 58 /* CommandResult.ValueUpperInvalidFormula */;
                     case "lowerInflectionPoint":
-                        return 59 /* ValueLowerInvalidFormula */;
+                        return 59 /* CommandResult.ValueLowerInvalidFormula */;
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkThresholds(check) {
-            return this.batchValidations((rule) => check(rule.minimum, "min"), (rule) => check(rule.maximum, "max"), (rule) => (rule.midpoint ? check(rule.midpoint, "mid") : 0 /* Success */));
+            return this.batchValidations((rule) => check(rule.minimum, "min"), (rule) => check(rule.maximum, "max"), (rule) => (rule.midpoint ? check(rule.midpoint, "mid") : 0 /* CommandResult.Success */));
         }
         checkInflectionPoints(check) {
             return this.batchValidations((rule) => check(rule.lowerInflectionPoint, "lowerInflectionPoint"), (rule) => check(rule.upperInflectionPoint, "upperInflectionPoint"));
@@ -25299,9 +26129,9 @@
             if (["number", "percentage", "percentile"].includes(rule.lowerInflectionPoint.type) &&
                 rule.lowerInflectionPoint.type === rule.upperInflectionPoint.type &&
                 Number(minValue) > Number(maxValue)) {
-                return 45 /* LowerBiggerThanUpper */;
+                return 45 /* CommandResult.LowerBiggerThanUpper */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkMinBiggerThanMax(rule) {
             const minValue = rule.minimum.value;
@@ -25309,9 +26139,9 @@
             if (["number", "percentage", "percentile"].includes(rule.minimum.type) &&
                 rule.minimum.type === rule.maximum.type &&
                 stringToNumber(minValue) >= stringToNumber(maxValue)) {
-                return 44 /* MinBiggerThanMax */;
+                return 44 /* CommandResult.MinBiggerThanMax */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkMidBiggerThanMax(rule) {
             var _a;
@@ -25321,9 +26151,9 @@
                 ["number", "percentage", "percentile"].includes(rule.midpoint.type) &&
                 rule.midpoint.type === rule.maximum.type &&
                 stringToNumber(midValue) >= stringToNumber(maxValue)) {
-                return 46 /* MidBiggerThanMax */;
+                return 46 /* CommandResult.MidBiggerThanMax */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkMinBiggerThanMid(rule) {
             var _a;
@@ -25333,9 +26163,9 @@
                 ["number", "percentage", "percentile"].includes(rule.midpoint.type) &&
                 rule.minimum.type === rule.midpoint.type &&
                 stringToNumber(minValue) >= stringToNumber(midValue)) {
-                return 47 /* MinBiggerThanMid */;
+                return 47 /* CommandResult.MinBiggerThanMid */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         removeConditionalFormatting(id, sheet) {
             const cfIndex = this.cfRules[sheet].findIndex((s) => s.id === id);
@@ -25375,7 +26205,7 @@
                 case "DELETE_FIGURE":
                     return this.checkFigureExists(cmd.sheetId, cmd.id);
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handle(cmd) {
@@ -25432,9 +26262,9 @@
         checkFigureExists(sheetId, figureId) {
             var _a;
             if (((_a = this.figures[sheetId]) === null || _a === void 0 ? void 0 : _a[figureId]) === undefined) {
-                return 68 /* FigureDoesNotExist */;
+                return 67 /* CommandResult.FigureDoesNotExist */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         // ---------------------------------------------------------------------------
         // Getters
@@ -25471,6 +26301,305 @@
         }
     }
     FigurePlugin.getters = ["getFigures", "getFigure"];
+
+    class FilterTable {
+        constructor(zone) {
+            this.filters = [];
+            this.zone = zone;
+            const uuid = new UuidGenerator();
+            this.id = uuid.uuidv4();
+            for (const i of range(zone.left, zone.right + 1)) {
+                const filterZone = { ...this.zone, left: i, right: i };
+                this.filters.push(new Filter(uuid.uuidv4(), filterZone));
+            }
+        }
+        /** Get zone of the table without the headers */
+        get contentZone() {
+            if (this.zone.bottom === this.zone.top) {
+                return undefined;
+            }
+            return { ...this.zone, top: this.zone.top + 1 };
+        }
+        getFilterId(col) {
+            var _a;
+            return (_a = this.filters.find((filter) => filter.col === col)) === null || _a === void 0 ? void 0 : _a.id;
+        }
+        clone() {
+            return new FilterTable(this.zone);
+        }
+    }
+    class Filter {
+        constructor(id, zone) {
+            if (zone.left !== zone.right) {
+                throw new Error("Can only define a filter on a single column");
+            }
+            this.id = id;
+            this.zoneWithHeaders = zone;
+        }
+        get col() {
+            return this.zoneWithHeaders.left;
+        }
+        /** Filtered zone, ie. zone of the filter without the header */
+        get filteredZone() {
+            const zone = this.zoneWithHeaders;
+            if (zone.bottom === zone.top) {
+                return undefined;
+            }
+            return { ...zone, top: zone.top + 1 };
+        }
+    }
+
+    class FiltersPlugin extends CorePlugin {
+        constructor() {
+            super(...arguments);
+            this.tables = {};
+        }
+        // ---------------------------------------------------------------------------
+        // Command Handling
+        // ---------------------------------------------------------------------------
+        allowDispatch(cmd) {
+            switch (cmd.type) {
+                case "CREATE_FILTER_TABLE":
+                    if (!areZonesContinuous(...cmd.target)) {
+                        return 78 /* CommandResult.NonContinuousTargets */;
+                    }
+                    const zone = union(...cmd.target);
+                    const checkFilterOverlap = () => {
+                        if (this.getFilterTables(cmd.sheetId).some((filter) => overlap(filter.zone, zone))) {
+                            return 75 /* CommandResult.FilterOverlap */;
+                        }
+                        return 0 /* CommandResult.Success */;
+                    };
+                    const checkMergeInFilter = () => {
+                        const mergesInTarget = this.getters.getMergesInZone(cmd.sheetId, zone);
+                        for (let merge of mergesInTarget) {
+                            if (overlap(zone, merge)) {
+                                return 77 /* CommandResult.MergeInFilter */;
+                            }
+                        }
+                        return 0 /* CommandResult.Success */;
+                    };
+                    return this.checkValidations(cmd, checkFilterOverlap, checkMergeInFilter);
+                case "ADD_MERGE":
+                    for (let merge of cmd.target) {
+                        for (let filterTable of this.getFilterTables(cmd.sheetId)) {
+                            if (overlap(filterTable.zone, merge)) {
+                                return 77 /* CommandResult.MergeInFilter */;
+                            }
+                        }
+                    }
+                    break;
+            }
+            return 0 /* CommandResult.Success */;
+        }
+        handle(cmd) {
+            switch (cmd.type) {
+                case "CREATE_SHEET":
+                    this.history.update("tables", cmd.sheetId, {});
+                    break;
+                case "DELETE_SHEET":
+                    const filterTables = { ...this.tables };
+                    delete filterTables[cmd.sheetId];
+                    this.history.update("tables", filterTables);
+                    break;
+                case "DUPLICATE_SHEET":
+                    this.history.update("tables", cmd.sheetIdTo, deepCopy(this.tables[cmd.sheetId]));
+                    break;
+                case "ADD_COLUMNS_ROWS":
+                    this.onAddColumnsRows(cmd);
+                    break;
+                case "REMOVE_COLUMNS_ROWS":
+                    this.onDeleteColumnsRows(cmd);
+                    break;
+                case "CREATE_FILTER_TABLE": {
+                    const zone = union(...cmd.target);
+                    const newFilterTable = this.createFilterTable(zone);
+                    this.history.update("tables", cmd.sheetId, newFilterTable.id, newFilterTable);
+                    break;
+                }
+                case "REMOVE_FILTER_TABLE": {
+                    const tables = {};
+                    for (const filterTable of this.getFilterTables(cmd.sheetId)) {
+                        if (cmd.target.every((zone) => !intersection(zone, filterTable.zone))) {
+                            tables[filterTable.id] = filterTable;
+                        }
+                    }
+                    this.history.update("tables", cmd.sheetId, tables);
+                    break;
+                }
+                case "UPDATE_CELL": {
+                    const sheetId = cmd.sheetId;
+                    for (let table of this.getFilterTables(sheetId)) {
+                        if (this.canUpdateCellCmdExtendTable(cmd, table)) {
+                            this.extendTableDown(sheetId, table);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        getFilters(sheetId) {
+            return this.getFilterTables(sheetId)
+                .map((filterTable) => filterTable.filters)
+                .flat();
+        }
+        getFilterTables(sheetId) {
+            return this.tables[sheetId] ? Object.values(this.tables[sheetId]).filter(isDefined$1) : [];
+        }
+        getFilter(sheetId, col, row) {
+            var _a;
+            return (_a = this.getFilterTable(sheetId, col, row)) === null || _a === void 0 ? void 0 : _a.filters.find((filter) => filter.col === col);
+        }
+        getFilterId(sheetId, col, row) {
+            var _a;
+            return (_a = this.getFilter(sheetId, col, row)) === null || _a === void 0 ? void 0 : _a.id;
+        }
+        getFilterTable(sheetId, col, row) {
+            return this.getFilterTables(sheetId).find((filterTable) => isInside(col, row, filterTable.zone));
+        }
+        /** Get the filter tables that are fully inside the given zone */
+        getFilterTablesInZone(sheetId, zone) {
+            return this.getFilterTables(sheetId).filter((filterTable) => isZoneInside(filterTable.zone, zone));
+        }
+        doesZonesContainFilter(sheetId, zones) {
+            for (const zone of zones) {
+                for (const filterTable of this.getFilterTables(sheetId)) {
+                    if (intersection(zone, filterTable.zone)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        onAddColumnsRows(cmd) {
+            for (const filterTable of this.getFilterTables(cmd.sheetId)) {
+                const zone = expandZoneOnInsertion(filterTable.zone, cmd.dimension === "COL" ? "left" : "top", cmd.base, cmd.position, cmd.quantity);
+                const filters = [];
+                for (const filter of filterTable.filters) {
+                    const filterZone = expandZoneOnInsertion(filter.zoneWithHeaders, cmd.dimension === "COL" ? "left" : "top", cmd.base, cmd.position, cmd.quantity);
+                    filters.push(new Filter(filter.id, filterZone));
+                }
+                // Add filters for new columns
+                if (filters.length < zoneToDimension(zone).width) {
+                    for (let col = zone.left; col <= zone.right; col++) {
+                        if (!filters.find((filter) => filter.col === col)) {
+                            filters.push(new Filter(this.uuidGenerator.uuidv4(), { ...zone, left: col, right: col }));
+                        }
+                    }
+                    filters.sort((f1, f2) => f1.col - f2.col);
+                }
+                this.history.update("tables", cmd.sheetId, filterTable.id, "zone", zone);
+                this.history.update("tables", cmd.sheetId, filterTable.id, "filters", filters);
+            }
+        }
+        onDeleteColumnsRows(cmd) {
+            for (const table of this.getFilterTables(cmd.sheetId)) {
+                const zone = reduceZoneOnDeletion(table.zone, cmd.dimension === "COL" ? "left" : "top", cmd.elements);
+                if (!zone) {
+                    const tables = { ...this.tables[cmd.sheetId] };
+                    delete tables[table.id];
+                    this.history.update("tables", cmd.sheetId, tables);
+                }
+                else {
+                    if (zoneToXc(zone) !== zoneToXc(table.zone)) {
+                        const filters = [];
+                        for (const filter of table.filters) {
+                            const newFilterZone = reduceZoneOnDeletion(filter.zoneWithHeaders, cmd.dimension === "COL" ? "left" : "top", cmd.elements);
+                            if (newFilterZone) {
+                                filters.push(new Filter(filter.id, newFilterZone));
+                            }
+                        }
+                        this.history.update("tables", cmd.sheetId, table.id, "zone", zone);
+                        this.history.update("tables", cmd.sheetId, table.id, "filters", filters);
+                    }
+                }
+            }
+        }
+        createFilterTable(zone) {
+            return new FilterTable(zone);
+        }
+        /** Extend a table down one row */
+        extendTableDown(sheetId, table) {
+            const newZone = { ...table.zone, bottom: table.zone.bottom + 1 };
+            this.history.update("tables", sheetId, table.id, "zone", newZone);
+            for (let filterIndex = 0; filterIndex < table.filters.length; filterIndex++) {
+                const filter = table.filters[filterIndex];
+                const newFilterZone = {
+                    ...filter.zoneWithHeaders,
+                    bottom: filter.zoneWithHeaders.bottom + 1,
+                };
+                this.history.update("tables", sheetId, table.id, "filters", filterIndex, "zoneWithHeaders", newFilterZone);
+            }
+            return;
+        }
+        /**
+         * Check if an UpdateCell command should cause the given table to be extended by one row.
+         *
+         * The table should be extended if all of these conditions are true:
+         * 1) The updated cell is right below the table
+         * 2) The command adds a content to the cell
+         * 3) No cell right below the table had any content before the command
+         * 4) Extending the table down would not overlap with another filter
+         * 5) Extending the table down would not overlap with a merge
+         *
+         */
+        canUpdateCellCmdExtendTable({ content: newCellContent, sheetId, col, row }, table) {
+            var _a;
+            if (!newCellContent) {
+                return;
+            }
+            const zone = table.zone;
+            if (!(zone.bottom + 1 === row && col >= zone.left && col <= zone.right)) {
+                return false;
+            }
+            for (const col of range(zone.left, zone.right + 1)) {
+                // Since this plugin is loaded before CellPlugin, the getters still give us the old cell content
+                const cellContent = (_a = this.getters.getCell(sheetId, col, row)) === null || _a === void 0 ? void 0 : _a.content;
+                if (cellContent) {
+                    return false;
+                }
+                if (this.getters.getFilter(sheetId, col, row)) {
+                    return false;
+                }
+                if (this.getters.isInMerge(sheetId, col, row)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // ---------------------------------------------------------------------------
+        // Import/Export
+        // ---------------------------------------------------------------------------
+        import(data) {
+            for (const sheet of data.sheets) {
+                for (const filterTableData of sheet.filterTables || []) {
+                    const table = this.createFilterTable(toZone(filterTableData.range));
+                    this.history.update("tables", sheet.id, table.id, table);
+                }
+            }
+        }
+        export(data) {
+            for (const sheet of data.sheets) {
+                for (const filterTable of this.getFilterTables(sheet.id)) {
+                    sheet.filterTables.push({
+                        range: zoneToXc(filterTable.zone),
+                    });
+                }
+            }
+        }
+        exportForExcel(data) {
+            this.export(data);
+        }
+    }
+    FiltersPlugin.getters = [
+        "doesZonesContainFilter",
+        "getFilter",
+        "getFilters",
+        "getFilterTable",
+        "getFilterTables",
+        "getFilterTablesInZone",
+        "getFilterId",
+    ];
 
     class HeaderSizePlugin extends CorePlugin {
         constructor() {
@@ -25719,7 +26848,7 @@
             switch (cmd.type) {
                 case "HIDE_COLUMNS_ROWS": {
                     if (!this.hiddenHeaders[cmd.sheetId]) {
-                        return 25 /* InvalidSheetId */;
+                        return 25 /* CommandResult.InvalidSheetId */;
                     }
                     const hiddenGroup = cmd.dimension === "COL"
                         ? this.getHiddenColsGroups(cmd.sheetId)
@@ -25728,11 +26857,11 @@
                         ? this.getters.getNumberCols(cmd.sheetId)
                         : this.getters.getNumberRows(cmd.sheetId);
                     return (hiddenGroup || []).flat().concat(cmd.elements).length < elements
-                        ? 0 /* Success */
-                        : 63 /* TooManyHiddenElements */;
+                        ? 0 /* CommandResult.Success */
+                        : 63 /* CommandResult.TooManyHiddenElements */;
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             switch (cmd.type) {
@@ -25777,16 +26906,11 @@
             }
             return;
         }
-        isRowHidden(sheetId, index) {
+        isRowHiddenByUser(sheetId, index) {
             return this.hiddenHeaders[sheetId].ROW[index];
         }
-        isColHidden(sheetId, index) {
+        isColHiddenByUser(sheetId, index) {
             return this.hiddenHeaders[sheetId].COL[index];
-        }
-        isHeaderHidden(sheetId, dimension, index) {
-            return dimension === "COL"
-                ? this.isColHidden(sheetId, index)
-                : this.isRowHidden(sheetId, index);
         }
         getHiddenColsGroups(sheetId) {
             const consecutiveIndexes = [[]];
@@ -25825,37 +26949,6 @@
                 consecutiveIndexes.pop();
             }
             return consecutiveIndexes;
-        }
-        getNextVisibleCellPosition(sheetId, col, row) {
-            return {
-                col: this.findVisibleHeader(sheetId, "COL", range(col, this.getters.getNumberCols(sheetId))),
-                row: this.findVisibleHeader(sheetId, "ROW", range(row, this.getters.getNumberRows(sheetId))),
-            };
-        }
-        findVisibleHeader(sheetId, dimension, indexes) {
-            return indexes.find((index) => this.getters.doesHeaderExist(sheetId, dimension, index) &&
-                !this.isHeaderHidden(sheetId, dimension, index));
-        }
-        findLastVisibleColRowIndex(sheetId, dimension, indexes) {
-            let lastIndex;
-            for (lastIndex = indexes.last; lastIndex >= indexes.first; lastIndex--) {
-                if (!this.isHeaderHidden(sheetId, dimension, lastIndex)) {
-                    return lastIndex;
-                }
-            }
-            return lastIndex;
-        }
-        findFirstVisibleColRowIndex(sheetId, dimension) {
-            const numberOfHeaders = this.getters.getNumberHeaders(sheetId, dimension);
-            for (let i = 0; i < numberOfHeaders - 1; i++) {
-                if (dimension === "COL" && !this.isColHidden(sheetId, i)) {
-                    return i;
-                }
-                if (dimension === "ROW" && !this.isRowHidden(sheetId, i)) {
-                    return i;
-                }
-            }
-            return undefined;
         }
         import(data) {
             var _a, _b;
@@ -25904,15 +26997,10 @@
         }
     }
     HeaderVisibilityPlugin.getters = [
-        "findFirstVisibleColRowIndex",
-        "findLastVisibleColRowIndex",
-        "findVisibleHeader",
         "getHiddenColsGroups",
         "getHiddenRowsGroups",
-        "getNextVisibleCellPosition",
-        "isRowHidden",
-        "isColHidden",
-        "isHeaderHidden",
+        "isRowHiddenByUser",
+        "isColHiddenByUser",
     ];
 
     class MergePlugin extends CorePlugin {
@@ -25936,7 +27024,7 @@
                 case "UPDATE_CELL":
                     return this.checkMergedContentUpdate(cmd);
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handle(cmd) {
@@ -26143,32 +27231,32 @@
         checkDestructiveMerge({ sheetId, target }) {
             const sheet = this.getters.tryGetSheet(sheetId);
             if (!sheet)
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             const isDestructive = target.some((zone) => this.isMergeDestructive(sheetId, zone));
-            return isDestructive ? 3 /* MergeIsDestructive */ : 0 /* Success */;
+            return isDestructive ? 3 /* CommandResult.MergeIsDestructive */ : 0 /* CommandResult.Success */;
         }
         checkOverlap({ target }) {
             for (const zone of target) {
                 for (const zone2 of target) {
                     if (zone !== zone2 && overlap(zone, zone2)) {
-                        return 62 /* MergeOverlap */;
+                        return 62 /* CommandResult.MergeOverlap */;
                     }
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkFrozenPanes({ sheetId, target }) {
             const sheet = this.getters.tryGetSheet(sheetId);
             if (!sheet)
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             const { xSplit, ySplit } = this.getters.getPaneDivisions(sheetId);
             for (const zone of target) {
                 if ((zone.left < xSplit && zone.right >= xSplit) ||
                     (zone.top < ySplit && zone.bottom >= ySplit)) {
-                    return 73 /* FrozenPaneOverlap */;
+                    return 72 /* CommandResult.FrozenPaneOverlap */;
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         /**
          * The content of a merged cell should always be empty.
@@ -26177,13 +27265,13 @@
         checkMergedContentUpdate(cmd) {
             const { col, row, sheetId, content } = cmd;
             if (content === undefined) {
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             }
             const { col: mainCol, row: mainRow } = this.getMainCellPosition(sheetId, col, row);
             if (mainCol === col && mainRow === row) {
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             }
-            return 4 /* CellIsMerged */;
+            return 4 /* CommandResult.CellIsMerged */;
         }
         /**
          * Merge the current selection. Note that:
@@ -26359,15 +27447,15 @@
         // ---------------------------------------------------------------------------
         allowDispatch(cmd) {
             const genericChecks = this.chainValidations(this.checkSheetExists, this.checkZones)(cmd);
-            if (genericChecks !== 0 /* Success */) {
+            if (genericChecks !== 0 /* CommandResult.Success */) {
                 return genericChecks;
             }
             switch (cmd.type) {
                 case "HIDE_SHEET": {
                     if (this.getVisibleSheetIds().length === 1) {
-                        return 8 /* NotEnoughSheets */;
+                        return 8 /* CommandResult.NotEnoughSheets */;
                     }
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
                 }
                 case "CREATE_SHEET": {
                     return this.checkValidations(cmd, this.checkSheetName, this.checkSheetPosition);
@@ -26379,43 +27467,43 @@
                             .slice(0, currentIndex)
                             .map((id) => !this.isSheetVisible(id));
                         return leftSheets.every((isHidden) => isHidden)
-                            ? 12 /* WrongSheetMove */
-                            : 0 /* Success */;
+                            ? 12 /* CommandResult.WrongSheetMove */
+                            : 0 /* CommandResult.Success */;
                     }
                     else {
                         const rightSheets = this.orderedSheetIds
                             .slice(currentIndex + 1)
                             .map((id) => !this.isSheetVisible(id));
                         return rightSheets.every((isHidden) => isHidden)
-                            ? 12 /* WrongSheetMove */
-                            : 0 /* Success */;
+                            ? 12 /* CommandResult.WrongSheetMove */
+                            : 0 /* CommandResult.Success */;
                     }
                 case "RENAME_SHEET":
                     return this.isRenameAllowed(cmd);
                 case "DELETE_SHEET":
                     return this.orderedSheetIds.length > 1
-                        ? 0 /* Success */
-                        : 8 /* NotEnoughSheets */;
+                        ? 0 /* CommandResult.Success */
+                        : 8 /* CommandResult.NotEnoughSheets */;
                 case "REMOVE_COLUMNS_ROWS": {
                     const length = cmd.dimension === "COL"
                         ? this.getNumberCols(cmd.sheetId)
                         : this.getNumberRows(cmd.sheetId);
                     return length > cmd.elements.length
-                        ? 0 /* Success */
-                        : 7 /* NotEnoughElements */;
+                        ? 0 /* CommandResult.Success */
+                        : 7 /* CommandResult.NotEnoughElements */;
                 }
                 case "FREEZE_ROWS": {
                     return cmd.quantity >= 1 && cmd.quantity < this.getNumberRows(cmd.sheetId)
-                        ? 0 /* Success */
-                        : 72 /* InvalidFreezeQuantity */;
+                        ? 0 /* CommandResult.Success */
+                        : 71 /* CommandResult.InvalidFreezeQuantity */;
                 }
                 case "FREEZE_COLUMNS": {
                     return cmd.quantity >= 1 && cmd.quantity < this.getNumberCols(cmd.sheetId)
-                        ? 0 /* Success */
-                        : 72 /* InvalidFreezeQuantity */;
+                        ? 0 /* CommandResult.Success */
+                        : 71 /* CommandResult.InvalidFreezeQuantity */;
                 }
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handle(cmd) {
@@ -26528,6 +27616,7 @@
                     cells: {},
                     conditionalFormats: [],
                     figures: [],
+                    filterTables: [],
                     areGridLinesVisible: sheet.areGridLinesVisible === undefined ? true : sheet.areGridLinesVisible,
                     isVisible: sheet.isVisible,
                 };
@@ -26824,24 +27913,24 @@
             const { orderedSheetIds, sheets } = this;
             const name = cmd.name && cmd.name.trim().toLowerCase();
             if (orderedSheetIds.find((id) => { var _a; return ((_a = sheets[id]) === null || _a === void 0 ? void 0 : _a.name.toLowerCase()) === name; })) {
-                return 10 /* DuplicatedSheetName */;
+                return 10 /* CommandResult.DuplicatedSheetName */;
             }
             if (FORBIDDEN_IN_EXCEL_REGEX.test(name)) {
-                return 11 /* ForbiddenCharactersInSheetName */;
+                return 11 /* CommandResult.ForbiddenCharactersInSheetName */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkSheetPosition(cmd) {
             const { orderedSheetIds } = this;
             if (cmd.position > orderedSheetIds.length || cmd.position < 0) {
-                return 13 /* WrongSheetPosition */;
+                return 13 /* CommandResult.WrongSheetPosition */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         isRenameAllowed(cmd) {
             const name = cmd.name && cmd.name.trim().toLowerCase();
             if (!name) {
-                return 9 /* MissingSheetName */;
+                return 9 /* CommandResult.MissingSheetName */;
             }
             return this.checkSheetName(cmd);
         }
@@ -27147,9 +28236,9 @@
          */
         checkSheetExists(cmd) {
             if (cmd.type !== "CREATE_SHEET" && "sheetId" in cmd && this.sheets[cmd.sheetId] === undefined) {
-                return 25 /* InvalidSheetId */;
+                return 25 /* CommandResult.InvalidSheetId */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         /**
          * Check if zones in the command are well formed and
@@ -27167,15 +28256,15 @@
                 zones.push(...cmd.ranges.map((rangeData) => this.getters.getRangeFromRangeData(rangeData).zone));
             }
             if (!zones.every(isZoneValid)) {
-                return 23 /* InvalidRange */;
+                return 23 /* CommandResult.InvalidRange */;
             }
             else if (zones.length && "sheetId" in cmd) {
                 const sheetZone = this.getSheetZone(cmd.sheetId);
                 return zones.every((zone) => isZoneInside(zone, sheetZone))
-                    ? 0 /* Success */
-                    : 16 /* TargetOutOfSheet */;
+                    ? 0 /* CommandResult.Success */
+                    : 16 /* CommandResult.TargetOutOfSheet */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
     }
     SheetPlugin.getters = [
@@ -27282,16 +28371,16 @@
                             ? this.lastCellSelected.row
                             : clip(cmd.row, 0, this.getters.getNumberRows(sheetId));
                     if (this.lastCellSelected.col !== undefined && this.lastCellSelected.row !== undefined) {
-                        return 0 /* Success */;
+                        return 0 /* CommandResult.Success */;
                     }
-                    return 42 /* InvalidAutofillSelection */;
+                    return 42 /* CommandResult.InvalidAutofillSelection */;
                 case "AUTOFILL_AUTO":
                     const zone = this.getters.getSelectedZone();
                     return zone.top === zone.bottom
-                        ? 0 /* Success */
-                        : 1 /* CancelledForUnknownReason */;
+                        ? 0 /* CommandResult.Success */
+                        : 1 /* CommandResult.CancelledForUnknownReason */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             switch (cmd.type) {
@@ -27345,7 +28434,7 @@
             const source = this.getters.getSelectedZone();
             const target = this.autofillZone;
             switch (this.direction) {
-                case 1 /* DOWN */:
+                case 1 /* DIRECTION.DOWN */:
                     for (let col = source.left; col <= source.right; col++) {
                         const xcs = [];
                         for (let row = source.top; row <= source.bottom; row++) {
@@ -27357,7 +28446,7 @@
                         }
                     }
                     break;
-                case 0 /* UP */:
+                case 0 /* DIRECTION.UP */:
                     for (let col = source.left; col <= source.right; col++) {
                         const xcs = [];
                         for (let row = source.bottom; row >= source.top; row--) {
@@ -27369,7 +28458,7 @@
                         }
                     }
                     break;
-                case 2 /* LEFT */:
+                case 2 /* DIRECTION.LEFT */:
                     for (let row = source.top; row <= source.bottom; row++) {
                         const xcs = [];
                         for (let col = source.right; col >= source.left; col--) {
@@ -27381,7 +28470,7 @@
                         }
                     }
                     break;
-                case 3 /* RIGHT */:
+                case 3 /* DIRECTION.RIGHT */:
                     for (let row = source.top; row <= source.bottom; row++) {
                         const xcs = [];
                         for (let col = source.left; col <= source.right; col++) {
@@ -27414,16 +28503,16 @@
             }
             this.direction = this.getDirection(col, row);
             switch (this.direction) {
-                case 0 /* UP */:
+                case 0 /* DIRECTION.UP */:
                     this.saveZone(row, source.top - 1, source.left, source.right);
                     break;
-                case 1 /* DOWN */:
+                case 1 /* DIRECTION.DOWN */:
                     this.saveZone(source.bottom + 1, row, source.left, source.right);
                     break;
-                case 2 /* LEFT */:
+                case 2 /* DIRECTION.LEFT */:
                     this.saveZone(source.top, source.bottom, col, source.left - 1);
                     break;
-                case 3 /* RIGHT */:
+                case 3 /* DIRECTION.RIGHT */:
                     this.saveZone(source.top, source.bottom, source.right + 1, col);
                     break;
             }
@@ -27531,10 +28620,10 @@
         getDirection(col, row) {
             const source = this.getters.getSelectedZone();
             const position = {
-                up: { number: source.top - row, value: 0 /* UP */ },
-                down: { number: row - source.bottom, value: 1 /* DOWN */ },
-                left: { number: source.left - col, value: 2 /* LEFT */ },
-                right: { number: col - source.right, value: 3 /* RIGHT */ },
+                up: { number: source.top - row, value: 0 /* DIRECTION.UP */ },
+                down: { number: row - source.bottom, value: 1 /* DIRECTION.DOWN */ },
+                left: { number: source.left - col, value: 2 /* DIRECTION.LEFT */ },
+                right: { number: col - source.right, value: 3 /* DIRECTION.RIGHT */ },
             };
             if (Object.values(position)
                 .map((x) => (x.number > 0 ? 1 : 0))
@@ -27592,7 +28681,7 @@
             }
         }
     }
-    AutofillPlugin.layers = [6 /* Autofill */];
+    AutofillPlugin.layers = [6 /* LAYERS.Autofill */];
     AutofillPlugin.getters = ["getAutofillTooltip"];
 
     class AutomaticSumPlugin extends UIPlugin {
@@ -27747,7 +28836,8 @@
         }
         isNumber(cell) {
             var _a;
-            return (cell === null || cell === void 0 ? void 0 : cell.evaluated.type) === CellValueType.number && !((_a = cell.format) === null || _a === void 0 ? void 0 : _a.match(DATETIME_FORMAT));
+            return ((cell === null || cell === void 0 ? void 0 : cell.evaluated.type) === CellValueType.number &&
+                !((_a = cell.evaluated.format) === null || _a === void 0 ? void 0 : _a.match(DATETIME_FORMAT)));
         }
         isZoneValid(zone) {
             return zone.bottom >= zone.top && zone.right >= zone.left;
@@ -27879,11 +28969,11 @@
                         cellPopoverRegistry.get(cmd.popoverType);
                     }
                     catch (error) {
-                        return 70 /* InvalidCellPopover */;
+                        return 69 /* CommandResult.InvalidCellPopover */;
                     }
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handle(cmd) {
@@ -27935,6 +29025,14 @@
                     ...this.computePopoverProps(mainPosition, popover.cellCorner),
                 };
         }
+        getPersistentPopoverTypeAtPosition({ col, row }) {
+            if (this.persistentPopover &&
+                this.persistentPopover.col === col &&
+                this.persistentPopover.row === row) {
+                return this.persistentPopover.type;
+            }
+            return undefined;
+        }
         computePopoverProps({ col, row }, corner) {
             const { width, height } = this.getters.getVisibleRect(positionToZone({ col, row }));
             return {
@@ -27960,7 +29058,7 @@
             }
         }
     }
-    CellPopoverPlugin.getters = ["getCellPopover"];
+    CellPopoverPlugin.getters = ["getCellPopover", "getPersistentPopoverTypeAtPosition"];
     CellPopoverPlugin.modes = ["normal"];
 
     /** Abstract state of the clipboard when copying/cutting content that is pasted in cells of the sheet */
@@ -27973,10 +29071,10 @@
             this.sheetId = getters.getActiveSheetId();
         }
         isCutAllowed(target) {
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         isPasteAllowed(target, clipboardOption) {
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         /**
          * Add columns and/or rows to ensure that col + width and row + height are still
@@ -28018,6 +29116,7 @@
             if (!zones.length) {
                 this.cells = [[]];
                 this.zones = [];
+                this.copiedTables = [];
                 return;
             }
             const lefts = new Set(zones.map((z) => z.left));
@@ -28046,26 +29145,37 @@
                 }
                 cellsInClipboard.push(cellsInRow);
             }
+            const tables = [];
+            for (const zone of zones) {
+                for (const table of this.getters.getFilterTablesInZone(sheetId, zone)) {
+                    const values = [];
+                    for (const col of range(table.zone.left, table.zone.right + 1)) {
+                        values.push(this.getters.getFilterValues(sheetId, col, table.zone.top));
+                    }
+                    tables.push({ filtersValues: values, zone: table.zone });
+                }
+            }
             this.cells = cellsInClipboard;
             this.zones = clippedZones;
+            this.copiedTables = tables;
         }
         isCutAllowed(target) {
             if (target.length !== 1) {
-                return 17 /* WrongCutSelection */;
+                return 17 /* CommandResult.WrongCutSelection */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         isPasteAllowed(target, clipboardOption) {
             const sheetId = this.getters.getActiveSheetId();
             if (this.operation === "CUT" && (clipboardOption === null || clipboardOption === void 0 ? void 0 : clipboardOption.pasteOption) !== undefined) {
                 // cannot paste only format or only value if the previous operation is a CUT
-                return 19 /* WrongPasteOption */;
+                return 19 /* CommandResult.WrongPasteOption */;
             }
             if (target.length > 1) {
                 // cannot paste if we have a clipped zone larger than a cell and multiple
                 // zones selected
                 if (this.cells.length > 1 || this.cells[0].length > 1) {
-                    return 18 /* WrongPasteSelection */;
+                    return 18 /* CommandResult.WrongPasteSelection */;
                 }
             }
             const clipboardHeight = this.cells.length;
@@ -28075,7 +29185,7 @@
                     if (target.length > 1 ||
                         !this.getters.isSingleCellOrMerge(sheetId, target[0]) ||
                         clipboardHeight * clipboardWidth !== 1) {
-                        return 2 /* WillRemoveExistingMerge */;
+                        return 2 /* CommandResult.WillRemoveExistingMerge */;
                     }
                 }
             }
@@ -28083,10 +29193,10 @@
             for (const zone of this.getPasteZones(target)) {
                 if ((zone.left < xSplit && zone.right >= xSplit) ||
                     (zone.top < ySplit && zone.bottom >= ySplit)) {
-                    return 73 /* FrozenPaneOverlap */;
+                    return 72 /* CommandResult.FrozenPaneOverlap */;
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         /**
          * Paste the clipboard content in the given target
@@ -28129,6 +29239,9 @@
                     }
                 }
             }
+            if ((options === null || options === void 0 ? void 0 : options.pasteOption) === undefined) {
+                this.pasteCopiedTables(target);
+            }
         }
         pasteFromCut(target, options) {
             this.clearClippedZones();
@@ -28141,6 +29254,13 @@
                 col: selection.left,
                 row: selection.top,
             });
+            for (const filterTable of this.copiedTables) {
+                this.dispatch("REMOVE_FILTER_TABLE", {
+                    sheetId: this.getters.getActiveSheetId(),
+                    target: [filterTable.zone],
+                });
+            }
+            this.pasteCopiedTables(target);
         }
         /**
          * The clipped zone is copied as many times as it fits in the target.
@@ -28345,6 +29465,28 @@
                 });
             }
         }
+        /** Paste the filter tables that are in the state */
+        pasteCopiedTables(target) {
+            const sheetId = this.getters.getActiveSheetId();
+            const selection = target[0];
+            const cutZone = this.zones[0];
+            const cutOffset = [
+                selection.left - cutZone.left,
+                selection.top - cutZone.top,
+            ];
+            for (const table of this.copiedTables) {
+                const newTableZone = createAdaptedZone(table.zone, "both", "MOVE", cutOffset);
+                this.dispatch("CREATE_FILTER_TABLE", { sheetId, target: [newTableZone] });
+                for (const i of range(0, table.filtersValues.length)) {
+                    this.dispatch("UPDATE_FILTER", {
+                        sheetId,
+                        col: newTableZone.left + i,
+                        row: newTableZone.top,
+                        values: table.filtersValues[i],
+                    });
+                }
+            }
+        }
         getClipboardContent() {
             return (this.cells
                 .map((cells) => {
@@ -28407,16 +29549,16 @@
             this.operation = operation;
         }
         isCutAllowed(target) {
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         isPasteAllowed(target, option) {
             if (target.length === 0) {
-                return 71 /* EmptyTarget */;
+                return 70 /* CommandResult.EmptyTarget */;
             }
             if ((option === null || option === void 0 ? void 0 : option.pasteOption) !== undefined) {
-                return 20 /* WrongFigurePasteOption */;
+                return 20 /* CommandResult.WrongFigurePasteOption */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         /**
          * Paste the clipboard content in the given target
@@ -28442,6 +29584,7 @@
                     id: this.copiedFigure.id,
                 });
             }
+            this.dispatch("SELECT_FIGURE", { id: newId });
         }
         getClipboardContent() {
             return "\t";
@@ -28465,9 +29608,9 @@
             const sheetId = this.getters.getActiveSheetId();
             const pasteZone = this.getPasteZone(target);
             if (this.getters.doesIntersectMerge(sheetId, pasteZone)) {
-                return 2 /* WillRemoveExistingMerge */;
+                return 2 /* CommandResult.WillRemoveExistingMerge */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         paste(target) {
             const values = this.values;
@@ -28533,7 +29676,7 @@
                     return state.isCutAllowed(zones);
                 case "PASTE":
                     if (!this.state) {
-                        return 21 /* EmptyClipboard */;
+                        return 21 /* CommandResult.EmptyClipboard */;
                     }
                     const pasteOption = cmd.pasteOption || (this._isPaintingFormat ? "onlyFormat" : undefined);
                     return this.state.isPasteAllowed(cmd.target, { pasteOption });
@@ -28552,7 +29695,7 @@
                     return state.isPasteAllowed(paste);
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             var _a, _b;
@@ -28726,7 +29869,7 @@
             this.state.drawClipboard(renderingContext);
         }
     }
-    ClipboardPlugin.layers = [2 /* Clipboard */];
+    ClipboardPlugin.layers = [2 /* LAYERS.Clipboard */];
     ClipboardPlugin.getters = ["getClipboardContent", "isCutOperation", "isPaintingFormat"];
 
     /**
@@ -29277,10 +30420,14 @@
             const cell = this.getters.getCell(sheetId, col, row);
             const styles = this.computedStyles[sheetId];
             const cfStyle = styles && ((_a = styles[col]) === null || _a === void 0 ? void 0 : _a[row]);
-            return {
+            const computedStyle = {
                 ...cell === null || cell === void 0 ? void 0 : cell.style,
                 ...cfStyle,
             };
+            if (this.getters.isFilterHeader(sheetId, col, row)) {
+                computedStyle.bold = true;
+            }
+            return computedStyle;
         }
         getConditionalIcon(col, row) {
             var _a;
@@ -29532,6 +30679,159 @@
         }
     }
     EvaluationConditionalFormatPlugin.getters = ["getConditionalIcon", "getCellComputedStyle"];
+
+    class FilterEvaluationPlugin extends UIPlugin {
+        constructor() {
+            super(...arguments);
+            this.filterValues = {};
+            this.hiddenRows = new Set();
+            this.isEvaluationDirty = false;
+        }
+        allowDispatch(cmd) {
+            switch (cmd.type) {
+                case "UPDATE_FILTER":
+                    if (!this.getters.getFilterId(cmd.sheetId, cmd.col, cmd.row)) {
+                        return 76 /* CommandResult.FilterNotFound */;
+                    }
+                    break;
+            }
+            return 0 /* CommandResult.Success */;
+        }
+        handle(cmd) {
+            switch (cmd.type) {
+                case "UNDO":
+                case "REDO":
+                case "UPDATE_CELL":
+                case "EVALUATE_CELLS":
+                case "ACTIVATE_SHEET":
+                    this.isEvaluationDirty = true;
+                    break;
+                case "UPDATE_FILTER":
+                    this.updateFilter(cmd);
+                    this.updateHiddenRows();
+                    break;
+                case "DUPLICATE_SHEET":
+                    const filterValues = {};
+                    for (const copiedFilter of this.getters.getFilters(cmd.sheetId)) {
+                        const zone = copiedFilter.zoneWithHeaders;
+                        const newFilter = this.getters.getFilter(cmd.sheetIdTo, zone.left, zone.top);
+                        filterValues[newFilter.id] = this.filterValues[cmd.sheetId][copiedFilter.id];
+                    }
+                    this.filterValues[cmd.sheetIdTo] = filterValues;
+                    break;
+                // If we don't handle DELETE_SHEET, on one hand we will have some residual data, on the other hand we keep the data
+                // on DELETE_SHEET followed by undo
+            }
+        }
+        finalize() {
+            if (this.isEvaluationDirty) {
+                this.updateHiddenRows();
+                this.isEvaluationDirty = false;
+            }
+        }
+        isRowFiltered(sheetId, row) {
+            if (sheetId !== this.getters.getActiveSheetId()) {
+                return false;
+            }
+            return this.hiddenRows.has(row);
+        }
+        getCellBorderWithFilterBorder(sheetId, col, row) {
+            let filterBorder = undefined;
+            for (let filters of this.getters.getFilterTables(sheetId)) {
+                const zone = filters.zone;
+                // The borders should be at the edges of the visible zone of the filter
+                const colsRange = range(zone.left, zone.right + 1);
+                const rowsRange = range(zone.top, zone.bottom + 1);
+                const visibleLeft = this.getters.findVisibleHeader(sheetId, "COL", colsRange);
+                const visibleRight = this.getters.findVisibleHeader(sheetId, "COL", colsRange.reverse());
+                const visibleTop = this.getters.findVisibleHeader(sheetId, "ROW", rowsRange);
+                const visibleBottom = this.getters.findVisibleHeader(sheetId, "ROW", rowsRange.reverse());
+                if (isInside(col, row, zone)) {
+                    filterBorder = {
+                        top: row === visibleTop ? DEFAULT_FILTER_BORDER_DESC : undefined,
+                        bottom: row === visibleBottom ? DEFAULT_FILTER_BORDER_DESC : undefined,
+                        left: col === visibleLeft ? DEFAULT_FILTER_BORDER_DESC : undefined,
+                        right: col === visibleRight ? DEFAULT_FILTER_BORDER_DESC : undefined,
+                    };
+                }
+            }
+            const cellBorder = this.getters.getCellBorder(sheetId, col, row);
+            // Use removeFalsyAttributes to avoid overwriting filter borders with undefined values
+            const border = { ...filterBorder, ...removeFalsyAttributes(cellBorder || {}) };
+            return isObjectEmptyRecursive(border) ? null : border;
+        }
+        getFilterHeaders(sheetId) {
+            const headers = [];
+            for (let filters of this.getters.getFilterTables(sheetId)) {
+                const zone = filters.zone;
+                if (!zone) {
+                    continue;
+                }
+                const row = zone.top;
+                for (let col = zone.left; col <= zone.right; col++) {
+                    if (this.getters.isColHidden(sheetId, col) || this.getters.isRowHidden(sheetId, row)) {
+                        continue;
+                    }
+                    headers.push({ col, row });
+                }
+            }
+            return headers;
+        }
+        getFilterValues(sheetId, col, row) {
+            const id = this.getters.getFilterId(sheetId, col, row);
+            if (!id || !this.filterValues[sheetId])
+                return [];
+            return this.filterValues[sheetId][id] || [];
+        }
+        isFilterHeader(sheetId, col, row) {
+            const headers = this.getFilterHeaders(sheetId);
+            return headers.some((header) => header.col === col && header.row === row);
+        }
+        isFilterActive(sheetId, col, row) {
+            var _a, _b;
+            const id = this.getters.getFilterId(sheetId, col, row);
+            return Boolean(id && ((_b = (_a = this.filterValues[sheetId]) === null || _a === void 0 ? void 0 : _a[id]) === null || _b === void 0 ? void 0 : _b.length));
+        }
+        updateFilter({ col, row, values, sheetId }) {
+            const id = this.getters.getFilterId(sheetId, col, row);
+            if (!id)
+                return;
+            if (!this.filterValues[sheetId])
+                this.filterValues[sheetId] = {};
+            this.filterValues[sheetId][id] = values;
+        }
+        updateHiddenRows() {
+            var _a, _b;
+            const sheetId = this.getters.getActiveSheetId();
+            const filters = this.getters.getFilters(sheetId);
+            const hiddenRows = new Set();
+            for (let filter of filters) {
+                const filteredValues = (_b = (_a = this.filterValues[sheetId]) === null || _a === void 0 ? void 0 : _a[filter.id]) === null || _b === void 0 ? void 0 : _b.map(toLowerCase);
+                if (!filteredValues || !filter.filteredZone)
+                    continue;
+                for (let row = filter.filteredZone.top; row <= filter.filteredZone.bottom; row++) {
+                    const value = this.getCellValueAsString(sheetId, filter.col, row);
+                    if (filteredValues.includes(value)) {
+                        hiddenRows.add(row);
+                    }
+                }
+            }
+            this.hiddenRows = hiddenRows;
+        }
+        getCellValueAsString(sheetId, col, row) {
+            var _a;
+            const value = (_a = this.getters.getCell(sheetId, col, row)) === null || _a === void 0 ? void 0 : _a.formattedValue;
+            return (value === null || value === void 0 ? void 0 : value.toLowerCase()) || "";
+        }
+    }
+    FilterEvaluationPlugin.getters = [
+        "getCellBorderWithFilterBorder",
+        "getFilterHeaders",
+        "getFilterValues",
+        "isFilterHeader",
+        "isRowFiltered",
+        "isFilterActive",
+    ];
 
     const BORDER_COLOR = "#8B008B";
     const BACKGROUND_COLOR = "#8B008B33";
@@ -29794,7 +31094,7 @@
             }
         }
     }
-    FindAndReplacePlugin.layers = [3 /* Search */];
+    FindAndReplacePlugin.layers = [3 /* LAYERS.Search */];
     FindAndReplacePlugin.getters = ["getSearchMatches", "getCurrentSelectedMatchIndex"];
 
     class FormatPlugin extends UIPlugin {
@@ -29858,6 +31158,60 @@
     }
     FormatPlugin.modes = ["normal"];
 
+    class HeaderVisibilityUIPlugin extends UIPlugin {
+        isRowHidden(sheetId, index) {
+            return (this.getters.isRowHiddenByUser(sheetId, index) || this.getters.isRowFiltered(sheetId, index));
+        }
+        isColHidden(sheetId, index) {
+            return this.getters.isColHiddenByUser(sheetId, index);
+        }
+        isHeaderHidden(sheetId, dimension, index) {
+            return dimension === "COL"
+                ? this.isColHidden(sheetId, index)
+                : this.isRowHidden(sheetId, index);
+        }
+        getNextVisibleCellPosition(sheetId, col, row) {
+            return {
+                col: this.findVisibleHeader(sheetId, "COL", range(col, this.getters.getNumberCols(sheetId))),
+                row: this.findVisibleHeader(sheetId, "ROW", range(row, this.getters.getNumberRows(sheetId))),
+            };
+        }
+        findVisibleHeader(sheetId, dimension, indexes) {
+            return indexes.find((index) => this.getters.doesHeaderExist(sheetId, dimension, index) &&
+                !this.isHeaderHidden(sheetId, dimension, index));
+        }
+        findLastVisibleColRowIndex(sheetId, dimension, indexes) {
+            let lastIndex;
+            for (lastIndex = indexes.last; lastIndex >= indexes.first; lastIndex--) {
+                if (!this.isHeaderHidden(sheetId, dimension, lastIndex)) {
+                    return lastIndex;
+                }
+            }
+            return lastIndex;
+        }
+        findFirstVisibleColRowIndex(sheetId, dimension) {
+            const numberOfHeaders = this.getters.getNumberHeaders(sheetId, dimension);
+            for (let i = 0; i < numberOfHeaders - 1; i++) {
+                if (dimension === "COL" && !this.isColHidden(sheetId, i)) {
+                    return i;
+                }
+                if (dimension === "ROW" && !this.isRowHidden(sheetId, i)) {
+                    return i;
+                }
+            }
+            return undefined;
+        }
+    }
+    HeaderVisibilityUIPlugin.getters = [
+        "getNextVisibleCellPosition",
+        "findVisibleHeader",
+        "findLastVisibleColRowIndex",
+        "findFirstVisibleColRowIndex",
+        "isRowHidden",
+        "isColHidden",
+        "isHeaderHidden",
+    ];
+
     /**
      * HighlightPlugin
      */
@@ -29920,7 +31274,7 @@
             }
         }
     }
-    HighlightPlugin.layers = [1 /* Highlights */];
+    HighlightPlugin.layers = [1 /* LAYERS.Highlights */];
     HighlightPlugin.getters = ["getHighlights"];
 
     class RendererPlugin extends UIPlugin {
@@ -29977,7 +31331,7 @@
         // ---------------------------------------------------------------------------
         drawGrid(renderingContext, layer) {
             switch (layer) {
-                case 0 /* Background */:
+                case 0 /* LAYERS.Background */:
                     this.boxes = this.getGridBoxes();
                     this.drawBackground(renderingContext);
                     this.drawCellBackground(renderingContext);
@@ -29986,7 +31340,7 @@
                     this.drawIcon(renderingContext);
                     this.drawFrozenPanes(renderingContext);
                     break;
-                case 7 /* Headers */:
+                case 7 /* LAYERS.Headers */:
                     if (!this.getters.isDashboard()) {
                         this.drawHeaders(renderingContext);
                         this.drawFrozenPanesHeaders(renderingContext);
@@ -30063,8 +31417,7 @@
         drawBorders(renderingContext) {
             const { ctx, thinLineWidth } = renderingContext;
             for (let box of this.boxes) {
-                // fill color
-                let border = box.border;
+                const border = box.border;
                 if (border) {
                     const { x, y, width, height } = box;
                     if (border.left) {
@@ -30110,7 +31463,11 @@
                         x = box.x + (box.image ? box.image.size + 2 * MIN_CF_ICON_MARGIN : MIN_CELL_TEXT_MARGIN);
                     }
                     else if (align === "right") {
-                        x = box.x + box.width - MIN_CELL_TEXT_MARGIN;
+                        x =
+                            box.x +
+                                box.width -
+                                MIN_CELL_TEXT_MARGIN -
+                                (box.isFilterHeader ? ICON_EDGE_LENGTH + FILTER_ICON_MARGIN : 0);
                     }
                     else {
                         x = box.x + box.width / 2;
@@ -30184,39 +31541,57 @@
             const bottom = visibleRows[visibleRows.length - 1];
             const { width, height } = this.getters.getSheetViewDimensionWithHeaders();
             const selection = this.getters.getSelectedZones();
+            const selectedCols = getZonesCols(selection);
+            const selectedRows = getZonesRows(selection);
             const sheetId = this.getters.getActiveSheetId();
             const numberOfCols = this.getters.getNumberCols(sheetId);
             const numberOfRows = this.getters.getNumberRows(sheetId);
             const activeCols = this.getters.getActiveCols();
             const activeRows = this.getters.getActiveRows();
-            ctx.fillStyle = BACKGROUND_HEADER_COLOR;
             ctx.font = `400 ${HEADER_FONT_SIZE}px ${DEFAULT_FONT}`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.lineWidth = thinLineWidth;
             ctx.strokeStyle = "#333";
-            // background
-            ctx.fillRect(0, 0, width, HEADER_HEIGHT);
-            ctx.fillRect(0, 0, HEADER_WIDTH, height);
-            // selection background
-            ctx.fillStyle = BACKGROUND_HEADER_SELECTED_COLOR;
-            for (let zone of selection) {
-                const colZone = intersection(zone, { left, right, top: 0, bottom: numberOfRows - 1 });
-                if (colZone) {
-                    const { x, width } = this.getters.getVisibleRect(colZone);
-                    ctx.fillStyle = activeCols.has(zone.left)
-                        ? BACKGROUND_HEADER_ACTIVE_COLOR
-                        : BACKGROUND_HEADER_SELECTED_COLOR;
-                    ctx.fillRect(x, 0, width, HEADER_HEIGHT);
+            // Columns headers background
+            for (let col = left; col <= right; col++) {
+                const colZone = { left: col, right: col, top: 0, bottom: numberOfRows - 1 };
+                const { x, width } = this.getters.getVisibleRect(colZone);
+                const colHasFilter = this.getters.doesZonesContainFilter(sheetId, [colZone]);
+                const isColActive = activeCols.has(col);
+                const isColSelected = selectedCols.has(col);
+                if (isColActive) {
+                    ctx.fillStyle = colHasFilter ? FILTERS_COLOR : BACKGROUND_HEADER_ACTIVE_COLOR;
                 }
-                const rowZone = intersection(zone, { top, bottom, left: 0, right: numberOfCols - 1 });
-                if (rowZone) {
-                    const { y, height } = this.getters.getVisibleRect(rowZone);
-                    ctx.fillStyle = activeRows.has(zone.top)
-                        ? BACKGROUND_HEADER_ACTIVE_COLOR
+                else if (isColSelected) {
+                    ctx.fillStyle = colHasFilter
+                        ? BACKGROUND_HEADER_SELECTED_FILTER_COLOR
                         : BACKGROUND_HEADER_SELECTED_COLOR;
-                    ctx.fillRect(0, y, HEADER_WIDTH, height);
                 }
+                else {
+                    ctx.fillStyle = colHasFilter ? BACKGROUND_HEADER_FILTER_COLOR : BACKGROUND_HEADER_COLOR;
+                }
+                ctx.fillRect(x, 0, width, HEADER_HEIGHT);
+            }
+            // Rows headers background
+            for (let row = top; row <= bottom; row++) {
+                const rowZone = { top: row, bottom: row, left: 0, right: numberOfCols - 1 };
+                const { y, height } = this.getters.getVisibleRect(rowZone);
+                const rowHasFilter = this.getters.doesZonesContainFilter(sheetId, [rowZone]);
+                const isRowActive = activeRows.has(row);
+                const isRowSelected = selectedRows.has(row);
+                if (isRowActive) {
+                    ctx.fillStyle = rowHasFilter ? FILTERS_COLOR : BACKGROUND_HEADER_ACTIVE_COLOR;
+                }
+                else if (isRowSelected) {
+                    ctx.fillStyle = rowHasFilter
+                        ? BACKGROUND_HEADER_SELECTED_FILTER_COLOR
+                        : BACKGROUND_HEADER_SELECTED_COLOR;
+                }
+                else {
+                    ctx.fillStyle = rowHasFilter ? BACKGROUND_HEADER_FILTER_COLOR : BACKGROUND_HEADER_COLOR;
+                }
+                ctx.fillRect(0, y, HEADER_WIDTH, height);
             }
             // 2 main lines
             ctx.beginPath();
@@ -30335,7 +31710,7 @@
                 y,
                 width,
                 height,
-                border: this.getters.getCellBorder(sheetId, col, row) || undefined,
+                border: this.getters.getCellBorderWithFilterBorder(sheetId, col, row) || undefined,
                 style: this.getters.getCellComputedStyle(sheetId, col, row),
             };
             if (!cell) {
@@ -30353,6 +31728,9 @@
                     image: ICONS[cfIcon].img,
                 };
             }
+            /** Filter Header */
+            box.isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
+            const headerIconWidth = box.isFilterHeader ? ICON_EDGE_LENGTH + FILTER_ICON_MARGIN : 0;
             /** Content */
             const text = this.getters.getCellText(cell, showFormula);
             const textWidth = this.getters.getTextWidth(cell);
@@ -30360,7 +31738,7 @@
             const multiLineText = wrapping === "wrap"
                 ? this.getters.getCellMultiLineText(cell, width - 2 * MIN_CELL_TEXT_MARGIN)
                 : [text];
-            const contentWidth = iconBoxWidth + textWidth;
+            const contentWidth = iconBoxWidth + textWidth + headerIconWidth;
             const align = this.computeCellAlignment(cell, contentWidth > width);
             box.content = {
                 multiLineText,
@@ -30374,11 +31752,11 @@
             }
             /** ClipRect */
             const isOverflowing = contentWidth > width || fontSizePX > height;
-            if (cfIcon) {
+            if (cfIcon || box.isFilterHeader) {
                 box.clipRect = {
                     x: box.x + iconBoxWidth,
                     y: box.y,
-                    width: Math.max(0, width - iconBoxWidth),
+                    width: Math.max(0, width - iconBoxWidth - headerIconWidth),
                     height,
                 };
             }
@@ -30475,7 +31853,7 @@
             return boxes;
         }
     }
-    RendererPlugin.layers = [0 /* Background */, 7 /* Headers */];
+    RendererPlugin.layers = [0 /* LAYERS.Background */, 7 /* LAYERS.Headers */];
     RendererPlugin.getters = ["getColDimensionsInViewport", "getRowDimensionsInViewport"];
 
     const selectionStatisticFunctions = [
@@ -30541,12 +31919,12 @@
                         break;
                     }
                     catch (error) {
-                        return 25 /* InvalidSheetId */;
+                        return 25 /* CommandResult.InvalidSheetId */;
                     }
                 case "MOVE_COLUMNS_ROWS":
                     return this.isMoveElementAllowed(cmd);
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handleEvent(event) {
             const anchor = event.anchor;
@@ -30986,9 +32364,9 @@
             if (doesElementsHaveCommonMerges(id, start - 1, start) ||
                 doesElementsHaveCommonMerges(id, end, end + 1) ||
                 doesElementsHaveCommonMerges(id, cmd.base - 1, cmd.base)) {
-                return 2 /* WillRemoveExistingMerge */;
+                return 2 /* CommandResult.WillRemoveExistingMerge */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         //-------------------------------------------
         // Helpers for extensions
@@ -31079,7 +32457,7 @@
             }
         }
     }
-    GridSelectionPlugin.layers = [5 /* Selection */];
+    GridSelectionPlugin.layers = [5 /* LAYERS.Selection */];
     GridSelectionPlugin.getters = [
         "getActiveSheet",
         "getActiveSheetId",
@@ -31128,11 +32506,11 @@
             switch (cmd.type) {
                 case "ADD_EMPTY_RANGE":
                     if (this.inputHasSingleRange && this.ranges.length === 1) {
-                        return 27 /* MaximumRangesReached */;
+                        return 27 /* CommandResult.MaximumRangesReached */;
                     }
                     break;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handleEvent(event) {
             const xc = zoneToXc(event.anchor.zone);
@@ -31317,7 +32695,7 @@
             return index >= 0 ? index : null;
         }
     }
-    SelectionInputPlugin.layers = [1 /* Highlights */];
+    SelectionInputPlugin.layers = [1 /* LAYERS.Highlights */];
     SelectionInputPlugin.getters = [];
 
     /**
@@ -31347,14 +32725,14 @@
                 case "FOCUS_RANGE":
                     const index = (_a = this.currentInput) === null || _a === void 0 ? void 0 : _a.getIndex(cmd.rangeId);
                     if (this.focusedInputId === cmd.id && ((_b = this.currentInput) === null || _b === void 0 ? void 0 : _b.focusedRangeIndex) === index) {
-                        return 26 /* InputAlreadyFocused */;
+                        return 26 /* CommandResult.InputAlreadyFocused */;
                     }
                     break;
             }
             if (this.currentInput) {
                 return this.currentInput.allowDispatch(cmd);
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             var _a;
@@ -31444,7 +32822,7 @@
             this.focusedInputId = null;
         }
     }
-    SelectionInputsManagerPlugin.layers = [1 /* Highlights */];
+    SelectionInputsManagerPlugin.layers = [1 /* LAYERS.Highlights */];
     SelectionInputsManagerPlugin.getters = [
         "getSelectionInput",
         "getSelectionInputValue",
@@ -31957,7 +33335,7 @@
         }
     }
     SelectionMultiUserPlugin.getters = ["getClientsToDisplay"];
-    SelectionMultiUserPlugin.layers = [5 /* Selection */];
+    SelectionMultiUserPlugin.layers = [5 /* LAYERS.Selection */];
 
     class InternalViewport {
         constructor(getters, sheetId, boundaries, sizeInGrid, options, offsets) {
@@ -32274,6 +33652,7 @@
             this.sheetViewHeight = DEFAULT_SHEETVIEW_SIZE;
             this.gridOffsetX = 0;
             this.gridOffsetY = 0;
+            this.sheetsWithDirtyViewports = [];
         }
         // ---------------------------------------------------------------------------
         // Command Handling
@@ -32281,34 +33660,31 @@
         allowDispatch(cmd) {
             switch (cmd.type) {
                 case "SET_VIEWPORT_OFFSET":
-                    return this.checkValidations(cmd, this.checkOffsetValidity, this.checkScrollingDirection);
+                    return this.checkScrollingDirection(cmd);
                 case "RESIZE_SHEETVIEW":
-                    if (cmd.width < 0 || cmd.height < 0) {
-                        return 66 /* InvalidViewportSize */;
-                    }
-                    return 0 /* Success */;
+                    return this.chainValidations(this.checkValuesAreDifferent, this.checkPositiveDimension)(cmd);
                 case "FREEZE_COLUMNS": {
                     const sheetId = this.getters.getActiveSheetId();
                     const merges = this.getters.getMerges(sheetId);
                     for (let merge of merges) {
                         if (merge.left < cmd.quantity && cmd.quantity <= merge.right) {
-                            return 62 /* MergeOverlap */;
+                            return 62 /* CommandResult.MergeOverlap */;
                         }
                     }
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
                 }
                 case "FREEZE_ROWS": {
                     const sheetId = this.getters.getActiveSheetId();
                     const merges = this.getters.getMerges(sheetId);
                     for (let merge of merges) {
                         if (merge.top < cmd.quantity && cmd.quantity <= merge.bottom) {
-                            return 62 /* MergeOverlap */;
+                            return 62 /* CommandResult.MergeOverlap */;
                         }
                     }
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
                 }
                 default:
-                    return 0 /* Success */;
+                    return 0 /* CommandResult.Success */;
             }
         }
         handleEvent(event) {
@@ -32363,7 +33739,14 @@
                 case "HIDE_COLUMNS_ROWS":
                 case "ADD_COLUMNS_ROWS":
                 case "UNHIDE_COLUMNS_ROWS":
+                case "UPDATE_FILTER":
                     this.resetViewports(cmd.sheetId);
+                    break;
+                case "UPDATE_CELL":
+                    // update cell content or format can change hidden rows because of data filters
+                    if ("content" in cmd || "format" in cmd) {
+                        this.sheetsWithDirtyViewports.push(cmd.sheetId);
+                    }
                     break;
                 case "ACTIVATE_SHEET":
                     this.setViewports();
@@ -32379,6 +33762,10 @@
             }
         }
         finalize() {
+            for (const sheetId of this.sheetsWithDirtyViewports) {
+                this.resetViewports(sheetId);
+            }
+            this.sheetsWithDirtyViewports = [];
             this.setViewports();
         }
         setViewports() {
@@ -32607,20 +33994,29 @@
             this.ensureMainViewportExist(sheetId);
             return Object.values(this.viewports[sheetId]).filter(isDefined$1);
         }
+        checkPositiveDimension(cmd) {
+            if (cmd.width < 0 || cmd.height < 0) {
+                return 65 /* CommandResult.InvalidViewportSize */;
+            }
+            return 0 /* CommandResult.Success */;
+        }
+        checkValuesAreDifferent(cmd) {
+            const { height, width } = this.getSheetViewDimension();
+            if (cmd.gridOffsetX === this.gridOffsetX &&
+                cmd.gridOffsetY === this.gridOffsetY &&
+                cmd.width === width &&
+                cmd.height === height) {
+                return 73 /* CommandResult.ValuesNotChanged */;
+            }
+            return 0 /* CommandResult.Success */;
+        }
         checkScrollingDirection({ offsetX, offsetY, }) {
             const pane = this.getMainInternalViewport(this.getters.getActiveSheetId());
             if ((!pane.canScrollHorizontally && offsetX > 0) ||
                 (!pane.canScrollVertically && offsetY > 0)) {
-                return 67 /* InvalidScrollingDirection */;
+                return 66 /* CommandResult.InvalidScrollingDirection */;
             }
-            return 0 /* Success */;
-        }
-        checkOffsetValidity({ offsetX, offsetY, }) {
-            const { maxOffsetX, maxOffsetY } = this.getMaximumSheetOffset();
-            if (offsetX < 0 || offsetY < 0 || offsetY > maxOffsetY || offsetX > maxOffsetX) {
-                return 65 /* InvalidOffset */;
-            }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         getMainViewport(sheetId) {
             const viewport = this.getMainInternalViewport(sheetId);
@@ -32677,7 +34073,8 @@
         }
         setSheetViewOffset(offsetX, offsetY) {
             const sheetId = this.getters.getActiveSheetId();
-            Object.values(this.getSubViewports(sheetId)).forEach((viewport) => viewport.setViewportOffset(offsetX, offsetY));
+            const { maxOffsetX, maxOffsetY } = this.getMaximumSheetOffset();
+            Object.values(this.getSubViewports(sheetId)).forEach((viewport) => viewport.setViewportOffset(clip(offsetX, 0, maxOffsetX), clip(offsetY, 0, maxOffsetY)));
         }
         /**
          * Clip the vertical offset within the allowed range.
@@ -32788,7 +34185,6 @@
         "getSheetViewDimension",
         "getSheetViewDimensionWithHeaders",
         "getMainViewportRect",
-        "getMaximumSheetOffset",
         "isVisibleInViewport",
         "getEdgeScrollCol",
         "getEdgeScrollRow",
@@ -32811,32 +34207,32 @@
                     }
                     return this.checkValidations(cmd, this.checkMerge, this.checkMergeSizes);
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             switch (cmd.type) {
                 case "SORT_CELLS":
-                    this.sortZone(cmd.sheetId, cmd, cmd.zone, cmd.sortDirection);
+                    this.sortZone(cmd.sheetId, cmd, cmd.zone, cmd.sortDirection, cmd.sortOptions || {});
                     break;
             }
         }
         checkMerge({ sheetId, zone }) {
             if (!this.getters.doesIntersectMerge(sheetId, zone)) {
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             }
             /*Test the presence of single cells*/
             for (let row = zone.top; row <= zone.bottom; row++) {
                 for (let col = zone.left; col <= zone.right; col++) {
                     if (!this.getters.isInMerge(sheetId, col, row)) {
-                        return 60 /* InvalidSortZone */;
+                        return 60 /* CommandResult.InvalidSortZone */;
                     }
                 }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkMergeSizes({ sheetId, zone }) {
             if (!this.getters.doesIntersectMerge(sheetId, zone)) {
-                return 0 /* Success */;
+                return 0 /* CommandResult.Success */;
             }
             const merges = this.getters.getMerges(sheetId).filter((merge) => overlap(merge, zone));
             /*Test the presence of merges of different sizes*/
@@ -32849,9 +34245,9 @@
                 ];
                 return widthCurrent === widthFirst && heightCurrent === heightFirst;
             })) {
-                return 60 /* InvalidSortZone */;
+                return 60 /* CommandResult.InvalidSortZone */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         // getContiguousZone helpers
         /**
@@ -33018,18 +34414,18 @@
                 return false;
             }
         }
-        sortZone(sheetId, anchor, zone, sortDirection) {
+        sortZone(sheetId, anchor, zone, sortDirection, options) {
             const [stepX, stepY] = this.mainCellsSteps(sheetId, zone);
             let sortingCol = this.getters.getMainCellPosition(sheetId, anchor.col, anchor.row).col; // fetch anchor
             let sortZone = Object.assign({}, zone);
             // Update in case of merges in the zone
             let cells = this.mainCells(sheetId, zone);
-            if (this.hasHeader(cells)) {
+            if (!options.sortHeaders && this.hasHeader(cells)) {
                 sortZone.top += stepY;
             }
             cells = this.mainCells(sheetId, sortZone);
             const sortingCells = cells[sortingCol - sortZone.left];
-            const sortedIndexOfSortTypeCells = sortCells(sortingCells, sortDirection);
+            const sortedIndexOfSortTypeCells = sortCells(sortingCells, sortDirection, Boolean(options.emptyCellAsZero));
             const sortedIndex = sortedIndexOfSortTypeCells.map((x) => x.index);
             const [width, height] = [cells.length, cells[0].length];
             for (let c = 0; c < width; c++) {
@@ -33134,10 +34530,10 @@
                         break;
                     }
                     catch (error) {
-                        return 25 /* InvalidSheetId */;
+                        return 25 /* CommandResult.InvalidSheetId */;
                     }
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         handle(cmd) {
             switch (cmd.type) {
@@ -33169,16 +34565,23 @@
         // ---------------------------------------------------------------------------
         // Getters
         // ---------------------------------------------------------------------------
-        getCellWidth(cell) {
-            let contentWidth = this.getTextWidth(cell);
-            const cellPosition = this.getters.getCellPosition(cell.id);
-            const icon = this.getters.getConditionalIcon(cellPosition.col, cellPosition.row);
+        getCellWidth(sheetId, { col, row }) {
+            const cell = this.getters.getCell(sheetId, col, row);
+            let contentWidth = 0;
+            if (cell) {
+                contentWidth += this.getTextWidth(cell);
+            }
+            const icon = this.getters.getConditionalIcon(col, row);
             if (icon) {
                 contentWidth += computeIconWidth(this.getters.getCellStyle(cell));
             }
+            const isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
+            if (isFilterHeader) {
+                contentWidth += ICON_EDGE_LENGTH + FILTER_ICON_MARGIN;
+            }
             contentWidth += 2 * PADDING_AUTORESIZE_HORIZONTAL;
             if (this.getters.getCellStyle(cell).wrapping === "wrap") {
-                const zone = positionToZone(this.getters.getCellPosition(cell.id));
+                const zone = positionToZone({ col, row });
                 const colWidth = this.getters.getColSize(this.getters.getActiveSheetId(), zone.left);
                 return Math.min(colWidth, contentWidth);
             }
@@ -33298,8 +34701,8 @@
         // Grid manipulation
         // ---------------------------------------------------------------------------
         getColMaxWidth(sheetId, index) {
-            const cells = this.getters.getColCells(sheetId, index);
-            const sizes = cells.map((cell) => this.getCellWidth(cell));
+            const cellsPositions = positions(this.getters.getColsZone(sheetId, index, index));
+            const sizes = cellsPositions.map((position) => this.getCellWidth(sheetId, position));
             return Math.max(0, ...sizes);
         }
         splitWordToSpecificWidth(ctx, word, width, style) {
@@ -33336,6 +34739,7 @@
     const corePluginRegistry = new Registry()
         .add("sheet", SheetPlugin)
         .add("header visibility", HeaderVisibilityPlugin)
+        .add("filters", FiltersPlugin)
         .add("cell", CellPlugin)
         .add("merge", MergePlugin)
         .add("headerSize", HeaderSizePlugin)
@@ -33346,8 +34750,10 @@
     const uiPluginRegistry = new Registry()
         .add("selection", GridSelectionPlugin)
         .add("ui_sheet", SheetUIPlugin)
+        .add("header_visibility_ui", HeaderVisibilityUIPlugin)
         .add("ui_options", UIOptionsPlugin)
         .add("evaluation", EvaluationPlugin)
+        .add("evaluation_filter", FilterEvaluationPlugin)
         .add("evaluation_cf", EvaluationConditionalFormatPlugin)
         .add("evaluation_chart", EvaluationChartPlugin)
         .add("clipboard", ClipboardPlugin)
@@ -33364,6 +34770,15 @@
         .add("cell_popovers", CellPopoverPlugin)
         .add("selection_multiuser", SelectionMultiUserPlugin)
         .add("custom_colors", CustomColorsPlugin);
+
+    const clickableCellRegistry = new Registry();
+    clickableCellRegistry.add("link", {
+        condition: (cell) => cell.isLink(),
+        action: (cell, env) => {
+            cell.action(env);
+        },
+        sequence: 5,
+    });
 
     // -----------------------------------------------------------------------------
     // SpreadSheet
@@ -33579,6 +34994,134 @@
     }
     BottomBar.template = "o-spreadsheet-BottomBar";
     BottomBar.components = { Menu };
+
+    css /* scss */ `
+  .o-dashboard-clickable-cell {
+    position: absolute;
+    cursor: pointer;
+  }
+`;
+    class SpreadsheetDashboard extends owl.Component {
+        setup() {
+            const gridRef = owl.useRef("grid");
+            this.canvasPosition = useAbsolutePosition(gridRef);
+            this.hoveredCell = owl.useState({ col: undefined, row: undefined });
+            useGridDrawing("canvas", this.env.model, () => this.env.model.getters.getSheetViewDimension());
+            this.onMouseWheel = useWheelHandler((deltaX, deltaY) => {
+                this.moveCanvas(deltaX, deltaY);
+                this.hoveredCell.col = undefined;
+                this.hoveredCell.row = undefined;
+            });
+        }
+        onCellHovered({ col, row }) {
+            this.hoveredCell.col = col;
+            this.hoveredCell.row = row;
+        }
+        get gridContainer() {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const { right } = this.env.model.getters.getSheetZone(sheetId);
+            const { end } = this.env.model.getters.getColDimensions(sheetId, right);
+            return `
+      max-width: ${end}px;
+    `;
+        }
+        get gridOverlayDimensions() {
+            return `
+      height: 100%;
+      width: 100%
+    `;
+        }
+        getCellClickableStyle(coordinates) {
+            return `
+      top: ${coordinates.y}px;
+      left: ${coordinates.x}px;
+      width: ${coordinates.width}px;
+      height: ${coordinates.height}px;
+    `;
+        }
+        /**
+         * Get all the boxes for the cell in the sheet view that are clickable.
+         * This function is used to render an overlay over each clickable cell in
+         * order to display a pointer cursor.
+         *
+         */
+        getClickableCells() {
+            const cells = [];
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            for (const col of this.env.model.getters.getSheetViewVisibleCols()) {
+                for (const row of this.env.model.getters.getSheetViewVisibleRows()) {
+                    const cell = this.env.model.getters.getCell(sheetId, col, row);
+                    if (cell) {
+                        const action = this.getClickableAction(cell);
+                        if (!action) {
+                            continue;
+                        }
+                        let zone;
+                        if (this.env.model.getters.isInMerge(sheetId, col, row)) {
+                            zone = this.env.model.getters.getMerge(sheetId, col, row);
+                        }
+                        else {
+                            zone = positionToZone({ col, row });
+                        }
+                        const rect = this.env.model.getters.getVisibleRect(zone);
+                        cells.push({
+                            coordinates: rect,
+                            cell,
+                            action,
+                        });
+                    }
+                }
+            }
+            return cells;
+        }
+        getClickableAction(cell) {
+            for (const items of clickableCellRegistry.getAll().sort((a, b) => a.sequence - b.sequence)) {
+                if (items.condition(cell, this.env)) {
+                    return items.action;
+                }
+            }
+            return false;
+        }
+        selectClickableCell(clickableCell) {
+            const { cell, action } = clickableCell;
+            action(cell, this.env);
+        }
+        onClosePopover() {
+            this.env.model.dispatch("CLOSE_CELL_POPOVER");
+        }
+        onGridResized({ height, width }) {
+            this.env.model.dispatch("RESIZE_SHEETVIEW", {
+                width: width,
+                height: height,
+                gridOffsetX: 0,
+                gridOffsetY: 0,
+            });
+        }
+        moveCanvas(deltaX, deltaY) {
+            const { offsetScrollbarX, offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+            this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
+                offsetX: offsetScrollbarX + deltaX,
+                offsetY: offsetScrollbarY + deltaY,
+            });
+        }
+        copy(ev) {
+            this.env.model.dispatch("COPY");
+            const content = this.env.model.getters.getClipboardContent();
+            // TODO use env.clipboard
+            // TODO add a test
+            ev.clipboardData.setData("text/plain", content);
+            ev.preventDefault();
+        }
+    }
+    SpreadsheetDashboard.template = "o-spreadsheet-SpreadsheetDashboard";
+    SpreadsheetDashboard.components = {
+        GridOverlay,
+        GridPopover,
+        Popover,
+        VerticalScrollBar,
+        HorizontalScrollBar,
+        FilterIconsOverlay,
+    };
 
     css /* scss */ `
   .o-sidePanel {
@@ -33837,14 +35380,18 @@
 
     const AddMergeInteractiveContent = {
         MergeIsDestructive: _lt("Merging these cells will only preserve the top-leftmost value. Merge anyway?"),
+        MergeInFilter: _lt("You can't merge cells inside of an existing filter."),
     };
     function interactiveAddMerge(env, sheetId, target) {
         const result = env.model.dispatch("ADD_MERGE", { sheetId, target });
         if (!result.isSuccessful) {
-            if (result.isCancelledBecause(3 /* MergeIsDestructive */)) {
+            if (result.isCancelledBecause(3 /* CommandResult.MergeIsDestructive */)) {
                 env.askConfirmation(AddMergeInteractiveContent.MergeIsDestructive, () => {
                     env.model.dispatch("ADD_MERGE", { sheetId, target, force: true });
                 });
+            }
+            else if (result.isCancelledBecause(77 /* CommandResult.MergeInFilter */)) {
+                env.raiseError(AddMergeInteractiveContent.MergeInFilter);
             }
         }
     }
@@ -33960,6 +35507,14 @@
           min-width: fit-content;
         }
 
+        .o-tool-outlined {
+          background-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .o-filter-tool {
+          margin-right: 8px;
+        }
+
         .o-tool.active,
         .o-tool:not(.o-disabled):hover {
           background-color: #f1f3f4;
@@ -33990,6 +35545,7 @@
 
         .o-disabled {
           opacity: 0.6;
+          cursor: default;
         }
 
         .o-dropdown {
@@ -34270,6 +35826,28 @@
         redo() {
             this.env.model.dispatch("REQUEST_REDO");
         }
+        get selectionContainsFilter() {
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const selectedZones = this.env.model.getters.getSelectedZones();
+            return this.env.model.getters.doesZonesContainFilter(sheetId, selectedZones);
+        }
+        get cannotCreateFilter() {
+            return !areZonesContinuous(...this.env.model.getters.getSelectedZones());
+        }
+        createFilter() {
+            if (this.cannotCreateFilter) {
+                return;
+            }
+            const sheetId = this.env.model.getters.getActiveSheetId();
+            const selection = this.env.model.getters.getSelectedZones();
+            interactiveAddFilter(this.env, sheetId, selection);
+        }
+        removeFilter() {
+            this.env.model.dispatch("REMOVE_FILTER_TABLE", {
+                sheetId: this.env.model.getters.getActiveSheetId(),
+                target: this.env.model.getters.getSelectedZones(),
+            });
+        }
     }
     TopBar.template = "o-spreadsheet-TopBar";
     TopBar.components = { ColorPicker, Menu, Composer };
@@ -34280,13 +35858,18 @@
     display: grid;
     grid-template-columns: auto 350px;
     * {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      font-family: "Roboto", "RobotoDraft", Helvetica, Arial, sans-serif;
     }
     &,
     *,
     *:before,
     *:after {
       box-sizing: content-box;
+    }
+    .o-separator {
+      border-bottom: ${MENU_SEPARATOR_BORDER_WIDTH}px solid #e0e2e4;
+      margin-top: ${MENU_SEPARATOR_PADDING}px;
+      margin-bottom: ${MENU_SEPARATOR_PADDING}px;
     }
   }
 
@@ -34305,6 +35888,39 @@
     width: ${CF_ICON_EDGE_LENGTH}px;
     height: ${CF_ICON_EDGE_LENGTH}px;
     vertical-align: sub;
+  }
+`;
+    // -----------------------------------------------------------------------------
+    // GRID STYLE
+    // -----------------------------------------------------------------------------
+    css /* scss */ `
+  .o-grid {
+    position: relative;
+    overflow: hidden;
+    background-color: ${BACKGROUND_GRAY_COLOR};
+    &:focus {
+      outline: none;
+    }
+
+    > canvas {
+      border-top: 1px solid #e2e3e3;
+      border-bottom: 1px solid #e2e3e3;
+    }
+    .o-scrollbar {
+      &.corner {
+        right: 0px;
+        bottom: 0px;
+        height: ${SCROLLBAR_WIDTH$1}px;
+        width: ${SCROLLBAR_WIDTH$1}px;
+        border-top: 1px solid #e2e3e3;
+        border-left: 1px solid #e2e3e3;
+      }
+    }
+
+    .o-grid-overlay {
+      position: absolute;
+      outline: none;
+    }
   }
 `;
     const t = (s) => s;
@@ -34342,8 +35958,8 @@
             });
             owl.useExternalListener(window, "resize", () => this.render(true));
             owl.useExternalListener(window, "beforeunload", this.unbindModelEvents.bind(this));
+            this.bindModelEvents();
             owl.onMounted(() => {
-                this.bindModelEvents();
                 this.checkViewportSize();
             });
             owl.onWillUnmount(() => this.unbindModelEvents());
@@ -34474,7 +36090,7 @@
         }
     }
     Spreadsheet.template = "o-spreadsheet-Spreadsheet";
-    Spreadsheet.components = { TopBar, Grid, BottomBar, SidePanel };
+    Spreadsheet.components = { TopBar, Grid, BottomBar, SidePanel, SpreadsheetDashboard };
     Spreadsheet._t = t;
 
     class LocalTransportService {
@@ -34502,9 +36118,10 @@
     otRegistry.addTransformation("DELETE_SHEET", ["MOVE_RANGES"], transformTargetSheetId);
     otRegistry.addTransformation("DELETE_FIGURE", ["UPDATE_FIGURE", "UPDATE_CHART"], updateChartFigure);
     otRegistry.addTransformation("CREATE_SHEET", ["CREATE_SHEET"], createSheetTransformation);
-    otRegistry.addTransformation("ADD_MERGE", ["ADD_MERGE", "REMOVE_MERGE"], mergeTransformation);
+    otRegistry.addTransformation("ADD_MERGE", ["ADD_MERGE", "REMOVE_MERGE", "CREATE_FILTER_TABLE"], mergeTransformation);
     otRegistry.addTransformation("ADD_COLUMNS_ROWS", ["FREEZE_COLUMNS", "FREEZE_ROWS"], freezeTransformation);
     otRegistry.addTransformation("REMOVE_COLUMNS_ROWS", ["FREEZE_COLUMNS", "FREEZE_ROWS"], freezeTransformation);
+    otRegistry.addTransformation("CREATE_FILTER_TABLE", ["CREATE_FILTER_TABLE", "ADD_MERGE"], createTableTransformation);
     function transformTargetSheetId(cmd, executed) {
         const deletedSheetId = executed.sheetId;
         if (cmd.targetSheetId === deletedSheetId || cmd.sheetId === deletedSheetId) {
@@ -34576,6 +36193,22 @@
             quantity = quantity > executedBase ? quantity + executed.quantity : quantity;
         }
         return quantity > 0 ? { ...cmd, quantity } : undefined;
+    }
+    /**
+     * Cancel CREATE_FILTER_TABLE and ADD_MERGE commands if they overlap a filter
+     */
+    function createTableTransformation(cmd, executed) {
+        if (cmd.sheetId !== executed.sheetId) {
+            return cmd;
+        }
+        for (const cmdTarget of cmd.target) {
+            for (const executedCmdTarget of executed.target) {
+                if (overlap(executedCmdTarget, cmdTarget)) {
+                    return undefined;
+                }
+            }
+        }
+        return cmd;
     }
 
     const transformations = [
@@ -35606,21 +37239,21 @@
         }
         allowDispatch(cmd) {
             if (this.isWaitingForUndoRedo) {
-                return 61 /* WaitingSessionConfirmation */;
+                return 61 /* CommandResult.WaitingSessionConfirmation */;
             }
             switch (cmd.type) {
                 case "REQUEST_UNDO":
                     if (!this.canUndo()) {
-                        return 5 /* EmptyUndoStack */;
+                        return 5 /* CommandResult.EmptyUndoStack */;
                     }
                     break;
                 case "REQUEST_REDO":
                     if (!this.canRedo()) {
-                        return 6 /* EmptyRedoStack */;
+                        return 6 /* CommandResult.EmptyRedoStack */;
                     }
                     break;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         beforeHandle(cmd) { }
         handle(cmd) {
@@ -35687,9 +37320,9 @@
         // ---------------------------------------------------------------------------
         allowDispatch(cmd) {
             if (cmd.type === "MOVE_RANGES") {
-                return cmd.target.length === 1 ? 0 /* Success */ : 24 /* InvalidZones */;
+                return cmd.target.length === 1 ? 0 /* CommandResult.Success */ : 24 /* CommandResult.InvalidZones */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         beforeHandle(command) { }
         handle(cmd) {
@@ -36439,7 +38072,7 @@
         processEvent(newAnchorEvent) {
             const event = { ...newAnchorEvent, previousAnchor: deepCopy(this.anchor) };
             const commandResult = this.checkEventAnchorZone(event);
-            if (commandResult !== 0 /* Success */) {
+            if (commandResult !== 0 /* CommandResult.Success */) {
                 return new DispatchResult(commandResult);
             }
             this.anchor = event.anchor;
@@ -36452,20 +38085,20 @@
         checkAnchorZone(anchor) {
             const { cell, zone } = anchor;
             if (!isInside(cell.col, cell.row, zone)) {
-                return 14 /* InvalidAnchorZone */;
+                return 14 /* CommandResult.InvalidAnchorZone */;
             }
             const { left, right, top, bottom } = zone;
             const sheetId = this.getters.getActiveSheetId();
             const refCol = this.getters.findVisibleHeader(sheetId, "COL", range(left, right + 1));
             const refRow = this.getters.findVisibleHeader(sheetId, "ROW", range(top, bottom + 1));
             if (refRow === undefined || refCol === undefined) {
-                return 15 /* SelectionOutOfBound */;
+                return 15 /* CommandResult.SelectionOutOfBound */;
             }
-            return 0 /* Success */;
+            return 0 /* CommandResult.Success */;
         }
         checkAnchorZoneOrThrow(anchor) {
             const result = this.checkAnchorZone(anchor);
-            if (result === 14 /* InvalidAnchorZone */) {
+            if (result === 14 /* CommandResult.InvalidAnchorZone */) {
                 throw new Error(_t("The provided anchor is invalid. The cell must be part of the zone."));
             }
         }
@@ -38057,7 +39690,7 @@
             /**
              * Internal status of the model. Important for command handling coordination
              */
-            this.status = 0 /* Ready */;
+            this.status = 0 /* Status.Ready */;
             /**
              * The dispatch method is the only entry point to manipulate data in the model.
              * This is through this method that commands are dispatched most of the time
@@ -38076,15 +39709,15 @@
                 const command = { type, ...payload };
                 let status = this.status;
                 if (this.getters.isReadonly() && !canExecuteInReadonly(command)) {
-                    return new DispatchResult(64 /* Readonly */);
+                    return new DispatchResult(64 /* CommandResult.Readonly */);
                 }
                 switch (status) {
-                    case 0 /* Ready */:
+                    case 0 /* Status.Ready */:
                         const result = this.checkDispatchAllowed(command);
                         if (!result.isSuccessful) {
                             return result;
                         }
-                        this.status = 1 /* Running */;
+                        this.status = 1 /* Status.Running */;
                         const { changes, commands } = this.state.recordChanges(() => {
                             if (isCoreCommand(command)) {
                                 this.state.addCommand(command);
@@ -38093,10 +39726,10 @@
                             this.finalize();
                         });
                         this.session.save(commands, changes);
-                        this.status = 0 /* Ready */;
+                        this.status = 0 /* Status.Ready */;
                         this.trigger("update");
                         break;
-                    case 1 /* Running */:
+                    case 1 /* Status.Running */:
                         if (isCoreCommand(command)) {
                             const dispatchResult = this.checkDispatchAllowed(command);
                             if (!dispatchResult.isSuccessful) {
@@ -38109,9 +39742,9 @@
                             this.dispatchToHandlers(this.handlers, command);
                         }
                         break;
-                    case 3 /* Finalizing */:
-                        throw new Error(_lt("Cannot dispatch commands in the finalize state"));
-                    case 2 /* RunningCore */:
+                    case 3 /* Status.Finalizing */:
+                        throw new Error("Cannot dispatch commands in the finalize state");
+                    case 2 /* Status.RunningCore */:
                         throw new Error("A UI plugin cannot dispatch while handling a core command");
                 }
                 return DispatchResult.Success;
@@ -38123,7 +39756,7 @@
             this.dispatchFromCorePlugin = (type, payload) => {
                 const command = { type, ...payload };
                 const previousStatus = this.status;
-                this.status = 2 /* RunningCore */;
+                this.status = 2 /* Status.RunningCore */;
                 this.dispatchToHandlers(this.handlers, command);
                 this.status = previousStatus;
                 return DispatchResult.Success;
@@ -38201,6 +39834,9 @@
                 if (!(name in plugin)) {
                     throw new Error(`Invalid getter name: ${name} for plugin ${plugin.constructor}`);
                 }
+                if (name in this.getters) {
+                    throw new Error(`Getter "${name}" is already defined.`);
+                }
                 this.getters[name] = plugin[name].bind(plugin);
             }
             this.uiPlugins.push(plugin);
@@ -38219,6 +39855,9 @@
             for (let name of Plugin.getters) {
                 if (!(name in plugin)) {
                     throw new Error(`Invalid getter name: ${name} for plugin ${plugin.constructor}`);
+                }
+                if (name in this.coreGetters) {
+                    throw new Error(`Getter "${name}" is already defined.`);
                 }
                 this.coreGetters[name] = plugin[name].bind(plugin);
             }
@@ -38274,11 +39913,11 @@
             return new DispatchResult(results.flat());
         }
         finalize() {
-            this.status = 3 /* Finalizing */;
+            this.status = 3 /* Status.Finalizing */;
             for (const h of this.handlers) {
                 h.finalize();
             }
-            this.status = 0 /* Ready */;
+            this.status = 0 /* Status.Ready */;
         }
         /**
          * Dispatch the given command to the given handlers.
@@ -38385,7 +40024,6 @@
         autofillRulesRegistry,
         cellMenuRegistry,
         colMenuRegistry,
-        dashboardMenuRegistry,
         linkMenuRegistry,
         functionRegistry,
         uiPluginRegistry,
@@ -38399,6 +40037,7 @@
         chartRegistry,
         topbarMenuRegistry,
         topbarComponentRegistry,
+        clickableCellRegistry,
         otRegistry,
         inverseCommandRegistry,
         cellRegistry,
@@ -38434,12 +40073,14 @@
         getFillingMode,
         rgbaToHex,
         colorToRGBA,
+        positionToZone,
     };
     const components = {
         ChartPanel,
         ChartFigure,
         ChartJsComponent,
         Grid,
+        GridOverlay,
         ScorecardChart,
         LineConfigPanel,
         LineBarPieDesignPanel,
@@ -38450,6 +40091,9 @@
         ScorecardChartConfigPanel,
         ScorecardChartDesignPanel,
     };
+    function addFunction(functionName, functionDescription) {
+        functionRegistry.add(functionName, functionDescription);
+    }
 
     exports.AbstractChart = AbstractChart;
     exports.CorePlugin = CorePlugin;
@@ -38463,6 +40107,7 @@
     exports.Spreadsheet = Spreadsheet;
     exports.UIPlugin = UIPlugin;
     exports.__info__ = __info__;
+    exports.addFunction = addFunction;
     exports.astToFormula = astToFormula;
     exports.cellTypes = cellTypes;
     exports.compile = compile;
@@ -38483,8 +40128,8 @@
     Object.defineProperty(exports, '__esModule', { value: true });
 
     exports.__info__.version = '2.0.0';
-    exports.__info__.date = '2022-09-28T11:17:56.798Z';
-    exports.__info__.hash = '70b8740';
+    exports.__info__.date = '2022-10-10T07:42:59.012Z';
+    exports.__info__.hash = '22b4de0';
 
 })(this.o_spreadsheet = this.o_spreadsheet || {}, owl);
 //# sourceMappingURL=o_spreadsheet.js.map

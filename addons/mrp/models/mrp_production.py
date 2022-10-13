@@ -344,7 +344,7 @@ class MrpProduction(models.Model):
             mo_by_picking_type_and_company_id[(mo.picking_type_id, mo.company_id.id)] |= mo
 
         for (picking_type, company_id), productions in mo_by_picking_type_and_company_id.items():
-            boms_by_product = self.env['mrp.bom']._bom_find(productions.product_id, picking_type=picking_type, company_id=company_id, bom_type='normal')
+            boms_by_product = self.env['mrp.bom'].with_context(active_test=True)._bom_find(productions.product_id, picking_type=picking_type, company_id=company_id, bom_type='normal')
             for production in productions:
                 if not production.bom_id or production.bom_id.product_tmpl_id != production.product_tmpl_id or (production.bom_id.product_id and production.bom_id.product_id != production.product_id):
                     bom = boms_by_product[production.product_id]
@@ -402,13 +402,12 @@ class MrpProduction(models.Model):
         production_no_alert.json_popover = False
         for production in (self - production_no_alert):
             production.json_popover = json.dumps({
-                'popoverTemplate': 'stock.PopoverStockRescheduling',
                 'delay_alert_date': format_datetime(self.env, production.delay_alert_date, dt_format=False),
                 'late_elements': [{
-                        'id': late_document.id,
-                        'name': late_document.display_name,
-                        'model': late_document._name,
-                    } for late_document in production.move_raw_ids.filtered(lambda m: m.delay_alert_date).move_orig_ids._delay_alert_get_documents()
+                    'id': late_document.id,
+                    'name': late_document.display_name,
+                    'model': late_document._name,
+                } for late_document in production.move_raw_ids.filtered(lambda m: m.delay_alert_date).move_orig_ids._delay_alert_get_documents()
                 ]
             })
 
@@ -495,7 +494,11 @@ class MrpProduction(models.Model):
                 production.state = 'draft'
             elif production.state == 'cancel' or (production.move_finished_ids and all(move.state == 'cancel' for move in production.move_finished_ids)):
                 production.state = 'cancel'
-            elif production.state == 'done' or (production.move_raw_ids and all(move.state in ('cancel', 'done') for move in production.move_raw_ids)):
+            elif (
+                production.state == 'done'
+                or (production.move_raw_ids and all(move.state in ('cancel', 'done') for move in production.move_raw_ids))
+                and all(move.state in ('cancel', 'done') for move in production.move_finished_ids)
+            ):
                 production.state = 'done'
             elif production.workorder_ids and all(wo_state in ('done', 'cancel') for wo_state in production.workorder_ids.mapped('state')):
                 production.state = 'to_close'

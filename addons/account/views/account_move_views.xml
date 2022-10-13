@@ -70,7 +70,6 @@
                                         <field name="blocked"/>
                                     </group>
                                     <group string="Analytic" groups="analytic.group_analytic_accounting">
-                                        <field name="analytic_distribution_stored_char" invisible="1"/>
                                         <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting"
                                             readonly="1"/>
                                     </group>
@@ -184,11 +183,9 @@
                     <field name="tax_line_id" string="Originator Tax" optional="hide" readonly="1"/>
                     <field name="date_maturity" readonly="1" optional="hide"/>
                     <field name="balance" sum="Total Balance" optional="hide" readonly="1"/>
-                    <field name="cumulated_balance" readonly="1" optional="hide"/>
                     <field name="matching_number" readonly="1" optional="show"/>
                     <field name="amount_residual" sum="Total Residual" string="Residual" readonly="1" optional="hide" attrs="{'invisible':[('is_account_reconcile', '=', False)]}"/>
                     <field name="amount_residual_currency" sum="Total Residual in Currency" string="Residual in Currency" readonly="1" optional="hide" attrs="{'invisible':['|', ('is_same_currency', '=', True), ('is_account_reconcile', '=', False)]}"/>
-                    <field name="analytic_distribution_stored_char" invisible="1"/>
                     <field name="analytic_distribution" widget="analytic_distribution"
                            groups="analytic.group_analytic_accounting"
                            optional="show"
@@ -248,7 +245,6 @@
             <field name="arch" type="xml">
                 <field name="account_id" position="attributes"><attribute name="optional">hide</attribute></field>
                 <field name="balance" position="attributes"><attribute name="optional">show</attribute></field>
-                <field name="cumulated_balance" position="attributes"><attribute name="optional">show</attribute></field>
             </field>
         </record>
 
@@ -262,7 +258,6 @@
                 <field name="partner_id" position="attributes"><attribute name="optional">hide</attribute></field>
                 <field name="date_maturity" position="attributes"><attribute name="optional">show</attribute></field>
                 <field name="balance" position="attributes"><attribute name="optional">show</attribute></field>
-                <field name="cumulated_balance" position="attributes"><attribute name="optional">show</attribute></field>
             </field>
         </record>
 
@@ -570,9 +565,11 @@
                         <!-- Post -->
                         <button name="action_post" string="Post" class="oe_highlight"
                                 type="object" groups="account.group_account_invoice" data-hotkey="v"
+                                context="{'validate_analytic': True}"
                                 attrs="{'invisible': ['|', ('hide_post_button', '=', True), ('move_type', '!=', 'entry')]}"/>
                         <button name="action_post" string="Confirm" class="oe_highlight"
                                 type="object" groups="account.group_account_invoice" data-hotkey="v"
+                                context="{'validate_analytic': True}"
                                 attrs="{'invisible': ['|', '|', ('hide_post_button', '=', True), ('move_type', '=', 'entry'), ('display_inactive_currency_warning','=',True)]}"/>
                         <!-- Send (only invoices) -->
                         <button name="action_invoice_sent"
@@ -743,6 +740,7 @@
                         <field name="quick_edit_mode" invisible="1"/>
                         <field name="hide_post_button" invisible="1"/>
                         <field name="duplicated_ref_ids" invisible="1"/>
+                        <field name="quick_encoding_vals" invisible="1"/>
 
                         <div class="oe_title">
                             <span class="o_form_label"><field name="move_type" attrs="{'invisible': [('move_type', '=', 'entry')]}" readonly="1" nolabel="1"/></span>
@@ -774,7 +772,7 @@
                                 <field name="partner_shipping_id"
                                        groups="account.group_delivery_invoice_address"
                                        attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund', 'out_receipt'))], 'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="quick_edit_total_amount"
+                                <field name="quick_edit_total_amount" class="w-50"
                                        attrs="{'invisible': ['|', ('move_type', '=', 'entry'), ('quick_edit_mode', '=', False)], 'readonly': [('state', '!=', 'draft')]}"/>
                                 <label for="ref" string="Bill Reference"
                                        attrs="{'invisible':[('move_type', 'not in', ('in_invoice', 'in_receipt', 'in_refund'))]}" />
@@ -860,6 +858,7 @@
                                            'default_partner_id': commercial_partner_id,
                                            'default_currency_id': currency_id or company_currency_id,
                                            'default_display_type': 'product',
+                                           'quick_encoding_vals': quick_encoding_vals,
                                        }">
                                     <tree editable="bottom" string="Journal Items" default_order="sequence, id">
                                         <control>
@@ -884,12 +883,11 @@
                                                options="{'no_create': True}"
                                                domain="[('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable', 'liability_payable')), ('company_id', '=', parent.company_id), ('is_off_balance', '=', False)]"
                                                attrs="{'required': [('display_type', 'not in', ('line_note', 'line_section'))]}"/>
-                                        <field name="analytic_distribution_stored_char" invisible="1"/>
                                         <field name="analytic_distribution" widget="analytic_distribution"
                                                groups="analytic.group_analytic_accounting"
                                                optional="show"
                                                options="{'product_field': 'product_id', 'account_field': 'account_id'}"
-                                               business_domain_compute="parent.move_type in ['out_invoice', 'out_refund', 'out_receipt'] and 'sale' or parent.move_type in ['in_invoice', 'in_refund', 'in_receipt'] and 'purchase' or 'general'"/>
+                                               business_domain_compute="parent.move_type in ['out_invoice', 'out_refund', 'out_receipt'] and 'invoice' or parent.move_type in ['in_invoice', 'in_refund', 'in_receipt'] and 'bill' or 'general'"/>
                                         <field name="quantity" optional="show"/>
                                         <field name="product_uom_category_id" invisible="1"/>
                                         <field name="product_uom_id" string="UoM" groups="uom.group_uom" optional="show"/>
@@ -930,7 +928,7 @@
                                         <templates>
                                             <t t-name="kanban-box">
                                                 <div t-attf-class="oe_kanban_card oe_kanban_global_click ps-0 pe-0 {{ record.display_type.raw_value ? 'o_is_' + record.display_type.raw_value : '' }}">
-                                                    <t t-if="!record.display_type.raw_value">
+                                                    <t t-if="!['line_note', 'line_section'].includes(record.display_type.raw_value)">
                                                         <div class="row g-0">
                                                             <div class="col-2 pe-3">
                                                                 <img t-att-src="kanban_image('product.product', 'image_128', record.product_id.raw_value)" t-att-title="record.product_id.value" t-att-alt="record.product_id.value" style="max-width: 100%;"/>
@@ -993,7 +991,6 @@
                                             <group>
                                                 <field name="account_id" options="{'no_create': True}" domain="[('company_id', '=', company_id)]" context="{'partner_id': partner_id, 'move_type': parent.move_type}"/>
                                                 <field name="tax_ids" widget="many2many_tags"/>
-                                                <field name="analytic_distribution_stored_char" invisible="1"/>
                                                 <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting"/>
                                             </group>
                                             <label for="name" string="Description" attrs="{'invisible': [('display_type', 'in', ('line_note', 'line_section'))]}"/>
@@ -1009,7 +1006,7 @@
                                 </field>
                                 <group col="12" class="oe_invoice_lines_tab">
                                     <group colspan="8">
-                                        <field name="narration" placeholder="Terms and Conditions" class="oe_inline" nolabel="1"/>
+                                        <field name="narration" placeholder="Terms and Conditions" colspan="2" nolabel="1"/>
                                     </group>
                                     <!-- Totals (only invoices / receipts) -->
                                     <group colspan="4">
@@ -1055,12 +1052,11 @@
                                                domain="['|', ('parent_id', '=', False), ('is_company', '=', True)]"
                                                attrs="{'column_invisible': [('parent.move_type', '!=', 'entry')]}"/>
                                         <field name="name" widget="section_and_note_text" optional="show"/>
-                                        <field name="analytic_distribution_stored_char" invisible="1"/>
                                         <field name="analytic_distribution" widget="analytic_distribution"
                                                groups="analytic.group_analytic_accounting"
                                                optional="show"
                                                options="{'account_field': 'account_id'}"
-                                               business_domain_compute="parent.move_type in ['out_invoice', 'out_refund', 'out_receipt'] and 'sale' or parent.move_type in ['in_invoice', 'in_refund', 'in_receipt'] and 'purchase' or 'general'"/>
+                                               business_domain_compute="parent.move_type in ['out_invoice', 'out_refund', 'out_receipt'] and 'invoice' or parent.move_type in ['in_invoice', 'in_refund', 'in_receipt'] and 'bill' or 'general'"/>
                                         <field name="date_maturity"
                                                optional="hide"
                                                invisible="context.get('view_no_maturity')"
@@ -1071,7 +1067,7 @@
                                         <field name="currency_id" options="{'no_create': True}"
                                                optional="hide" groups="base.group_multi_currency"
                                                attrs="{'column_invisible': [('parent.move_type', '!=', 'entry')]}"/>
-                                        <field name="tax_ids" widget="many2many_tags"
+                                        <field name="tax_ids" widget="autosave_many2many_tags"
                                                optional="hide"
                                                domain="[('type_tax_use', '=?', parent.invoice_filter_type_domain)]"
                                                context="{'append_type_to_tax_name': not parent.invoice_filter_type_domain}"
@@ -1139,7 +1135,6 @@
                                         <field name="account_id" domain="[('company_id', '=', parent.company_id), ('deprecated', '=', False)]"/>
                                         <field name="partner_id" domain="['|', ('parent_id', '=', False), ('is_company', '=', True)]"/>
                                         <field name="name"/>
-                                        <field name="analytic_distribution_stored_char" invisible="1"/>
                                         <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting"/>
                                         <field name="amount_currency" groups="base.group_multi_currency"/>
                                         <field name="company_currency_id" invisible="1"/>
@@ -1148,7 +1143,7 @@
                                         <field name="debit" sum="Total Debit"/>
                                         <field name="credit" sum="Total Credit"/>
                                         <field name="balance" invisible="1"/>
-                                        <field name="tax_ids" string="Taxes Applied" widget="many2many_tags" options="{'no_create': True}"/>
+                                        <field name="tax_ids" string="Taxes Applied" widget="autosave_many2many_tags" options="{'no_create': True}"/>
                                         <field name="date_maturity" required="0" invisible="context.get('view_no_maturity', False)"/>
                                       </group>
                                     </form>

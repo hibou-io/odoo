@@ -32,7 +32,7 @@ export const websiteService = {
         let fullscreen;
         let pageDocument;
         let contentWindow;
-        let editedObjectPath;
+        let lastUrl;
         let websiteRootInstance;
         let Wysiwyg;
         let isRestrictedEditor;
@@ -42,6 +42,8 @@ export const websiteService = {
         let blockingProcesses = [];
         let modelNamesProm = null;
         const modelNames = {};
+        let invalidateSnippetCache = false;
+        let lastWebsiteId = null;
 
         const context = reactive({
             showNewContentModal: false,
@@ -71,6 +73,10 @@ export const websiteService = {
         });
         return {
             set currentWebsiteId(id) {
+                if (id && id !== lastWebsiteId) {
+                    invalidateSnippetCache = true;
+                    lastWebsiteId = id;
+                }
                 currentWebsiteId = id;
                 websiteSystrayRegistry.trigger('EDIT-WEBSITE');
             },
@@ -108,7 +114,10 @@ export const websiteService = {
                     currentMetadata = {};
                 } else {
                     const { mainObject, seoObject, isPublished, canPublish, editableInBackend, translatable, viewXmlid } = document.documentElement.dataset;
-                    const contentMenuEl = document.querySelector('[data-content_menu_id]');
+                    const contentMenus = [...document.querySelectorAll('[data-content_menu_id]')].map(menu => [
+                        menu.dataset.menu_name,
+                        menu.dataset.content_menu_id,
+                    ]);
                     currentMetadata = {
                         path: document.location.href,
                         mainObject: unslugHtmlDataObject(mainObject),
@@ -118,13 +127,15 @@ export const websiteService = {
                         editableInBackend: editableInBackend === 'True',
                         title: document.title,
                         translatable: !!translatable,
-                        contentMenuId: contentMenuEl && contentMenuEl.dataset.content_menu_id,
+                        contentMenus,
                         // TODO: Find a better way to figure out if
                         // a page is editable or not. For now, we use
                         // the editable selector because it's the common
                         // denominator of editable pages.
                         editable: !!document.getElementById('wrapwrap'),
                         viewXmlid: viewXmlid,
+                        lang: document.documentElement.getAttribute('lang').replace('-', '_'),
+                        direction: document.documentElement.querySelector('#wrapwrap.o_rtl') ? 'rtl' : 'ltr',
                     };
                 }
                 contentWindow = document.defaultView;
@@ -143,11 +154,11 @@ export const websiteService = {
                 websiteRootInstance = rootInstance;
                 context.isPublicRootReady = !!rootInstance;
             },
-            set editedObjectPath(path) {
-                editedObjectPath = path;
+            set lastUrl(url) {
+                lastUrl = url;
             },
-            get editedObjectPath() {
-                return editedObjectPath;
+            get lastUrl() {
+                return lastUrl;
             },
             get isRestrictedEditor() {
                 return isRestrictedEditor === true;
@@ -164,6 +175,13 @@ export const websiteService = {
             set actionJsId(jsId) {
                 actionJsId = jsId;
             },
+            get invalidateSnippetCache() {
+                return invalidateSnippetCache;
+            },
+            set invalidateSnippetCache(value) {
+                invalidateSnippetCache = value;
+            },
+
             goToWebsite({ websiteId, path, edition, translation } = {}) {
                 action.doAction('website.website_preview', {
                     clearBreadcrumbs: true,

@@ -75,7 +75,13 @@ def extract_rfc2822_addresses(text):
     if not text:
         return []
     candidates = address_pattern.findall(ustr(text))
-    return [formataddr(('', c), charset='ascii') for c in candidates]
+    valid_addresses = []
+    for c in candidates:
+        try:
+            valid_addresses.append(formataddr(('', c), charset='ascii'))
+        except idna.IDNAError:
+            pass
+    return valid_addresses
 
 
 class IrMailServer(models.Model):
@@ -778,9 +784,3 @@ class IrMailServer(models.Model):
         outgoing mail server.
         """
         return getattr(threading.current_thread(), 'testing', False) or self.env.registry.in_test_mode()
-
-    def _neutralize(self):
-        super()._neutralize()
-        self.env.flush_all()
-        self.env.invalidate_all()
-        self.env.cr.execute("UPDATE ir_mail_server SET active = false")

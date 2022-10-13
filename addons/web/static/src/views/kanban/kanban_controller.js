@@ -28,6 +28,7 @@ export class KanbanController extends Component {
             onCreate: archInfo.onCreate,
             quickCreateView: archInfo.quickCreateView,
             defaultGroupBy,
+            defaultOrder: archInfo.defaultOrder,
             viewMode: "kanban",
             openGroupsByDefault: true,
             tooltipInfo: archInfo.tooltipInfo,
@@ -106,12 +107,12 @@ export class KanbanController extends Component {
     }
 
     get canCreate() {
-        const { create, groupCreate } = this.props.archInfo.activeActions;
+        const { create, createGroup } = this.props.archInfo.activeActions;
         const list = this.model.root;
         if (!create) {
             return false;
         }
-        return list.isGrouped ? list.groups.length > 0 || !groupCreate : true;
+        return list.isGrouped ? list.groups.length > 0 || !createGroup : true;
     }
 
     async beforeExecuteActionButton(clickParams) {}

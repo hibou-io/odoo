@@ -6,7 +6,7 @@ from functools import lru_cache
 
 from odoo import api, fields, models, Command, _
 from odoo.exceptions import ValidationError, UserError
-from odoo.tools import frozendict, formatLang, format_date, float_is_zero
+from odoo.tools import frozendict, formatLang, format_date, float_is_zero, float_compare
 from odoo.tools.sql import create_index
 from odoo.addons.web.controllers.utils import clean_action
 
@@ -15,7 +15,7 @@ INTEGRITY_HASH_LINE_FIELDS = ('debit', 'credit', 'account_id', 'partner_id')
 
 class AccountMoveLine(models.Model):
     _name = "account.move.line"
-    _inherit = 'analytic.mixin'
+    _inherit = "analytic.mixin"
     _description = "Journal Item"
     _order = "date desc, move_name desc, sequence, id"
     _check_company_auto = True
@@ -76,6 +76,7 @@ class AccountMoveLine(models.Model):
         comodel_name='account.account',
         string='Account',
         compute='_compute_account_id', store=True, readonly=False, precompute=True,
+        inverse='_inverse_account_id',
         index=True,
         ondelete="cascade",
         domain="[('deprecated', '=', False), ('company_id', '=', company_id), ('is_off_balance', '=', False)]",
@@ -89,12 +90,12 @@ class AccountMoveLine(models.Model):
     )
     debit = fields.Monetary(
         string='Debit',
-        compute='_compute_debit_credit', inverse='_inverse_debit_credit', store=True,
+        compute='_compute_debit_credit', inverse='_inverse_debit', store=True, precompute=True,
         currency_field='company_currency_id',
     )
     credit = fields.Monetary(
         string='Credit',
-        compute='_compute_debit_credit', inverse='_inverse_debit_credit', store=True,
+        compute='_compute_debit_credit', inverse='_inverse_credit', store=True, precompute=True,
         currency_field='company_currency_id',
     )
     balance = fields.Monetary(
@@ -351,6 +352,9 @@ class AccountMoveLine(models.Model):
         comodel_name='account.analytic.line', inverse_name='move_line_id',
         string='Analytic lines',
     )
+    analytic_distribution = fields.Json(
+        inverse="_inverse_analytic_distribution",
+    ) # add the inverse function used to trigger the creation/update of the analytic lines accordingly (field originally defined in the analytic mixin)
 
     # === Early Pay fields === #
     discount_date = fields.Date(
@@ -545,7 +549,7 @@ class AccountMoveLine(models.Model):
                 for model, id, account_type, account_id in self.env.cr.fetchall()
             }
             for line in term_lines:
-                account_type = 'asset_receivable' if line.move_id.is_sale_document() else 'liability_payable'
+                account_type = 'asset_receivable' if line.move_id.is_sale_document(include_receipts=True) else 'liability_payable'
                 move = line.move_id
                 account_id = (
                     accounts.get(('account.move', move.id, None))
@@ -568,27 +572,32 @@ class AccountMoveLine(models.Model):
                 elif line.move_id.is_purchase_document(include_receipts=True):
                     line.account_id = accounts['expense'] or line.account_id
             elif line.partner_id:
-                line.account_id = self.env['account.account']._order_by_frequency_per_partner(
+                line.account_id = self.env['account.account']._get_most_frequent_account_for_partner(
                     company_id=line.company_id.id,
                     partner_id=line.partner_id.id,
                     move_type=line.move_id.move_type,
-                    limit=1,
-                )[0]
+                )
         for line in self:
             if not line.account_id and line.display_type not in ('line_section', 'line_note'):
-                line.account_id = line.company_id.account_journal_suspense_account_id
+                previous_two_accounts = line.move_id.line_ids.filtered(
+                    lambda l: l.account_id and l.display_type == line.display_type
+                )[-2:].account_id
+                if len(previous_two_accounts) == 1:
+                    line.account_id = previous_two_accounts
+                else:
+                    line.account_id = line.move_id.journal_id.default_account_id
 
     @api.depends('move_id')
     def _compute_balance(self):
         for line in self:
-            if line.display_type not in ('line_section', 'line_note'):
-                line.balance = (
-                    line.balance
-                    or line.debit - line.credit
-                    or -sum((line.move_id.line_ids - line).mapped('balance'))
-                )
-            else:
+            if line.display_type in ('line_section', 'line_note'):
                 line.balance = False
+            elif not line.move_id.is_invoice(include_receipts=True):
+                # Only act as a default value when none of balance/debit/credit is specified
+                # balance is always the written field because of `_sanitize_vals`
+                line.balance = -sum((line.move_id.line_ids - line).mapped('balance'))
+            else:
+                line.balance = 0
 
     @api.depends('balance', 'move_id.is_storno')
     def _compute_debit_credit(self):
@@ -941,7 +950,7 @@ class AccountMoveLine(models.Model):
                     'group_tax_id': tax['group'] and tax['group'].id or False,
                     'account_id': tax['account_id'] or line.account_id.id,
                     'currency_id': line.currency_id.id,
-                    'analytic_distribution': tax['analytic'] and line.analytic_distribution,
+                    'analytic_distribution': (tax['analytic'] or not tax['use_in_tax_closing']) and line.analytic_distribution,
                     'tax_ids': [(6, 0, tax['tax_ids'])],
                     'tax_tag_ids': [(6, 0, tax['tag_ids'])],
                     'partner_id': line.move_id.partner_id.id or line.partner_id.id,
@@ -1065,18 +1074,18 @@ class AccountMoveLine(models.Model):
                 line.term_key = False
 
     @api.depends('account_id', 'partner_id', 'product_id')
-    def _compute_analytic_distribution_stored_char(self):
+    def _compute_analytic_distribution(self):
         for line in self:
-            distribution = self.env['account.analytic.distribution.model']._get_distributionjson({
-                "product_id": line.product_id.id,
-                "product_categ_id": line.product_id.categ_id.id,
-                "partner_id": line.partner_id.id,
-                "partner_category_id": line.partner_id.category_id.ids,
-                "account_prefix": line.account_id.code,
-                "company_id": line.company_id.id,
-            })
-            line.analytic_distribution_stored_char = distribution or line.analytic_distribution_stored_char
-            line._compute_analytic_distribution()
+            if line.display_type == 'product' or not line.move_id.is_invoice(include_receipts=True):
+                distribution = self.env['account.analytic.distribution.model']._get_distribution({
+                    "product_id": line.product_id.id,
+                    "product_categ_id": line.product_id.categ_id.id,
+                    "partner_id": line.partner_id.id,
+                    "partner_category_id": line.partner_id.category_id.ids,
+                    "account_prefix": line.account_id.code,
+                    "company_id": line.company_id.id,
+                })
+                line.analytic_distribution = distribution or line.analytic_distribution
 
     # -------------------------------------------------------------------------
     # INVERSE METHODS
@@ -1101,35 +1110,35 @@ class AccountMoveLine(models.Model):
             if line.currency_id == line.company_id.currency_id and line.balance != line.amount_currency:
                 line.balance = line.amount_currency
 
-    @api.onchange('debit', 'credit')
-    def _inverse_debit_credit(self):
+    @api.onchange('debit')
+    def _inverse_debit(self):
         for line in self:
+            if line.debit:
+                line.credit = 0
+            line.balance = line.debit - line.credit
+
+    @api.onchange('credit')
+    def _inverse_credit(self):
+        for line in self:
+            if line.credit:
+                line.debit = 0
             line.balance = line.debit - line.credit
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
         """ Unlink and recreate analytic_lines when modifying the distribution."""
-        super()._inverse_analytic_distribution()
         lines_to_modify = self.env['account.move.line'].browse([
             line.id for line in self if line.parent_state == "posted"
         ])
         lines_to_modify.analytic_line_ids.unlink()
         lines_to_modify._create_analytic_lines()
 
-    # -------------------------------------------------------------------------
-    # ONCHANGE METHODS
-    # -------------------------------------------------------------------------
-
-    @api.onchange('tax_ids')
-    def _onchange_quick_suggest_price_unit(self):
-        """When a new line is created, we suggest a price_unit according to the quick suggestions"""
-        for line in self:
-            if line.price_unit != 0 or not line.move_id.quick_edit_mode:
-                continue
-            suggestions = line.move_id._get_quick_edit_suggestions()
-            if suggestions:
-                line.price_unit = suggestions['price_unit']
-                line.tax_ids = suggestions['tax_ids']
+    @api.onchange('account_id')
+    def _inverse_account_id(self):
+        self._conditional_add_to_compute('tax_ids', lambda line: (
+            line.account_id.tax_ids
+            and not line.product_id.taxes_id.filtered(lambda tax: tax.company_id == line.company_id)
+        ))
 
     # -------------------------------------------------------------------------
     # CONSTRAINT METHODS
@@ -1170,6 +1179,17 @@ class AccountMoveLine(models.Model):
                     raise UserError(_('You cannot use taxes on lines with an Off-Balance account'))
                 if line.reconciled:
                     raise UserError(_('Lines from "Off-Balance Sheet" accounts cannot be reconciled'))
+
+    @api.constrains('account_id', 'display_type')
+    def _check_payable_receivable(self):
+        for line in self:
+            account_type = line.account_id.account_type
+            if line.move_id.is_sale_document(include_receipts=True):
+                if (line.display_type == 'payment_term') ^ (account_type == 'asset_receivable'):
+                    raise UserError(_("Any journal item on a receivable account must have a due date and vice versa."))
+            if line.move_id.is_purchase_document(include_receipts=True):
+                if (line.display_type == 'payment_term') ^ (account_type == 'liability_payable'):
+                    raise UserError(_("Any journal item on a payable account must have a due date and vice versa."))
 
     def _affect_tax_report(self):
         self.ensure_one()
@@ -1274,9 +1294,18 @@ class AccountMoveLine(models.Model):
         create_index(self._cr, 'account_move_line_partner_id_ref_idx', 'account_move_line', ["partner_id", "ref"])
         create_index(self._cr, 'account_move_line_date_name_id_idx', 'account_move_line', ["date desc", "move_name desc", "id"])
 
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        quick_encode_suggestion = self.env.context.get('quick_encoding_vals')
+        if quick_encode_suggestion:
+            defaults['account_id'] = quick_encode_suggestion['account_id']
+            defaults['price_unit'] = quick_encode_suggestion['price_unit']
+            defaults['tax_ids'] = [Command.set(quick_encode_suggestion['tax_ids'])]
+        return defaults
 
     def _sanitize_vals(self, vals):
         if 'debit' in vals or 'credit' in vals:
+            vals = vals.copy()
             if 'balance' in vals:
                 vals.pop('debit', None)
                 vals.pop('credit', None)
@@ -1329,6 +1358,11 @@ class AccountMoveLine(models.Model):
                 and (not changed('balance') or (line not in before and not line.balance))
             ):
                 line.balance = balance
+        # Since this method is called during the sync, inside of `create`/`write`, these fields
+        # already have been computed and marked as so. But this method should re-trigger it since
+        # it changes the dependencies.
+        self.env.add_to_compute(self._fields['debit'], container['records'])
+        self.env.add_to_compute(self._fields['credit'], container['records'])
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -1348,12 +1382,6 @@ class AccountMoveLine(models.Model):
         lines.move_id._synchronize_business_models(['line_ids'])
         return lines
 
-    def new(self, values=None, origin=None, ref=None):
-        record = super().new(values, origin, ref)
-        if record.move_id.quick_edit_total_amount and record.move_id.quick_edit_mode:
-            record.move_id._check_total_amount(record.move_id.quick_edit_total_amount)
-        return record
-
     def write(self, vals):
         if not vals:
             return True
@@ -1365,7 +1393,7 @@ class AccountMoveLine(models.Model):
             raise UserError(_('You cannot use a deprecated account.'))
 
         line_to_write = self
-        self._sanitize_vals(vals)
+        vals = self._sanitize_vals(vals)
         for line in self:
             if not any(self.env['account.move']._field_will_change(line, vals, field_name) for field_name in vals):
                 line_to_write -= line
@@ -1388,18 +1416,6 @@ class AccountMoveLine(models.Model):
             # Check the reconciliation.
             if any(self.env['account.move']._field_will_change(line, vals, field_name) for field_name in protected_fields['reconciliation']):
                 line._check_reconciliation()
-
-            # Check switching receivable / payable accounts.
-            if account_to_write:
-                account_type = line.account_id.account_type
-                if line.move_id.is_sale_document(include_receipts=True):
-                    if (account_type == 'asset_receivable' and account_to_write.account_type != account_type) \
-                            or (account_type != 'asset_receivable' and account_to_write.account_type == 'asset_receivable'):
-                        raise UserError(_("You can only set an account having the receivable type on payment terms lines for customer invoice."))
-                if line.move_id.is_purchase_document(include_receipts=True):
-                    if (account_type == 'liability_payable' and account_to_write.account_type != account_type) \
-                            or (account_type != 'liability_payable' and account_to_write.account_type == 'liability_payable'):
-                        raise UserError(_("You can only set an account having the payable type on payment terms lines for vendor bill."))
 
         move_container = {'records': self.move_id, 'self': self, 'line_to_write': line_to_write}
         with self.move_id._check_balanced(move_container),\
@@ -1464,7 +1480,7 @@ class AccountMoveLine(models.Model):
     def _prevent_automatic_line_deletion(self):
         if not self.env.context.get('dynamic_unlink'):
             for line in self:
-                if line.display_type == 'tax':
+                if line.display_type == 'tax' and line.move_id.line_ids.tax_ids:
                     raise ValidationError(_(
                         "You cannot delete a tax line as it would impact the tax report"
                     ))
@@ -2316,9 +2332,31 @@ class AccountMoveLine(models.Model):
     # ANALYTIC
     # -------------------------------------------------------------------------
 
+    def _validate_distribution(self):
+        for line in self.filtered(lambda line: line.display_type == 'product'):
+            mandatory_plans_ids = [plan['id'] for plan in self.env['account.analytic.plan'].sudo().get_relevant_plans(**{
+                        'product': line.product_id.id,
+                        'account': line.account_id.id,
+                        'business_domain': line.move_id.move_type in ['out_invoice', 'out_refund', 'out_receipt'] and 'invoice'
+                                           or line.move_id.move_type in ['in_invoice', 'in_refund', 'in_receipt'] and 'bill'
+                                           or 'general'
+                        }) if plan['applicability'] == 'mandatory']
+            if not mandatory_plans_ids:
+                continue
+            distribution_by_root_plan = {}
+            for analytic_account_id, percentage in (line.analytic_distribution or {}).items():
+                root_plan = self.env['account.analytic.account'].browse(int(analytic_account_id)).root_plan_id
+                distribution_by_root_plan[root_plan.id] = distribution_by_root_plan.get(root_plan.id, 0) + percentage
+
+            for plan_id in mandatory_plans_ids:
+                if float_compare(distribution_by_root_plan.get(plan_id, 0), 100, precision_digits=2) != 0:
+                    raise ValidationError(_("One or more lines require a 100% analytic distribution."))
+
     def _create_analytic_lines(self):
         """ Create analytic items upon validation of an account.move.line having an analytic distribution.
         """
+        if self.env.context.get('validate_analytic', False):
+            self._validate_distribution()
         analytic_line_vals = []
         for line in self:
             analytic_line_vals.extend(line._prepare_analytic_lines())
@@ -2328,7 +2366,6 @@ class AccountMoveLine(models.Model):
     def _prepare_analytic_lines(self):
         self.ensure_one()
         analytic_line_vals = []
-        self._compute_analytic_distribution()
         if self.analytic_distribution:
             # distribution_on_each_plan corresponds to the proportion that is distributed to each plan to be able to
             # give the real amount when we achieve a 100% distribution

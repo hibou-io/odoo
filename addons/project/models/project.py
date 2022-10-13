@@ -169,6 +169,11 @@ class ProjectTaskType(models.Model):
             else:
                 stage.disabled_rating_warning = False
 
+    @api.constrains('user_id', 'project_ids')
+    def _check_personal_stage_not_linked_to_projects(self):
+        if any(stage.user_id and stage.project_ids for stage in self):
+            raise UserError(_('A personal stage cannot be linked to a project because it is only visible to its corresponding user.'))
+
     def remove_personal_stage(self):
         """
         Remove a personal stage, tasks using that stage will move to the first
@@ -388,10 +393,7 @@ class Project(models.Model):
 
     # Not `required` since this is an option to enable in project settings.
     stage_id = fields.Many2one('project.project.stage', string='Stage', ondelete='restrict', groups="project.group_project_stages",
-        tracking=True, index=True, copy=False, default=_default_stage_id, group_expand='_read_group_stage_ids',
-        help="The step, or stage, that your project is in. You can add, remove, and move stages around to adapt the pipeline to your own needs.\n"
-            "Via the stage configuration you can set up email templates and automate the sending of emails when a project moves into the stage.\n"
-            "Projects in a folded stage are considered as closed.")
+        tracking=True, index=True, copy=False, default=_default_stage_id, group_expand='_read_group_stage_ids')
 
     update_ids = fields.One2many('project.update', 'project_id')
     last_update_id = fields.Many2one('project.update', string='Last Update', copy=False)
@@ -2299,10 +2301,10 @@ class Task(models.Model):
             'done': 'project.mt_task_ready',
             'normal': 'project.mt_task_progress',
         }
-        if 'kanban_state_label' in init_values and self.kanban_state in mail_message_subtype_per_kanban_state:
-            return self.env.ref(mail_message_subtype_per_kanban_state[self.kanban_state])
-        elif 'stage_id' in init_values:
+        if 'stage_id' in init_values:
             return self.env.ref('project.mt_task_stage')
+        elif 'kanban_state_label' in init_values and self.kanban_state in mail_message_subtype_per_kanban_state:
+            return self.env.ref(mail_message_subtype_per_kanban_state[self.kanban_state])
         return super(Task, self)._track_subtype(init_values)
 
     def _mail_get_message_subtypes(self):
@@ -2646,6 +2648,12 @@ class ProjectTags(models.Model):
         tag_ids = list(self.with_user(SUPERUSER_ID)._search(
             ['|', ('task_ids.project_id', '=', project_id), ('project_ids', 'in', project_id)]))
         return expression.AND([domain, [('id', 'in', tag_ids)]])
+
+    @api.model
+    def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
+        if 'project_id' in self.env.context:
+            domain = self._get_project_tags_domain(domain, self.env.context.get('project_id'))
+        return super().read_group(domain, fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy)
 
     @api.model
     def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):

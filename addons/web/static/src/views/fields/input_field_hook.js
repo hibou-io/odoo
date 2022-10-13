@@ -17,7 +17,7 @@ const { useComponent, useEffect, useRef, useEnv } = owl;
  */
 export function useInputField(params) {
     const env = useEnv();
-    const inputRef = useRef(params.refName || "input");
+    const inputRef = params.ref || useRef(params.refName || "input");
     const component = useComponent();
 
     /*
@@ -56,7 +56,9 @@ export function useInputField(params) {
                 try {
                     val = params.parse(val);
                 } catch (_e) {
-                    component.props.record.setInvalidField(component.props.name);
+                    if (component.props.record) {
+                        component.props.record.setInvalidField(component.props.name);
+                    }
                     isInvalid = true;
                 }
             }
@@ -101,7 +103,7 @@ export function useInputField(params) {
      * If it is not such a case, we update the field with the new value.
      */
     useEffect(() => {
-        const isInvalid = component.props.record.isInvalid(component.props.name);
+        const isInvalid = component.props.record ? component.props.record.isInvalid(component.props.name) : false;
         if (inputRef.el && !isDirty && !isInvalid) {
             inputRef.el.value = params.getValue();
             lastSetValue = inputRef.el.value;
@@ -133,7 +135,7 @@ export function useInputField(params) {
                     isInvalid = true;
                     if (urgent) {
                         return;
-                    } else {
+                    } else if (component.props.record) {
                         component.props.record.setInvalidField(component.props.name);
                     }
                 }
@@ -152,4 +154,6 @@ export function useInputField(params) {
             }
         }
     }
+
+    return inputRef;
 }

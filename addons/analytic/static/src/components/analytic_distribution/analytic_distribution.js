@@ -7,6 +7,7 @@ import { getNextTabableElement, getPreviousTabableElement } from "@web/core/util
 import { usePosition } from "@web/core/position_hook";
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { shallowEqual } from "@web/core/utils/arrays";
+import { _lt } from "@web/core/l10n/translation";
 import { AnalyticAutoComplete } from "../autocomplete/autocomplete";
 
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
@@ -17,7 +18,15 @@ import { formatPercentage } from "@web/views/fields/formatters";
 
 const { Component, useState, useRef, useExternalListener, onWillUpdateProps, onWillStart, onPatched } = owl;
 
-
+const PLAN_APPLICABILITY = {
+    mandatory: _lt("Mandatory"),
+    optional: _lt("Optional"),
+}
+const PLAN_STATUS = {
+    editing: _lt("Editing"),
+    invalid: _lt("Invalid"),
+    ok: _lt("OK"),
+}
 export class AnalyticDistribution extends Component {
     setup(){
         this.orm = useService("orm");
@@ -47,9 +56,9 @@ export class AnalyticDistribution extends Component {
         this.openTemplate = useOpenMany2XRecord({
             resModel: "account.analytic.distribution.model",
             activeActions: {
-                canCreate: true,
-                canCreateEdit: false,
-                canWrite: true,
+                create: true,
+                edit: false,
+                write: true,
             },
             isToMany: false,
             onRecordSaved: async (record) => {
@@ -70,6 +79,12 @@ export class AnalyticDistribution extends Component {
         if (this.editingRecord) {
             await this.fetchAllPlans(this.props);
         }
+        const args = {
+            domain: [["name", "like", "Percentage Analytic"]],
+            fields: ["digits"],
+            context: [],
+        }
+        this.decimal_precision = await this.orm.call("decimal.precision", "search_read", [], args);
         await this.formatData(this.props);
     }
 
@@ -97,7 +112,7 @@ export class AnalyticDistribution extends Component {
         this.focusToSelector();
     }
 
-    async formatData(nextProps) { 
+    async formatData(nextProps) {
         const data = nextProps.value;
         const analytic_account_ids = Object.keys(data).map((id) => parseInt(id));
         const records = analytic_account_ids.length ? await this.fetchAnalyticAccounts([["id", "in", analytic_account_ids]]) : [];
@@ -285,7 +300,7 @@ export class AnalyticDistribution extends Component {
     get firstIncompletePlanId() {
         for (const group_id in this.list) {
             const group_status = this.groupStatus(group_id);
-            if (["orange", "red"].includes(group_status)) return group_id;
+            if (["editing", "invalid"].includes(group_status)) return group_id;
         }
         return 0;
     }
@@ -316,7 +331,7 @@ export class AnalyticDistribution extends Component {
 
     get allowSave() {
         for (const group_id in this.list) {
-            if (['orange', 'red'].includes(this.groupStatus(group_id))) return false;
+            if (['editing', 'invalid'].includes(this.groupStatus(group_id))) return false;
         }
         return this.props.allow_save;
     }
@@ -329,41 +344,26 @@ export class AnalyticDistribution extends Component {
         return this.state.showDropdown && !!this.dropdownRef.el;
     }
 
-    applicabilityStatus(group_id) {
+    statusDescription(group_id) {
         const group = this.list[group_id];
-        const status = this.groupStatus(group_id);
-        let description;
-        switch(status){
-            case "gray":
-                description = this.env._t("Editing (OK)");
-                break;
-            case "orange": {
-                description = this.env._t("Editing (Incomplete)");
-                break;
-            }
-            case "red": {
-                description = this.env._t("Invalid");
-                break;
-            }
-            case "green": {
-                description = this.env._t("OK");
-                break;
-            }
-        }
-        return `${group.applicability.charAt(0).toUpperCase()}${group.applicability.slice(1)} - ${description}`;
+        const applicability = PLAN_APPLICABILITY[group.applicability];
+        const status = PLAN_STATUS[this.groupStatus(group_id)];
+        return `${applicability} - ${status} ${this.formatPercentage(this.sumByGroup(group_id))}`;
     }
 
     groupStatus(id) {
         const group = this.list[id];
         const ready_tags = this.listReadyByGroup(id);
-        if (group.distribution.length > ready_tags.length) {
-            return group.applicability === 'mandatory' ? 'orange' : 'gray';
+        if (group.applicability === 'mandatory') {
+            if (group.distribution.length > ready_tags.length) {
+                return 'editing'
+            }
+            const sum = this.sumByGroup(id);
+            if (sum < 99.99 || sum >= 100.01) {
+                return 'invalid';
+            }
         }
-        const sum = this.sumByGroup(id);
-        if (group.applicability === 'mandatory' && (sum < 99.99 || sum >= 100.01)){
-            return 'red';
-        }
-        return 'green';
+        return 'ok';
     }
 
     listReadyByGroup(id) {
@@ -408,21 +408,10 @@ export class AnalyticDistribution extends Component {
         }
     }
 
-    validate() {
-        for (const group_id in this.list) {
-            if (this.groupStatus(group_id) === 'red') {
-                this.props.record.setInvalidField(this.props.name);
-                return false;
-            }
-        }
-        return true;
-    }
-
     async save() {
         const currentDistribution = this.listForJson;
         const dataToSave = currentDistribution;
         await this.props.update(dataToSave);
-        this.validate();
     }
 
     onSaveNew() {
@@ -576,7 +565,8 @@ export class AnalyticDistribution extends Component {
     }
 
     formatPercentage(value) {
-        return formatPercentage(value / 100, { digits: [false, 2] });
+        return formatPercentage(value / 100, { digits: [false, this.decimal_precision[0].digits || 2] });
+
     }
 }
 AnalyticDistribution.template = "analytic_distribution";

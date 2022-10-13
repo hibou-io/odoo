@@ -8,15 +8,20 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { getWysiwygClass } from 'web_editor.loader';
 import { QWebPlugin } from '@web_editor/js/backend/QWebPlugin';
 import { TranslationButton } from "@web/views/fields/translation_button";
+import { useDynamicPlaceholder } from "@web/views/fields/dynamicplaceholder_hook";
 import { QWeb } from 'web.core';
 import ajax from 'web.ajax';
 import {
     useBus,
     useService,
 } from "@web/core/utils/hooks";
-import { getAdjacentPreviousSiblings, getAdjacentNextSiblings } from '@web_editor/js/editor/odoo-editor/src/utils/utils';
+import {
+    getAdjacentPreviousSiblings,
+    getAdjacentNextSiblings,
+    getRangePosition
+} from '@web_editor/js/editor/odoo-editor/src/utils/utils';
 import { toInline } from 'web_editor.convertInline';
-
+import { loadJS } from '@web/core/assets';
 const {
     markup,
     Component,
@@ -54,6 +59,7 @@ export class HtmlFieldWysiwygAdapterComponent extends ComponentAdapter {
             this.widget.resetEditor(newValue, {
                 collaborationChannel: newCollaborationChannel,
             });
+            this.env.onWysiwygReset && this.env.onWysiwygReset();
         }
     }
     renderWidget() {}
@@ -66,6 +72,9 @@ export class HtmlField extends Component {
         this.iframeRef = useRef("iframe");
         this.codeViewButtonRef = useRef("codeViewButton");
 
+        if (this.props.dynamicPlaceholder) {
+            this.dynamicPlaceholder = useDynamicPlaceholder();
+        }
         this.rpc = useService("rpc");
 
         this.onIframeUpdated = this.env.onIframeUpdated || (() => {});
@@ -86,12 +95,16 @@ export class HtmlField extends Component {
                 this.cssReadonlyAsset = await ajax.loadAsset(this.props.cssReadonlyAssetId);
             }
             if (this.props.cssEditAssetId || this.props.isInlineStyle) {
+                await loadJS('/web_editor/static/lib/html2canvas.js');
                 this.cssEditAsset = await ajax.loadAsset(this.props.cssEditAssetId || 'web_editor.assets_edit_html_field');
             }
         });
         onWillUpdateProps((newProps) => {
             if (!newProps.readonly && this.state.iframeVisible) {
                 this.state.iframeVisible = false;
+            }
+            if (!this._selfUpdating) {
+                this.currentEditingValue = undefined;
             }
         });
         useEffect(() => {
@@ -142,12 +155,50 @@ export class HtmlField extends Component {
         return this.props.readonly && this.props.cssReadonlyAssetId;
     }
     get wysiwygOptions() {
+        let dynamicPlaceholderOptions = {};
+        if (this.props.dynamicPlaceholder) {
+            dynamicPlaceholderOptions = {
+                // Add the powerbox option to open the Dynamic Placeholder
+                // generator.
+                powerboxCommands: [
+                    {
+                        category: this.env._t('Marketing Tools'),
+                        name: this.env._t('Dynamic Placeholder'),
+                        priority: 10,
+                        description: this.env._t('Insert personalized content'),
+                        fontawesome: 'fa-magic',
+                        callback: () => {
+                            this.wysiwygRangePosition = getRangePosition(document.createElement('x'), this.wysiwyg.options.document || document);
+                            const baseModel = this.props.record.data.mailing_model_real || this.props.record.data.model;
+                            if (baseModel) {
+                                // The method openDynamicPlaceholder need to be triggered
+                                // after the focus from powerBox prevalidate.
+                                setTimeout(async () => {
+                                    await this.dynamicPlaceholder.open(
+                                        this.wysiwyg.$editable[0],
+                                        baseModel,
+                                        {
+                                            validateCallback: this.onDynamicPlaceholderValidate.bind(this),
+                                            closeCallback: this.onDynamicPlaceholderClose.bind(this),
+                                            positionCallback: this.positionDynamicPlaceholder.bind(this),
+                                        }
+                                    );
+                                });
+                            }
+                        },
+                    }
+                ],
+                powerboxFilters: [this._filterPowerBoxCommands.bind(this)],
+            }
+        }
+
         return {
             value: this.props.value,
             autostart: false,
             onAttachmentChange: this._onAttachmentChange.bind(this),
             onWysiwygBlur: this._onWysiwygBlur.bind(this),
             ...this.props.wysiwygOptions,
+            ...dynamicPlaceholderOptions,
             recordInfo: {
                 res_model: this.props.record.resModel,
                 res_id: this.props.record.resId,
@@ -163,6 +214,28 @@ export class HtmlField extends Component {
                 res_id: this.props.record.resId,
             },
         };
+    }
+    /**
+     * Prevent usage of the dynamic placeholder command inside widgets
+     * containing background images ( cover & masonry ).
+     *
+     * We cannot use dynamic placeholder in block containing background images
+     * because the email processing will flatten the text into the background
+     * image and this case the dynamic placeholder cannot be dynamic anymore.
+     *
+     * @param {Array} commands commands available in this wysiwyg
+     * @returns {Array} commands which can be used after the filter was applied
+     */
+    _filterPowerBoxCommands(commands) {
+        let selectionIsInForbidenSnippet = false;
+        if (this.wysiwyg && this.wysiwyg.odooEditor) {
+            const selection = this.wysiwyg.odooEditor.document.getSelection();
+            selectionIsInForbidenSnippet = this.wysiwyg.closestElement(
+                selection.anchorNode,
+                'div[data-snippet="s_cover"], div[data-snippet="s_masonry_block"]'
+            );
+        }
+        return selectionIsInForbidenSnippet ? commands.filter((o) => o.title !== "Dynamic Placeholder") : commands;
     }
     get translationButtonWrapperStyle() {
         return `
@@ -185,7 +258,7 @@ export class HtmlField extends Component {
             }
         }
     }
-    updateValue() {
+    async updateValue() {
         const value = this.getEditingValue();
         const lastValue = (this.props.value || "").toString();
         if (value !== null && !(!lastValue && value === "<p><br></p>") && value !== lastValue) {
@@ -193,7 +266,9 @@ export class HtmlField extends Component {
                 this.props.setDirty(true);
             }
             this.currentEditingValue = value;
-            return this.props.update(value);
+            this._selfUpdating = true;
+            await this.props.update(value);
+            this._selfUpdating = false;
         }
     }
     async startWysiwyg(wysiwyg) {
@@ -234,6 +309,33 @@ export class HtmlField extends Component {
             this.props.update(value);
 
         }
+    }
+    onDynamicPlaceholderValidate(chain, defaultValue) {
+        if (chain) {
+            let dynamicPlaceholder = "object." + chain.join('.');
+            dynamicPlaceholder += defaultValue && defaultValue !== '' ? ` or '''${defaultValue}'''` : '';
+            const t = document.createElement('T');
+            t.setAttribute('t-out', dynamicPlaceholder);
+            this.wysiwyg.odooEditor.execCommand('insert', t);
+        }
+    }
+    onDynamicPlaceholderClose() {
+        this.wysiwyg.focus();
+    }
+
+    /**
+     * @param {HTMLElement} popover
+     * @param {Object} position
+     */
+    positionDynamicPlaceholder(popover, position) {
+        let topPosition = this.wysiwygRangePosition.top;
+        // Offset the popover to ensure the arrow is pointing at
+        // the precise range location.
+        let leftPosition = this.wysiwygRangePosition.left - 14;
+
+        // Apply the position back to the element.
+        popover.style.top = topPosition + 'px';
+        popover.style.left = leftPosition + 'px';
     }
     async commitChanges({ urgent } = {}) {
         if (this._isDirty() || urgent) {
@@ -386,6 +488,9 @@ export class HtmlField extends Component {
         const $editable = this.wysiwyg.getEditable();
         const html = this.wysiwyg.getValue();
         const $odooEditor = $editable.closest('.odoo-editor-editable');
+        // Save correct nodes references.
+        const originalContents = document.createDocumentFragment();
+        originalContents.append(...$editable[0].childNodes);
         // Remove temporarily the class so that css editing will not be converted.
         $odooEditor.removeClass('odoo-editor-editable');
         $editable.html(html);
@@ -393,13 +498,14 @@ export class HtmlField extends Component {
         await toInline($editable, this.cssRules, this.wysiwyg.$iframe);
         $odooEditor.addClass('odoo-editor-editable');
 
-        this.wysiwyg.setValue($editable.html());
+        $editable[0].replaceChildren(...originalContents.childNodes);
     }
     async _getWysiwygClass() {
         return getWysiwygClass();
     }
     _onAttachmentChange(attachment) {
-        if (!this.props.record.fieldNames.includes('attachment_ids')) {
+        // This only needs to happen for the composer for now
+        if (!(this.props.record.fieldNames.includes('attachment_ids') && this.props.record.resModel === 'mail.compose.message')) {
             return;
         }
         this.props.record.update(_.object(['attachment_ids'], [{
@@ -467,6 +573,7 @@ HtmlField.components = {
     TranslationButton,
     HtmlFieldWysiwygAdapterComponent,
 };
+HtmlField.defaultProps = {dynamicPlaceholder: false};
 HtmlField.props = {
     ...standardFieldProps,
     isTranslatable: { type: Boolean, optional: true },
@@ -474,6 +581,7 @@ HtmlField.props = {
     fieldName: { type: String, optional: true },
     codeview: { type: Boolean, optional: true },
     isCollaborative: { type: Boolean, optional: true },
+    dynamicPlaceholder: { type: Boolean, optional: true, default: false },
     cssReadonlyAssetId: { type: String, optional: true },
     cssEditAssetId: { type: String, optional: true },
     isInlineStyle: { type: Boolean, optional: true },
@@ -493,6 +601,7 @@ HtmlField.extractProps = ({ attrs, field }) => {
 
         isCollaborative: attrs.options.collaborative,
         cssReadonlyAssetId: attrs.options.cssReadonly,
+        dynamicPlaceholder: attrs.options.dynamic_placeholder,
         cssEditAssetId: attrs.options.cssEdit,
         isInlineStyle: attrs.options['style-inline'],
         wrapper: attrs.options.wrapper,
@@ -502,6 +611,7 @@ HtmlField.extractProps = ({ attrs, field }) => {
             noAttachment: attrs.options['no-attachment'],
             inIframe: Boolean(attrs.options.cssEdit),
             iframeCssAssets: attrs.options.cssEdit,
+            iframeHtmlClass: attrs.iframeHtmlClass,
             snippets: attrs.options.snippets,
             allowCommandVideo: Boolean(attrs.options.allowCommandVideo) && (!field.sanitize || !field.sanitize_tags),
             mediaModalParams: {

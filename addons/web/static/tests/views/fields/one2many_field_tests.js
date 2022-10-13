@@ -1,6 +1,5 @@
 /** @odoo-module **/
 
-import AbstractField from "web.AbstractField";
 import {
     addRow,
     click,
@@ -26,9 +25,7 @@ import {
 import BasicModel from "web.BasicModel";
 import { browser } from "@web/core/browser/browser";
 import { createWebClient, doAction } from "@web/../tests/webclient/helpers";
-import { FieldOne2Many } from "web.relational_fields";
 import { getNextTabableElement } from "@web/core/utils/ui";
-import fieldRegistry from "web.field_registry";
 import { makeView, setupViewRegistries } from "@web/../tests/views/helpers";
 import { registerCleanup } from "@web/../tests/helpers/cleanup";
 import { registry } from "@web/core/registry";
@@ -5504,138 +5501,6 @@ QUnit.module("Fields", (hooks) => {
         await click(target, ".oe_kanban_action_button");
     });
 
-    QUnit.test(
-        "one2many kanban with edit type action and widget with specialData",
-        async function (assert) {
-            assert.expect(3);
-
-            patchWithCleanup(BasicModel.prototype, {
-                _fetchSpecialDataForMyWidget() {
-                    assert.step("_fetchSpecialDataForMyWidget");
-                    return Promise.resolve();
-                },
-            });
-            const MyWidget = AbstractField.extend({
-                specialData: "_fetchSpecialDataForMyWidget",
-                className: "my_widget",
-            });
-            fieldRegistry.add("specialWidget", MyWidget);
-
-            await makeView({
-                type: "form",
-                resModel: "partner",
-                serverData,
-                // turtle_int is displayed without widget in the kanban, and with
-                // widget required specialData in the form
-                arch: `
-                    <form>
-                        <group>
-                            <field name="turtles" mode="kanban">
-                                <kanban>
-                                    <templates>
-                                        <t t-name="kanban-box">
-                                            <div>
-                                                <field name="display_name"/>
-                                                <field name="turtle_foo"/>
-                                                <field name="turtle_int"/>
-                                                <a type="edit"> Edit </a>
-                                            </div>
-                                        </t>
-                                    </templates>
-                                </kanban>
-                                <form>
-                                    <field name="product_id" widget="statusbar"/>
-                                    <field name="turtle_int" widget="specialWidget"/>
-                                </form>
-                            </field>
-                        </group>
-                    </form>`,
-                resId: 1,
-            });
-
-            await click(target.querySelector(".oe_kanban_action"));
-            assert.containsOnce(target, ".modal .my_widget");
-            assert.verifySteps(["_fetchSpecialDataForMyWidget"]);
-        }
-    );
-
-    QUnit.test("one2many list with onchange and widget using SpecialData", async function (assert) {
-        patchWithCleanup(BasicModel.prototype, {
-            _fetchSpecialDataForMyWidget() {
-                assert.step("_fetchSpecialDataForMyWidget");
-                return Promise.resolve();
-            },
-        });
-        const MyWidget = AbstractField.extend({
-            specialData: "_fetchSpecialDataForMyWidget",
-            className: "my_widget",
-        });
-        fieldRegistry.add("specialWidget", MyWidget);
-
-        serverData.models.partner.onchanges = {
-            turtles: function (obj) {
-                var virtualID = obj.turtles[1][1];
-                obj.turtles = [
-                    [5], // delete all
-                    [
-                        0,
-                        virtualID,
-                        {
-                            display_name: "coucou",
-                            product_id: [37, "xphone"],
-                            turtle_bar: false,
-                            turtle_foo: "has changed",
-                            turtle_int: 42,
-                            turtle_qux: 9.8,
-                            partner_ids: [],
-                            turtle_ref: "product,37",
-                        },
-                    ],
-                ];
-            },
-        };
-        await makeView({
-            type: "form",
-            resModel: "partner",
-            serverData,
-            // turtle_int is displayed without widget in the list, and with
-            // widget required specialData in the form
-            arch: `
-                <form>
-                    <group>
-                        <field name="turtles" mode="tree">
-                            <tree>
-                                <field name="display_name"/>
-                                <field name="turtle_foo"/>
-                                <field name="turtle_int"/>
-                            </tree>
-                            <form>
-                                <field name="turtle_int" widget="specialWidget"/>
-                            </form>
-                        </field>
-                    </group>
-                </form>`,
-            resId: 1,
-        });
-
-        await addRow(target, ".o_field_one2many");
-        assert.containsOnce(target, ".modal");
-        await click(target.querySelector(".modal-footer button"));
-
-        assert.deepEqual(
-            [...target.querySelectorAll(".o_field_one2many tbody tr .o_data_cell")].map(
-                (el) => el.innerText
-            ),
-            ["coucou", "has changed", "42"],
-            "the onchange should create one new record and remove the existing"
-        );
-
-        await click(target.querySelector(".o_field_one2many .o_list_renderer tbody tr td"));
-
-        await clickSave(target.querySelector(".modal"));
-        assert.verifySteps(["_fetchSpecialDataForMyWidget"], "should only fetch special data once");
-    });
-
     QUnit.test("one2many without inline tree arch", async function (assert) {
         serverData.models.partner.records[0].turtles = [2, 3];
         serverData.views = {
@@ -6426,6 +6291,46 @@ QUnit.module("Fields", (hooks) => {
         }
     );
 
+    QUnit.test(
+        "open a record in a one2many list (mode 'readonly') with a notebook",
+        async function (assert) {
+            serverData.views = {
+                "turtle,false,form": `
+                    <form>
+                        <notebook>
+                            <page string="Yop">
+                                <field name="display_name">
+                                </field>
+                            </page>
+                    </notebook>
+                    </form>`,
+            };
+
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                serverData,
+                arch: `
+                    <form>
+                        <field name="turtles">
+                            <tree>
+                                <field name="turtle_foo"/>
+                            </tree>
+                        </field>
+                    </form>`,
+                resId: 1,
+            });
+
+            await click(target, ".o_data_cell");
+            assert.containsOnce(target, ".modal .o_form_view");
+            assert.containsOnce(target, ".modal .o_form_view .o_notebook_headers");
+            assert.strictEqual(
+                target.querySelector(".modal .o_form_view .o_notebook_headers").textContent,
+                "Yop"
+            );
+        }
+    );
+
     QUnit.test("one2many field with virtual ids", async function (assert) {
         serverData.views = {
             "partner,false,form": '<form><field name="foo"/></form>',
@@ -6666,8 +6571,8 @@ QUnit.module("Fields", (hooks) => {
         assert.notOk(target.querySelector(btn2Warn).disabled);
         assert.strictEqual(
             target.querySelector(btn2Warn).getAttribute("warn"),
-            null,
-            "the warn attribute is not copied onto the button"
+            "warn",
+            "Should have a button type object with warn attr in area 2"
         );
 
         // click all buttons
@@ -9051,6 +8956,33 @@ QUnit.module("Fields", (hooks) => {
         assert.verifySteps(["do_something"]);
     });
 
+    QUnit.test("o2m button with parent in context", async function (assert) {
+        await makeView({
+            type: "form",
+            resModel: "partner",
+            serverData,
+            resId: 1,
+            arch: `
+                <form>
+                    <field name="turtles">
+                        <tree>
+                            <field name="display_name"/>
+                            <button string="Action Button" name="test_button" type="object" context="{'parent_name': parent.display_name}"/>
+                        </tree>
+                    </field>
+                </form>`,
+            mockRPC(route, args) {
+                if (args.method === "test_button") {
+                    assert.step("test_button");
+                    assert.strictEqual(args.kwargs.context.parent_name, "first record");
+                    return true;
+                }
+            },
+        });
+        await click(target, 'button[name="test_button"]');
+        assert.verifySteps(["test_button"]);
+    });
+
     QUnit.test("o2m add a line custom control create align with handle", async function (assert) {
         await makeView({
             type: "form",
@@ -9129,7 +9061,7 @@ QUnit.module("Fields", (hooks) => {
         assert.containsNone(target, ".modal .o_form_view .o_data_row");
 
         // click on the action button
-        await click(target.querySelector(".modal .o_form_view button"));
+        await click(target.querySelector(".modal .o_form_editable button"));
         assert.containsOnce(target, ".modal .o_data_row");
         assert.strictEqual(target.querySelector(".modal .o_data_cell").textContent, "gold");
 
@@ -10550,46 +10482,6 @@ QUnit.module("Fields", (hooks) => {
         await clickSave(target);
     });
 
-    QUnit.test(
-        "one2many: internal state is updated after another field changes",
-        async function (assert) {
-            // The FieldOne2Many is configured such that it is reset at any field change.
-            // The MatrixProductConfigurator feature relies on that, and requires that its
-            // internal state is correctly updated. This white-box test artificially checks that.
-            let o2m;
-            // keep using the legacy version considering the above comment
-            const MyFieldOne2Many = FieldOne2Many.extend({
-                init() {
-                    this._super(...arguments);
-                    o2m = this;
-                },
-            });
-            fieldRegistry.add("myone2many", MyFieldOne2Many);
-            registerCleanup(() => {
-                delete fieldRegistry.map.myone2many;
-            });
-
-            await makeView({
-                type: "form",
-                resModel: "partner",
-                serverData,
-                arch: `
-                    <form>
-                        <field name="display_name"/>
-                        <field name="p" widget="myone2many">
-                            <tree><field name="display_name"/></tree>
-                        </field>
-                    </form>`,
-            });
-
-            assert.strictEqual(o2m.recordData.display_name, false);
-
-            await editInput(target, ".o_field_widget[name=display_name] input", "val");
-
-            assert.strictEqual(o2m.recordData.display_name, "val");
-        }
-    );
-
     QUnit.test("nested one2many, onchange, no command value", async function (assert) {
         // This test ensures that we always send all values to onchange rpcs for nested
         // one2manys, even if some field hasn't changed. In this particular test case,
@@ -10655,84 +10547,6 @@ QUnit.module("Fields", (hooks) => {
         await click(target.querySelector(".o_data_row .o_field_boolean input"));
     });
 
-    QUnit.test("update a one2many from a custom field widget", async function (assert) {
-        // In this test, we define a custom field widget to render/update a one2many
-        // field. For the update part, we ensure that updating primitive fields of a sub
-        // record works. There is no guarantee that updating a relational field on the sub
-        // record would work. Deleting a sub record works as well. However, creating sub
-        // records isn't supported. There are obviously a lot of limitations, but the code
-        // hasn't been designed to support all this. This test simply encodes what can be
-        // done, and this comment explains what can't (and won't be implemented in stable
-        // versions).
-        serverData.models.partner.records[0].p = [1, 2];
-        const MyRelationalField = AbstractField.extend({
-            events: {
-                "click .update": "_onUpdate",
-                "click .delete": "_onDelete",
-            },
-            async _render() {
-                const records = await this._rpc({
-                    method: "read",
-                    model: "partner",
-                    args: [this.value.res_ids],
-                });
-                this.$el.text(records.map((r) => `${r.display_name}/${r.int_field}`).join(", "));
-                this.$el.append($('<button class="update fa fa-edit">'));
-                this.$el.append($('<button class="delete fa fa-trash">'));
-            },
-            _onUpdate() {
-                this._setValue({
-                    operation: "UPDATE",
-                    id: this.value.data[0].id,
-                    data: {
-                        display_name: "new name",
-                        int_field: 44,
-                    },
-                });
-            },
-            _onDelete() {
-                this._setValue({
-                    operation: "DELETE",
-                    ids: [this.value.data[0].id],
-                });
-            },
-        });
-        fieldRegistry.add("my_relational_field", MyRelationalField);
-
-        await makeView({
-            type: "form",
-            resModel: "partner",
-            serverData,
-            mode: "readonly",
-            arch: `
-                <form>
-                    <field name="p" widget="my_relational_field"/>
-                </form>`,
-            resId: 1,
-        });
-
-        assert.strictEqual(
-            target.querySelector(".o_field_widget[name=p]").innerText,
-            "first record/10, second record/9"
-        );
-
-        await click(target.querySelector("button.update"));
-
-        assert.strictEqual(
-            target.querySelector(".o_field_widget[name=p]").innerText,
-            "new name/44, second record/9"
-        );
-
-        await click(target.querySelector("button.delete"));
-
-        assert.strictEqual(
-            target.querySelector(".o_field_widget[name=p]").innerText,
-            "second record/9"
-        );
-
-        delete fieldRegistry.map.my_relational_field;
-    });
-
     QUnit.test("edition in list containing widget with decoration", async function (assert) {
         // We use here a badge widget and check its decoration is properly managed
         // in this scenario (we need a widget with specific decoration handling)
@@ -10756,7 +10570,7 @@ QUnit.module("Fields", (hooks) => {
         assert.containsN(target, ".o_data_row", 2);
         assert.hasClass(
             target.querySelectorAll(".o_data_row")[1].querySelector(".o_field_badge .badge"),
-            "bg-warning"
+            "text-bg-warning"
         );
 
         await click(target.querySelector(".o_data_row .o_data_cell"));
@@ -10764,7 +10578,7 @@ QUnit.module("Fields", (hooks) => {
 
         assert.hasClass(
             target.querySelectorAll(".o_data_row")[1].querySelector(".o_field_badge .badge"),
-            "bg-warning"
+            "text-bg-warning"
         );
     });
 
@@ -11103,7 +10917,7 @@ QUnit.module("Fields", (hooks) => {
         // the next line should be displayed below the newly added one
         assert.containsN(target, ".o_data_row", 2, "should have 2 records");
         assert.deepEqual(
-            [...target.querySelectorAll(".o_data_cell")].map(el => el.textContent.trim()),
+            [...target.querySelectorAll(".o_data_cell")].map((el) => el.textContent.trim()),
             ["pi", "", "kawa", ""],
             "should display the correct records on page 1"
         );
@@ -11470,10 +11284,10 @@ QUnit.module("Fields", (hooks) => {
 
             await click(target.querySelector(".o_optional_columns_dropdown .dropdown-toggle"));
             await click(target.querySelector(".o_optional_columns_dropdown .dropdown-item"));
-            assert.containsNone(
+            assert.containsOnce(
                 target.querySelector(".o_field_one2many"),
                 "tr.o_selected_row",
-                "current edition mode discarded when selecting advanced field"
+                "current edition mode kept when selecting advanced field"
             );
             assert.containsN(
                 target.querySelector(".o_field_one2many"),
@@ -12480,5 +12294,80 @@ QUnit.module("Fields", (hooks) => {
         assert.strictEqual(serverData.models.partner.records[0].int_field, 5);
         assert.strictEqual(serverData.models.turtle.records[1].turtle_int, 5);
         assert.strictEqual(serverData.models.turtle.records[0].turtle_int, 5);
+    });
+
+    QUnit.test("active actions are passed to o2m field", async (assert) => {
+        serverData.models.partner.records[0].turtles = [1, 2, 3];
+
+        await makeView({
+            type: "form",
+            resModel: "partner",
+            serverData,
+            arch: /* xml */ `
+                <form>
+                    <field name="turtles">
+                        <tree editable="bottom" create="false" delete="false">
+                            <field name="display_name" />
+                            <field name="turtle_foo" />
+                        </tree>
+                    </field>
+                </form>`,
+            resId: 1,
+            mode: "edit",
+        });
+
+        assert.containsN(target, ".o_data_row", 3);
+        assert.containsNone(target, ".o_list_record_remove");
+
+        await click(target, ".o_data_row:nth-child(3) .o_data_cell:nth-child(2)");
+
+        assert.hasClass(target.querySelector(".o_data_row:nth-child(3)"), "o_selected_row");
+
+        triggerHotkey("Enter");
+        await nextTick();
+
+        assert.containsN(target, ".o_data_row", 3);
+        assert.containsNone(target, ".o_list_record_remove");
+        assert.hasClass(target.querySelector(".o_data_row:first-child"), "o_selected_row");
+    });
+
+    QUnit.test('Add a line, click on "Save & New" with an invalid form', async function (assert) {
+        await makeView({
+            type: "form",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <form>
+                    <field name="p">
+                        <tree>
+                            <field name="display_name"/>
+                        </tree>
+                        <form>
+                            <field name="display_name" required="1"/>
+                        </form>
+                    </field>
+                </form>`,
+        });
+
+        assert.containsNone(target, ".o_data_row");
+        // Add a new record
+        await addRow(target);
+        assert.containsOnce(target, ".o_dialog .o_form_view");
+
+        // Click on "Save & New" with an invalid form
+        await click(target, ".o_dialog .o_form_button_save_new");
+        assert.containsOnce(target, ".o_dialog .o_form_view");
+
+        // Check that no buttons are disabled
+        assert.hasAttrValue(
+            target.querySelector(".o_dialog .o_form_button_save_new"),
+            "disabled",
+            undefined
+        );
+        assert.hasAttrValue(
+            target.querySelector(".o_dialog .o_form_button_cancel"),
+            "disabled",
+            undefined
+        );
     });
 });

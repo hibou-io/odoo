@@ -20,6 +20,7 @@ This module provides the core of the Odoo Web Client.
         'views/base_document_layout_views.xml',
         'views/speedscope_template.xml',
         'views/lazy_assets.xml',
+        'views/neutralize_views.xml',
         'data/ir_attachment.xml',
         'data/report_layout.xml',
     ],
@@ -80,7 +81,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/src/boot.js',
             'web/static/src/session.js',
             'web/static/src/legacy/js/core/cookie_utils.js',
-            'web/static/src/legacy/js/core/menu.js',
 
             'web/static/lib/underscore/underscore.js',
             'web/static/lib/underscore.string/lib/underscore.string.js',
@@ -186,7 +186,6 @@ This module provides the core of the Odoo Web Client.
 
             'web/static/src/core/utils/transitions.scss',
             'web/static/src/core/**/*',
-            'web/static/src/legacy/legacy_fields.scss',
             'web/static/src/search/**/*',
             'web/static/src/webclient/icons.scss', # variables required in list_controller.scss
             'web/static/src/views/**/*',
@@ -243,8 +242,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/src/legacy/legacy_dialog.js',
             'web/static/src/legacy/legacy_load_views.js',
             'web/static/src/legacy/legacy_views.js',
-            'web/static/src/legacy/legacy_fields.js',
-            'web/static/src/legacy/legacy_view_widgets.js',
             'web/static/src/legacy/legacy_promise_error_handler.js',
             'web/static/src/legacy/legacy_rpc_error_handler.js',
             'web/static/src/legacy/root_widget.js',
@@ -414,6 +411,7 @@ This module provides the core of the Odoo Web Client.
             'web/static/src/legacy/js/core/popover.js',
             'web/static/src/legacy/js/core/dom.js',
             'web/static/src/legacy/js/core/local_storage.js',
+            'web/static/src/legacy/js/core/menu.js',
             'web/static/src/legacy/js/core/mixins.js',
             'web/static/src/legacy/js/core/qweb.js',
             'web/static/src/legacy/js/core/ram_storage.js',
@@ -515,6 +513,19 @@ This module provides the core of the Odoo Web Client.
         ],
 
         # ---------------------------------------------------------------------
+        # COLOR SCHEME BUNDLES
+        # ---------------------------------------------------------------------
+        "web.dark_mode_assets_common": [
+            ('include', 'web.assets_common'),
+        ],
+        "web.dark_mode_assets_backend": [
+            ('include', 'web.assets_backend'),
+        ],
+        "web.dark_mode_variables": [
+            ('before', 'base/static/src/scss/onboarding.variables.scss', 'base/static/src/scss/onboarding.variables.dark.scss'),
+        ],
+
+        # ---------------------------------------------------------------------
         # SUB BUNDLES
         # ---------------------------------------------------------------------
         # These bundles can be used by main bundles but are not supposed to be
@@ -530,6 +541,7 @@ This module provides the core of the Odoo Web Client.
         'web._assets_primary_variables': [
             'web/static/src/scss/primary_variables.scss',
             'web/static/src/**/**/*.variables.scss',
+            'base/static/src/scss/onboarding.variables.scss',
         ],
         'web._assets_secondary_variables': [
             'web/static/src/scss/secondary_variables.scss',

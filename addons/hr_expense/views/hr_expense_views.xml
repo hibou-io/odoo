@@ -56,10 +56,10 @@
                     <field name="activity_ids" widget="list_activity" optional="show"/>
                     <field name="accounting_date" optional="hide" groups="account.group_account_invoice,account.group_account_readonly" readonly="0"/>
                     <field name="reference" optional="hide" groups="account.group_account_readonly"/>
-                    <field name="analytic_distribution_stored_char" invisible="1"/>
                     <field name="analytic_distribution" widget="analytic_distribution"
                            optional="show"
-                           groups="analytic.group_analytic_accounting"/>
+                           groups="analytic.group_analytic_accounting"
+                           options="{'product_field': 'product_id', 'business_domain': 'expense'}"/>
                     <field name="account_id" optional="hide" groups="account.group_account_readonly"/>
                     <field name="company_id" optional="show" groups="base.group_multi_company" readonly="1"/>
                     <field name="unit_amount_display" string="Unit Price" optional="hide" widget="monetary" options="{'currency_field': 'company_currency_id'}"/>
@@ -140,28 +140,34 @@
                             <field name="total_amount_company" invisible="1"/>
                             <field name="duplicate_expense_ids" invisible="1"/>
                             <field name="sheet_is_editable" invisible="1"/>
-                            <field name="product_id" required="1" attrs="{'readonly': [('sheet_is_editable', '=', False)]}" context="{'default_can_be_expensed': 1, 'tree_view_ref': 'hr_expense.product_product_expense_tree_view', 'form_view_ref': 'hr_expense.product_product_expense_form_view'}"/>
-                            <label for="product_description" string="" attrs="{'invisible': ['|', ('product_description', '=', False), ('product_id', '=', False)]}"/>
-                            <div class="o_row" attrs="{'invisible': ['|', ('product_description', '=', False), ('product_id', '=', False)]}">
-                                <field name ="product_description" class="fst-italic"/>
+                            <field name="currency_rate" invisible="1"/>
+                            <label for="product_id"/>
+                            <div>
+                                <field name="product_id" required="1" attrs="{'readonly': [('sheet_is_editable', '=', False)]}" context="{'default_can_be_expensed': 1, 'tree_view_ref': 'hr_expense.product_product_expense_tree_view', 'form_view_ref': 'hr_expense.product_product_expense_form_view'}" class="w-100"/>
+                                <div class="fst-italic" attrs="{'invisible': ['|', ('product_description', '=', False), ('product_id', '=', False)]}">
+                                    <field name ="product_description"/>
+                                </div>
                             </div>
                             <field name="unit_amount" required="1" force_save="1" widget="monetary" options="{'currency_field': 'currency_id', 'field_digits': True}" attrs="{'invisible': [('product_has_cost', '=', False)], 'readonly': ['|', ('sheet_is_editable', '=', False), ('product_has_cost', '=', True)]}"/>
                             <field name="product_uom_category_id" invisible="1"/>
                             <label for="quantity" attrs="{'invisible': [('product_has_cost', '=', False)]}"/>
-                            <div class="o_row" attrs="{'invisible': [('product_has_cost', '=', False)]}">
+                            <div attrs="{'invisible': [('product_has_cost', '=', False)]}">
                                 <field name="quantity" class="oe_inline" attrs="{'readonly': [('sheet_is_editable', '=', False)]}" style="width: auto !important;"/>
-                                <field name="product_uom_id" required="1" options="{'no_open': True, 'no_create': True}" class="oe_inline" groups="uom.group_uom"/>
+                                <field name="product_uom_id" required="1" force_save="1" options="{'no_open': True, 'no_create': True}" groups="uom.group_uom"/>
+
+                                <field name="total_amount_company" widget='monetary' options="{'currency_field': 'company_currency_id'}" class="d-block"/>
                             </div>
 
                             <label for="total_amount" string="Total" attrs="{'invisible': [('product_has_cost', '=', True)]}"/>
-                            <div class="o_row" attrs="{'invisible': [('product_has_cost', '=', True)]}">
-                                <field name="total_amount" widget='monetary' options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('sheet_is_editable', '=', False)]}" class="oe_inline"/>
-                                <field name="currency_id" groups="base.group_multi_currency"/>
-                            </div>
-                            <label for="total_amount_company" attrs="{'invisible': [('product_has_cost', '=', False)]}"/>
-                            <div class="o_row d-flex" attrs="{'invisible': [('same_currency', '=', True), ('product_has_cost', '=', False)]}">
-                                <field name="total_amount_company" style="vertical-align: top;" widget='monetary' options="{'currency_field': 'company_currency_id'}"/>
-                                <field name="label_convert_rate"/>
+                            <div attrs="{'invisible': [('product_has_cost', '=', True)]}">
+                                <div class="row" attrs="{'invisible': [('product_has_cost', '=', True)]}">
+                                    <field name="total_amount" widget='monetary' options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('sheet_is_editable', '=', False)]}" class="col-lg-4"/>
+                                    <field name="currency_id" groups="base.group_multi_currency" class="ps-2 col-lg-8"/>
+                                </div>
+                                <div class="row" attrs="{'invisible': [('same_currency', '=', True), ('product_has_cost', '=', False)]}">
+                                    <field name="total_amount_company" widget='monetary' options="{'currency_field': 'company_currency_id'}" class="col-lg-4"/>
+                                    <field name="label_convert_rate" class="ps-0 col-lg-8"/>
+                                </div>
                             </div>
                             <label for="tax_ids" attrs="{'invisible': [('product_has_tax', '=', False)]}"/>
                             <div class="d-flex o_row">
@@ -187,13 +193,10 @@
                             <field name="accounting_date" attrs="{'invisible': ['|', ('accounting_date', '=', False), ('state', 'not in', ['approved', 'done'])]}" />
                             <field name="account_id" options="{'no_create': True}" domain="[('account_type', 'not in', ('asset_receivable','liability_payable','asset_cash','liability_credit_card')), ('company_id', '=', company_id)]" groups="account.group_account_readonly" attrs="{'readonly': ['|', ('is_editable', '=', False), ('sheet_is_editable', '=', False)]}" context="{'default_company_id': company_id}"/>
                             <field name="sheet_id" invisible="1"/>
-                            <field name="analytic_distribution_stored_char" invisible="1"/>
                             <field name="analytic_distribution" widget="analytic_distribution"
                                 groups="analytic.group_analytic_accounting"
-                                options="{'product_field': 'product_id', 'account_field': 'account_id'}"
-                                business_domain_compute="'purchase'"
-                                attrs="{'readonly': [('is_editable', '=', False)]}"
-                                   />
+                                options="{'product_field': 'product_id', 'account_field': 'account_id', 'business_domain': 'expense'}"
+                                attrs="{'readonly': [('is_editable', '=', False)]}"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="employee_id" groups="hr_expense.group_hr_expense_team_approver" context="{'default_company_id': company_id}" widget="many2one_avatar_employee"/>
                             <label id="lo" for="payment_mode" attrs="{'invisible': [('product_has_cost', '=', True)]}"/>
@@ -203,7 +206,7 @@
                         </group>
                     </group>
                     <div>
-                        <field name="description" class="oe_inline" placeholder="Notes..."/>
+                        <field name="description" placeholder="Notes..."/>
                     </div>
                 </sheet>
                 <div class="o_attachment_preview"/>
@@ -517,7 +520,7 @@
                                 <label for="default_code"/>
                                 <div>
                                     <field name="default_code"/>
-                                    <i class="text-muted oe_edit_only">Use this reference as a subject prefix when submitting by email.</i>
+                                    <span class="d-inline-block"><i class="text-muted">Use this reference as a subject prefix when submitting by email.</i></span>
                                 </div>
                                 <field name="company_id" groups="base.group_multi_company"/>
                             </group>
@@ -748,12 +751,10 @@
                                     <field name="attachment_number" invisible="1"/>
                                     <button name="action_get_attachment_view" type="object" icon="fa-paperclip" aria-label="View Attachments" title="View Attachments" class="float-end pe-0" readonly="True" attrs="{'invisible': [('attachment_number', '=', 0)]}"/>
                                     <field name="reference" optional="hide" readonly="True"/>
-                                    <field name="analytic_distribution_stored_char" invisible="1"/>
                                     <field name="analytic_distribution" widget="analytic_distribution"
                                            groups="analytic.group_analytic_accounting"
                                            optional="show"
-                                           options="{'product_field': 'product_id', 'account_field': 'account_id'}"
-                                           business_domain_compute="'purchase'"/>
+                                           options="{'product_field': 'product_id', 'account_field': 'account_id', 'business_domain': 'expense'}"/>
                                     <field name="account_id" optional="hide" readonly="True"/>
                                     <field name="product_has_cost" invisible="True"/>
                                     <field name="unit_amount" optional="hide" widget="monetary" attrs="{'readonly': [('product_has_cost', '=', False)]}" options="{'currency_field': 'currency_id'}"/>

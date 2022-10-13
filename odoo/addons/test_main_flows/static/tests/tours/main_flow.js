@@ -530,8 +530,8 @@ tour.stepUtils.autoExpandMoreButtons('.o_form_saved'),
     trigger: ".ui-menu-item > a:contains('the_flow.product')",
 }, {
     mobile: false,
-    trigger: ".o_field_widget[name=order_line] .o_external_button",
-    run: () => {},
+    trigger: "td[name='name'][data-tooltip*='the_flow.product']",
+    run: () => {}, // check
 }, {
     mobile: true,
     trigger: ".o_field_widget[name=product_id] input",
@@ -568,8 +568,8 @@ tour.stepUtils.autoExpandMoreButtons('.o_form_saved'),
     trigger: ".ui-menu-item > a:contains('the_flow.service')",
 }, {
     mobile: false,
-    trigger: ".o_field_widget[name=order_line] .o_external_button",
-    run: () => {},
+    trigger: "td[name='name'][data-tooltip*='the_flow.service']",
+    run: () => {}, // check
 }, {
     mobile: false,
     trigger: 'label:contains("Untaxed Amount")',
@@ -828,7 +828,7 @@ tour.stepUtils.mobileModifier(tour.stepUtils.autoExpandMoreButtons('.o_control_p
     run: 'text 10 hours',
 }, {
     mobile: true,
-    trigger: '.modal-body .o_form_view div[name="name"] input',
+    trigger: '.modal-content.o_form_view div[name="name"] input',
     content: 'Enter a description this timesheet',
     run: 'text 10 hours',
 }, {
@@ -838,7 +838,7 @@ tour.stepUtils.mobileModifier(tour.stepUtils.autoExpandMoreButtons('.o_control_p
     run: 'text 10',
 }, {
     mobile: true,
-    trigger: '.modal-body .o_form_view div[name="unit_amount"] input',
+    trigger: '.modal-content.o_form_view div[name="unit_amount"] input',
     content: 'Enter one hour for this timesheet',
     run: 'text 10',
 }, {

@@ -129,7 +129,7 @@ class HrExpense(models.Model):
         date_today = fields.Date.context_today(self.env.user)
         for expense in self:
             target_currency = expense.currency_id or self.env.company.currency_id
-            expense.currency_rate = self.env['res.currency']._get_conversion_rate(
+            expense.currency_rate = expense.company_id and self.env['res.currency']._get_conversion_rate(
                 from_currency=target_currency,
                 to_currency=expense.company_currency_id,
                 company=expense.company_id,
@@ -307,16 +307,15 @@ class HrExpense(models.Model):
                 expenses = expenses - exp
 
     @api.depends('product_id', 'account_id')
-    def _compute_analytic_distribution_stored_char(self):
+    def _compute_analytic_distribution(self):
         for expense in self:
-            distribution = self.env['account.analytic.distribution.model']._get_distributionjson({
+            distribution = self.env['account.analytic.distribution.model']._get_distribution({
                 'product_id': expense.product_id.id,
                 'product_categ_id': expense.product_id.categ_id.id,
                 'account_prefix': expense.account_id.code,
                 'company_id': expense.company_id.id,
             })
-            expense.analytic_distribution_stored_char = distribution or expense.analytic_distribution_stored_char
-            expense._compute_analytic_distribution()
+            expense.analytic_distribution = distribution or expense.analytic_distribution
 
     @api.constrains('payment_mode')
     def _check_payment_mode(self):
@@ -591,6 +590,7 @@ Or send your receipts at <a href="mailto:%(email)s?subject=Lunch%%20with%%20cust
                 ).id,
                 'move_type': 'in_receipt',
                 'company_id': sheet.company_id.id,
+                'partner_id': sheet.employee_id.sudo().address_home_id.commercial_partner_id.id,
                 'date': sheet.accounting_date or fields.Date.context_today(sheet),
                 'invoice_date': sheet.accounting_date or fields.Date.context_today(sheet),
                 'ref': sheet.name,
@@ -601,8 +601,9 @@ Or send your receipts at <a href="mailto:%(email)s?subject=Lunch%%20with%%20cust
                 'line_ids':[
                     Command.create({
                         'name': expense.employee_id.name + ': ' + expense.name.split('\n')[0][:64],
+                        'account_id': expense.account_id.id,
                         'quantity': expense.quantity or 1,
-                        'price_unit': expense.total_amount,
+                        'price_unit': expense.unit_amount if expense.unit_amount != 0 else expense.total_amount,
                         'product_id': expense.product_id.id,
                         'product_uom_id': expense.product_uom_id.id,
                         'analytic_distribution': expense.analytic_distribution,

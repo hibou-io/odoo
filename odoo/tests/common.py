@@ -465,6 +465,17 @@ class BaseCase(unittest.TestCase, metaclass=MetaCase):
         patcher.start()
         cls.addClassCleanup(patcher.stop)
 
+    def startPatcher(self, patcher):
+        mock = patcher.start()
+        self.addCleanup(patcher.stop)
+        return mock
+
+    @classmethod
+    def startClassPatcher(cls, patcher):
+        mock = patcher.start()
+        cls.addClassCleanup(patcher.stop)
+        return mock
+
     @contextmanager
     def with_user(self, login):
         """ Change user for a given test, like with self.with_user() ... """
@@ -809,9 +820,23 @@ class TransactionCase(BaseCase):
     env: api.Environment = None
     cr: Cursor = None
 
+
+    @classmethod
+    def _gc_filestore(cls):
+        # attachment can be created or unlink during the tests.
+        # they can addup during test and take some disc space.
+        # since cron are not running during tests, we need to gc manually
+        # We need to check the status of the file system outside of the test cursor
+        with odoo.registry(get_db_name()).cursor() as cr:
+            gc_env = api.Environment(cr, odoo.SUPERUSER_ID, {})
+            gc_env['ir.attachment']._gc_file_store_unsafe()
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        cls.addClassCleanup(cls._gc_filestore)
+
         cls.registry = odoo.registry(get_db_name())
         cls.addClassCleanup(cls.registry.reset_changes)
         cls.addClassCleanup(cls.registry.clear_caches)
@@ -1194,12 +1219,13 @@ class ChromeBrowser:
                 self._logger.debug('\n<- %s', msg)
             except websocket.WebSocketTimeoutException:
                 continue
-            except Exception:
+            except Exception as e:
                 # if the socket is still connected something bad happened,
                 # otherwise the client was just shut down
-                self._result.cancel()
                 if self.ws.connected:
+                    self._result.set_exception(e)
                     raise
+                self._result.cancel()
                 return
 
             res = json.loads(msg)
@@ -1486,15 +1512,27 @@ which leads to stray network requests and inconsistencies."""))
         }, timeout=timeout)['result']
         if res.get('subtype') == 'error':
             raise ChromeBrowserException("Running code returned an error: %s" % res)
-        # if the runcode was a promise which took some time to execute, discount
-        # that from the timeout
-        if self._result.result(time.time() - start + timeout) and not self.had_failure:
+
+        err = ChromeBrowserException("failed")
+        try:
+            # if the runcode was a promise which took some time to execute,
+            # discount that from the timeout
+            if self._result.result(time.time() - start + timeout) and not self.had_failure:
+                return
+        except CancelledError:
+            # regular-ish shutdown
             return
+        except Exception as e:
+            err = e
 
         self.take_screenshot()
         self._save_screencast()
-        raise ChromeBrowserException('Script timeout exceeded')
+        if isinstance(err, ChromeBrowserException):
+            raise err
 
+        if isinstance(err, concurrent.futures.TimeoutError):
+            raise ChromeBrowserException('Script timeout exceeded') from err
+        raise ChromeBrowserException("Unknown error") from err
 
     def navigate_to(self, url, wait_stop=False):
         self._logger.info('Navigating to: "%s"', url)
@@ -2452,7 +2490,7 @@ class Form(object):
             values[f] = v
         return values
 
-    def _perform_onchange(self, fields):
+    def _perform_onchange(self, fields, context=None):
         assert isinstance(fields, list)
         # marks any onchange source as changed
         self._changed.update(fields)
@@ -2464,6 +2502,8 @@ class Form(object):
             return
 
         record = self._model.browse(self._values.get('id'))
+        if context is not None:
+            record = record.with_context(**context)
         result = record.onchange(self._onchange_values(), fields, spec)
         self._model.env.flush_all()
         self._model.env.clear()  # discard cache and pending recomputations
@@ -2659,7 +2699,7 @@ class O2MForm(Form):
                 raise AssertionError("Expected command type 0 or 1, found %s" % c)
 
         # FIXME: should be called when performing on change => value needs to be serialised into parent every time?
-        proxy._parent._perform_onchange([proxy._field])
+        proxy._parent._perform_onchange([proxy._field], self._env.context)
 
     def _values_to_save(self, all_fields=False):
         """ Validates values and returns only fields modified since

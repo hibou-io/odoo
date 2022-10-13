@@ -1,9 +1,11 @@
 /** @odoo-module **/
 
 import { registerPatch } from '@mail/model/model_core';
+import { attr, one } from '@mail/model/model_field';
 import { clear } from '@mail/model/model_field_command';
 
-import { set_cookie, unaccent } from 'web.utils';
+import {unaccent} from 'web.utils';
+import {setCookie} from 'web.utils.cookies';
 
 registerPatch({
     name: 'LivechatButtonView',
@@ -38,17 +40,38 @@ registerPatch({
                 return this._super();
             }
             this.messaging.publicLivechatGlobal.update({
-                publicLivechat: { data: this.messaging.publicLivechatGlobal.testChatbotData.channel },
+                publicLivechat: { data: this.messaging.publicLivechatGlobal.options.testChatbotChannelData },
             });
             await this.openChatWindow();
             this.widget._sendWelcomeMessage();
             this.messaging.publicLivechatGlobal.chatWindow.renderMessages();
             this.env.services.bus_service.addChannel(this.messaging.publicLivechatGlobal.publicLivechat.uuid);
-            set_cookie('im_livechat_session', unaccent(JSON.stringify(this.messaging.publicLivechatGlobal.publicLivechat.widget.toData()), true), 60 * 60);
+            setCookie('im_livechat_session', unaccent(JSON.stringify(this.messaging.publicLivechatGlobal.publicLivechat.widget.toData()), true), 60 * 60, 'required');
             this.update({ isOpeningChat: false });
         },
     },
     fields: {
+        floatingTextView: one('PublicLivechatFloatingTextView', {
+            inverse: 'livechatButtonViewOwner',
+        }),
+        hasFloatingText: attr({
+            compute() {
+                return Boolean(
+                    this.messaging.publicLivechatGlobal.rule &&
+                    this.messaging.publicLivechatGlobal.rule.action === 'display_button_and_text' &&
+                    this.isWidgetMounted
+                );
+            },
+        }),
+        initialFloatingTextViewVisibilityTimer: one('Timer', {
+            compute() {
+                if (!this.floatingTextView && this.hasFloatingText) {
+                    return {};
+                }
+                return clear();
+            },
+            inverse: 'livechatButtonViewOwnerAsInitialFloatingTextVisibility',
+        }),
         isOpenChatDebounced: {
             compute() {
                 if (this.messaging.publicLivechatGlobal.isTestChatbot) {

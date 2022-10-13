@@ -42,6 +42,7 @@
             }
 
             .o_field_widget {
+                width: 100%;
                 margin-bottom: $o-form-spacing-unit * 2;
 
                 > .o_field_widget {
@@ -129,9 +130,6 @@
     }
 
     .o_row > div > .o_field_widget,
-    &.o_form_editable .oe_title .o_field_char {
-        width: 100%;
-    }
 
     // Readonly specific rules
     .o_form_readonly {
@@ -152,21 +150,14 @@
 
     .o_form_uri {
         display: inline-block;
-        color: $link-color;
-        &:hover {
-            color: darken($link-color, 15%);
-        }
+        @include o-hover-text-color($link-color, $link-hover-color);
+
         > span {
-            color: $o-main-text-color;
-            &:hover {
-                color: $o-main-text-color;
-            }
+            @include o-hover-text-color($o-main-text-color, $o-main-text-color);
         }
+
         > span:first-child {
-            color: $link-color;
-            &:hover {
-                color: darken($link-color, 15%);
-            }
+            @include o-hover-text-color($link-color, $link-hover-color);
         }
     }
 
@@ -178,6 +169,10 @@
 
         .oe_title {
             max-width: 75%;
+
+            .o_field_char {
+                width: 100%;
+            }
         }
 
         .o_field_x2many .o_list_table .o_handle_cell .o_row_handle {
@@ -207,6 +202,33 @@
         flex: 1 1 auto;
     }
 
+    // rules for fields borders: only on hover/focus by default
+    // except when used with o_field_highlight (on parent or on the field)
+    .o_input {
+        border-color: transparent;
+        padding: $o-input-padding-y $o-input-padding-x;
+
+        &:hover, &:focus {
+            border-color: var(--o-input-border-color);
+        }
+    }
+
+    &.o_field_invalid .o_input {
+        border-color: var(--o-input-border-color);
+    }
+
+    .o_datepicker {
+        .o_datepicker_button {
+            visibility: hidden;
+        }
+
+        &:hover, &:focus-within {
+            .o_datepicker_button {
+                visibility: visible;
+            }
+        }
+    }
+
     // No sheet
     &.o_form_nosheet, .o_form_nosheet {
         @include o-webclient-padding($top: $o-sheet-vpadding, $bottom: $o-sheet-vpadding);
@@ -219,13 +241,10 @@
         }
 
         .o_notebook {
-            > .o_notebook_headers {
-                @include o-form-nosheet-negative-margin;
-                > .nav.nav-tabs {
-                    @include o-form-nosheet-inner-left-padding;
-                }
-            }
-            > .tab-content > .tab-pane > :first-child {
+            --notebook-margin-x: -#{$o-horizontal-padding};
+            --notebook-padding-x: #{$o-horizontal-padding};
+
+            > .tab-content > .tab-pane > :first-child:not(.o_group) {
                 // These elements will appear attached to the tabs
                 &.o_field_x2many.o_field_x2many_list {
                     @include o-form-nosheet-negative-margin;
@@ -339,7 +358,7 @@
 
         &:hover, &:focus, &:active {
             &:after {
-                border-left-color: map-get($grays, '100');
+                border-left-color: $o-btn-light-background-hover;
             }
         }
     }
@@ -400,8 +419,6 @@
         }
 
         .o_field_widget {
-            width: 100%;
-
             > .btn {
                 flex: 0 0 auto;
                 padding: 0 10px;
@@ -453,6 +470,12 @@
         }
     }
 
+    .o_group, .o_inner_group {
+        .o_field_widget {
+            width: 100%;
+        }
+    }
+
     .o_checkbox_optional_field {
         display: flex;
 
@@ -484,55 +507,12 @@
         clear: both; // For the notebook not to have alongside floating elements
         margin-top: $o-form-spacing-unit * 2;
 
-        > .o_notebook_headers {
-            @include o-form-sheet-negative-margin;
+        --notebook-margin-x: -#{$o-horizontal-padding};
+        --notebook-padding-x: #{$o-horizontal-padding};
 
-            @include media-breakpoint-down(md) {
-                overflow-x: auto;
-                &::-webkit-scrollbar {
-                    display: none;
-                }
-                .nav.nav-tabs {
-                    flex-flow: row nowrap;
-                }
-            }
-
-            > .nav.nav-tabs {
-                @include o-form-sheet-inner-left-padding;
-                border-bottom-color: $border-color;
-
-                > .nav-item {
-                    white-space: nowrap;
-
-                    > .nav-link {
-                        color: $body-color;
-                        border-color: $border-color;
-                        background-color: white;
-
-                        &:hover, &:focus, &:active {
-                            outline: none;
-                            color: $link-color;
-                        }
-
-                        &.active {
-                            border-bottom-color: white;
-
-                            &, &:hover, &:focus, &:active {
-                                color: $headings-color;
-                                border-top-color: $o-brand-odoo;
-                            }
-                        }
-
-                        &.disabled {
-                            color: $text-muted;
-                        }
-                    }
-
-                    + .nav-item {
-                        margin-left: -1px;
-                    }
-                }
-            }
+        @include media-breakpoint-up(lg, $o-extra-grid-breakpoints) {
+            --notebook-margin-x: -#{$o-horizontal-padding * 2};
+            --notebook-padding-x: #{$o-horizontal-padding * 2};
         }
 
         > .tab-content {
@@ -541,6 +521,12 @@
             > .tab-pane {
                 padding: $o-horizontal-padding 0;
 
+                > .o_field_html > .note-editable {
+                    min-height: 180px;
+                    &:hover, &:focus {
+                        border-color: transparent;
+                    }
+                }
                 > :first-child {
                     // Reset margin to 0 and use tab-pane's padding
                     // to define the distance between panel and content
@@ -577,7 +563,7 @@
                     }
 
                     // Full width on first x2many or on second x2many if first is invisible
-                    .o_field_x2many.o_field_x2many_list,
+                    &:not(.o_group) .o_field_x2many.o_field_x2many_list,
                     &.o_invisible_modifier + .o_field_widget .o_field_x2many.o_field_x2many_list  {
                         display: block;
                         width: auto;
@@ -615,8 +601,8 @@
             font-size: $o-font-size-base-touch;
         }
 
-        &.o_form_label_empty, &.o_form_label_false {
-            opacity: 0.5;
+        &.o_form_label_empty, &.o_form_label_false, &.o_form_label_readonly {
+            opacity: 0.66;
             font-weight: $font-weight-normal;
         }
     }
@@ -638,7 +624,7 @@
                     box-shadow: inset 0 1px 0 $border-color;
                     > td {
                         border:none;
-    
+
                         &:empty {
                             padding: 0;
                         }
@@ -703,6 +689,26 @@
         width: 100%!important;
         @include media-breakpoint-up(vsm, $o-extra-grid-breakpoints) {
             width: 45%!important;
+        }
+    }
+
+    .o_field_float, .o_field_date, .o_field_monetary {
+        &.oe_inline {
+            &, input {
+                max-width: 9rem;
+            }
+        }
+    }
+
+    .o_field_float_time.oe_inline {
+        &, input {
+            max-width: 7ch;
+        }
+    }
+
+    .o_field_integer.oe_inline {
+        &, input {
+            max-width: 7rem;
         }
     }
 
@@ -863,7 +869,7 @@
             table-layout: fixed;
             display: table;
             td {
-                border: 1px solid #dee2e6;
+                border: 1px solid $table-border-color;
             }
             th, td {
                 padding: 0.75rem 0 0.75rem 0;
@@ -1019,6 +1025,8 @@
 // Overridden style when form view in modal
 .modal .modal-dialog {
     .o_form_view {
+        min-height: auto;
+
         .o_statusbar_buttons > .btn {
             /**
              * Override to prevent the status bar from increasing height when
@@ -1104,10 +1112,12 @@
 .o_form_view.o_xxl_form_view {
     flex-flow: row nowrap !important;
 
+    .o_form_view_container {
+        width: $o-form-sheet-min-width + 2 * $o-horizontal-padding;
+    }
+
     .o_form_sheet_bg {
         flex: 1 1 auto; // Side chatter is disabled if this has to shrink but this was added for safety
-        width: $o-form-sheet-min-width + 2 * $o-horizontal-padding;
-        // max-width: map-get($container-max-widths, xl) + 2 * $o-horizontal-padding; // would be logical but breaks no-chatter form views
         padding: 0 $o-horizontal-padding;
         overflow: auto;
         border-bottom: none;
@@ -1147,6 +1157,12 @@
             font-weight: $font-weight-normal;
             color: $o-brand-secondary;
         }
+    }
+}
+
+.o_form_view.o_xxs_form_view {
+    .o_inner_group {
+        @include form-break-table;
     }
 }
 

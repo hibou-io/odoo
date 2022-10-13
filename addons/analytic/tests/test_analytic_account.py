@@ -82,12 +82,12 @@ class TestAnalyticAccount(TransactionCase):
 
     def test_get_plans_with_option(self):
         """ Test the plans returned with applicability rules and options """
-        kwargs = {'business_domain': 'sale'}
+        kwargs = {'business_domain': 'general'}
         plans_json = self.env['account.analytic.plan'].get_relevant_plans(**kwargs)
         self.assertEqual(1, len(plans_json), "Only the Default plan should be available")
 
         applicability = self.env['account.analytic.applicability'].create({
-            'business_domain': 'sale',
+            'business_domain': 'general',
             'analytic_plan_id': self.analytic_plan_1.id,
             'applicability': 'mandatory'
         })
@@ -114,8 +114,8 @@ class TestAnalyticAccount(TransactionCase):
         distribution_json = self.env['account.analytic.distribution.model']._get_distribution({
             "partner_id": self.partner_a.id,
         })
-        self.assertEqual(distribution_json, self.distribution_1.analytic_distribution, "Distribution 1 should be given")
+        self.assertEqual(distribution_json, {str(self.analytic_account_3.id): 100}, "Distribution 1 should be given")
         distribution_json = self.env['account.analytic.distribution.model']._get_distribution({
             "partner_id": self.partner_b.id,
         })
-        self.assertEqual(distribution_json, self.distribution_2.analytic_distribution, "Distribution 2 should be given")
+        self.assertEqual(distribution_json, {str(self.analytic_account_2.id): 100}, "Distribution 2 should be given")
