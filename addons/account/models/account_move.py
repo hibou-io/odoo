@@ -53,6 +53,7 @@ class AccountMove(models.Model):
     _mail_post_access = 'read'
     _check_company_auto = True
     _sequence_index = "journal_id"
+    _rec_names_search = ['name', 'partner_id.name', 'ref']
 
     @property
     def _sequence_monthly_regex(self):
@@ -1118,12 +1119,16 @@ class AccountMove(models.Model):
                         reconciliation_ref = '%s (%s)' % (counterpart_line.move_id.name, counterpart_line.move_id.ref)
                     else:
                         reconciliation_ref = counterpart_line.move_id.name
+                    if counterpart_line.amount_currency and counterpart_line.currency_id != counterpart_line.company_id.currency_id:
+                        foreign_currency = counterpart_line.currency_id
+                    else:
+                        foreign_currency = False
 
                     reconciled_vals.append({
                         'name': counterpart_line.name,
                         'journal_name': counterpart_line.journal_id.name,
                         'amount': reconciled_partial['amount'],
-                        'currency_id': reconciled_partial['currency'].id,
+                        'currency_id': move.company_id.currency_id.id if reconciled_partial['is_exchange'] else reconciled_partial['currency'].id,
                         'date': counterpart_line.date,
                         'partial_id': reconciled_partial['partial_id'],
                         'account_payment_id': counterpart_line.payment_id.id,
@@ -1133,7 +1138,7 @@ class AccountMove(models.Model):
                         # these are necessary for the views to change depending on the values
                         'is_exchange': reconciled_partial['is_exchange'],
                         'amount_company_currency': formatLang(self.env, abs(counterpart_line.balance), currency_obj=counterpart_line.company_id.currency_id),
-                        'amount_foreign_currency': formatLang(self.env, abs(counterpart_line.amount_currency), currency_obj=counterpart_line.currency_id) if counterpart_line.currency_id != counterpart_line.company_id.currency_id else False
+                        'amount_foreign_currency': foreign_currency and formatLang(self.env, abs(counterpart_line.amount_currency), currency_obj=foreign_currency)
                     })
                 payments_widget_vals['content'] = reconciled_vals
 
@@ -3056,6 +3061,11 @@ class AccountMove(models.Model):
             name += '(* %s)' % str(self.id)
         else:
             name += self.name
+            if self.env.context.get('input_full_display_name'):
+                if self.partner_id:
+                    name += f', {self.partner_id.name}'
+                if self.date:
+                    name += f', {format_date(self.env, self.date)}'
         return name + (f" ({shorten(self.ref, width=50)})" if show_ref and self.ref else '')
 
     def _get_reconciled_amls(self):

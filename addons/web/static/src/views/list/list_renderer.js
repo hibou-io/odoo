@@ -1255,6 +1255,7 @@ export class ListRenderer extends Component {
                             futureRecord.switchMode("edit");
                         }
                     } else {
+                        list.unselectRecord(true);
                         return false;
                     }
                 } else {
@@ -1343,7 +1344,7 @@ export class ListRenderer extends Component {
         switch (hotkey) {
             case "arrowup":
                 toFocus = this.findFocusFutureCell(cell, cellIsInGroupRow, "up");
-                if (!toFocus) {
+                if (!toFocus && this.env.searchModel) {
                     this.env.searchModel.trigger("focus-search");
                     return true;
                 }

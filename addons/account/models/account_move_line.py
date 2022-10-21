@@ -17,7 +17,7 @@ class AccountMoveLine(models.Model):
     _name = "account.move.line"
     _inherit = "analytic.mixin"
     _description = "Journal Item"
-    _order = "date desc, move_name desc, sequence, id"
+    _order = "date desc, move_name desc, id"
     _check_company_auto = True
     _rec_names_search = ['name', 'move_id', 'product_id']
 
@@ -78,6 +78,7 @@ class AccountMoveLine(models.Model):
         compute='_compute_account_id', store=True, readonly=False, precompute=True,
         inverse='_inverse_account_id',
         index=True,
+        auto_join=True,
         ondelete="cascade",
         domain="[('deprecated', '=', False), ('company_id', '=', company_id), ('is_off_balance', '=', False)]",
         check_company=True,
@@ -143,16 +144,19 @@ class AccountMoveLine(models.Model):
         comodel_name='account.payment',
         string="Originator Payment",
         related='move_id.payment_id', store=True,
+        auto_join=True,
         index='btree_not_null',
         help="The payment that created this entry")
     statement_line_id = fields.Many2one(
         comodel_name='account.bank.statement.line',
         string="Originator Statement Line",
         related='move_id.statement_line_id', store=True,
+        auto_join=True,
         index='btree_not_null',
         help="The statement line that created this entry")
     statement_id = fields.Many2one(
         related='statement_line_id.statement_id', store=True,
+        auto_join=True,
         index='btree_not_null',
         copy=False,
         help="The bank statement used for bank reconciliation")
@@ -1605,6 +1609,8 @@ class AccountMoveLine(models.Model):
         has_credit_zero_residual = company_currency.is_zero(remaining_credit_amount)
         has_debit_zero_residual_currency = debit_vals['currency'].is_zero(remaining_debit_amount_curr)
         has_credit_zero_residual_currency = credit_vals['currency'].is_zero(remaining_credit_amount_curr)
+        is_rec_pay_account = debit_vals.get('record') \
+                             and debit_vals['record'].account_type in ('asset_receivable', 'liability_payable')
 
         if debit_vals['currency'] == credit_vals['currency'] == company_currency \
                 and not has_debit_zero_residual \
@@ -1615,6 +1621,7 @@ class AccountMoveLine(models.Model):
             recon_debit_amount = remaining_debit_amount
             recon_credit_amount = -remaining_credit_amount
         elif debit_vals['currency'] == company_currency \
+                and is_rec_pay_account \
                 and not has_debit_zero_residual \
                 and credit_vals['currency'] != company_currency \
                 and not has_credit_zero_residual_currency:
@@ -1626,6 +1633,7 @@ class AccountMoveLine(models.Model):
             recon_debit_amount = recon_currency.round(remaining_debit_amount * debit_rate)
             recon_credit_amount = -remaining_credit_amount_curr
         elif debit_vals['currency'] != company_currency \
+                and is_rec_pay_account \
                 and not has_debit_zero_residual_currency \
                 and credit_vals['currency'] == company_currency \
                 and not has_credit_zero_residual:
