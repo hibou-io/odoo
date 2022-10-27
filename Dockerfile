@@ -11,6 +11,10 @@ RUN set -x; \
         zip \
         curl \
         vim \
+        #  for openupgrade and Odoo upgrade script
+        git \
+        openssh-client \
+        rsync \
         #  for apt-key
         gnupg \
         #  for pip install \
