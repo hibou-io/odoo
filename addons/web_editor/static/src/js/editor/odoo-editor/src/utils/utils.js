@@ -661,7 +661,7 @@ export function getTraversedNodes(editable, range = getDeepRange(editable)) {
     do {
         node = iterator.nextNode();
     } while (node && node !== range.startContainer && !(selectedTableCells.length && node === selectedTableCells[0]));
-    const traversedNodes = new Set([node]);
+    const traversedNodes = new Set([node, ...descendants(node)]);
     while (node && node !== range.endContainer) {
         node = iterator.nextNode();
         if (node) {
@@ -1337,14 +1337,13 @@ export function isUnbreakable(node) {
 }
 
 export function isUnremovable(node) {
-    if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.TEXT_NODE) {
-        return true;
-    }
     return (
+        (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.TEXT_NODE) ||
         node.oid === 'root' ||
         (node.nodeType === Node.ELEMENT_NODE &&
             (node.classList.contains('o_editable') || node.getAttribute('t-set') || node.getAttribute('t-call'))) ||
-        (node.classList && node.classList.contains('oe_unremovable'))
+        (node.classList && node.classList.contains('oe_unremovable')) ||
+        (node.ownerDocument && node.ownerDocument.defaultWindow && !ancestors(node).find(ancestor => ancestor.oid === 'root')) // Node is in DOM but not in editable.
     );
 }
 

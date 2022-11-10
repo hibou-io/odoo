@@ -413,7 +413,7 @@ msgstr "<span class=\"o_form_label\">活動</span>"
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "<span class=\"o_form_label\">Custom ICE server list</span>"
-msgstr ""
+msgstr "<span class=\"o_form_label\">カスタムICEサーバーリスト</span>"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
@@ -779,7 +779,7 @@ msgstr "新しい%(document)sを追加するか、%(email_link)sにメールを�
 #. module: mail
 #: model_terms:ir.actions.act_window,help:mail.mail_blacklist_action
 msgid "Add an email address to the blacklist"
-msgstr ""
+msgstr "ブラックリストにメールアドレスを追加する"
 
 #. module: mail
 #. openerp-web
@@ -827,7 +827,7 @@ msgstr ""
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "Add your twilio credentials for ICE servers"
-msgstr ""
+msgstr "ICEサーバ用のtwilioの認証情報を追加します。"
 
 #. module: mail
 #: code:addons/mail/models/mail_channel.py:0
@@ -1752,7 +1752,7 @@ msgstr "設定"
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "Configure your ICE server list for webRTC"
-msgstr ""
+msgstr "webRTC用のICEサーバーリストを設定する"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
@@ -2269,6 +2269,7 @@ msgstr ""
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel__description
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_description
 #: model:ir.model.fields,field_description:mail.field_mail_message_subtype__description
 #: model:ir.model.fields,field_description:mail.field_mail_shortcode__description
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_message_subtype_form
@@ -2720,7 +2721,7 @@ msgstr ""
 msgid ""
 "Email address to which replies will be redirected when sending emails in "
 "mass"
-msgstr ""
+msgstr "一括でメールを送信する際に、返信先となるメールアドレス"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_template__reply_to
@@ -2728,13 +2729,13 @@ msgid ""
 "Email address to which replies will be redirected when sending emails in "
 "mass; only used when the reply is not logged in the original discussion "
 "thread."
-msgstr ""
+msgstr "一括でメールを送信する際に、返信先となるメールアドレス；返信が元のスレッドに記録されていない場合にのみ使用されます。"
 
 #. module: mail
 #: model_terms:ir.actions.act_window,help:mail.mail_blacklist_action
 msgid ""
 "Email addresses that are blacklisted won't receive Email mailings anymore."
-msgstr ""
+msgstr "ブラックリストに登録されたメールアドレスには、今後メールが届かなくなります。"
 
 #. module: mail
 #: code:addons/mail/models/mail_alias.py:0
@@ -3251,7 +3252,7 @@ msgstr "グループ"
 #: model:ir.model.fields,field_description:mail.field_res_users_settings_volumes__guest_id
 #, python-format
 msgid "Guest"
-msgstr ""
+msgstr "ゲスト"
 
 #. module: mail
 #: code:addons/mail/models/mail_guest.py:0
@@ -3419,7 +3420,7 @@ msgstr ""
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
 msgid "ICE Servers"
-msgstr ""
+msgstr "ICEサーバー"
 
 #. module: mail
 #: model:ir.model,name:mail.model_mail_ice_server
@@ -3431,7 +3432,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:mail.action_ice_servers
 #: model:ir.ui.menu,name:mail.mail_channel_ice_servers_menu
 msgid "ICE servers"
-msgstr ""
+msgstr "ICEサーバー"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_fetchmail_server__id
@@ -3515,7 +3516,7 @@ msgstr "追従するリソースのID"
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_channel_rtc_session_view_form
 msgid "Identity"
-msgstr ""
+msgstr "識別"
 
 #. module: mail
 #. openerp-web
@@ -3632,6 +3633,7 @@ msgstr ""
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: model:ir.model.fields,field_description:mail.field_mail_channel__image_128
 #: model:ir.model.fields,field_description:mail.field_mail_guest__image_1920
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_image
 #, python-format
 msgid "Image"
 msgstr "画像"
@@ -3655,6 +3657,11 @@ msgstr "イメージ 256"
 #: model:ir.model.fields,field_description:mail.field_mail_guest__image_512
 msgid "Image 512"
 msgstr "イメージ 512"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__image_mimetype
+msgid "Image MIME type"
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_document_file_kanban
@@ -4216,6 +4223,7 @@ msgstr "ロード中"
 #: code:addons/mail/static/src/components/message_list/message_list.xml:0
 #: code:addons/mail/static/src/components/thread_view/thread_view.xml:0
 #: code:addons/mail/static/src/components/thread_view/thread_view.xml:0
+#: code:addons/mail/static/src/models/emoji_grid_loading_screen.js:0
 #: code:addons/mail/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/mail/static/src/xml/web_kanban_activity.xml:0
 #, python-format
@@ -4278,6 +4286,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
 msgid "Login Information"
 msgstr "ログイン情報"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_mimetype
+msgid "MIME type"
+msgstr ""
 
 #. module: mail
 #. openerp-web
@@ -5130,7 +5143,7 @@ msgstr "通知"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_mail__is_notification
 msgid "Notification Email"
-msgstr ""
+msgstr "通知メール"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_message_schedule__notification_parameters
@@ -6193,6 +6206,13 @@ msgstr "削除"
 #: model:ir.model,name:mail.model_mail_blacklist_remove
 msgid "Remove email from blacklist wizard"
 msgstr "ブラックリストウィザードからメールを削除する"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/models/message_action_view.js:0
+#, python-format
+msgid "Remove from Todo"
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
@@ -7497,6 +7517,11 @@ msgid "Timezone"
 msgstr "タイムゾーン"
 
 #. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_title
+msgid "Title"
+msgstr "タイトル"
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_mail__email_to
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__email_to
 msgid "To"
@@ -7677,6 +7702,7 @@ msgstr ""
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__message_type
 #: model:ir.model.fields,field_description:mail.field_mail_ice_server__server_type
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_type
 #: model:ir.model.fields,field_description:mail.field_mail_mail__message_type
 #: model:ir.model.fields,field_description:mail.field_mail_message__message_type
 #: model_terms:ir.ui.view,arch_db:mail.mail_activity_type_view_tree
@@ -7721,6 +7747,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:mail.field_mail_ice_server__uri
 msgid "URI"
 msgstr "URI"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__source_url
+msgid "URL"
+msgstr "URL"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel__uuid
@@ -7848,6 +7879,13 @@ msgstr "ドキュメントをアップロード"
 #. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/backend_components/activity_list_view_item/activity_list_view_item.xml:0
+#, python-format
+msgid "Upload File"
+msgstr "ファイルをアップロード"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/backend_components/activity_list_view_item/activity_list_view_item.xml:0
 #: code:addons/mail/static/src/xml/web_kanban_activity.xml:0
 #, python-format
 msgid "Upload file"
@@ -7882,7 +7920,7 @@ msgstr ""
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_res_config_settings__use_twilio_rtc_servers
 msgid "Use Twilio ICE servers"
-msgstr ""
+msgstr "Twilio ICEサーバを使用する"
 
 #. module: mail
 #: code:addons/mail/models/fetchmail.py:0
@@ -8546,11 +8584,6 @@ msgid "deaf"
 msgstr ""
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_description
-msgid "description"
-msgstr ""
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/models/mail_thread.py:0
 #: code:addons/mail/static/src/components/message/message.xml:0
@@ -8659,16 +8692,6 @@ msgid "has just assigned you the following activity:"
 msgstr ""
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_image
-msgid "image"
-msgstr ""
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__image_mimetype
-msgid "image_mimetype"
-msgstr ""
-
-#. module: mail
 #: code:addons/mail/models/models.py:0
 #, python-format
 msgid "incorrectly configured alias"
@@ -8715,11 +8738,6 @@ msgstr ""
 #: code:addons/mail/models/mail_thread.py:0
 #, python-format
 msgid "message_post partner_ids and must be integer list, not commands."
-msgstr ""
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_mimetype
-msgid "mimetype"
 msgstr ""
 
 #. module: mail
@@ -8856,11 +8874,6 @@ msgid "this document"
 msgstr "このドキュメント"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_title
-msgid "title"
-msgstr "タイトル"
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/call_settings_menu/call_settings_menu.xml:0
 #: code:addons/mail/static/src/components/call_settings_menu/call_settings_menu.xml:0
@@ -8875,11 +8888,6 @@ msgid "turn:"
 msgstr ""
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_type
-msgid "type"
-msgstr ""
-
-#. module: mail
 #: code:addons/mail/models/mail_thread.py:0
 #, python-format
 msgid "unknown error"
@@ -8890,11 +8898,6 @@ msgstr ""
 #, python-format
 msgid "unknown target model %s"
 msgstr "不明なターゲットモデル %s"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__source_url
-msgid "url"
-msgstr "url"
 
 #. module: mail
 #. openerp-web

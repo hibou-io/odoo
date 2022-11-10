@@ -146,6 +146,7 @@ class SaleOrder(models.Model):
             'points_cost': cost,
             'reward_identifier_code': _generate_random_reward_code(),
             'product_uom': product.uom_id.id,
+            'sequence': max(self.order_line.filtered(lambda x: not x.is_reward_line).mapped('sequence')) + 1,
             'tax_id': [(Command.CLEAR, 0, 0)] + [(Command.LINK, tax.id, False) for tax in taxes]
         }]
 
@@ -280,6 +281,7 @@ class SaleOrder(models.Model):
         discountable = 0
         discountable_per_tax = defaultdict(int)
         reward_applies_on = reward.discount_applicability
+        sequence = max(self.order_line.filtered(lambda x: not x.is_reward_line).mapped('sequence')) + 1
         if reward_applies_on == 'order':
             discountable, discountable_per_tax = self._discountable_order(reward)
         elif reward_applies_on == 'specific':
@@ -319,6 +321,7 @@ class SaleOrder(models.Model):
                 'coupon_id': coupon.id,
                 'points_cost': point_cost,
                 'reward_identifier_code': reward_code,
+                'sequence': sequence,
             }]
         discount_factor = min(1, (max_discount / discountable)) if discountable else 1
         mapped_taxes = {tax: self.fiscal_position_id.map_tax(tax) for tax in discountable_per_tax}
@@ -336,6 +339,7 @@ class SaleOrder(models.Model):
             'coupon_id': coupon.id,
             'points_cost': 0,
             'reward_identifier_code': reward_code,
+            'sequence': sequence,
             'tax_id': [(Command.CLEAR, 0, 0)] + [(Command.LINK, tax.id, False) for tax in mapped_taxes[tax]]
         } for tax, price in discountable_per_tax.items() if price}
         # We only assign the point cost to one line to avoid counting the cost multiple times
@@ -947,8 +951,6 @@ class SaleOrder(models.Model):
                 not coupon.program_id.reward_ids or\
                 not coupon.program_id.filtered_domain(self._get_program_domain()):
                 return {'error': _('This code is invalid (%s).', code), 'not_found': True}
-            elif coupon.partner_id and coupon.partner_id != self.partner_id:
-                return {'error': _('Invalid partner.')}
             elif coupon.expiration_date and coupon.expiration_date < fields.Date.today():
                 return {'error': _('This coupon is expired.')}
             elif coupon.points < min(coupon.program_id.reward_ids.mapped('required_points')):

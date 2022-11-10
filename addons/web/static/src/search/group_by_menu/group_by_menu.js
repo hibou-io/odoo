@@ -7,7 +7,7 @@ import { FACET_ICONS, GROUPABLE_TYPES } from "../utils/misc";
 import { sortBy } from "@web/core/utils/arrays";
 import { useBus } from "@web/core/utils/hooks";
 
-const { Component } = owl;
+import { Component } from "@odoo/owl";
 
 export class GroupByMenu extends Component {
     setup() {
@@ -48,8 +48,12 @@ export class GroupByMenu extends Component {
      * @returns {boolean}
      */
     validateField(fieldName, field) {
-        const { sortable, type } = field;
-        return fieldName !== "id" && sortable && GROUPABLE_TYPES.includes(type);
+        const { sortable, store, type } = field;
+        return (
+            (type === "many2many" ? store : sortable) &&
+            fieldName !== "id" &&
+            GROUPABLE_TYPES.includes(type)
+        );
     }
 
     /**

@@ -5,9 +5,9 @@
 # Translators:
 # Olivier Lenoir <olivier.lenoir@free.fr>, 2022
 # laje_odoo, 2022
-# Martin Trigaux, 2022
-# Jolien De Paepe, 2022
 # Cécile Collart <cco@odoo.com>, 2022
+# Jolien De Paepe, 2022
+# Martin Trigaux, 2022
 # 
 msgid ""
 msgstr ""
@@ -15,7 +15,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-10-10 10:22+0000\n"
 "PO-Revision-Date: 2022-09-22 05:53+0000\n"
-"Last-Translator: Cécile Collart <cco@odoo.com>, 2022\n"
+"Last-Translator: Martin Trigaux, 2022\n"
 "Language-Team: French (https://www.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2366,6 +2366,7 @@ msgstr "Échec de l'envoi"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel__description
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_description
 #: model:ir.model.fields,field_description:mail.field_mail_message_subtype__description
 #: model:ir.model.fields,field_description:mail.field_mail_shortcode__description
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_message_subtype_form
@@ -3791,6 +3792,7 @@ msgstr "Ignorer tout"
 #: code:addons/mail/static/src/components/attachment_viewer/attachment_viewer.xml:0
 #: model:ir.model.fields,field_description:mail.field_mail_channel__image_128
 #: model:ir.model.fields,field_description:mail.field_mail_guest__image_1920
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_image
 #, python-format
 msgid "Image"
 msgstr "Image"
@@ -3814,6 +3816,11 @@ msgstr "Image 256"
 #: model:ir.model.fields,field_description:mail.field_mail_guest__image_512
 msgid "Image 512"
 msgstr "Image 512"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__image_mimetype
+msgid "Image MIME type"
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_document_file_kanban
@@ -4387,6 +4394,7 @@ msgstr "En cours de chargement..."
 #: code:addons/mail/static/src/components/message_list/message_list.xml:0
 #: code:addons/mail/static/src/components/thread_view/thread_view.xml:0
 #: code:addons/mail/static/src/components/thread_view/thread_view.xml:0
+#: code:addons/mail/static/src/models/emoji_grid_loading_screen.js:0
 #: code:addons/mail/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/mail/static/src/xml/web_kanban_activity.xml:0
 #, python-format
@@ -4449,6 +4457,11 @@ msgstr "Enregistré comme"
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
 msgid "Login Information"
 msgstr "Information de connexion"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_mimetype
+msgid "MIME type"
+msgstr ""
 
 #. module: mail
 #. openerp-web
@@ -6443,6 +6456,13 @@ msgid "Remove email from blacklist wizard"
 msgstr "Assistant pour supprimer l'email de la liste noire"
 
 #. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/models/message_action_view.js:0
+#, python-format
+msgid "Remove from Todo"
+msgstr "Supprimer de la liste des tâches"
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
 msgid "Remove the contextual action to use this template on related documents"
 msgstr ""
@@ -7808,6 +7828,11 @@ msgid "Timezone"
 msgstr "Fuseau horaire"
 
 #. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_title
+msgid "Title"
+msgstr "Titre"
+
+#. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_mail__email_to
 #: model:ir.model.fields,field_description:mail.field_mail_template_preview__email_to
 msgid "To"
@@ -7990,6 +8015,7 @@ msgstr "Twilio Compte SID"
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_compose_message__message_type
 #: model:ir.model.fields,field_description:mail.field_mail_ice_server__server_type
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_type
 #: model:ir.model.fields,field_description:mail.field_mail_mail__message_type
 #: model:ir.model.fields,field_description:mail.field_mail_message__message_type
 #: model_terms:ir.ui.view,arch_db:mail.mail_activity_type_view_tree
@@ -8043,6 +8069,11 @@ msgstr "Tapez le nom d'une personne"
 #: model:ir.model.fields,field_description:mail.field_mail_ice_server__uri
 msgid "URI"
 msgstr "URI"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_mail_link_preview__source_url
+msgid "URL"
+msgstr "URL"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_channel__uuid
@@ -8172,6 +8203,13 @@ msgstr "Mise à jour de la mise en page de l'email"
 #, python-format
 msgid "Upload Document"
 msgstr "Télécharger un document"
+
+#. module: mail
+#. openerp-web
+#: code:addons/mail/static/src/backend_components/activity_list_view_item/activity_list_view_item.xml:0
+#, python-format
+msgid "Upload File"
+msgstr "Télécharger le fichier"
 
 #. module: mail
 #. openerp-web
@@ -8911,11 +8949,6 @@ msgid "deaf"
 msgstr "sourd"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_description
-msgid "description"
-msgstr "description"
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/models/mail_thread.py:0
 #: code:addons/mail/static/src/components/message/message.xml:0
@@ -8947,7 +8980,7 @@ msgstr "par ex. \"Email de bienvenue\""
 #: model_terms:ir.ui.view,arch_db:mail.email_template_form
 msgid "e.g. \"Welcome to MyCompany\" or \"Nice to meet you, {{ object.name }}\""
 msgstr ""
-"par ex. \"Bienvenue à MyCompany\" ou \"Ravi de vous rencontrer,  {{ "
+"par ex. \"Bienvenue à MyCompany\" or \"Ravi de vous rencontrer,  {{ "
 "object.name }}\""
 
 #. module: mail
@@ -9026,16 +9059,6 @@ msgid "has just assigned you the following activity:"
 msgstr "vient de vous attribuer l'activité suivante :"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_image
-msgid "image"
-msgstr "image"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__image_mimetype
-msgid "image_mimetype"
-msgstr "image_mimetype"
-
-#. module: mail
 #: code:addons/mail/models/models.py:0
 #, python-format
 msgid "incorrectly configured alias"
@@ -9090,11 +9113,6 @@ msgid "message_post partner_ids and must be integer list, not commands."
 msgstr ""
 "message_post et partner_ids doivent être une liste entière, pas des "
 "instructions."
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_mimetype
-msgid "mimetype"
-msgstr "mimetype"
 
 #. module: mail
 #: code:addons/mail/models/mail_thread.py:0
@@ -9234,11 +9252,6 @@ msgid "this document"
 msgstr "ce document"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_title
-msgid "title"
-msgstr "titre"
-
-#. module: mail
 #. openerp-web
 #: code:addons/mail/static/src/components/call_settings_menu/call_settings_menu.xml:0
 #: code:addons/mail/static/src/components/call_settings_menu/call_settings_menu.xml:0
@@ -9253,11 +9266,6 @@ msgid "turn:"
 msgstr "turn:"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__og_type
-msgid "type"
-msgstr "type"
-
-#. module: mail
 #: code:addons/mail/models/mail_thread.py:0
 #, python-format
 msgid "unknown error"
@@ -9268,11 +9276,6 @@ msgstr "erreur inconnue"
 #, python-format
 msgid "unknown target model %s"
 msgstr "modèle cible inconnu %s"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_mail_link_preview__source_url
-msgid "url"
-msgstr "url"
 
 #. module: mail
 #. openerp-web
