@@ -306,6 +306,7 @@ class PurchaseOrderLine(models.Model):
                         elif (
                             move.location_dest_id.usage == "internal"
                             and move.location_id.usage != "supplier"
+                            and move.warehouse_id
                             and move.location_dest_id
                             not in self.env["stock.location"].search(
                                 [("id", "child_of", move.warehouse_id.view_location_id.id)]
@@ -474,7 +475,7 @@ class PurchaseOrderLine(models.Model):
         return {
             # truncate to 2000 to avoid triggering index limit error
             # TODO: remove index in master?
-            'name': (self.name or '')[:2000],
+            'name': (self.product_id.display_name or '')[:2000],
             'product_id': self.product_id.id,
             'date': date_planned,
             'date_deadline': date_planned + relativedelta(days=self.order_id.company_id.po_lead),
