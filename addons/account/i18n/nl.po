@@ -5,6 +5,7 @@
 # Translators:
 # Odoo Experts Consultants <consultants@odooexperts.nl>, 2021
 # Martin Trigaux, 2022
+# Jolien De Paepe, 2022
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2022
 # 
 msgid ""
@@ -359,7 +360,7 @@ msgstr ""
 "            <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t>,\n"
 "        </t>\n"
 "        <br/><br/>\n"
-"        Hierbij ontvang je onze\n"
+"        Hierbij vind je onze\n"
 "        <t t-if=\"object.name\">\n"
 "            factuur <strong t-out=\"object.name or ''\">INV/2021/05/0005</strong>\n"
 "        </t>\n"
@@ -378,7 +379,7 @@ msgstr ""
 "            Wij zien de betaling graag zo snel mogelijk tegemoet.\n"
 "            <t t-if=\"object.payment_reference\">\n"
 "                <br/><br/>\n"
-"                Gebruik de volgende communicatie voor uw betaling: <strong t-out=\"object.payment_reference or ''\">INV/2021/05/0005</strong>.\n"
+"                Gebruik de volgende communicatie voor je betaling: <strong t-out=\"object.payment_reference or ''\">INV/2021/05/0005</strong>.\n"
 "            </t>\n"
 "        </t>\n"
 "        <br/><br/>\n"
@@ -1256,6 +1257,14 @@ msgid ""
 msgstr ""
 "Een dagboek wordt gebruikt om alle verrichtingen uit het dagelijkse "
 "zakenleven in je boekhouding op te slaan."
+
+#. module: account
+#: code:addons/account/models/account_move.py:0
+#, python-format
+msgid "A line of this move is using a deprecated account, you cannot post it."
+msgstr ""
+"Een regel van deze boeking gebruikt een verouderde rekening. Je kunt niet "
+"boeken."
 
 #. module: account
 #: code:addons/account/models/account_payment.py:0
