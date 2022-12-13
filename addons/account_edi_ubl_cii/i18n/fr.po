@@ -6,6 +6,7 @@
 # Jérôme Tanché <jerome.tanche@ouest-dsi.fr>, 2022
 # Martin Trigaux, 2022
 # Cécile Collart <cco@odoo.com>, 2022
+# Jolien De Paepe, 2022
 # 
 msgid ""
 msgstr ""
@@ -13,7 +14,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-10-10 10:22+0000\n"
 "PO-Revision-Date: 2022-09-22 05:44+0000\n"
-"Last-Translator: Cécile Collart <cco@odoo.com>, 2022\n"
+"Last-Translator: Jolien De Paepe, 2022\n"
 "Language-Team: French (https://www.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -94,31 +95,26 @@ msgstr ""
 "multidevise et activé la devise ?"
 
 #. module: account_edi_ubl_cii
-#: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
 #: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_20.py:0
+#, python-format
+msgid "Could not retrieve the %s."
+msgstr "Impossible de récupérer %s."
+
+#. module: account_edi_ubl_cii
+#: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
+#: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
 msgid "Could not retrieve the tax: %s %% for line '%s'."
-msgstr ""
+msgstr "Impossible de récupérer la taxe : %s %% pour la ligne '%s'."
 
 #. module: account_edi_ubl_cii
-#: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
-#: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_20.py:0
+#: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
-msgid ""
-"Could not retrieve the unit of measure for line with label '%s'. Did you "
-"install the inventory app and enabled the 'Units of Measure' option ?"
+msgid "Could not retrieve the unit of measure for line with label '%s'."
 msgstr ""
 "Impossible de récupérer l'unité de mesure pour la ligne avec l'étiquette "
-"'%s'. Avez-vous installé l'application Inventaire et activé l'option "
-"\"Unités de mesure\" ?"
-
-#. module: account_edi_ubl_cii
-#: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
-#: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_20.py:0
-#, python-format
-msgid "Could not retrieve the vendor."
-msgstr "Impossible de récupérer le fournisseur."
+"'%s'."
 
 #. module: account_edi_ubl_cii
 #: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.account_invoice_pdfa_3_facturx_metadata
@@ -161,13 +157,13 @@ msgstr "EN 16931"
 #: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_bis3.py:0
 #, python-format
 msgid "Each invoice line shall have one and only one tax."
-msgstr ""
+msgstr "Chaque ligne de facture diot comporter une et une seule taxe."
 
 #. module: account_edi_ubl_cii
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
 msgid "Each invoice line should have at least one tax."
-msgstr ""
+msgstr "Chaque ligne de facture doit composer au moins une taxe."
 
 #. module: account_edi_ubl_cii
 #: model:ir.model,name:account_edi_ubl_cii.model_mail_template
@@ -257,25 +253,25 @@ msgstr "Odoo"
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
 msgid "Output VAT, reduced rate, low"
-msgstr ""
+msgstr "TVA en aval, taux réduit, faible"
 
 #. module: account_edi_ubl_cii
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
 msgid "Output VAT, reduced rate, middle"
-msgstr "TVA en sortie, taux réduit, moyen"
+msgstr "TVA en aval, taux réduit, moyen"
 
 #. module: account_edi_ubl_cii
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
 msgid "Output VAT, reduced rate, raw fish"
-msgstr ""
+msgstr "TVA de aval, taux réduit, poisson cru"
 
 #. module: account_edi_ubl_cii
 #: code:addons/account_edi_ubl_cii/models/account_edi_common.py:0
 #, python-format
 msgid "Output VAT, regular rate"
-msgstr "TVA en sortie, taux normal"
+msgstr "TVA en aval, taux normal"
 
 #. module: account_edi_ubl_cii
 #: model:ir.model,name:account_edi_ubl_cii.model_ir_actions_report
@@ -344,6 +340,7 @@ msgstr "Le champ %s est requis sur %s."
 msgid ""
 "The field 'Sanitized Account Number' is required on the Recipient Bank."
 msgstr ""
+"Le champ 'Numéro de compte nettoyé' est requis pour la Banque destinataire."
 
 #. module: account_edi_ubl_cii
 #: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
@@ -402,6 +399,8 @@ msgid ""
 "When the Canary Island General Indirect Tax (IGIC) applies, the tax rate on "
 "each invoice line should be greater than 0."
 msgstr ""
+"Lorsque l'impôt direct général des Canaries (IGIC) s'applique, le taux "
+"d'imposition de chaque ligne de facture doit être supérieur à 0."
 
 #. module: account_edi_ubl_cii
 #: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
@@ -411,6 +410,16 @@ msgid ""
 "Invoice line (BG-25) shall be categorized with an Invoiced item VAT category"
 " code (BT-151)."
 msgstr ""
+"Vous devez inclure au moins une taxe par ligne de facture. [BR-CO-04]-Chaque"
+" ligne de facture (BG-25) doit être classée avec un code de la catégorie de "
+"TVA De l'article facturé (BT-151)."
+
+#. module: account_edi_ubl_cii
+#: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
+#: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_20.py:0
+#, python-format
+msgid "customer"
+msgstr "client"
 
 #. module: account_edi_ubl_cii
 #: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.account_invoice_pdfa_3_facturx_metadata
@@ -441,3 +450,10 @@ msgstr "nom du fichier de facture XML intégré"
 #: model_terms:ir.ui.view,arch_db:account_edi_ubl_cii.account_invoice_pdfa_3_facturx_metadata
 msgid "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#"
 msgstr "urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#"
+
+#. module: account_edi_ubl_cii
+#: code:addons/account_edi_ubl_cii/models/account_edi_xml_cii_facturx.py:0
+#: code:addons/account_edi_ubl_cii/models/account_edi_xml_ubl_20.py:0
+#, python-format
+msgid "vendor"
+msgstr "fournisseur"

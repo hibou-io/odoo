@@ -5,8 +5,8 @@
 # Translators:
 # Goffin Simon <simon.goffin@outlook.com>, 2022
 # Damien Bouvy <dbo@odoo.com>, 2022
-# Cécile Collart <cco@odoo.com>, 2022
 # Martin Trigaux, 2022
+# Cécile Collart <cco@odoo.com>, 2022
 # Jolien De Paepe, 2022
 # 
 msgid ""
@@ -3002,6 +3002,12 @@ msgid "True if the reminder email is confirmed by the vendor."
 msgstr "Vrai si le mail de rappel est confirmé par le vendeur"
 
 #. module: purchase
+#: model_terms:ir.ui.view,arch_db:purchase.res_partner_view_purchase_buttons
+#: model_terms:ir.ui.view,arch_db:purchase.view_product_supplier_inherit
+msgid "Type a message..."
+msgstr "Tapez un message..."
+
+#. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__activity_exception_decoration
 msgid "Type of the exception activity on record."
 msgstr "Type d'activité d'exception enregistrée"
@@ -3119,6 +3125,17 @@ msgstr "Facture fournisseur"
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_bill_union_filter
 msgid "Vendor Bills"
 msgstr "Factures fournisseurs"
+
+#. module: purchase
+#. odoo-python
+#: code:addons/purchase/report/purchase_report.py:0
+#, python-format
+msgid ""
+"Value: 'avg_days_to_purchase' should only be used to show an average. If you"
+" are seeing this message then it is being accessed incorrectly."
+msgstr ""
+"La valeur 'avg_days_to_purchase' ne doit être utilisée que pour afficher une"
+" moyenne. Si vous voyez ce message, c'est que l'accès est incorrect."
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search

@@ -7,6 +7,7 @@ helpers and classes to write tests.
 import base64
 import collections
 import concurrent.futures
+import contextlib
 import difflib
 import functools
 import importlib
@@ -318,6 +319,9 @@ class OdooSuite(BackportSuite):
         test_id = f'{previous_test_class.__module__}.{previous_test_class.__qualname__}.tearDownClass'
         with result.collectStats(test_id):
             super()._tearDownPreviousClass(test, result)
+
+    def has_http_case(self):
+        return self.countTestCases() and any(isinstance(test_case, HttpCase) for test_case in self)
 
 
 class MetaCase(type):
@@ -852,11 +856,13 @@ class TransactionCase(BaseCase):
         # restore environments after the test to avoid invoking flush() with an
         # invalid environment (inexistent user id) from another test
         envs = self.env.all.envs
+        for env in list(envs):
+            self.addCleanup(env.clear)
+        # restore the set of known environments as it was at setUp
         self.addCleanup(envs.update, list(envs))
         self.addCleanup(envs.clear)
 
         self.addCleanup(self.registry.clear_caches)
-        self.addCleanup(self.env.clear)
 
         # flush everything in setUpClass before introducing a savepoint
         self.env.flush_all()
@@ -1330,9 +1336,11 @@ class ChromeBrowser:
             )
             @qs.add_done_callback
             def _qs_result(fut):
-                # stupid dumbass chrome returns a nodeid of 0 when nothing
-                # is found
-                if fut.result()['nodeId']:
+                node_id = 0
+                with contextlib.suppress(Exception):
+                    node_id = fut.result()['nodeId']
+
+                if node_id:
                     self.take_screenshot("unsaved_form_")
                     self._result.set_exception(ChromeBrowserException("""\
 Tour finished with an open form view in edition mode.

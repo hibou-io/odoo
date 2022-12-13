@@ -4,10 +4,11 @@
 # 
 # Translators:
 # liulixia <liu.lixia@elico-corp.com>, 2022
-# Jeffery CHEN <jeffery9@gmail.com>, 2022
-# Martin Trigaux, 2022
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2022
+# digitalliuzg8888, 2022
+# Martin Trigaux, 2022
 # Raymond Yu <cl_yu@hotmail.com>, 2022
+# Jeffery CHEN <jeffery9@gmail.com>, 2022
 # 
 msgid ""
 msgstr ""
@@ -15,7 +16,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-10-10 10:22+0000\n"
 "PO-Revision-Date: 2022-09-22 05:54+0000\n"
-"Last-Translator: Raymond Yu <cl_yu@hotmail.com>, 2022\n"
+"Last-Translator: Jeffery CHEN <jeffery9@gmail.com>, 2022\n"
 "Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -73,7 +74,7 @@ msgstr "# 任务"
 #: model:ir.model.fields,field_description:project.field_report_project_task_user__nbr
 #, python-format
 msgid "# of Tasks"
-msgstr "#  任务"
+msgstr "# 任务"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
@@ -557,7 +558,7 @@ msgstr "<i class=\"fa fa-warning\"/>&amp;nbsp;"
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "<p><em>Number of tasks: %(tasks_count)s</em></p>"
-msgstr "<p><em>任务数量：%(tasks_count)s</em></p>"
+msgstr "<p><em>任务计数：%(tasks_count)s</em></p>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_task
@@ -793,7 +794,7 @@ msgstr "活动状态"
 #: model:ir.model.fields,field_description:project.field_project_task__activity_type_icon
 #: model:ir.model.fields,field_description:project.field_project_update__activity_type_icon
 msgid "Activity Type Icon"
-msgstr "活动类型图表"
+msgstr "活动类型图标"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.mail_activity_type_action_config_project_types
@@ -1069,7 +1070,7 @@ msgstr "已指派"
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "Assigned On: %s"
-msgstr ""
+msgstr "分配: %s"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.act_res_users_2_project_task_opened
@@ -1131,7 +1132,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:project.field_project_task__message_attachment_count
 #: model:ir.model.fields,field_description:project.field_project_update__message_attachment_count
 msgid "Attachment Count"
-msgstr "附件数量"
+msgstr "附件计数"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__attachment_ids
@@ -1448,6 +1449,9 @@ msgid ""
 "Rating when changing stage: an email will be automatically sent when the task reaches the stage on which the rating email template is set.\n"
 "Periodic rating: an email will be automatically sent at regular intervals as long as the task remains in the stage in which the rating email template is set."
 msgstr ""
+"当任务进入某个阶段时，通过向客户发送评分请求来收集他们的反馈。为此，在相应的阶段上定义一个评级电子邮件模板。\n"
+"分级分级:当任务到达分级邮件模板设置的分级阶段时，会自动发送邮件。\n"
+"周期评级:只要任务处于邮件评级模板设置的阶段，邮件就会定期自动发送。"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_tags__color
@@ -2204,7 +2208,7 @@ msgstr "实验"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__date
 msgid "Expiration Date"
-msgstr "有效期"
+msgstr "过期日期"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_project_user_search
@@ -2672,10 +2676,24 @@ msgid ""
 msgstr "和这个项目相关的内部邮件。收件会自动同步为任务（或者是议题，如果问题模块已经安装过）"
 
 #. module: project
+#. openerp-web
+#: code:addons/project/static/src/project_sharing/components/chatter/chatter_messages.xml:0
+#, python-format
+msgid "Internal notes are only displayed to internal users."
+msgstr "内部注释仅向内部用户显示."
+
+#. module: project
 #: code:addons/project/report/project_task_burndown_chart_report.py:0
 #, python-format
 msgid "Invalid aggregation function %r."
 msgstr "无效聚合函数 %r."
+
+#. module: project
+#: code:addons/project/report/project_task_burndown_chart_report.py:0
+#: code:addons/project/report/project_task_burndown_chart_report.py:0
+#, python-format
+msgid "Invalid field %r on model %r"
+msgstr "无效的字段 %r 或 模型 %r"
 
 #. module: project
 #: code:addons/project/report/project_task_burndown_chart_report.py:0
@@ -3168,12 +3186,12 @@ msgstr "里程碑"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__milestone_count
 msgid "Milestone Count"
-msgstr "里程碑数量"
+msgstr "里程碑计数"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__milestone_count_reached
 msgid "Milestone Count Reached"
-msgstr "已达到的里程碑数量"
+msgstr "已达到的里程碑计数"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_report_project_task_user__milestone_deadline
@@ -3523,6 +3541,12 @@ msgid "Not Blocking"
 msgstr "未阻塞"
 
 #. module: project
+#: code:addons/project/models/project.py:0
+#, python-format
+msgid "Not Implemented."
+msgstr "未实现。"
+
+#. module: project
 #: model:ir.model.fields,field_description:project.field_project_share_wizard__note
 msgid "Note"
 msgstr "笔记"
@@ -3661,7 +3685,7 @@ msgstr "打开任务"
 #: code:addons/project/models/project.py:0
 #, python-format
 msgid "Operation should be = or != (not %s)"
-msgstr ""
+msgstr "应操作 = 或 != (不做%s)"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_force_thread_id
@@ -3881,7 +3905,7 @@ msgstr "门户用户将从项目及其任务的关注者中删除。"
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid "Prioritize Tasks by using the"
-msgstr ""
+msgstr "任务的优先级"
 
 #. module: project
 #: code:addons/project/controllers/portal.py:0
@@ -3895,7 +3919,7 @@ msgstr "优先级"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_my_tasks_priority_widget_template
 msgid "Priority: {{'Important' if task.priority == '1' else 'Normal'}}"
-msgstr ""
+msgstr "Priority: {{'Important' if task.priority == '1' else 'Normal'}}"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__privacy_visibility_warning
@@ -3984,7 +4008,7 @@ msgstr "项目颜色"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_account_analytic_account__project_count
 msgid "Project Count"
-msgstr "项目个数"
+msgstr "项目计数"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__user_id
@@ -4134,6 +4158,7 @@ msgstr "项目：任务评价请求"
 #: model_terms:ir.ui.view,arch_db:project.portal_my_projects
 #: model_terms:ir.ui.view,arch_db:project.view_project
 #: model_terms:ir.ui.view,arch_db:project.view_project_calendar
+#, python-format
 msgid "Projects"
 msgstr "项目"
 
@@ -4498,7 +4523,7 @@ msgstr "研究"
 #: model:account.analytic.account,name:project.analytic_research_development
 #: model:project.project,name:project.project_project_2
 msgid "Research & Development"
-msgstr "研究与发展"
+msgstr "研究和发展"
 
 #. module: project
 #. openerp-web
@@ -4541,7 +4566,7 @@ msgstr "收入"
 #: model:ir.model.fields,field_description:project.field_project_task__message_has_sms_error
 #: model:ir.model.fields,field_description:project.field_project_update__message_has_sms_error
 msgid "SMS Delivery error"
-msgstr "短信发送错误"
+msgstr "短信息发送错误"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
@@ -4574,6 +4599,13 @@ msgstr "满意"
 #: model:ir.model.fields.selection,name:project.selection__project_task_recurrence__repeat_weekday__sat
 msgid "Saturday"
 msgstr "周六"
+
+#. module: project
+#. openerp-web
+#: code:addons/project/static/src/js/tours/project.js:0
+#, python-format
+msgid "Schedule your activity once it is ready."
+msgstr "一旦准备就绪，就安排您的活动。"
 
 #. module: project
 #. openerp-web
@@ -4760,6 +4792,12 @@ msgid "Share Readonly"
 msgstr "分享 只读"
 
 #. module: project
+#: code:addons/project/models/project_task_recurrence.py:0
+#, python-format
+msgid "Should repeat at least once"
+msgstr "必须重复至少一次"
+
+#. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__is_favorite
 msgid "Show Project on Dashboard"
 msgstr "在仪表板上显示项目"
@@ -4926,7 +4964,7 @@ msgstr "挺迟重复"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__subtask_count
 msgid "Sub-task Count"
-msgstr "子任务数量"
+msgstr "子任务计数"
 
 #. module: project
 #: model:ir.actions.act_window,name:project.project_sharing_project_task_action_sub_task
@@ -5034,7 +5072,7 @@ msgstr "任务统计"
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__task_count_with_subtasks
 msgid "Task Count With Subtasks"
-msgstr "带子任务的任务数量"
+msgstr "带子任务的任务计数"
 
 #. module: project
 #: model:mail.message.subtype,description:project.mt_task_new
@@ -5210,7 +5248,9 @@ msgid "Tasks Stages"
 msgstr "任务阶段"
 
 #. module: project
+#: code:addons/project/models/project.py:0
 #: model:ir.model.fields,field_description:project.field_project_task__recurring_count
+#, python-format
 msgid "Tasks in Recurrence"
 msgstr "循环中的任务"
 
@@ -5239,6 +5279,18 @@ msgid "The current user's personal task stage."
 msgstr "当前用户的个人任务阶段。"
 
 #. module: project
+#: code:addons/project/models/project_task_recurrence.py:0
+#, python-format
+msgid "The end date should be after the day of the month"
+msgstr "结束日期应该在那月的那天之后。"
+
+#. module: project
+#: code:addons/project/models/project_task_recurrence.py:0
+#, python-format
+msgid "The end date should be in the future"
+msgstr "结束日期应该在未来"
+
+#. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "The following milestone has been added:"
 msgstr "增加了以下里程碑:"
@@ -5247,6 +5299,12 @@ msgstr "增加了以下里程碑:"
 #: model_terms:ir.ui.view,arch_db:project.project_update_default_description
 msgid "The following milestones have been added:"
 msgstr "增加了以下里程碑。:"
+
+#. module: project
+#: code:addons/project/models/project_task_recurrence.py:0
+#, python-format
+msgid "The interval should be greater than 0"
+msgstr "间隔应大于0"
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_model_id
@@ -5287,6 +5345,12 @@ msgstr "项目无法与收件人共享，因为项目的隐私受限制。 将�
 #: model:ir.model.constraint,message:project.constraint_project_project_project_date_greater
 msgid "The project's start date must be before its end date."
 msgstr "项目的开始时间必须在结束时间之前。"
+
+#. module: project
+#: code:addons/project/models/project.py:0
+#, python-format
+msgid "The search does not support the %s operator or %s value."
+msgstr "搜索不支持%s操作员或%s值。"
 
 #. module: project
 #: code:addons/project/models/project.py:0
@@ -5943,6 +6007,12 @@ msgid ""
 "You should at least have one personal stage. Create a new stage to which the"
 " tasks can be transferred after this one is deleted."
 msgstr "您至少应该有一个个人阶段。创建一个新阶段，删除此阶段后，可以将任务传输到该阶段。"
+
+#. module: project
+#: code:addons/project/models/project_task_recurrence.py:0
+#, python-format
+msgid "You should select a least one day"
+msgstr "您必须选择至少一天。"
 
 #. module: project
 #. openerp-web
