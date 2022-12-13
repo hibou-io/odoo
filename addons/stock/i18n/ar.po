@@ -32,6 +32,7 @@
 # Mohamed Masoud <mo.masoud94@gmail.com>, 2020
 # Mustafa J. Kadhem <safi2266@gmail.com>, 2021
 # Farid Fox, 2022
+# Samer Ali, 2022
 # Malaz Abuidris <msea@odoo.com>, 2022
 # 
 msgid ""
@@ -130,7 +131,7 @@ msgstr "%s (نسخة)"
 #: code:addons/stock/wizard/stock_picking_responsible.py:0
 #, python-format
 msgid "%s has a restricted access to %s"
-msgstr ""
+msgstr "%sلديه وصول مقيد إلى%s"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
@@ -139,6 +140,8 @@ msgid ""
 "%s use default source or destination locations                        from "
 "warehouse %s that will be archived."
 msgstr ""
+"%s استخدام المصدر أو الوجهة الافتراضية للموقع من المستودع  %s  الذي سيتم "
+"أرشفته."
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
@@ -162,7 +165,7 @@ msgstr ""
 #. module: stock
 #: model:ir.actions.report,print_report_name:stock.action_report_inventory
 msgid "'Inventory - %s' % (object.name)"
-msgstr ""
+msgstr "مخزن - %s"
 
 #. module: stock
 #: model:ir.actions.report,print_report_name:stock.action_report_location_barcode
@@ -184,7 +187,7 @@ msgstr "'نوع العملية - %s' % object.name"
 msgid ""
 "'Picking Operations - %s - %s' % (object.partner_id.name or '', object.name)"
 msgstr ""
-"'عمليات الانتقاء - %s - %s' % (object.partner_id.name أو '', object.name)"
+"'عمليات النقل - %s - %s' % (object.partner_id.name أو '', object.name)"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__state
@@ -467,7 +470,7 @@ msgstr "<strong>أقل كمية :</strong>"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_inventory
 msgid "<strong>On Hand Quantity</strong>"
-msgstr ""
+msgstr "<strong>الكمية الموجودة</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_delivery_document
@@ -695,7 +698,7 @@ msgstr "متقدم: تطبيق قواعد التحصيل"
 #: model:ir.model.fields,field_description:stock.field_stock_move__delay_alert
 #: model:ir.model.fields,field_description:stock.field_stock_rule__delay_alert
 msgid "Alert if Delay"
-msgstr ""
+msgstr "تحذير عند التأخير"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_picking_type_kanban
@@ -732,7 +735,7 @@ msgstr "الموقع المسموح به "
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_inventory__start_empty
 msgid "Allows to start with an empty inventory."
-msgstr ""
+msgstr "السماح بالبدء بخزن فارغ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_inventory__prefill_counted_quantity
@@ -740,6 +743,7 @@ msgid ""
 "Allows to start with prefill counted quantity for each lines or with all "
 "counted quantity set to zero."
 msgstr ""
+"السماح بالبدء بالكمية المحسوبة سابقا لكل بند أو ضبط الكمية المحسوبة إلى صفر."
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_rule_form
@@ -817,7 +821,7 @@ msgstr "تعيين مالك"
 #. module: stock
 #: model:ir.model,name:stock.model_stock_picking_responsible
 msgid "Assign Responsible"
-msgstr ""
+msgstr "تعيين مسؤول"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.act_assign_serial_numbers
@@ -933,7 +937,7 @@ msgstr "قارئ الباركود"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_label_transfer_template_pdf
 msgid "Barcodes (PDF)"
-msgstr ""
+msgstr "باركود(PDF)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.action_label_transfer_template_zpl
@@ -1135,7 +1139,7 @@ msgstr "التحقق من وجود الحزم المطلوبة على خط ال�
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__move_line_exist
 msgid "Check the existence of pack operation on the picking"
-msgstr ""
+msgstr "تحقق من وجود عملية على النقل"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location__return_location
@@ -1896,7 +1900,7 @@ msgstr "الوصف في الشحنات الواردة"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__description_picking
 msgid "Description picking"
-msgstr ""
+msgstr "وصف عملية الانتقاء "
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__partner_id
@@ -1981,7 +1985,7 @@ msgstr "تجاهل"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__display_assign_serial
 msgid "Display Assign Serial"
-msgstr ""
+msgstr "عرض الرقم التسلسلي للإسناد "
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_production_lot__display_complete
@@ -7235,6 +7239,12 @@ msgstr ""
 "النوع، ينبغي إلغاء حجز حركة المخزون أولًا."
 
 #. module: stock
+#: code:addons/stock/models/product.py:0
+#, python-format
+msgid "You can not change the type of a product that was already used."
+msgstr "لا يمكنك تغيير نوع منتج قد تم استخدامه بالفعل. "
+
+#. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
 #, python-format
 msgid ""
@@ -7462,6 +7472,7 @@ msgstr ""
 msgid ""
 "You have to define a groupby and sorted method and pass them as arguments."
 msgstr ""
+"You have to define a groupby and sorted method and pass them as arguments."
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
