@@ -21,7 +21,10 @@ class StockRule(models.Model):
         message_dict = super(StockRule, self)._get_message_dict()
         dummy, destination, dummy = self._get_message_values()
         message_dict.update({
-            'buy': _('When products are needed in <b>%s</b>, <br/> a request for quotation is created to fulfill the need.') % (destination)
+            'buy': _('When products are needed in <b>%s</b>, <br/> '
+                     'a request for quotation is created to fulfill the need.<br/>'
+                     'Note: This rule will be used in combination with the rules<br/>'
+                     'of the reception route(s)') % (destination)
         })
         return message_dict
 
@@ -321,3 +324,12 @@ class StockRule(models.Model):
         res = super(StockRule, self)._push_prepare_move_copy_values(move_to_copy, new_date)
         res['purchase_line_id'] = None
         return res
+
+    def _get_stock_move_values(self, product_id, product_qty, product_uom, location_id, name, origin, company_id, values):
+        move_values = super()._get_stock_move_values(product_id, product_qty, product_uom, location_id, name, origin, company_id, values)
+        if values.get('supplierinfo_name'):
+            move_values['restrict_partner_id'] = values['supplierinfo_name'].id
+        elif values.get('supplierinfo_id'):
+            partner = values['supplierinfo_id'].name
+            move_values['restrict_partner_id'] = partner.id
+        return move_values

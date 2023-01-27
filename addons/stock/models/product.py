@@ -555,6 +555,8 @@ class Product(models.Model):
             'route_ids': route_ids,
             'warehouse_id': location.get_warehouse()
         })
+        if rule in seen_rules:
+            raise UserError(_("Invalid rule's configuration, the following rule causes an endless loop: %s", rule.display_name))
         if not rule:
             return seen_rules
         if rule.procure_method == 'make_to_stock' or rule.action not in ('pull_push', 'pull'):
@@ -635,6 +637,12 @@ class ProductTemplate(models.Model):
     route_from_categ_ids = fields.Many2many(
         relation="stock.location.route", string="Category Routes",
         related='categ_id.total_route_ids', readonly=False, related_sudo=False)
+    show_on_hand_qty_status_button = fields.Boolean(compute='_compute_show_on_hand_qty_status_button')
+
+    @api.depends('type')
+    def _compute_show_on_hand_qty_status_button(self):
+        for template in self:
+            template.show_on_hand_qty_status_button = template.type == 'product'
 
     @api.depends('type')
     def _compute_has_available_route_ids(self):
@@ -753,6 +761,18 @@ class ProductTemplate(models.Model):
         return res
 
     def write(self, vals):
+        if 'company_id' in vals and vals['company_id']:
+            products_changing_company = self.filtered(lambda product: product.company_id.id != vals['company_id'])
+            if products_changing_company:
+                # Forbid changing a product's company when quant(s) exist in another company.
+                quant = self.env['stock.quant'].sudo().search([
+                    ('product_id', 'in', products_changing_company.product_variant_ids.ids),
+                    ('company_id', '!=', vals['company_id']),
+                    ('quantity', '!=', 0),
+                ], order=None, limit=1)
+                if quant:
+                    raise UserError(_("This product's company cannot be changed as long as there are quantities of it belonging to another company."))
+
         if 'uom_id' in vals:
             new_uom = self.env['uom.uom'].browse(vals['uom_id'])
             updated = self.filtered(lambda template: template.uom_id != new_uom)

@@ -559,6 +559,8 @@ class StockMove(models.Model):
         # messages according to the state of the stock.move records.
         receipt_moves_to_reassign = self.env['stock.move']
         move_to_recompute_state = self.env['stock.move']
+        if 'quantity_done' in vals and any(move.state == 'cancel' for move in self):
+            raise UserError(_('You cannot change a cancelled stock move, create a new line instead.'))
         if 'product_uom' in vals and any(move.state == 'done' for move in self):
             raise UserError(_('You cannot change the UoM for a stock move that has been set to \'Done\'.'))
         if 'product_uom_qty' in vals:
@@ -1515,8 +1517,8 @@ class StockMove(models.Model):
         return extra_move | self
 
     def _action_done(self, cancel_backorder=False):
-        self.filtered(lambda move: move.state == 'draft')._action_confirm()  # MRP allows scrapping draft moves
-        moves = self.exists().filtered(lambda x: x.state not in ('done', 'cancel'))
+        moves = self.filtered(lambda move: move.state == 'draft')._action_confirm()  # MRP allows scrapping draft moves
+        moves = (self | moves).exists().filtered(lambda x: x.state not in ('done', 'cancel'))
         moves_todo = self.env['stock.move']
 
         # Cancel moves where necessary ; we should do it before creating the extra moves because
@@ -1825,3 +1827,15 @@ class StockMove(models.Model):
         moves_to_reserve = self.env['stock.move'].search(expression.AND([static_domain, expression.OR(domains)]),
                                                          order='priority desc, date asc, id asc')
         moves_to_reserve._action_assign()
+
+    def _get_orig_reserved_availability(self, done_ids=False):
+        self.ensure_one()
+        if not done_ids:
+            done_ids = set()
+        if self.id in done_ids:
+            return 0
+        done_ids.add(self.id)
+        reserved = self.reserved_availability if self.show_reserved_availability else 0.0
+        if self.move_orig_ids:
+            reserved += sum([m._get_orig_reserved_availability(done_ids) for m in self.move_orig_ids])
+        return reserved
