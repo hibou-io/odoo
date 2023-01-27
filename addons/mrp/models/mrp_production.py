@@ -1028,12 +1028,11 @@ class MrpProduction(models.Model):
                 continue
             new_qty = float_round((self.qty_producing - self.qty_produced) * move.unit_factor, precision_rounding=move.product_uom.rounding)
             move.move_line_ids.filtered(lambda ml: ml.state not in ('done', 'cancel')).qty_done = 0
-            move.move_line_ids = move._set_quantity_done_prepare_vals(new_qty)
+            move._set_quantity_done(new_qty)
 
     def _update_raw_moves(self, factor):
         self.ensure_one()
         update_info = []
-        move_to_unlink = self.env['stock.move']
         moves_to_assign = self.env['stock.move']
         for move in self.move_raw_ids.filtered(lambda m: m.state not in ('done', 'cancel')):
             old_qty = move.product_uom_qty
@@ -1045,13 +1044,7 @@ class MrpProduction(models.Model):
                         or (move.reservation_date and move.reservation_date <= fields.Date.today()):
                     moves_to_assign |= move
                 update_info.append((move, old_qty, new_qty))
-            else:
-                if move.quantity_done > 0:
-                    raise UserError(_('Lines need to be deleted, but can not as you still have some quantities to consume in them. '))
-                move._action_cancel()
-                move_to_unlink |= move
         moves_to_assign._action_assign()
-        move_to_unlink.unlink()
         return update_info
 
     def _get_ready_to_produce_state(self):
@@ -1559,8 +1552,19 @@ class MrpProduction(models.Model):
 
         # As we have split the moves before validating them, we need to 'remove' the excess reservation
         if not close_mo:
-            self.move_raw_ids.filtered(lambda m: not m.additional)._do_unreserve()
-            self.move_raw_ids.filtered(lambda m: not m.additional)._action_assign()
+            raw_moves = self.move_raw_ids.filtered(lambda m: not m.additional)
+            raw_moves._do_unreserve()
+            for sml in raw_moves.move_line_ids:
+                try:
+                    q = self.env['stock.quant']._update_reserved_quantity(sml.product_id, sml.location_id, sml.qty_done,
+                                                                          lot_id=sml.lot_id, package_id=sml.package_id,
+                                                                          owner_id=sml.owner_id, strict=True)
+                    reserved_qty = sum([x[1] for x in q])
+                    reserved_qty = sml.product_id.uom_id._compute_quantity(reserved_qty, sml.product_uom_id)
+                except UserError:
+                    reserved_qty = 0
+                sml.with_context(bypass_reservation_update=True).product_uom_qty = reserved_qty
+            raw_moves._recompute_state()
         backorders.action_confirm()
         bo_to_assign.action_assign()
 

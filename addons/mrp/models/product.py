@@ -48,7 +48,7 @@ class ProductTemplate(models.Model):
         super()._compute_show_qty_status_button()
         for template in self:
             if template.is_kits:
-                template.show_on_hand_qty_status_button = True
+                template.show_on_hand_qty_status_button = template.product_variant_count <= 1
                 template.show_forecasted_qty_status_button = False
 
     def _compute_used_in_bom_count(self):
@@ -78,7 +78,7 @@ class ProductTemplate(models.Model):
         action['domain'] = [('state', '=', 'done'), ('product_tmpl_id', 'in', self.ids)]
         action['context'] = {
             'graph_measure': 'product_uom_qty',
-            'time_ranges': {'field': 'date_planned_start', 'range': 'last_365_days'}
+            'search_default_filter_plan_date': 1,
         }
         return action
 

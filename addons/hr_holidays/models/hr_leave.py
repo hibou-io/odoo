@@ -15,7 +15,7 @@ from odoo import api, fields, models, tools
 from odoo.addons.base.models.res_partner import _tz_get
 from odoo.addons.resource.models.resource import float_to_time, HOURS_PER_DAY
 from odoo.exceptions import AccessError, UserError, ValidationError
-from odoo.tools import float_compare
+from odoo.tools import float_compare, format_date
 from odoo.tools.float_utils import float_round
 from odoo.tools.translate import _
 from odoo.osv import expression
@@ -88,7 +88,65 @@ class HolidaysRequest(models.Model):
             defaults.update({'date_from': now})
         if 'date_to' not in defaults:
             defaults.update({'date_to': now})
+        employee = self.env['hr.employee'].browse(defaults['employee_id']) if defaults.get('employee_id') else self.env.user.employee_id
+        default_start_time = self._get_start_or_end_from_attendance(7, datetime.now().date(), employee).time()
+        default_end_time = self._get_start_or_end_from_attendance(19, datetime.now().date(), employee).time()
+        if defaults['date_from'].time() == default_start_time and defaults['date_to'].time() == default_end_time:
+            date_from = defaults['date_from'].date()
+            date_to = defaults['date_to'].date()
+            attendance_from, attendance_to = self._get_attendances(employee, date_from, date_to)
+            defaults['date_from'] = self._get_start_or_end_from_attendance(attendance_from.hour_from, date_from, employee)
+            defaults['date_to'] = self._get_start_or_end_from_attendance(attendance_to.hour_to, date_to, employee)
+
         return defaults
+
+    def _get_start_or_end_from_attendance(self, hour, date, employee):
+        hour = float_to_time(float(hour))
+        holiday_tz = timezone(employee.tz or self.env.user.tz)
+        return holiday_tz.localize(datetime.combine(date, hour)).astimezone(UTC).replace(tzinfo=None)
+
+    def _get_attendances(self, employee, request_date_from, request_date_to):
+        resource_calendar_id = employee.resource_calendar_id or self.env.company.resource_calendar_id
+        domain = [('calendar_id', '=', resource_calendar_id.id), ('display_type', '=', False)]
+        attendances = self.env['resource.calendar.attendance'].read_group(domain,
+            ['ids:array_agg(id)', 'hour_from:min(hour_from)', 'hour_to:max(hour_to)',
+             'week_type', 'dayofweek', 'day_period'],
+            ['week_type', 'dayofweek', 'day_period'], lazy=False)
+
+        # Must be sorted by dayofweek ASC and day_period DESC
+        attendances = sorted([DummyAttendance(group['hour_from'], group['hour_to'], group['dayofweek'], group['day_period'], group['week_type']) for group in attendances], key=lambda att: (att.dayofweek, att.day_period != 'morning'))
+
+        default_value = DummyAttendance(0, 0, 0, 'morning', False)
+
+        if resource_calendar_id.two_weeks_calendar:
+            # find week type of start_date
+            start_week_type = self.env['resource.calendar.attendance'].get_week_type(request_date_from)
+            attendance_actual_week = [att for att in attendances if att.week_type is False or int(att.week_type) == start_week_type]
+            attendance_actual_next_week = [att for att in attendances if att.week_type is False or int(att.week_type) != start_week_type]
+            # First, add days of actual week coming after date_from
+            attendance_filtred = [att for att in attendance_actual_week if int(att.dayofweek) >= request_date_from.weekday()]
+            # Second, add days of the other type of week
+            attendance_filtred += list(attendance_actual_next_week)
+            # Third, add days of actual week (to consider days that we have remove first because they coming before date_from)
+            attendance_filtred += list(attendance_actual_week)
+            end_week_type = self.env['resource.calendar.attendance'].get_week_type(request_date_to)
+            attendance_actual_week = [att for att in attendances if att.week_type is False or int(att.week_type) == end_week_type]
+            attendance_actual_next_week = [att for att in attendances if att.week_type is False or int(att.week_type) != end_week_type]
+            attendance_filtred_reversed = list(reversed([att for att in attendance_actual_week if int(att.dayofweek) <= request_date_to.weekday()]))
+            attendance_filtred_reversed += list(reversed(attendance_actual_next_week))
+            attendance_filtred_reversed += list(reversed(attendance_actual_week))
+
+            # find first attendance coming after first_day
+            attendance_from = attendance_filtred[0]
+            # find last attendance coming before last_day
+            attendance_to = attendance_filtred_reversed[0]
+        else:
+            # find first attendance coming after first_day
+            attendance_from = next((att for att in attendances if int(att.dayofweek) >= request_date_from.weekday()), attendances[0] if attendances else default_value)
+            # find last attendance coming before last_day
+            attendance_to = next((att for att in reversed(attendances) if int(att.dayofweek) <= request_date_to.weekday()), attendances[-1] if attendances else default_value)
+
+        return attendance_from, attendance_to
 
     def _default_get_request_parameters(self, values):
         new_values = dict(values)
@@ -727,6 +785,7 @@ class HolidaysRequest(models.Model):
                     target = leave.employee_id.name
                 else:
                     target = ', '.join(leave.employee_ids.mapped('name'))
+                display_date = format_date(self.env, date_from_utc) or ""
                 if leave.leave_type_request_unit == 'hour':
                     if self.env.context.get('hide_employee_name') and 'employee_id' in self.env.context.get('group_by', []):
                         res.append((
@@ -735,7 +794,7 @@ class HolidaysRequest(models.Model):
                                 person=target,
                                 leave_type=leave.holiday_status_id.name,
                                 duration=leave.number_of_hours_display,
-                                date=fields.Date.to_string(date_from_utc) or "",
+                                date=display_date,
                             )
                         ))
                     else:
@@ -745,13 +804,13 @@ class HolidaysRequest(models.Model):
                                 person=target,
                                 leave_type=leave.holiday_status_id.name,
                                 duration=leave.number_of_hours_display,
-                                date=fields.Date.to_string(date_from_utc) or "",
+                                date=display_date,
                             )
                         ))
                 else:
                     display_date = fields.Date.to_string(date_from_utc) or ""
                     if leave.number_of_days > 1 and date_from_utc and date_to_utc:
-                        display_date += ' / %s' % fields.Date.to_string(date_to_utc) or ""
+                        display_date += ' / %s' % format_date(self.env, date_to_utc) or ""
                     if self.env.context.get('hide_employee_name') and 'employee_id' in self.env.context.get('group_by', []):
                         res.append((
                             leave.id,
