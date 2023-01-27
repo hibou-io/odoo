@@ -28,16 +28,16 @@ class AccountBankStatementLine(models.Model):
         # statement is completed. It is only possible if we know the journal that is used, so it can only be done
         # in a view in which the journal is already set and so is single journal view.
         if'journal_id' in defaults:
-            last_line = self.search([('journal_id', '=', defaults.get('journal_id'))], limit=1)
+            last_line = self.search([
+                ('journal_id', '=', defaults.get('journal_id')),
+                ('state', '=', 'posted'),
+            ], limit=1)
             statement = last_line.statement_id
             if statement and not statement.is_complete:
-                defaults.setdefault(
-                    'statement_id', statement.id
-                )
-                if statement.date:
-                    defaults.setdefault(
-                        'date', statement.date
-                    )
+                defaults.setdefault('statement_id', statement.id)
+                defaults.setdefault('date', statement.date)
+            elif last_line and not statement:
+                defaults.setdefault('date', last_line.date)
 
         return defaults
 
@@ -155,15 +155,19 @@ class AccountBankStatementLine(models.Model):
         # that the running balance is always relative to the latest statement. In this way we do not need to calculate
         # the running balance for all statement lines every time.
         # If there are statements inside the computed range, their balance_start has priority over calculated balance.
+        # we have to compute running balance for draft lines because they are visible and also
+        # the user can split on that lines, but their balance should be the same as previous posted line
+        # we do the same for the canceled lines, in order to keep using them as anchor points
 
         self.statement_id.flush_model(['balance_start', 'first_line_index'])
-        self.flush_model(['internal_index', 'date', 'journal_id', 'statement_id', 'amount'])
+        self.flush_model(['internal_index', 'date', 'journal_id', 'statement_id', 'amount', 'state'])
         record_by_id = {x.id: x for x in self}
 
         for journal in self.journal_id:
-            journal_lines = self.filtered(lambda line: line.journal_id == journal).sorted('internal_index')
-            max_index = max(journal_lines.mapped('internal_index'))
-            min_index = min(journal_lines.mapped('internal_index'))
+            journal_lines_indexes = self.filtered(lambda line: line.journal_id == journal)\
+                .sorted('internal_index')\
+                .mapped('internal_index')
+            min_index, max_index = journal_lines_indexes[0], journal_lines_indexes[-1]
 
             # Find the oldest index for each journal.
             self._cr.execute(
@@ -193,7 +197,8 @@ class AccountBankStatementLine(models.Model):
                         st_line.id,
                         st_line.amount,
                         st.first_line_index = st_line.internal_index AS is_anchor,
-                        st.balance_start
+                        st.balance_start,
+                        move.state
                     FROM account_bank_statement_line st_line
                     JOIN account_move move ON move.statement_line_id = st_line.id
                     LEFT JOIN account_bank_statement st ON st.id = st_line.statement_id
@@ -205,10 +210,11 @@ class AccountBankStatementLine(models.Model):
                 """,
                 [max_index, journal.id] + extra_params,
             )
-            for st_line_id, amount, is_anchor, balance_start in self._cr.fetchall():
+            for st_line_id, amount, is_anchor, balance_start, state in self._cr.fetchall():
                 if is_anchor:
                     current_running_balance = balance_start
-                current_running_balance += amount
+                if state == 'posted':
+                    current_running_balance += amount
                 if record_by_id.get(st_line_id):
                     record_by_id[st_line_id].running_balance = current_running_balance
 
@@ -323,6 +329,14 @@ class AccountBankStatementLine(models.Model):
                 # statement they can omit the journal field because it can be obtained from the statement
                 if statement.journal_id:
                     vals['journal_id'] = statement.journal_id.id
+
+            # Avoid having the same foreign_currency_id as currency_id.
+            if vals.get('journal_id') and vals.get('foreign_currency_id'):
+                journal = self.env['account.journal'].browse(vals['journal_id'])
+                journal_currency = journal.currency_id or journal.company_id.currency_id
+                if vals['foreign_currency_id'] == journal_currency.id:
+                    vals['foreign_currency_id'] = None
+                    vals['amount_currency'] = 0.0
 
             # Force the move_type to avoid inconsistency with residual 'default_move_type' inside the context.
             vals['move_type'] = 'entry'
@@ -504,6 +518,35 @@ class AccountBankStatementLine(models.Model):
                 st_line_text_values.append(value)
         return st_line_text_values
 
+    def _get_accounting_amounts_and_currencies(self):
+        """ Retrieve the transaction amount, journal amount and the company amount with their corresponding currencies
+        from the journal entry linked to the statement line.
+        All returned amounts will be positive for an inbound transaction, negative for an outbound one.
+
+        :return: (
+            transaction_amount, transaction_currency,
+            journal_amount, journal_currency,
+            company_amount, company_currency,
+        )
+        """
+        self.ensure_one()
+        liquidity_line, suspense_line, other_lines = self._seek_for_lines()
+        if suspense_line and not other_lines:
+            transaction_amount = -suspense_line.amount_currency
+            transaction_currency = suspense_line.currency_id
+        else:
+            # In case of to_check or partial reconciliation, we can't trust the suspense line.
+            transaction_amount = self.amount_currency if self.foreign_currency_id else self.amount
+            transaction_currency = self.foreign_currency_id or liquidity_line.currency_id
+        return (
+            transaction_amount,
+            transaction_currency,
+            liquidity_line.amount_currency,
+            liquidity_line.currency_id,
+            liquidity_line.balance,
+            liquidity_line.company_currency_id,
+        )
+
     def _prepare_counterpart_amounts_using_st_line_rate(self, currency, balance, amount_currency):
         """ Convert the amounts passed as parameters to the statement line currency using the rates provided by the
         bank. The computed amounts are the one that could be set on the statement line as a counterpart journal item
@@ -519,13 +562,14 @@ class AccountBankStatementLine(models.Model):
             * amount_currency:  The amount to consider expressed in statement line's foreign currency.
         """
         self.ensure_one()
-        company_amount, company_currency, journal_amount, journal_currency, transaction_amount, foreign_currency \
-            = self._get_amounts_with_currencies()
+
+        transaction_amount, transaction_currency, journal_amount, journal_currency, company_amount, company_currency \
+            = self._get_accounting_amounts_and_currencies()
 
         rate_journal2foreign_curr = journal_amount and abs(transaction_amount) / abs(journal_amount)
         rate_comp2journal_curr = company_amount and abs(journal_amount) / abs(company_amount)
 
-        if currency == foreign_currency:
+        if currency == transaction_currency:
             trans_amount_currency = amount_currency
             if rate_journal2foreign_curr:
                 journ_amount_currency = journal_currency.round(trans_amount_currency / rate_journal2foreign_curr)
@@ -536,14 +580,14 @@ class AccountBankStatementLine(models.Model):
             else:
                 new_balance = 0.0
         elif currency == journal_currency:
-            trans_amount_currency = foreign_currency.round(amount_currency * rate_journal2foreign_curr)
+            trans_amount_currency = transaction_currency.round(amount_currency * rate_journal2foreign_curr)
             if rate_comp2journal_curr:
                 new_balance = company_currency.round(amount_currency / rate_comp2journal_curr)
             else:
                 new_balance = 0.0
         else:
             journ_amount_currency = journal_currency.round(balance * rate_comp2journal_curr)
-            trans_amount_currency = foreign_currency.round(journ_amount_currency * rate_journal2foreign_curr)
+            trans_amount_currency = transaction_currency.round(journ_amount_currency * rate_journal2foreign_curr)
             new_balance = balance
 
         return {

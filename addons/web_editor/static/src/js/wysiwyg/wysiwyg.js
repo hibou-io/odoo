@@ -96,6 +96,7 @@ const Wysiwyg = Widget.extend({
         this.tooltipTimeouts = [];
         Wysiwyg.activeWysiwygs.add(this);
         this._oNotEditableObservers = new Map();
+        this._joinPeerToPeer = this._joinPeerToPeer.bind(this);
     },
     /**
      *
@@ -138,6 +139,8 @@ const Wysiwyg = Widget.extend({
             this.getSession()['notification_type']
         ) {
             editorCollaborationOptions = this.setupCollaboration(options.collaborationChannel);
+            // Wait until editor is focused to join the peer to peer network.
+            this.$editable[0].addEventListener('focus', this._joinPeerToPeer);
         }
 
         const getYoutubeVideoElement = async (url) => {
@@ -166,6 +169,7 @@ const Wysiwyg = Widget.extend({
             getUnremovableElements: this.options.getUnremovableElements,
             defaultLinkAttributes: this.options.userGeneratedContent ? {rel: 'ugc' } : {},
             allowCommandVideo: this.options.allowCommandVideo,
+            allowInlineAtRoot: this.options.allowInlineAtRoot,
             getYoutubeVideoElement: getYoutubeVideoElement,
             getContextFromParentRect: options.getContextFromParentRect,
             getPowerboxElement: () => {
@@ -234,12 +238,6 @@ const Wysiwyg = Widget.extend({
             this.$root = this.$root || $wrapwrap;
         }
 
-        if (this._peerToPeerLoading) {
-            // Now that the editor is loaded, wait for the peerToPeer to be
-            // ready to join.
-            this._peerToPeerLoading.then(() => this.ptp.notifyAllClients('ptp_join'));
-        }
-
         this.$editable.on('click', '[data-oe-field][data-oe-sanitize-prevent-edition]', () => {
             Dialog.alert(this, _t("Someone with escalated rights previously modified this area, you are therefore not able to modify it yourself."));
         });
@@ -306,7 +304,14 @@ const Wysiwyg = Widget.extend({
                 $el.selectElement();
 
                 if (!$el.parent().hasClass('o_stars')) {
-                    self.openMediaDialog(params);
+                    // Waiting for all the options to be initialized before
+                    // opening the media dialog and only if the media has not
+                    // been deleted in the meantime.
+                    self.waitForEmptyMutexAction().then(() => {
+                        if ($el[0].parentElement) {
+                            self.openMediaDialog(params);
+                        }
+                    });
                 }
             }
         });
@@ -373,7 +378,7 @@ const Wysiwyg = Widget.extend({
                     })();
                 }
                 $target.focus();
-                if ($target.closest('#wrapwrap, .iframe-editor-wrapper').length) {
+                if ($target.closest('#wrapwrap').length) {
                     this.toggleLinkTools({
                         forceOpen: true,
                         link: $target[0],
@@ -440,8 +445,6 @@ const Wysiwyg = Widget.extend({
             this.call('bus_service', 'deleteChannel', this._collaborationChannelName);
         }
 
-        // const syncHistory = async (fromClientId) => {
-        // }
         // Check wether clientA is before clientB.
         const isClientFirst = (clientA, clientB) => {
             if (clientA.startTime === clientB.startTime) {
@@ -702,9 +705,7 @@ const Wysiwyg = Widget.extend({
             Wysiwyg.activeCollaborationChannelNames.delete(this._collaborationChannelName);
         }
 
-        if (this.ptp) {
-            this.ptp.stop();
-        }
+        this._stopPeerToPeer();
         document.removeEventListener("mousemove", this._signalOnline, true);
         document.removeEventListener("keydown", this._signalOnline, true);
         document.removeEventListener("keyup", this._signalOnline, true);
@@ -735,7 +736,7 @@ const Wysiwyg = Widget.extend({
         if ($wrapwrap.length) {
             $('#wrapwrap')[0].removeEventListener('scroll', this.odooEditor.multiselectionRefresh, { passive: true });
         }
-        $(this.$root).off('mousedown');
+        $(this.$root).off('click');
         if (this.linkPopover) {
             this.linkPopover.hide();
         }
@@ -758,7 +759,7 @@ const Wysiwyg = Widget.extend({
         // We add the field's name as id so default_focus will target it if
         // needed. For that to work, it has to already be editable but note that
         // the editor is at this point not yet instantiated.
-        if (typeof this.options.fieldId !== 'undefined') {
+        if (typeof this.options.fieldId !== 'undefined' && !this.options.inIframe) {
             this.$editable.attr('id', this.options.fieldId);
             this.$editable.attr('contenteditable', true);
         }
@@ -838,7 +839,8 @@ const Wysiwyg = Widget.extend({
      * @returns {Boolean}
      */
     isDirty: function () {
-        return this._initialValue !== (this.getValue() || this.$editable.val());
+        const isDocumentDirty = this.$editable[0].ownerDocument.defaultView.$(".o_dirty").length;
+        return this._initialValue !== (this.getValue() || this.$editable.val()) && isDocumentDirty;
     },
     /**
      * Get the value of the editable element.
@@ -892,6 +894,9 @@ const Wysiwyg = Widget.extend({
      * @returns {Promise}
      */
     saveContent: async function (reload = true) {
+        // TODO dead code: we await for nothing. But let's be extra careful and
+        // only remove it in master as `await nothing` actually allows external
+        // code to take over before the rest of the function here is executed.
         const defs = [];
         await Promise.all(defs);
 
@@ -1332,6 +1337,11 @@ const Wysiwyg = Widget.extend({
         const field = $editable.data('oe-field');
         const type = $editable.data('oe-type');
 
+        // The html_field value should not be updated while the mediaDialog is
+        // in use because if its value change, restoreSelection may fail since
+        // it has a reference to HTMLElements which are not in the DOM anymore.
+        this._shouldDelayBlur = true;
+
         this.mediaDialogWrapper = new ComponentWrapper(this, MediaDialogWrapper, {
             resModel: model,
             resId: $editable.data('oe-id'),
@@ -1402,6 +1412,18 @@ const Wysiwyg = Widget.extend({
     },
     getInSelection(selector) {
         return getInSelection(this.odooEditor.document, selector);
+    },
+    /**
+     * Adds an empty action in the mutex. Can be used to wait for some options
+     * to be initialized before doing something else.
+     *
+     * @returns {Promise}
+     */
+    waitForEmptyMutexAction() {
+        if (this.snippetsMenu) {
+            return this.snippetsMenu.execWithLoadingEffect(() => null, false);
+        }
+        return Promise.resolve();
     },
 
     //--------------------------------------------------------------------------
@@ -1965,7 +1987,7 @@ const Wysiwyg = Widget.extend({
         // autohideToolbar is true by default (false by default if navbar present).
         finalOptions.autohideToolbar = typeof finalOptions.autohideToolbar === 'boolean'
             ? finalOptions.autohideToolbar
-            : !options.snippets;
+            : !finalOptions.snippets;
 
         return finalOptions;
     },
@@ -2401,8 +2423,9 @@ const Wysiwyg = Widget.extend({
         if (!e.target.classList.contains('o_editable_date_field_linked')) {
             this.$editable.find('.o_editable_date_field_linked').removeClass('o_editable_date_field_linked');
         }
-        if (e.target.closest('.oe-toolbar')) {
-            this._onToolbar = true;
+        const closestDialog = e.target.closest('.o_dialog, .o_web_editor_dialog');
+        if (e.target.closest('.oe-toolbar') || (closestDialog && closestDialog.querySelector('.o_select_media_dialog, .o_link_dialog'))) {
+            this._shouldDelayBlur = true;
         } else {
             if (this._pendingBlur && !e.target.closest('.o_wysiwyg_wrapper')) {
                 // todo: to remove when removing the legacy field_html
@@ -2410,11 +2433,11 @@ const Wysiwyg = Widget.extend({
                 this.options.onWysiwygBlur && this.options.onWysiwygBlur();
                 this._pendingBlur = false;
             }
-            this._onToolbar = false;
+            this._shouldDelayBlur = false;
         }
     },
     _onBlur: function () {
-        if (this._onToolbar) {
+        if (this._shouldDelayBlur) {
             this._pendingBlur = true;
         } else {
             // todo: to remove when removing the legacy field_html
@@ -2469,6 +2492,9 @@ const Wysiwyg = Widget.extend({
                 dialog.open({shouldFocusButtons:true});
 
                 this.resetEditor(dbRecord.body);
+                // We were in a peer to peer session before the conflict, join
+                // it again immediately.
+                this._joinPeerToPeer();
             }
             this.preSavePromiseResolve();
             resetPreSavePromise();
@@ -2481,26 +2507,37 @@ const Wysiwyg = Widget.extend({
         // No need for secure random number.
         return Math.floor(Math.random() * Math.pow(2, 52)).toString();
     },
+    _stopPeerToPeer: function () {
+        this.ptp && this.ptp.stop();
+        this._collaborationStopBus && this._collaborationStopBus();
+    },
+    _joinPeerToPeer: function () {
+        this.$editable[0].removeEventListener('focus', this._joinPeerToPeer);
+        if (this._peerToPeerLoading) {
+            this._peerToPeerLoading.then(() => this.ptp.notifyAllClients('ptp_join'));
+        }
+    },
     resetEditor: function (value, options) {
-        this.options = this._getEditorOptions(options);
-        const {collaborationChannel} = options;
-        if (!this.ptp) {
+        if (options) {
+            this.options = this._getEditorOptions(options);
+        }
+        const {collaborationChannel} = this.options;
+        this._stopPeerToPeer();
+        // If there is no collaborationResId, the record has been deleted.
+        if (!collaborationChannel || !collaborationChannel.collaborationResId) {
             this.setValue(value);
             this.odooEditor.historyReset();
             return;
         }
-        this.ptp.stop();
-        if (collaborationChannel) {
-            this._collaborationStopBus();
-            this.setupCollaboration(collaborationChannel);
-        }
+        this.setupCollaboration(collaborationChannel);
         this._currentClientId = this._generateClientId();
         this._startCollaborationTime = new Date().getTime();
         this.ptp = this._getNewPtp();
         this.odooEditor.collaborationSetClientId(this._currentClientId);
         this.setValue(value);
         this.odooEditor.historyReset();
-        this.ptp.notifyAllClients('ptp_join');
+        // Wait until editor is focused to join the peer to peer network.
+        this.$editable[0].addEventListener('focus', this._joinPeerToPeer);
     },
     /**
      * Set contenteditable=false for all `.o_not_editable` found within node if

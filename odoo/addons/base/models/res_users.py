@@ -488,6 +488,14 @@ class Users(models.Model):
         action_open_website = self.env.ref('base.action_open_website', raise_if_not_found=False)
         if action_open_website and any(user.action_id.id == action_open_website.id for user in self):
             raise ValidationError(_('The "App Switcher" action cannot be selected as home action.'))
+        # Prevent using reload actions.
+        # We use sudo() because  "Access rights" admins can't read action models
+        for user in self.sudo():
+            if user.action_id.type == "ir.actions.client":
+                action = self.env["ir.actions.client"].browse(user.action_id.id)  # magic
+                if action.tag == "reload":
+                    raise ValidationError(_('The "%s" action cannot be selected as home action.', action.name))
+
 
     @api.constrains('groups_id')
     def _check_one_user_type(self):
@@ -685,12 +693,15 @@ class Users(models.Model):
             for name, key in name_to_key.items()
         }
 
-        # ensure the language is set and is compatible with the web client
-        lang = context.get('lang') or (request and request.default_lang()) or DEFAULT_LANG
-        if lang == 'ar_AR':
-            context['lang'] = 'ar'
-        if lang in babel.core.LOCALE_ALIASES:
-            context['lang'] = babel.core.LOCALE_ALIASES[lang]
+        # ensure the lang is installed, it case it isn't fallback on
+        # the request lang or the first installed lang.
+        langs = [code for code, _ in self.env['res.lang'].get_installed()]
+        lang = context.get('lang')
+        if lang not in langs:
+            lang = request.default_lang() if request else None
+            if lang not in langs:
+                lang = langs[0]
+        context['lang'] = lang
 
         # ensure uid is set
         context['uid'] = self.env.uid
@@ -2046,7 +2057,7 @@ class APIKeyDescription(models.TransientModel):
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'res.users.apikeys.show',
-            'name': 'API Key Ready',
+            'name': _('API Key Ready'),
             'views': [(False, 'form')],
             'target': 'new',
             'context': {

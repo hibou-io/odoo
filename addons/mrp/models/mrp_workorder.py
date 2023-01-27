@@ -553,6 +553,12 @@ class MrpWorkorder(models.Model):
         vals['leave_id'] = leave.id
         self.write(vals)
 
+    def _cal_cost(self, times=None):
+        self.ensure_one()
+        times = times or self.time_ids
+        duration = sum(times.mapped('duration'))
+        return (duration / 60.0) * self.workcenter_id.costs_hour
+
     @api.model
     def gantt_unavailability(self, start_date, end_date, scale, group_bys=None, rows=None):
         """Get unavailabilities data to display in the Gantt view."""
@@ -601,6 +607,8 @@ class MrpWorkorder(models.Model):
 
         if self.product_tracking == 'serial':
             self.qty_producing = 1.0
+        elif self.qty_producing == 0:
+            self.qty_producing = self.qty_remaining
 
         if self._should_start_timer():
             self.env['mrp.workcenter.productivity'].create(
@@ -629,10 +637,9 @@ class MrpWorkorder(models.Model):
             vals['leave_id'] = leave.id
             return self.write(vals)
         else:
-            if self.date_planned_start > start_date:
+            if not self.date_planned_start or self.date_planned_start > start_date:
                 vals['date_planned_start'] = start_date
-                if self.duration_expected:
-                    vals['date_planned_finished'] = self._calculate_date_planned_finished(start_date)
+                vals['date_planned_finished'] = self._calculate_date_planned_finished(start_date)
             if self.date_planned_finished and self.date_planned_finished < start_date:
                 vals['date_planned_finished'] = start_date
             return self.with_context(bypass_duration_calculation=True).write(vals)
@@ -654,7 +661,7 @@ class MrpWorkorder(models.Model):
                 vals['date_start'] = end_date
             if not workorder.date_planned_start or end_date < workorder.date_planned_start:
                 vals['date_planned_start'] = end_date
-            workorder.write(vals)
+            workorder.with_context(bypass_duration_calculation=True).write(vals)
         return True
 
     def end_previous(self, doall=False):

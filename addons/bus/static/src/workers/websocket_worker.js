@@ -11,7 +11,7 @@ import { debounce } from '@bus/workers/websocket_worker_utils';
 /**
  * Type of action that can be sent from the client to the worker.
  *
- * @typedef {'add_channel' | 'delete_channel' | 'force_update_channels' | 'initialize_connection' | 'send' | 'leave' } WorkerAction
+ * @typedef {'add_channel' | 'delete_channel' | 'force_update_channels' | 'initialize_connection' | 'send' | 'leave' | 'stop' | 'start' } WorkerAction
  */
 
 export const WEBSOCKET_CLOSE_CODES = Object.freeze({
@@ -34,7 +34,8 @@ export const WEBSOCKET_CLOSE_CODES = Object.freeze({
 });
 // Should be incremented on every worker update in order to force
 // update of the worker in browser cache.
-export const WORKER_VERSION = "1.0.0";
+export const WORKER_VERSION = '1.0.2';
+const INITIAL_RECONNECT_DELAY = 1000;
 
 /**
  * This class regroups the logic necessary in order for the
@@ -44,12 +45,12 @@ export const WORKER_VERSION = "1.0.0";
  * for SharedWorker and this class implements it.
  */
 export class WebsocketWorker {
-    constructor(websocketURL) {
-        this.websocketURL = websocketURL;
+    constructor() {
+        this.websocketURL = "";
         this.currentUID = null;
         this.isWaitingForNewUID = true;
         this.channelsByClient = new Map();
-        this.connectRetryDelay = 1000;
+        this.connectRetryDelay = INITIAL_RECONNECT_DELAY;
         this.connectTimeout = null;
         this.debugModeByClient = new Map();
         this.isDebug = false;
@@ -122,6 +123,8 @@ export class WebsocketWorker {
                 return this._sendToServer(data);
             case 'start':
                 return this._start();
+            case 'stop':
+                return this._stop();
             case 'leave':
                 return this._unregisterClient(client);
             case 'add_channel':
@@ -200,12 +203,14 @@ export class WebsocketWorker {
      * given client.
      * @param {Number} [param0.lastNotificationId] Last notification id
      * known by the client.
+     * @param {String} [param0.websocketURL] URL of the websocket endpoint.
      * @param {Number|false|undefined} [param0.uid] Current user id
      *     - Number: user is logged whether on the frontend/backend.
      *     - false: user is not logged.
      *     - undefined: not available (e.g. livechat support page)
      */
-    _initializeConnection(client, { debug, lastNotificationId, uid }) {
+    _initializeConnection(client, { debug, lastNotificationId, uid, websocketURL }) {
+        this.websocketURL = websocketURL;
         this.lastNotificationId = lastNotificationId;
         this.debugModeByClient[client] = debug;
         this.isDebug = Object.values(this.debugModeByClient).some(debugValue => debugValue !== '');
@@ -219,8 +224,9 @@ export class WebsocketWorker {
             if (this.websocket) {
                 this.websocket.close(WEBSOCKET_CLOSE_CODES.CLEAN);
             }
+            this.channelsByClient.forEach((_, key) => this.channelsByClient.set(key, []));
         }
-        this.sendToClient(client, "initialized");
+        this.sendToClient(client, 'initialized');
     }
 
     /**
@@ -315,11 +321,11 @@ export class WebsocketWorker {
         if (this.isDebug) {
             console.debug(`%c${new Date().toLocaleString()} - [onOpen]`, 'color: #c6e; font-weight: bold;');
         }
+        this._updateChannels();
         this.messageWaitQueue.forEach(msg => this.websocket.send(msg));
         this.messageWaitQueue = [];
         this.broadcast(this.isReconnecting ? 'reconnect' : 'connect');
-        this._updateChannels();
-        this.connectRetryDelay = 0;
+        this.connectRetryDelay = INITIAL_RECONNECT_DELAY;
         this.connectTimeout = null;
         this.isReconnecting = false;
     }
@@ -329,7 +335,7 @@ export class WebsocketWorker {
      * applied to the reconnect attempts.
      */
     _retryConnectionWithDelay() {
-        this.connectRetryDelay = this.connectRetryDelay * 1.5 + 500 * Math.random();
+        this.connectRetryDelay = this.connectRetryDelay * 1.5 + 1000 * Math.random();
         this.connectTimeout = setTimeout(this._start.bind(this), this.connectRetryDelay);
     }
 
@@ -361,6 +367,18 @@ export class WebsocketWorker {
         this.websocket.addEventListener('error', this._onWebsocketError.bind(this));
         this.websocket.addEventListener('message', this._onWebsocketMessage.bind(this));
         this.websocket.addEventListener('close', this._onWebsocketClose.bind(this));
+    }
+
+    /**
+     * Stop the worker.
+     */
+    _stop() {
+        clearTimeout(this.connectTimeout);
+        this.connectRetryDelay = INITIAL_RECONNECT_DELAY;
+        this.isReconnecting = false;
+        if (this.websocket) {
+            this.websocket.close();
+        }
     }
 
     /**

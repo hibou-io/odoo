@@ -82,6 +82,9 @@ def transfer_node_to_modifiers(node, modifiers):
     attrs = node.attrib.pop('attrs', None)
     if attrs:
         modifiers.update(ast.literal_eval(attrs.strip()))
+        for a in ('invisible', 'readonly', 'required'):
+            if a in modifiers and isinstance(modifiers[a], int):
+                modifiers[a] = bool(modifiers[a])
 
     states = node.attrib.pop('states', None)
     if states:
@@ -2844,7 +2847,7 @@ class NameManager:
         field_info = self.model.fields_get(attributes=['invisible', 'states', 'readonly', 'required'])
         has_access = functools.partial(self.model.check_access_rights, raise_exception=False)
         if not (has_access('write') or has_access('create')):
-            for info in field_info.vals():
+            for info in field_info.values():
                 info['readonly'] = True
                 info['states'] = {}
         return field_info

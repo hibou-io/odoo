@@ -1130,7 +1130,7 @@ class AccountMove(models.Model):
 
                 kwargs = {
                     'base_lines': base_line_values_list,
-                    'currency': move.currency_id,
+                    'currency': move.currency_id or move.journal_id.currency_id or move.journal_id.company_id.currency_id,
                 }
 
                 if move.id:
@@ -1168,6 +1168,10 @@ class AccountMove(models.Model):
                             handle_price_include=False,
                         ))
                 move.tax_totals = self.env['account.tax']._prepare_tax_totals(**kwargs)
+                rounding_line = move.line_ids.filtered(lambda l: l.display_type == 'rounding')
+                if rounding_line:
+                    amount_total_rounded = move.tax_totals['amount_total'] - rounding_line.balance
+                    move.tax_totals['formatted_amount_total_rounded'] = formatLang(self.env, amount_total_rounded, currency_obj=move.currency_id) or ''
             else:
                 # Non-invoice moves don't support that field (because of multicurrency: all lines of the invoice share the same currency)
                 move.tax_totals = None
@@ -1418,7 +1422,7 @@ class AccountMove(models.Model):
     def _compute_display_qr_code(self):
         for record in self:
             record.display_qr_code = (
-                record.move_type in ('out_invoice', 'out_receipt')
+                record.move_type in ('out_invoice', 'out_receipt', 'in_invoice', 'in_receipt')
                 and record.company_id.qr_code
             )
 
@@ -1562,7 +1566,7 @@ class AccountMove(models.Model):
 
             if (
                 new_format != origin_format
-                or dict(new_format_values, seq=0) != dict(origin_format_values, seq=0)
+                or dict(new_format_values, year=0, month=0, seq=0) != dict(origin_format_values, year=0, month=0, seq=0)
             ):
                 changed = _(
                     "It was previously '%(previous)s' and it is now '%(current)s'.",
@@ -1882,8 +1886,13 @@ class AccountMove(models.Model):
         # Skip posted moves.
         for invoice in (x for x in container['records'] if x.state != 'posted'):
 
-            # Unlink tax lines if all tax tags have been removed.
+            # Unlink tax lines if all taxes have been removed.
             if not invoice.line_ids.tax_ids:
+                # if there isn't any tax but there remains a tax_line_id, it means we are currently in the process of
+                # removing the taxes from the entry. Thus, we want the automatic balancing to happen in order  to have
+                # a smooth process for tax deletion
+                if not invoice.line_ids.filtered('tax_line_id'):
+                    continue
                 invoice.line_ids.filtered('tax_line_id').unlink()
 
             # Set the balancing line's balance and amount_currency to zero,
@@ -2365,9 +2374,6 @@ class AccountMove(models.Model):
     # SEQUENCE MIXIN
     # -------------------------------------------------------------------------
 
-    def _must_check_constrains_date_sequence(self):
-        return not self.posted_before and not self.quick_edit_mode
-
     def _get_last_sequence_domain(self, relaxed=False):
         # EXTENDS account sequence.mixin
         self.ensure_one()
@@ -2538,7 +2544,7 @@ class AccountMove(models.Model):
         for that partner as the default one, otherwise the default of the journal.
         """
         self.ensure_one()
-        if not self.quick_edit_total_amount:
+        if not self.quick_edit_mode or not self.quick_edit_total_amount:
             return False
         count, account_id, tax_ids = self._get_frequent_account_and_taxes(
             self.company_id.id,
@@ -2772,6 +2778,8 @@ class AccountMove(models.Model):
 
         product_lines = self.line_ids.filtered(lambda x: x.display_type == 'product')
         base_lines = [x._convert_to_tax_base_line_dict() for x in product_lines]
+        for base_line in base_lines:
+            base_line['taxes'] = base_line['taxes'].filtered(lambda t: t.amount_type != 'fixed')
 
         if self.is_inbound(include_receipts=True):
             cash_discount_account = self.company_id.account_journal_early_pay_discount_loss_account_id
@@ -3047,6 +3055,10 @@ class AccountMove(models.Model):
         if not reconciled_lines:
             return {}
 
+        self.env['account.partial.reconcile'].flush_model([
+            'credit_amount_currency', 'credit_move_id', 'debit_amount_currency',
+            'debit_move_id', 'exchange_move_id',
+        ])
         query = '''
             SELECT
                 part.id,
@@ -3083,6 +3095,7 @@ class AccountMove(models.Model):
                 exchange_move_ids.add(values['exchange_move_id'])
 
         if exchange_move_ids:
+            self.env['account.move.line'].flush_model(['move_id'])
             query = '''
                 SELECT
                     part.id,
@@ -3281,10 +3294,6 @@ class AccountMove(models.Model):
 
         # Create the analytic lines in batch is faster as it leads to less cache invalidation.
         to_post.line_ids._create_analytic_lines()
-        to_post.write({
-            'state': 'posted',
-            'posted_before': True,
-        })
 
         # Trigger copying for recurring invoices
         to_post.filtered(lambda m: m.auto_post not in ('no', 'at_date'))._copy_recurring_entries()
@@ -3299,6 +3308,12 @@ class AccountMove(models.Model):
             if wrong_lines:
                 wrong_lines.write({'partner_id': invoice.commercial_partner_id.id})
 
+        to_post.write({
+            'state': 'posted',
+            'posted_before': True,
+        })
+
+        for invoice in to_post:
             invoice.message_subscribe([
                 p.id
                 for p in [invoice.partner_id]
@@ -3374,10 +3389,6 @@ class AccountMove(models.Model):
             'views': [(False, 'form')],
             'res_model': res_model,
             'res_id': res_id,
-            'context': {
-                'create': False,
-                'delete': False,
-            },
             'target': 'current',
         }
 
@@ -3756,7 +3767,7 @@ class AccountMove(models.Model):
         else:
             # Else we find one that's eligible and assign it to the invoice
             for candidate_method, _candidate_name in self.env['res.partner.bank'].get_available_qr_methods_in_sequence():
-                if self.partner_bank_id._eligible_for_qr_code(candidate_method, self.partner_id, self.currency_id):
+                if self.partner_bank_id._eligible_for_qr_code(candidate_method, self.partner_id, self.currency_id, raises_error=False):
                     qr_code_method = candidate_method
                     break
 

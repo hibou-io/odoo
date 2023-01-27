@@ -13,7 +13,7 @@ import psycopg2
 
 from odoo import models, fields, Command
 from odoo.addons.base.tests.common import TransactionCaseWithUserDemo
-from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.tests import common
 from odoo.tools import mute_logger, float_repr
 from odoo.tools.date_utils import add, subtract, start_of, end_of
@@ -1624,6 +1624,57 @@ class TestFields(TransactionCaseWithUserDemo):
         with self.assertRaises(AccessError):
             cat1.name
 
+    def test_32_prefetch_missing_error(self):
+        """ Test that prefetching non-column fields works in the presence of deleted records. """
+        Discussion = self.env['test_new_api.discussion']
+
+        # add an ir.rule that forces reading field 'name'
+        self.env['ir.rule'].create({
+            'model_id': self.env['ir.model']._get(Discussion._name).id,
+            'groups': [self.env.ref('base.group_user').id],
+            'domain_force': "[('name', '!=', 'Super Secret discution')]",
+        })
+
+        records = Discussion.with_user(self.user_demo).create([
+            {'name': 'EXISTING'},
+            {'name': 'MISSING'},
+        ])
+
+        # unpack to keep the prefetch on each recordset
+        existing, deleted = records
+        self.assertEqual(existing._prefetch_ids, records._ids)
+
+        # this invalidates the caches but the prefetching remains the same
+        deleted.unlink()
+
+        # this should not trigger a MissingError
+        existing.categories
+
+        # invalidate 'categories' for the assertQueryCount
+        records.invalidate_model(['categories'])
+        with self.assertQueryCount(4):
+            # <categories>.__get__(existing)
+            #  -> records._fetch_field(['categories'])
+            #      -> records._read(['categories'])
+            #          -> records.check_access_rule('read')
+            #              -> records._filter_access_rules_python('read')
+            #                  -> records.filtered_domain(...)
+            #                      -> <name>.__get__(existing)
+            #                          -> records._fetch_field(['name'])
+            #                              -> records._read(['name', ...])
+            #                                  -> ONE QUERY to read ['name', ...] of records
+            #                                  -> ONE QUERY for deleted.exists() / code: forbidden = missing.exists()
+            #          -> ONE QUERY for records.exists() / code: self = self.exists()
+            #          -> ONE QUERY to read the many2many of existing
+            existing.categories
+
+        # this one must trigger a MissingError
+        with self.assertRaises(MissingError):
+            deleted.categories
+
+        # special case: should not fail
+        Discussion.browse([None]).read(['categories'])
+
     def test_40_real_vs_new(self):
         """ test field access on new records vs real records. """
         Model = self.env['test_new_api.category']
@@ -2994,7 +3045,23 @@ class TestHtmlField(common.TransactionCase):
         })
         record = self.env['test_new_api.mixed'].create({})
 
-        # 1. Test main use case: prevent restricted user to wipe non restricted
+        # 1. Test normalize case: diff due to normalize should not prevent the
+        #    changes
+        val = '<blockquote>Something</blockquote>'
+        normalized_val = '<blockquote data-o-mail-quote-node="1" data-o-mail-quote="1">Something</blockquote>'
+        write_vals = {'comment5': val}
+
+        record.with_user(internal_user).write(write_vals)
+        self.assertEqual(record.comment5, normalized_val,
+                         "should be normalized (not in groups)")
+        record.with_user(bypass_user).write(write_vals)
+        self.assertEqual(record.comment5, val,
+                         "should not be normalized (has group)")
+        record.with_user(internal_user).write(write_vals)
+        self.assertEqual(record.comment5, normalized_val,
+                         "should be normalized (not in groups) despite admin previous diff")
+
+        # 2. Test main use case: prevent restricted user to wipe non restricted
         #    user previous change
         val = '<script></script>'
         write_vals = {'comment5': val}
@@ -3010,7 +3077,7 @@ class TestHtmlField(common.TransactionCase):
             # other user that bypassed the sanitize)
             record.with_user(internal_user).write(write_vals)
 
-        # 2. Make sure field compare in `_convert` is working as expected with
+        # 3. Make sure field compare in `_convert` is working as expected with
         #    special content / format
         val = '<span  attr1 ="att1"   attr2=\'attr2\'>é@&nbsp;</span><p><span/></p>'
         write_vals = {'comment5': val}
@@ -3026,6 +3093,13 @@ class TestHtmlField(common.TransactionCase):
         record.with_user(bypass_user).write(write_vals)
         # Next write shouldn't raise a sanitize right error
         record.with_user(internal_user).write(write_vals)
+
+        # 4. Ensure our exception handling is fine
+        val = '<!-- I am a comment -->'
+        write_vals = {'comment5': val}
+        record.with_user(internal_user).write(write_vals)
+        self.assertEqual(record.comment5, '',
+                         "should be sanitized (not in groups)")
 
 
 class TestMagicFields(common.TransactionCase):
