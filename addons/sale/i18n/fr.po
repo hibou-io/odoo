@@ -13,7 +13,6 @@
 # Desausoi Laurent, 2022
 # Camille Dantinne <cmd@odoo.com>, 2022
 # Cécile Collart <cco@odoo.com>, 2022
-# Walid Hanniche, 2022
 # Martin Trigaux, 2022
 # Moka Tourisme <hello@mokatourisme.fr>, 2023
 # Jolien De Paepe, 2023
@@ -840,7 +839,7 @@ msgstr "Accepter &amp; Payer"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "Accept &amp; Sign"
-msgstr "Accepter et signer"
+msgstr "Accepter & Signer"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__access_warning
@@ -3406,7 +3405,7 @@ msgstr "Examiner, Accepter &amp; Payer le Devis"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.mail_notification_paynow_online
 msgid "Review, Accept &amp; Sign Quotation"
-msgstr "Examiner, Accepter &amp; Payer le Devis"
+msgstr "Examiner, Accepter &amp; Signer le Devis"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.mail_notification_paynow_online
@@ -4855,6 +4854,6 @@ msgid ""
 "(ctx.get('proforma') and 'Proforma' or 'Quotation') or 'Order' }} (Ref {{ "
 "object.name or 'n/a' }})"
 msgstr ""
-"{{ object.company_id.name }} {{ object.state in ('brouillon', 'envoyé') and "
+"{{ object.company_id.name }} {{ object.state in ('draft', 'sent') and "
 "(ctx.get('proforma') and 'Pro forma' or 'Devis') or 'Commande' }} (Ref {{ "
 "object.name or 'n/a' }})"

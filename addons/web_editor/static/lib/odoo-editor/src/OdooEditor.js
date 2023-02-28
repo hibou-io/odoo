@@ -53,9 +53,9 @@ import {
     rightLeafOnlyNotBlockPath,
     isBlock,
     isMacOS,
-    childNodeIndex,
-    getSelectedNodes,
-    isVoidElement
+    isVoidElement,
+    cleanZWS,
+    isZWS,
 } from './utils/utils.js';
 import { editorCommands } from './commands/commands.js';
 import { Powerbox } from './powerbox/Powerbox.js';
@@ -148,7 +148,7 @@ export const CLIPBOARD_WHITELISTS = {
         /^btn/,
         /^fa/,
     ],
-    attributes: ['class', 'href', 'src'],
+    attributes: ['class', 'href', 'src', 'target'],
     styledTags: ['SPAN', 'B', 'STRONG', 'I', 'S', 'U', 'FONT'],
     styles: {
         'text-decoration': { defaultValues: ['', 'none'] },
@@ -305,7 +305,9 @@ export class OdooEditor extends EventTarget {
         this.idSet(editable);
         this._historyStepsActive = true;
         this.historyReset();
-        this.updateDocumentHistoryId();
+        if (this.options.initialHistoryId) {
+            this.historySetInitialId(this.options.initialHistoryId);
+        }
 
         this._pluginCall('sanitizeElement', [editable]);
 
@@ -685,20 +687,14 @@ export class OdooEditor extends EventTarget {
         this._historyIds = [];
     }
     /**
-     * Retrieve the document history id.
+     * Set the initial document history id.
      *
      * To prevent a saving a document with a diverging history, we store the
      * last history id in the first node of the document to the database.
-     * When we set the value of the editor, we need to fetch that node and add
-     * that id to our list of history ids so the server know we come from that
-     * history.
+     * This method provide the initial document history id to the editor.
      */
-    updateDocumentHistoryId() {
-        const historyStepNode = this.editable.querySelector(`[data-last-history-steps]`);
-        if (historyStepNode) {
-            const lastHistoryStep = peek(historyStepNode.getAttribute('data-last-history-steps').split(','));
-            this._historyIds.push(lastHistoryStep);
-        }
+    historySetInitialId(id) {
+        this._historyIds.unshift(id);
     }
     /**
      * Get all the history ids for the current history branch.
@@ -2003,7 +1999,7 @@ export class OdooEditor extends EventTarget {
                 this._beforeCommandbarStepIndex = this._historySteps.length - 1;
             },
             preValidate: () => {
-                this._historyRevertUntil(this._beforeCommandbarStepIndex);
+                this.historyRevertUntil(this._beforeCommandbarStepIndex);
                 this.historyStep(true);
                 this._historyStepsStates.set(peek(this._historySteps).id, 'consumed');
                 setTimeout(() => {
@@ -2018,7 +2014,7 @@ export class OdooEditor extends EventTarget {
         });
     }
 
-    _historyRevertUntil (toStepIndex) {
+    historyRevertUntil (toStepIndex) {
         const lastStep = this._currentStep;
         this.historyRevert(lastStep);
         let stepIndex = this._historySteps.length - 1;
@@ -2854,14 +2850,14 @@ export class OdooEditor extends EventTarget {
         // we only remove the attribute to ensure we don't break some style.
         // Otherwise we remove the entire inline element.
         for (const emptyElement of element.querySelectorAll('[oe-zws-empty-inline]')) {
-            if (emptyElement.textContent.length === 1 && emptyElement.textContent.includes('\u200B')) {
+            if (isZWS(emptyElement)) {
                 if (emptyElement.classList.length > 0) {
                     emptyElement.removeAttribute('oe-zws-empty-inline');
                 } else {
                     emptyElement.remove();
                 }
             } else {
-                emptyElement.textContent = emptyElement.textContent.replace('\u200B', '');
+                cleanZWS(emptyElement);
                 emptyElement.removeAttribute('oe-zws-empty-inline');
             }
         }
@@ -2878,10 +2874,10 @@ export class OdooEditor extends EventTarget {
             el.removeAttribute('oe-keep-contenteditable');
         }
 
-        // Remove Zero Width Spzces on Font awesome elements
+        // Remove Zero Width Spaces on Font awesome elements
         const faSelector = 'i.fa,span.fa,i.fab,span.fab,i.fad,span.fad,i.far,span.far';
         for (const el of element.querySelectorAll(faSelector)) {
-            el.textContent = el.textContent.replace('\u200B', '');
+            cleanZWS(el);
         }
 
     }
@@ -3262,7 +3258,7 @@ export class OdooEditor extends EventTarget {
                     ];
 
                     const execCommandAtStepIndex = (index, callback) => {
-                        this._historyRevertUntil(index);
+                        this.historyRevertUntil(index);
                         this.historyStep(true);
                         this._historyStepsStates.set(peek(this._historySteps).id, 'consumed');
 
