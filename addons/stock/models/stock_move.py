@@ -939,7 +939,7 @@ class StockMove(models.Model):
             if breaking_char in (move_line.lot_name or ''):
                 split_lines = move_line.lot_name.split(breaking_char)
                 split_lines = list(filter(None, split_lines))
-                move_line.lot_name = split_lines[0]
+                move_line.lot_name = split_lines[0] if split_lines else ''
                 move_lines_commands = self._generate_serial_move_line_commands(
                     split_lines[1:],
                     origin_move_line=move_line,
@@ -979,8 +979,7 @@ class StockMove(models.Model):
             keys += (self.partner_id, )
         return keys
 
-    def _search_picking_for_assignation(self):
-        self.ensure_one()
+    def _search_picking_for_assignation_domain(self):
         domain = [
             ('group_id', '=', self.group_id.id),
             ('location_id', '=', self.location_id.id),
@@ -991,6 +990,11 @@ class StockMove(models.Model):
             ('state', 'in', ['draft', 'confirmed', 'waiting', 'partially_available', 'assigned'])]
         if self.partner_id and (self.location_id.usage == 'transit' or self.location_dest_id.usage == 'transit'):
             domain += [('partner_id', '=', self.partner_id.id)]
+        return domain
+
+    def _search_picking_for_assignation(self):
+        self.ensure_one()
+        domain = self._search_picking_for_assignation_domain()
         picking = self.env['stock.picking'].search(domain, limit=1)
         return picking
 
