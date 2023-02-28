@@ -614,6 +614,7 @@ class MrpWorkorder(models.Model):
             self.env['mrp.workcenter.productivity'].create(
                 self._prepare_timeline_vals(self.duration, datetime.now())
             )
+
         if self.production_id.state != 'progress':
             self.production_id.write({
                 'date_start': datetime.now(),

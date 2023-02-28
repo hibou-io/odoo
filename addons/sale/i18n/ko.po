@@ -8,9 +8,9 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0+e\n"
+"Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 12:51+0000\n"
+"POT-Creation-Date: 2023-02-02 10:34+0000\n"
 "PO-Revision-Date: 2022-09-22 05:54+0000\n"
 "Last-Translator: Sarah Park, 2023\n"
 "Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
@@ -296,13 +296,13 @@ msgstr ""
 "        <t t-set=\"transaction\" t-value=\"object.get_portal_last_transaction()\"/>\n"
 "        주문번호 <span style=\"font-weight:bold;\" t-out=\"object.name or ''\">S00049</span> 및 관련 금액 <span style=\"font-weight:bold;\" t-out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ 10.00</span>\n"
 "        <t t-if=\"object.state == 'sale' or (transaction and transaction.state in ('done', 'authorized'))\">\n"
-"            해당 내용이 확인되었습니다.<br/>\n"
+"            이 확인 완료되었습니다.<br/>\n"
 "            고객님의 신뢰에 감사드립니다!\n"
 "        </t>\n"
 "        <t t-elif=\"transaction and transaction.state == 'pending'\">\n"
 "            대기 중입니다. 입금 내역이 확인되면 승인이 완료됩니다.\n"
 "            <t t-if=\"object.reference\">\n"
-"                결제 참조 내용은 다음과 같습니다 <span style=\"font-weight:bold;\" t-out=\"object.reference or ''\"/>.\n"
+"                결제와 관련된 참조 내용은 다음과 같습니다 <span style=\"font-weight:bold;\" t-out=\"object.reference or ''\"/>.\n"
 "            </t>\n"
 "        </t>\n"
 "        <br/><br/>\n"
@@ -512,14 +512,14 @@ msgstr ""
 "        <br/><br/>\n"
 "        고객님의\n"
 "        <t t-if=\"ctx.get('proforma')\">\n"
-"            견적용 송장이 <t t-out=\"doc_name or ''\">견적서 번호</t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</span> 및\n"
+"            견적송장이 <t t-out=\"doc_name or ''\">견적서 번호</t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</span> 및\n"
 "            <t t-if=\"object.origin\">\n"
 "                (참조사항: <t t-out=\"object.origin or ''\"/> )\n"
 "            </t>\n"
 "            금액 <span style=\"font-weight: bold;\" t-out=\"format_amount(object.amount_total, object.pricelist_id.currency_id) or ''\">$ 10.00</span> 항목으로 준비가 완료되었습니다.\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <t t-out=\"doc_name or ''\">견적서 보기</t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\"/>\n"
+"            <t t-out=\"doc_name or ''\">견적 보기</t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\"/>\n"
 "            <t t-if=\"object.origin\">\n"
 "                (관련 번호: <t t-out=\"object.origin or ''\">S00052</t> )\n"
 "            </t>\n"
@@ -836,7 +836,7 @@ msgstr "<strong>만료 :</strong>"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "<strong>Fiscal Position Remark:</strong>"
-msgstr "<strong>회계 위치 참고 :</strong>"
+msgstr "<strong>재정상태 참고사항 :</strong>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
@@ -1129,7 +1129,7 @@ msgid ""
 "            to sell extra hours when all ordered hours have been consumed."
 msgstr ""
 "예를 들어 서비스 상품을 시간제로 판매하는 경우, Odoo에서는 주문한 전체 시간을\n"
-" 사용한 이후에 추가 시간을 판매하도록 권장하고 있습니다."
+" 소진한 이후에 추가 시간을 판매하도록 추천하고 있습니다."
 
 #. module: sale
 #: model:ir.model.fields.selection,name:sale.selection__product_template__expense_policy__cost
@@ -1932,7 +1932,7 @@ msgstr "FedEx 연결기"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__fiscal_position_id
 msgid "Fiscal Position"
-msgstr "회계 포지션"
+msgstr "재정 상태"
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__fiscal_position_id
@@ -1940,7 +1940,8 @@ msgid ""
 "Fiscal positions are used to adapt taxes and accounts for particular "
 "customers or sales orders/invoices.The default value comes from the "
 "customer."
-msgstr "회계 위치는 특정 고객 또는 판매 주문 /송장에 대한 세금 및 계정을 조정하는 데 사용됩니다. 기본값은 고객이 제공합니다."
+msgstr ""
+"재정 상태는 특정한 고객이나 판매발주서/청구서에 대한 세금 과 계정을 조정하는 데 사용됩니다. 고객이 설정한 값을 기본값으로 합니다."
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__message_follower_ids
@@ -2848,6 +2849,11 @@ msgid "Order Date:"
 msgstr "주문 날짜:"
 
 #. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.view_order_product_search
+msgid "Order Date: Last 365 Days"
+msgstr "주문일: 최근 365일"
+
+#. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__order_line
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
 msgid "Order Lines"
@@ -3280,8 +3286,10 @@ msgid "Quotation Sent"
 msgstr "견적 발송"
 
 #. module: sale
+#. odoo-python
 #: code:addons/sale/models/res_config_settings.py:0
 #: model:ir.model.constraint,message:sale.constraint_res_company_check_quotation_validity_days
+#, python-format
 msgid "Quotation Validity is required and must be greater than 0."
 msgstr "견적 승인이 필요하며 0보다 커야 합니다."
 
@@ -4066,14 +4074,14 @@ msgstr "이 견적을 거절한 이유를 알려 주시면 서비스 개선에 �
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__terms_type
 msgid "Terms & Conditions format"
-msgstr ""
+msgstr "이용 약관 형식"
 
 #. module: sale
 #. odoo-python
 #: code:addons/sale/models/sale_order.py:0
 #, python-format
 msgid "Terms & Conditions: %s"
-msgstr ""
+msgstr "이용 약관: %s"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
@@ -4083,7 +4091,7 @@ msgstr "이용 약관"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
 msgid "Terms &amp; Conditions:"
-msgstr ""
+msgstr "이용약관"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__note
@@ -4677,7 +4685,7 @@ msgstr "회사명을 입력하면 신규 자료를 생성하거나 기존 내용
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.product_template_form_view
 msgid "You can invoice them before they are delivered."
-msgstr ""
+msgstr "배송 전에 청구서를 발행할 수 있습니다."
 
 #. module: sale
 #. odoo-python

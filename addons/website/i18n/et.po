@@ -20,14 +20,14 @@
 # Eneli Õigus <enelioigus@gmail.com>, 2022
 # Rivo Zängov <eraser@eraser.ee>, 2022
 # Leaanika Randmets, 2022
-# Jana Jaakson, 2022
+# Jana Jaakson, 2023
 # Anna, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0+e\n"
+"Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 12:48+0000\n"
+"POT-Creation-Date: 2023-02-02 10:33+0000\n"
 "PO-Revision-Date: 2022-09-22 05:56+0000\n"
 "Last-Translator: Anna, 2023\n"
 "Language-Team: Estonian (https://www.transifex.com/odoo/teams/41243/et/)\n"
@@ -638,14 +638,10 @@ msgstr "<b>Liigutage</b> seda nuppu veeru suuruse muutmiseks."
 #: model_terms:ir.ui.view,arch_db:website.view_edit_robots
 msgid ""
 "<br/><br/>\n"
-"                    Example of rule:<br/>\n"
-"                    <code class=\"ms-4\">Disallow: /web/login</code><br/>\n"
-"                    <code class=\"ms-4\">Allow: *</code>"
+"                    Example of rule:<br/>"
 msgstr ""
 "<br/><br/>\n"
-"                    Reegli näide:<br/>\n"
-"                    <code class=\"ms-4\">Ära luba: /web/login</code><br/>\n"
-"                    <code class=\"ms-4\">Luba: *</code>"
+"                    Reegli näide:<br/>"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_carousel
@@ -816,6 +812,8 @@ msgid ""
 "<i class=\"fa fa-info-circle\"/> Edit the content below this line to adapt "
 "the default <strong>Page not found</strong> page."
 msgstr ""
+"<i class=\"fa fa-info-circle\"/> Muuda selle joone alust sisu, et kohandada "
+"vaikimisi<strong>Lehte ei leitud.</strong>lehte."
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.protected_403
@@ -1012,6 +1010,9 @@ msgid ""
 "                                        <i class=\"fa fa-info\"/>: type some of the first chars after 'google' is enough, we'll guess the rest.\n"
 "                                    </small>"
 msgstr ""
+"<small class=\"text-muted\">\n"
+"                                        <i class=\"fa fa-info\"/>: kirjuta mõned tähemärgid peale 'google' ja sellest on piisav, ülejäänud me lisame ise.\n"
+"                                    </small>"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.color_combinations_debug_view
@@ -1373,6 +1374,7 @@ msgstr ""
 "kuvamisvalikuid."
 
 #. module: website
+#: model:ir.model.fields,help:website.field_base_automation__website_published
 #: model:ir.model.fields,help:website.field_ir_actions_server__website_published
 #: model:ir.model.fields,help:website.field_ir_cron__website_published
 msgid ""
@@ -1819,7 +1821,7 @@ msgstr "Võimaldab teha kontaktidele masspostitus kampaaniaid"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Alows your visitors to chat with you"
-msgstr "Võimaldab külastajatel teiega vestelda"
+msgstr "Luba külastajatel teiega vestelda"
 
 #. module: website
 #. odoo-javascript
@@ -2106,6 +2108,7 @@ msgid "Autosizing"
 msgstr "Autosizing"
 
 #. module: website
+#: model:ir.model.fields,field_description:website.field_base_automation__website_published
 #: model:ir.model.fields,field_description:website.field_ir_actions_server__website_published
 #: model:ir.model.fields,field_description:website.field_ir_cron__website_published
 msgid "Available on the Website"
@@ -3003,7 +3006,7 @@ msgstr ""
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_contact
 msgid "Contact us anytime"
-msgstr "Võtke meiega ühendust igal ajal"
+msgstr "Võtke meiega ühendust"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_images_subtitles
@@ -3079,7 +3082,7 @@ msgstr "Küpsiste poliis"
 #: model:ir.model.fields,field_description:website.field_res_config_settings__website_cookies_bar
 #: model:ir.model.fields,field_description:website.field_website__cookies_bar
 msgid "Cookies Bar"
-msgstr "Cookies Bar"
+msgstr "Küpsiseriba"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.cookie_policy
@@ -3406,7 +3409,7 @@ msgstr "Andmehulga värv"
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
 #: model_terms:ir.ui.view,arch_db:website.website_visitor_page_view_search
 msgid "Date"
-msgstr "Date"
+msgstr "Kuupäev"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
@@ -3459,7 +3462,7 @@ msgstr "Vaikimisi tühistatud"
 #: model:ir.model.fields,field_description:website.field_website__social_default_image
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Default Social Share Image"
-msgstr "Vaikimisi Social Share Pilt"
+msgstr "Vaikimisi sotsiaalmeedias jagatav pilt"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_website_form_options
@@ -3758,7 +3761,7 @@ msgstr "Näidatav nimi"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Display a customizable cookies bar on your website"
-msgstr ""
+msgstr "Kuva kohandatud küpsiseriba oma veebilehel"
 
 #. module: website
 #: model:ir.model.fields,help:website.field_res_config_settings__website_cookies_bar
@@ -4058,7 +4061,7 @@ msgstr "Muuda videot"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.layout
 msgid "Editor"
-msgstr "Toimetaja"
+msgstr "Veebiredaktor"
 
 #. module: website
 #: model:res.groups,name:website.group_website_designer
@@ -4093,7 +4096,7 @@ msgstr "E-post"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Email &amp; Marketing"
-msgstr "E-posti &amp; turundus"
+msgstr "E-post &amp; turundus"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -4250,6 +4253,7 @@ msgid "Extension View"
 msgstr "Laienduse vaade"
 
 #. module: website
+#: model:ir.model.fields,field_description:website.field_base_automation__xml_id
 #: model:ir.model.fields,field_description:website.field_ir_actions_server__xml_id
 #: model:ir.model.fields,field_description:website.field_ir_cron__xml_id
 #: model:ir.model.fields,field_description:website.field_website_page__xml_id
@@ -4533,7 +4537,7 @@ msgstr "Ujukomaarv"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_headline
 msgid "Follow Us"
-msgstr "Jälgi meid"
+msgstr "Jälgige meid"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.footer_custom
@@ -4549,7 +4553,7 @@ msgstr "Jälgi meid"
 #: model_terms:ir.ui.view,arch_db:website.template_header_sidebar_oe_structure_header_sidebar_1
 #: model_terms:ir.ui.view,arch_db:website.template_header_vertical_oe_structure_header_vertical_1
 msgid "Follow us"
-msgstr "Jälgi meid"
+msgstr "Jälgige meid"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -5266,6 +5270,7 @@ msgid "ID"
 msgstr "ID"
 
 #. module: website
+#: model:ir.model.fields,help:website.field_base_automation__xml_id
 #: model:ir.model.fields,help:website.field_ir_actions_server__xml_id
 #: model:ir.model.fields,help:website.field_ir_cron__xml_id
 msgid "ID of the action if defined in a XML file"
@@ -5311,7 +5316,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "If set, replaces the website logo as the default social share image."
 msgstr ""
-"Kui valitud, asendatakse veebilehe logi vaikimisi sotsiaalmeedia jagamise "
+"Kui valitud, asendatakse veebilehe logo vaikimisi sotsiaalmeedia jagamise "
 "pildiga."
 
 #. module: website
@@ -5625,7 +5630,7 @@ msgstr "Paigalda keel"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Install languages"
-msgstr "Paigalda keeli"
+msgstr "Lisa keeled"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.show_website_info
@@ -6019,7 +6024,7 @@ msgstr "Eelmine kuu"
 #: model_terms:ir.ui.view,arch_db:website.website_visitor_view_kanban
 #: model_terms:ir.ui.view,arch_db:website.website_visitor_view_tree
 msgid "Last Page"
-msgstr "Viimane leht"
+msgstr "Viimati külastatud"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_theme_ir_asset__write_uid
@@ -6060,7 +6065,7 @@ msgstr "Viimati uuendatud"
 #. module: website
 #: model:ir.model.fields,field_description:website.field_website_visitor__last_visited_page_id
 msgid "Last Visited Page"
-msgstr "Viimane külastatud leht"
+msgstr "Viimati külastatud leht"
 
 #. module: website
 #. odoo-javascript
@@ -6507,6 +6512,11 @@ msgid "Menus"
 msgstr "Menüüd"
 
 #. module: website
+#: model:ir.model,name:website.model_base_partner_merge_automatic_wizard
+msgid "Merge Partner Wizard"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_facebook_page_options
 msgid "Messages"
 msgstr "Sõnumid"
@@ -6643,7 +6653,7 @@ msgstr "Veebilehe moodul: online vestlusaken"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Monitor Google Search results data"
-msgstr "Monitoori Google Ostingu tulemuste andmeid"
+msgstr "Jägi Google otsingumootori tulemuste andmeid"
 
 #. module: website
 #: model_terms:digest.tip,tip_description:website.digest_tip_website_0
@@ -7924,7 +7934,7 @@ msgstr "Telli uuesti"
 #: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
 #, python-format
 msgid "Ready to build the"
-msgstr "Valmis loomiseks"
+msgstr "Kas oled valmis loomiseks"
 
 #. module: website
 #. odoo-javascript
@@ -8165,7 +8175,7 @@ msgid ""
 "they can or can't request from your site.<br/>"
 msgstr ""
 "Robots.txt: See fail ütleb otsingumootorile, milliseid lehti või faile nad "
-"saavad või ei saa teie saidilt taotleda.<br/>"
+"saavad või ei saa teie veebilehelt taotleda.<br/>"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -9313,6 +9323,7 @@ msgid "The full URL to access the document through the website."
 msgstr "Dokumendile veebisaidi kaudu juurdepääsuks täielik URL."
 
 #. module: website
+#: model:ir.model.fields,help:website.field_base_automation__website_url
 #: model:ir.model.fields,help:website.field_ir_actions_server__website_url
 #: model:ir.model.fields,help:website.field_ir_cron__website_url
 msgid "The full URL to access the server action through the website."
@@ -9796,7 +9807,7 @@ msgstr "Jälgi"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid "Track visits using Google Analytics"
-msgstr "Jälgige külastusi Google Analyticsi abil"
+msgstr "Jälgi külastusi Google Analytics'i abil"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.website_pages_view_search
@@ -10063,7 +10074,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
 msgid ""
 "Use Plausible.io, Simple and privacy-friendly Google Analytics alternative"
-msgstr "Kasutage Plausible.io! Mugav ja arusaadav statistika lahendus. "
+msgstr "Plausible.io on mugav ja arusaadav statistika lahendus. "
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.res_config_settings_view_form
@@ -10533,7 +10544,7 @@ msgstr "Me võtame teiega peatselt ühendust."
 #: code:addons/website/static/src/client_actions/configurator/configurator.xml:0
 #, python-format
 msgid "We'll set you up and running in"
-msgstr ""
+msgstr "Veebilehe loomiseks on"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.website_visitor_view_tree
@@ -10671,9 +10682,10 @@ msgstr "Veebilehe lehe seaded"
 #: model:ir.actions.act_window,name:website.action_website_pages_list
 #: model_terms:ir.ui.view,arch_db:website.website_pages_view_search
 msgid "Website Pages"
-msgstr "Vebilehe lehed"
+msgstr "Veebilehe lehed"
 
 #. module: website
+#: model:ir.model.fields,field_description:website.field_base_automation__website_path
 #: model:ir.model.fields,field_description:website.field_ir_actions_server__website_path
 #: model:ir.model.fields,field_description:website.field_ir_cron__website_path
 msgid "Website Path"
@@ -10692,7 +10704,7 @@ msgstr "Veebilehe avaldatud mixin"
 #. module: website
 #: model:ir.model,name:website.model_website_searchable_mixin
 msgid "Website Searchable Mixin"
-msgstr ""
+msgstr "Veebilehe otsitav Mixin"
 
 #. module: website
 #. odoo-javascript
@@ -10728,6 +10740,7 @@ msgid "Website URL"
 msgstr "Veebilehe URL"
 
 #. module: website
+#: model:ir.model.fields,field_description:website.field_base_automation__website_url
 #: model:ir.model.fields,field_description:website.field_ir_actions_server__website_url
 #: model:ir.model.fields,field_description:website.field_ir_cron__website_url
 msgid "Website Url"
@@ -10991,6 +11004,14 @@ msgstr "Väli ei saa olla eemaldatud, kuna mudel ise nõuab seda. "
 #, python-format
 msgid "You can't remove the submit button of the form"
 msgstr "Vormi ära saatmise nuppu ei saa eemaldada."
+
+#. module: website
+#. odoo-python
+#: code:addons/website/models/website.py:0
+#, python-format
+msgid ""
+"You cannot delete default website %s. Try to change its settings instead"
+msgstr ""
 
 #. module: website
 #. odoo-python

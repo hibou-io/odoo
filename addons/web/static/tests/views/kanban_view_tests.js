@@ -1020,13 +1020,9 @@ QUnit.module("Views", (hooks) => {
     QUnit.test("kanban with kanban-tooltip template", async (assert) => {
         serviceRegistry.add("tooltip", tooltipService);
         let simulateTimeout;
-        let simulateInterval;
         patchWithCleanup(browser, {
             setTimeout: (fn) => {
                 simulateTimeout = fn;
-            },
-            setInterval: (fn) => {
-                simulateInterval = fn;
             },
         });
         await makeView({
@@ -1068,19 +1064,7 @@ QUnit.module("Views", (hooks) => {
             "yop"
         );
 
-        const recordRect = target.querySelector(".o_kanban_record").getBoundingClientRect();
-        const x = recordRect.right + 10;
-        const y = recordRect.bottom + 10;
-        await triggerEvent(target.querySelector(".o_kanban_record"), null, "mousemove", {
-            pageX: x,
-            layerX: x,
-            screenX: x,
-            pageY: y,
-            layerY: y,
-            screenY: y,
-        });
-        assert.containsOnce(target, ".o_popover_container .o_popover");
-        simulateInterval();
+        target.querySelector(".o_kanban_record").dispatchEvent(new Event("mouseleave"));
         await nextTick();
         assert.containsNone(target, ".o_popover_container .o_popover");
     });
@@ -1183,6 +1167,181 @@ QUnit.module("Views", (hooks) => {
             serverData,
             arch: `
                 <kanban limit="2">
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            async mockRPC(route, { method }) {
+                assert.step(method);
+            },
+        });
+
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "1-2");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "3+");
+        assert.verifySteps(["get_views", "web_search_read"]);
+
+        await click(target.querySelector(".o_pager_limit"));
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "1-2");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "4");
+        assert.verifySteps(["search_count"]);
+    });
+
+    QUnit.test("pager, ungrouped, with count limit reached, click next", async (assert) => {
+        patchWithCleanup(DynamicRecordList, { WEB_SEARCH_READ_COUNT_LIMIT: 3 });
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban limit="2">
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            async mockRPC(route, { method }) {
+                assert.step(method);
+            },
+        });
+
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "1-2");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "3+");
+        assert.verifySteps(["get_views", "web_search_read"]);
+
+        await click(target.querySelector(".o_pager_next"));
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "3-4");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "4");
+        assert.verifySteps(["web_search_read"]);
+    });
+
+    QUnit.test("pager, ungrouped, with count limit reached, click next (2)", async (assert) => {
+        patchWithCleanup(DynamicRecordList, { WEB_SEARCH_READ_COUNT_LIMIT: 3 });
+        serverData.models.partner.records.push({ id: 5, foo: "xxx" });
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban limit="2">
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            async mockRPC(route, { method }) {
+                assert.step(method);
+            },
+        });
+
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "1-2");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "3+");
+        assert.verifySteps(["get_views", "web_search_read"]);
+
+        await click(target.querySelector(".o_pager_next"));
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "3-4");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "4+");
+        assert.verifySteps(["web_search_read"]);
+
+        await click(target.querySelector(".o_pager_next"));
+        assert.containsOnce(target, ".o_kanban_record:not(.o_kanban_ghost)");
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "5-5");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "5");
+        assert.verifySteps(["web_search_read"]);
+    });
+
+    QUnit.test("pager, ungrouped, with count limit reached, click previous", async (assert) => {
+        patchWithCleanup(DynamicRecordList, { WEB_SEARCH_READ_COUNT_LIMIT: 3 });
+        serverData.models.partner.records.push({ id: 5, foo: "xxx" });
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban limit="2">
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            async mockRPC(route, { method }) {
+                assert.step(method);
+            },
+        });
+
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "1-2");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "3+");
+        assert.verifySteps(["get_views", "web_search_read"]);
+
+        await click(target.querySelector(".o_pager_previous"));
+        assert.containsOnce(target, ".o_kanban_record:not(.o_kanban_ghost)");
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "5-5");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "5");
+        assert.verifySteps(["search_count", "web_search_read"]);
+    });
+
+    QUnit.test("pager, ungrouped, with count limit reached, edit pager", async (assert) => {
+        patchWithCleanup(DynamicRecordList, { WEB_SEARCH_READ_COUNT_LIMIT: 3 });
+        serverData.models.partner.records.push({ id: 5, foo: "xxx" });
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban limit="2">
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            async mockRPC(route, { method }) {
+                assert.step(method);
+            },
+        });
+
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 2);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "1-2");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "3+");
+        assert.verifySteps(["get_views", "web_search_read"]);
+
+        await click(target, ".o_pager_value");
+        await editInput(target, "input.o_pager_value", "2-4");
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 3);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "2-4");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "4+");
+        assert.verifySteps(["web_search_read"]);
+
+        await click(target, ".o_pager_value");
+        await editInput(target, "input.o_pager_value", "2-14");
+        assert.containsN(target, ".o_kanban_record:not(.o_kanban_ghost)", 4);
+        assert.strictEqual(target.querySelector(".o_pager_value").innerText, "2-5");
+        assert.strictEqual(target.querySelector(".o_pager_limit").innerText, "5");
+        assert.verifySteps(["web_search_read"]);
+    });
+
+    QUnit.test("count_limit attrs set in arch", async (assert) => {
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban limit="2" count_limit="3">
                     <templates>
                         <t t-name="kanban-box">
                             <div><field name="foo"/></div>
@@ -1559,8 +1718,8 @@ QUnit.module("Views", (hooks) => {
             "web_search_read", // initial search_read (second column)
             "onchange", // quick create
             "name_create", // should perform a name_create to create the record
-            "read", // read the created record
             "onchange", // reopen the quick create automatically
+            "read", // read the created record
         ]);
     });
 
@@ -1636,9 +1795,74 @@ QUnit.module("Views", (hooks) => {
             "get_views", // form view in quick create
             "onchange", // quick create
             "create", // should perform a create to create the record
-            "read", // read the created record
             "onchange", // new quick create
+            "read", // read the created record
         ]);
+    });
+
+    QUnit.test("quick create record flickering", async (assert) => {
+        let def;
+        serverData.views["partner,some_view_ref,form"] =
+            "<form>" +
+            '<field name="foo"/>' +
+            '<field name="int_field"/>' +
+            '<field name="state" widget="priority"/>' +
+            "</form>";
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch:
+                '<kanban on_create="quick_create" quick_create_view="some_view_ref">' +
+                '<field name="bar"/>' +
+                '<templates><t t-name="kanban-box">' +
+                '<div><field name="foo"/></div>' +
+                "</t></templates></kanban>",
+            groupBy: ["bar"],
+            async mockRPC(route, args) {
+                if (args.method === "create") {
+                    assert.deepEqual(
+                        args.args[0],
+                        {
+                            foo: "new partner",
+                            int_field: 4,
+                            state: "def",
+                        },
+                        "should send the correct values"
+                    );
+                }
+                if (args.method === "onchange") {
+                    await def;
+                }
+            },
+        });
+
+        // click on 'Create' -> should open the quick create in the first column
+        await createRecord();
+
+        assert.containsN(target, ".o_kanban_group:first-child .o_kanban_record", 1);
+        assert.containsOnce(target, ".o_kanban_group:first-child .o_kanban_quick_create");
+        const quickCreate = target.querySelector(
+            ".o_kanban_group:first-child .o_kanban_quick_create"
+        );
+
+        assert.containsOnce(quickCreate, ".o_form_view.o_xxs_form_view");
+        assert.containsN(quickCreate, "input", 2);
+        assert.containsN(quickCreate, ".o_field_widget", 3, "should have rendered three widgets");
+
+        // fill the quick create and validate
+        await editQuickCreateInput("foo", "new partner");
+        await editQuickCreateInput("int_field", 4);
+        await click(quickCreate, ".o_field_widget[name=state] .o_priority_star:first-child");
+        def = makeDeferred();
+        await validateRecord();
+        assert.containsN(target, ".o_kanban_group:first-child .o_kanban_record", 1);
+        assert.containsOnce(target, ".o_kanban_group:first-child .o_kanban_quick_create");
+        def.resolve();
+        await nextTick();
+        assert.containsN(target, ".o_kanban_group:first-child .o_kanban_record", 2);
+        assert.containsOnce(target, ".o_kanban_group:first-child .o_kanban_quick_create");
     });
 
     QUnit.test(
@@ -1794,8 +2018,8 @@ QUnit.module("Views", (hooks) => {
             "web_search_read", // initial search_read (second column)
             "onchange", // quick create
             "name_create", // should perform a name_create to create the record
-            "read", // read the created record
             "onchange", // reopen the quick create automatically
+            "read", // read the created record
         ]);
     });
 
@@ -1862,8 +2086,8 @@ QUnit.module("Views", (hooks) => {
             "get_views", // form view in quick create
             "onchange", // quick create
             "create", // should perform a create to create the record
-            "read", // read the created record
             "onchange", // reopen the quick create automatically
+            "read", // read the created record
         ]);
     });
 
@@ -2058,7 +2282,7 @@ QUnit.module("Views", (hooks) => {
         await editQuickCreateInput("foo", "new partner");
         assert.verifySteps(["onchange"]);
         await validateRecord();
-        assert.verifySteps(["create", "read", "onchange"]);
+        assert.verifySteps(["create", "onchange", "read"]);
     });
 
     QUnit.test("quick create record and change state in grouped mode", async (assert) => {
@@ -5309,13 +5533,15 @@ QUnit.module("Views", (hooks) => {
             type: "kanban",
             resModel: "partner",
             serverData,
-            arch:
-                "<kanban>" +
-                '<field name="product_id"/>' +
-                '<templates><t t-name="kanban-box">' +
-                '<div><field name="foo"/></div>' +
-                "</t></templates>" +
-                "</kanban>",
+            arch: `
+                <kanban>
+                    <field name="product_id"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
             groupBy: ["product_id"],
             async mockRPC(route, args, performRPC) {
                 if (args.method === "web_read_group") {
@@ -5323,6 +5549,9 @@ QUnit.module("Views", (hooks) => {
                     result.groups[2].__fold = true;
                     result.groups[8].__fold = true;
                     return result;
+                }
+                if (args.method === "web_search_read") {
+                    assert.step(`web_search_read domain: ${args.kwargs.domain}`);
                 }
             },
         });
@@ -5341,6 +5570,92 @@ QUnit.module("Views", (hooks) => {
         // we look if we have the right count of folded/unfolded column
         assert.containsN(target, ".o_kanban_group:not(.o_column_folded)", 10);
         assert.containsN(target, ".o_kanban_group.o_column_folded", 4);
+
+        assert.verifySteps([
+            "web_search_read domain: product_id,=,3",
+            "web_search_read domain: product_id,=,5",
+            "web_search_read domain: product_id,=,9",
+            "web_search_read domain: product_id,=,10",
+            "web_search_read domain: product_id,=,11",
+            "web_search_read domain: product_id,=,12",
+            "web_search_read domain: product_id,=,13",
+            "web_search_read domain: product_id,=,15",
+            "web_search_read domain: product_id,=,16",
+            "web_search_read domain: product_id,=,17",
+        ]);
+    });
+
+    QUnit.test("auto fold group when reach the limit (2)", async (assert) => {
+        // this test is similar to the previous one, except that in this one,
+        // read_group sets the __fold key on each group, even those that are
+        // unfolded, which could make subtle differences in the code
+        for (let i = 0; i < 12; i++) {
+            serverData.models.product.records.push({
+                id: 8 + i,
+                name: "column",
+            });
+            serverData.models.partner.records.push({
+                id: 20 + i,
+                foo: "dumb entry",
+                product_id: 8 + i,
+            });
+        }
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban>
+                    <field name="product_id"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            groupBy: ["product_id"],
+            async mockRPC(route, args, performRPC) {
+                if (args.method === "web_read_group") {
+                    const result = await performRPC(route, args);
+                    for (let i = 0; i < result.groups.length; i++) {
+                        result.groups[i].__fold = i == 2 || i == 8;
+                    }
+                    return result;
+                }
+                if (args.method === "web_search_read") {
+                    assert.step(`web_search_read domain: ${args.kwargs.domain}`);
+                }
+            },
+        });
+
+        // we look if column are folded/unfolded according to what is expected
+        assert.doesNotHaveClass(getColumn(1), "o_column_folded");
+        assert.doesNotHaveClass(getColumn(3), "o_column_folded");
+        assert.doesNotHaveClass(getColumn(9), "o_column_folded");
+        assert.hasClass(getColumn(2), "o_column_folded");
+        assert.hasClass(getColumn(8), "o_column_folded");
+
+        // we look if columns are actually folded after we reached the limit
+        assert.hasClass(getColumn(12), "o_column_folded");
+        assert.hasClass(getColumn(13), "o_column_folded");
+
+        // we look if we have the right count of folded/unfolded column
+        assert.containsN(target, ".o_kanban_group:not(.o_column_folded)", 10);
+        assert.containsN(target, ".o_kanban_group.o_column_folded", 4);
+
+        assert.verifySteps([
+            "web_search_read domain: product_id,=,3",
+            "web_search_read domain: product_id,=,5",
+            "web_search_read domain: product_id,=,9",
+            "web_search_read domain: product_id,=,10",
+            "web_search_read domain: product_id,=,11",
+            "web_search_read domain: product_id,=,12",
+            "web_search_read domain: product_id,=,13",
+            "web_search_read domain: product_id,=,15",
+            "web_search_read domain: product_id,=,16",
+            "web_search_read domain: product_id,=,17",
+        ]);
     });
 
     QUnit.test(
@@ -7317,6 +7632,54 @@ QUnit.module("Views", (hooks) => {
             );
         }
     );
+
+    QUnit.test("kanban with sample data: do an on_create action", async (assert) => {
+        serverData.models.partner.records = [];
+        serverData.views["partner,some_view_ref,form"] = `<form><field name="foo"/></form>`;
+
+        await makeView({
+            arch: `
+                <kanban sample="1" on_create="myCreateAction">
+                    <templates>
+                        <div t-name="kanban-box">
+                            <field name="foo"/>
+                        </div>
+                    </templates>
+                </kanban>`,
+            serverData,
+            resModel: "partner",
+            type: "kanban",
+            mockRPC: async (route, args) => {
+                if (route === "/web/action/load" && args.action_id === "myCreateAction") {
+                    return {
+                        type: "ir.actions.act_window",
+                        name: "Archive Action",
+                        res_model: "partner",
+                        view_mode: "form",
+                        target: "new",
+                        views: [[false, "form"]],
+                    };
+                }
+            },
+        });
+
+        assert.hasClass(target.querySelector(".o_content"), "o_view_sample_data");
+        assert.containsN(
+            target,
+            ".o_kanban_record:not(.o_kanban_ghost)",
+            10,
+            "there should be 10 sample records"
+        );
+        assert.containsOnce(target, ".o_view_nocontent");
+
+        await createRecord(target);
+        assert.containsOnce(target, ".modal");
+
+        await click(target, ".modal .o_cp_buttons .o_form_button_save");
+        assert.doesNotHaveClass(target.querySelector(".o_content"), "o_view_sample_data");
+        assert.containsOnce(target, ".o_kanban_record:not(.o_kanban_ghost)");
+        assert.containsNone(target, ".o_view_nocontent");
+    });
 
     QUnit.test("bounce create button when no data and click on empty area", async (assert) => {
         const kanban = await makeView({
@@ -9419,6 +9782,34 @@ QUnit.module("Views", (hooks) => {
 
         assert.strictEqual(document.activeElement, getCard(0), "the first card should be focussed");
     });
+
+    QUnit.test(
+        "keyboard navigation on kanban basic rendering does not crash when the focus is inside a card",
+        async (assert) => {
+            await makeView({
+                type: "kanban",
+                resModel: "partner",
+                serverData,
+                arch:
+                    '<kanban><templates><t t-name="kanban-box">' +
+                    "<div>" +
+                    '<t t-esc="record.foo.value"/>' +
+                    '<field name="foo"/>' +
+                    '<a href="#" class="o-this-is-focussable">ho! this is focussable</a>' +
+                    "</div>" +
+                    "</t></templates></kanban>",
+            });
+
+            getCard(0).querySelector(".o-this-is-focussable").focus();
+            triggerHotkey("ArrowDown");
+
+            assert.strictEqual(
+                document.activeElement,
+                getCard(1),
+                "the second card should be focussed"
+            );
+        }
+    );
 
     QUnit.test("keyboard navigation on kanban grouped rendering", async (assert) => {
         await makeView({

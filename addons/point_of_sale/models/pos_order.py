@@ -195,7 +195,7 @@ class PosOrder(models.Model):
             'quantity': order_line.qty if self.amount_total >= 0 else -order_line.qty,
             'discount': order_line.discount,
             'price_unit': order_line.price_unit,
-            'name': order_line.full_product_name or order_line.product_id.display_name,
+            'name': order_line.product_id.display_name or order_line.full_product_name,
             'tax_ids': [(6, 0, order_line.tax_ids_after_fiscal_position.ids)],
             'product_uom_id': order_line.product_uom_id.id,
         }
@@ -227,6 +227,10 @@ class PosOrder(models.Model):
             .sorted(lambda x: x.date)
         price_unit = product.with_company(self.company_id)._compute_average_price(0, quantity, moves)
         return price_unit
+
+    def _prepare_order_line(self, order_line):
+        # This method is used in pos_restaurant for orders synchronization between different POSes
+        return order_line
 
     name = fields.Char(string='Order Ref', required=True, readonly=True, copy=False, default='/')
     date_order = fields.Datetime(string='Date', readonly=True, index=True, default=fields.Datetime.now)
@@ -1041,6 +1045,14 @@ class PosOrder(models.Model):
         """This function is here to be overriden"""
         return []
 
+    def get_table_draft_orders(self, table_id):
+        """This function is here to be overriden"""
+        return []
+
+    def _add_activated_coupon_to_draft_orders(self, table_orders):
+        """This function is here to be overriden"""
+        return table_orders
+
     def export_for_ui(self):
         """ Returns a list of dict with each item having similar signature as the return of
             `export_as_JSON` of models.Order. This is useful for back-and-forth communication
@@ -1167,7 +1179,6 @@ class PosOrderLine(models.Model):
         return {
             'price_subtotal_incl': taxes['total_included'],
             'price_subtotal': taxes['total_excluded'],
-            'taxes': taxes['taxes']
         }
 
     @api.onchange('product_id')

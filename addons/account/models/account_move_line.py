@@ -203,6 +203,7 @@ class AccountMoveLine(models.Model):
         string="Tags",
         comodel_name='account.account.tag',
         ondelete='restrict',
+        context={'active_test': False},
         tracking=True,
         help="Tags assigned to this line by the tax creating it, if any. It determines its impact on financial reports.",
     )
@@ -681,7 +682,7 @@ class AccountMoveLine(models.Model):
         for record in self:
             record.cumulated_balance = result[record.id]
 
-    @api.depends('debit', 'credit', 'amount_currency', 'account_id', 'currency_id', 'move_id.state', 'company_id',
+    @api.depends('debit', 'credit', 'amount_currency', 'account_id', 'currency_id', 'company_id',
                  'matched_debit_ids', 'matched_credit_ids')
     def _compute_amount_residual(self):
         """ Computes the residual amount of a move line from a reconcilable account in the company currency and the line's currency.
@@ -745,7 +746,6 @@ class AccountMoveLine(models.Model):
             line.reconciled = (
                 comp_curr.is_zero(line.amount_residual)
                 and foreign_curr.is_zero(line.amount_residual_currency)
-                and (line.matched_debit_ids or line.matched_credit_ids)
             )
 
     @api.depends('move_id.move_type', 'tax_ids', 'tax_repartition_line_id', 'debit', 'credit', 'tax_tag_ids', 'is_refund')
@@ -787,6 +787,8 @@ class AccountMoveLine(models.Model):
 
                 audit_str += separator if audit_str else ''
                 audit_str += tag_name + ': ' + formatLang(self.env, tag_amount, currency_obj=currency)
+
+            record.tax_audit = audit_str
 
     @api.depends('product_id')
     def _compute_product_uom_id(self):
@@ -1109,6 +1111,12 @@ class AccountMoveLine(models.Model):
         for line in self:
             if line.currency_id == line.company_id.currency_id and line.balance != line.amount_currency:
                 line.balance = line.amount_currency
+            elif (
+                line.currency_id != line.company_id.currency_id
+                and not line.move_id.is_invoice(True)
+                and not self.env.is_protected(self._fields['balance'], line)
+            ):
+                line.balance = line.company_id.currency_id.round(line.amount_currency / line.currency_rate)
 
     @api.onchange('debit')
     def _inverse_debit(self):
@@ -1135,6 +1143,7 @@ class AccountMoveLine(models.Model):
 
     @api.onchange('account_id')
     def _inverse_account_id(self):
+        self._inverse_analytic_distribution()
         self._conditional_add_to_compute('tax_ids', lambda line: (
             line.account_id.tax_ids
             and not line.product_id.taxes_id.filtered(lambda tax: tax.company_id == line.company_id)
@@ -1327,7 +1336,7 @@ class AccountMoveLine(models.Model):
 
     @contextmanager
     def _sync_invoice(self, container):
-        if container['records'].env.context.get('skip_sync_invoice'):
+        if container['records'].env.context.get('skip_invoice_line_sync'):
             yield
             return  # avoid infinite recursion
 
@@ -1340,7 +1349,7 @@ class AccountMoveLine(models.Model):
                     'price_subtotal': line.currency_id.round(line.price_subtotal),
                     'move_type': line.move_id.move_type,
                 } for line in container['records'].with_context(
-                    skip_sync_invoice=True,
+                    skip_invoice_line_sync=True,
                 ).filtered(lambda l: l.move_id.is_invoice(True))
             }
 
@@ -1379,7 +1388,7 @@ class AccountMoveLine(models.Model):
     def create(self, vals_list):
         moves = self.env['account.move'].browse({vals['move_id'] for vals in vals_list})
         container = {'records': self}
-        move_container = {'records': moves, 'self': self}
+        move_container = {'records': moves}
         with moves._check_balanced(move_container),\
              moves._sync_dynamic_lines(move_container),\
              self._sync_invoice(container):
@@ -1428,7 +1437,7 @@ class AccountMoveLine(models.Model):
             if any(self.env['account.move']._field_will_change(line, vals, field_name) for field_name in protected_fields['reconciliation']):
                 line._check_reconciliation()
 
-        move_container = {'records': self.move_id, 'self': self, 'line_to_write': line_to_write}
+        move_container = {'records': self.move_id}
         with self.move_id._check_balanced(move_container),\
              self.move_id._sync_dynamic_lines(move_container),\
              self._sync_invoice({'records': self}):
@@ -1514,7 +1523,7 @@ class AccountMoveLine(models.Model):
         # Check the tax lock date.
         self._check_tax_lock_date()
 
-        move_container = {'records': self.move_id, 'self': self}
+        move_container = {'records': self.move_id}
         with self.move_id._check_balanced(move_container),\
              self.move_id._sync_dynamic_lines(move_container):
             res = super().unlink()
@@ -1566,7 +1575,8 @@ class AccountMoveLine(models.Model):
             SELECT account.root_id
               FROM account_account account,
                    LATERAL ({query_str}) line
-        """, query_param)
+             WHERE account.company_id IN %s
+        """, query_param + [tuple(self.env.companies.ids)])
         return {
             root.id: {'id': root.id, 'display_name': root.display_name}
             for root in self.env['account.root'].browse(id for [id] in self.env.cr.fetchall())
@@ -1704,6 +1714,17 @@ class AccountMoveLine(models.Model):
             credit_rate = get_accounting_rate(credit_vals)
             recon_debit_amount = remaining_debit_amount
             recon_credit_amount = -remaining_credit_amount
+
+        # Check if there is something left to reconcile. Move to the next loop iteration if not.
+        skip_reconciliation = False
+        if recon_currency.is_zero(recon_debit_amount):
+            res['debit_vals'] = None
+            skip_reconciliation = True
+        if recon_currency.is_zero(recon_credit_amount):
+            res['credit_vals'] = None
+            skip_reconciliation = True
+        if skip_reconciliation:
+            return res
 
         # ==== Match both lines together and compute amounts to reconcile ====
 
@@ -1851,9 +1872,9 @@ class AccountMoveLine(models.Model):
         credit_vals['amount_residual'] = remaining_credit_amount
         credit_vals['amount_residual_currency'] = remaining_credit_amount_curr
 
-        if recon_currency.is_zero(recon_debit_amount) or debit_fully_matched:
+        if debit_fully_matched:
             res['debit_vals'] = None
-        if recon_currency.is_zero(recon_credit_amount) or credit_fully_matched:
+        if credit_fully_matched:
             res['credit_vals'] = None
         return res
 
@@ -1863,9 +1884,8 @@ class AccountMoveLine(models.Model):
         Note: The order of records in self is important because the journal items will be reconciled using this order.
         :return: a tuple of 1) list of vals for partial reconciliation creation, 2) the list of vals for the exchange difference entries to be created
         '''
-        debit_vals_list = iter([x for x in vals_list if x['balance'] > 0.0 or x['amount_currency'] > 0.0 and not x['reconciled']])
-        credit_vals_list = iter([x for x in vals_list if x['balance'] < 0.0 or x['amount_currency'] < 0.0 and not x['reconciled']])
-        void_vals_list = iter([x for x in vals_list if not x['balance'] and not x['amount_currency'] and not x['reconciled']])
+        debit_vals_list = iter([x for x in vals_list if x['balance'] > 0.0 or x['amount_currency'] > 0.0])
+        credit_vals_list = iter([x for x in vals_list if x['balance'] < 0.0 or x['amount_currency'] < 0.0])
         debit_vals = None
         credit_vals = None
 
@@ -1881,13 +1901,13 @@ class AccountMoveLine(models.Model):
 
             # Move to the next available debit line.
             if not debit_vals:
-                debit_vals = next(debit_vals_list, None) or next(void_vals_list, None)
+                debit_vals = next(debit_vals_list, None)
                 if not debit_vals:
                     break
 
             # Move to the next available credit line.
             if not credit_vals:
-                credit_vals = next(void_vals_list, None) or next(credit_vals_list, None)
+                credit_vals = next(credit_vals_list, None)
                 if not credit_vals:
                     break
 
@@ -1919,7 +1939,6 @@ class AccountMoveLine(models.Model):
                 'company': line.company_id,
                 'currency': line.currency_id,
                 'date': line.date,
-                'reconciled': line.reconciled,
             }
             for line in self
         ])
@@ -2387,11 +2406,18 @@ class AccountMoveLine(models.Model):
                         results['exchange_partials'] += exchange_diff_partials
 
             # ==== Create the full reconcile ====
-            results['full_reconcile'] = self.env['account.full.reconcile'].create({
-                'exchange_move_id': exchange_move and exchange_move.id,
-                'partial_reconcile_ids': [(6, 0, involved_partials.ids)],
-                'reconciled_line_ids': [(6, 0, involved_lines.ids)],
-            })
+            results['full_reconcile'] = self.env['account.full.reconcile'] \
+                .with_context(
+                    skip_invoice_sync=True,
+                    skip_invoice_line_sync=True,
+                    skip_account_move_synchronization=True,
+                    check_move_validity=False,
+                ) \
+                .create({
+                    'exchange_move_id': exchange_move and exchange_move.id,
+                    'partial_reconcile_ids': [Command.set(involved_partials.ids)],
+                    'reconciled_line_ids': [Command.set(involved_lines.ids)],
+                })
 
             # === Cash basis rounding autoreconciliation ===
             # In case a cash basis rounding difference line got created for the transition account, we reconcile it with the corresponding lines
@@ -2493,7 +2519,7 @@ class AccountMoveLine(models.Model):
 
     def _reconciled_lines(self):
         ids = []
-        for aml in self.filtered('account_id.reconcile'):
+        for aml in self.filtered('reconciled'):
             ids.extend([r.debit_move_id.id for r in aml.matched_debit_ids] if aml.credit > 0 else [r.credit_move_id.id for r in aml.matched_credit_ids])
             ids.append(aml.id)
         return ids

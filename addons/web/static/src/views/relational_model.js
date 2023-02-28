@@ -357,7 +357,7 @@ class DataPoint {
                 return value ? deserializeDateTime(value) : false;
             }
             case "html": {
-                return markup(value);
+                return markup(value || "");
             }
             case "selection": {
                 if (value === false) {
@@ -725,7 +725,9 @@ export class Record extends DataPoint {
                     : false;
             } else if (fieldType === "reference") {
                 const value = changes[fieldName];
-                changes[fieldName] = value ? `${value.resModel},${value.resId}` : false;
+                changes[fieldName] = value && value.resModel && value.resId
+                    ? `${value.resModel},${value.resId}`
+                    : (value || false);
             }
         }
 
@@ -1789,22 +1791,15 @@ class DynamicList extends DataPoint {
 DynamicList.DEFAULT_LIMIT = 80;
 
 export class DynamicRecordList extends DynamicList {
-    setup(params) {
+    setup(params, state) {
         super.setup(...arguments);
 
         /** @type {Record[]} */
         this.records = [];
         this.data = params.data;
-        this.countLimit = params.countLimit || this.constructor.WEB_SEARCH_READ_COUNT_LIMIT;
+        this.countLimit =
+            state.countLimit || params.countLimit || this.constructor.WEB_SEARCH_READ_COUNT_LIMIT;
         this.hasLimitedCount = false;
-    }
-
-    // -------------------------------------------------------------------------
-    // Getters
-    // -------------------------------------------------------------------------
-
-    get quickCreateRecord() {
-        return this.records.find((r) => r.isInQuickCreation);
     }
 
     // -------------------------------------------------------------------------
@@ -1849,13 +1844,6 @@ export class DynamicRecordList extends DynamicList {
         return record;
     }
 
-    async cancelQuickCreate(force = false) {
-        const record = this.quickCreateRecord;
-        if (record && (force || !record.isDirty)) {
-            this.removeRecord(record);
-        }
-    }
-
     /**
      * @param {Object} [params={}]
      * @param {boolean} [atFirstPosition]
@@ -1882,8 +1870,11 @@ export class DynamicRecordList extends DynamicList {
         await this.model.keepLast.add(this.model.mutex.exec(() => newRecord.load()));
         this.editedRecord = newRecord;
         this.onRemoveNewRecord = await this.onCreateRecord(newRecord);
-
-        return this.addRecord(newRecord, atFirstPosition ? 0 : this.count);
+        if (params.isInQuickCreation) {
+            return newRecord;
+        } else {
+            return this.addRecord(newRecord, atFirstPosition ? 0 : this.count);
+        }
     }
 
     /**
@@ -1932,6 +1923,7 @@ export class DynamicRecordList extends DynamicList {
         return {
             ...super.exportState(),
             offset: this.offset,
+            countLimit: this.countLimit,
         };
     }
 
@@ -1948,6 +1940,7 @@ export class DynamicRecordList extends DynamicList {
         this.countLimit = Number.MAX_SAFE_INTEGER;
         this.hasLimitedCount = false;
         this.model.notify();
+        return this.count;
     }
 
     async load(params = {}) {
@@ -1965,10 +1958,6 @@ export class DynamicRecordList extends DynamicList {
 
     async quickCreate(activeFields, context) {
         await this.model.mutex.getUnlockedDef();
-        const record = this.quickCreateRecord;
-        if (record) {
-            this.removeRecord(record);
-        }
         const rawContext = {
             parent: this.rawContext,
             make: () => makeContext([context, {}]),
@@ -2026,6 +2015,9 @@ export class DynamicRecordList extends DynamicList {
      * @returns {Promise<Record[]>}
      */
     async _loadRecords() {
+        if (this.countLimit < this.offset + this.limit) {
+            this.countLimit = this.offset + this.limit;
+        }
         const kwargs = {
             limit: this.limit,
             offset: this.offset,
@@ -2067,6 +2059,7 @@ export class DynamicRecordList extends DynamicList {
             this.hasLimitedCount = true;
             this.count = length - 1;
         } else {
+            this.hasLimitedCount = false;
             this.count = length;
         }
 
@@ -2278,7 +2271,11 @@ export class DynamicGroupList extends DynamicList {
         if (isFolded) {
             await group.toggle();
         }
-        await group.quickCreate(this.quickCreateInfo.activeFields, this.context);
+        group.quickCreateRecord = await group.quickCreate(
+            this.quickCreateInfo.activeFields,
+            this.context
+        );
+        this.model.notify();
     }
 
     /**
@@ -2449,7 +2446,8 @@ export class DynamicGroupList extends DynamicList {
                     }
                     case "__fold": {
                         // optional
-                        groupParams.isFolded = value;
+                        groupParams.isFolded =
+                            openGroups >= this.constructor.DEFAULT_LOAD_LIMIT || value;
                         if (!value) {
                             openGroups++;
                         }
@@ -2704,6 +2702,13 @@ export class Group extends DataPoint {
             [`default_${this.groupByField.name}`]: this.getServerValue(),
         };
         return this.list.quickCreate(activeFields, ctx);
+    }
+
+    async cancelQuickCreate(force = false) {
+        if (this.quickCreateRecord && (force || !this.quickCreateRecord.isDirty)) {
+            this.quickCreateRecord = null;
+            this.model.notify();
+        }
     }
 
     /**
@@ -3426,10 +3431,12 @@ export class RelationalModel extends Model {
                 this.rootParams.mode = params.mode;
             }
         } else {
-            this.rootParams.openGroupsByDefault = params.openGroupsByDefault || false;
-            this.rootParams.limit = params.limit;
-            this.rootParams.expand = params.expand;
-            this.rootParams.groupsLimit = params.groupsLimit;
+            const { limit, countLimit, groupsLimit, openGroupsByDefault, expand } = params;
+            this.rootParams.openGroupsByDefault = openGroupsByDefault || false;
+            this.rootParams.limit = limit;
+            this.rootParams.countLimit = countLimit && Math.max(limit, countLimit);
+            this.rootParams.groupsLimit = groupsLimit;
+            this.rootParams.expand = expand;
         }
         this.initialValues = params.initialValues;
 

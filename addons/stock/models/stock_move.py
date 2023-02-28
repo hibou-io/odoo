@@ -663,6 +663,8 @@ Please change the quantity done or the rounding precision of your unit of measur
         # messages according to the state of the stock.move records.
         receipt_moves_to_reassign = self.env['stock.move']
         move_to_recompute_state = self.env['stock.move']
+        if 'quantity_done' in vals and any(move.state == 'cancel' for move in self):
+            raise UserError(_('You cannot change a cancelled stock move, create a new line instead.'))
         if 'product_uom' in vals and any(move.state == 'done' for move in self):
             raise UserError(_('You cannot change the UoM for a stock move that has been set to \'Done\'.'))
         if 'product_uom_qty' in vals:
@@ -961,7 +963,7 @@ Please change the quantity done or the rounding precision of your unit of measur
             for pos_move in moves_by_neg_key.get(neg_key(neg_move), []):
                 currency_prec = pos_move.product_id.currency_id.decimal_places
                 rounding = min(currency_prec, price_unit_prec)
-                if float_compare(pos_move.price_unit, neg_move.price_unit, precision_rounding=rounding) == 0:
+                if float_compare(pos_move.price_unit, neg_move.price_unit, precision_digits=rounding) == 0:
                     new_total_value = pos_move.product_qty * pos_move.price_unit + neg_move.product_qty * neg_move.price_unit
                     # If quantity can be fully absorbed by a single move, update its quantity and remove the negative move
                     if float_compare(pos_move.product_uom_qty, abs(neg_move.product_uom_qty), precision_rounding=pos_move.product_uom.rounding) >= 0:
@@ -1086,7 +1088,7 @@ Please change the quantity done or the rounding precision of your unit of measur
             if breaking_char in (move_line.lot_name or ''):
                 split_lines = move_line.lot_name.split(breaking_char)
                 split_lines = list(filter(None, split_lines))
-                move_line.lot_name = split_lines[0]
+                move_line.lot_name = split_lines[0] if split_lines else ''
                 move_lines_commands = self._generate_serial_move_line_commands(
                     split_lines[1:],
                     origin_move_line=move_line,
@@ -1380,9 +1382,12 @@ Please change the quantity done or the rounding precision of your unit of measur
             elif self.rule_id.group_propagation_option == 'none':
                 group_id = False
         product_id = self.product_id.with_context(lang=self._get_lang())
+        date = self._get_mto_procurement_date()
+        if self.location_id.warehouse_id and self.location_id.warehouse_id.lot_stock_id.parent_path in self.location_id.parent_path:
+            date = self.product_id._get_date_with_security_lead_days(self.date, self.location_id)
         return {
             'product_description_variants': self.description_picking and self.description_picking.replace(product_id._get_description(self.picking_type_id), ''),
-            'date_planned': self._get_mto_procurement_date(),
+            'date_planned': date,
             'date_deadline': self.date_deadline,
             'move_dest_ids': self,
             'group_id': group_id,
@@ -1476,6 +1481,7 @@ Please change the quantity done or the rounding precision of your unit of measur
             taken_quantity = 0
 
         # Find a candidate move line to update or create a new one.
+        serial_move_line_vals = []
         for reserved_quant, quantity in quants:
             to_update = next((line for line in self.move_line_ids if line._reservation_is_updatable(quantity, reserved_quant)), False)
             if to_update:
@@ -1486,9 +1492,11 @@ Please change the quantity done or the rounding precision of your unit of measur
                 to_update.with_context(bypass_reservation_update=True).reserved_uom_qty += uom_quantity
             else:
                 if self.product_id.tracking == 'serial':
-                    self.env['stock.move.line'].create([self._prepare_move_line_vals(quantity=1, reserved_quant=reserved_quant) for i in range(int(quantity))])
+                    # Move lines with serial tracked product_id cannot be to-update candidates. Delay the creation to speed up candidates search + create.
+                    serial_move_line_vals.extend([self._prepare_move_line_vals(quantity=1, reserved_quant=reserved_quant) for i in range(int(quantity))])
                 else:
                     self.env['stock.move.line'].create(self._prepare_move_line_vals(quantity=quantity, reserved_quant=reserved_quant))
+        self.env['stock.move.line'].create(serial_move_line_vals)
         return taken_quantity
 
     def _should_bypass_reservation(self, forced_location=False):
@@ -1677,9 +1685,8 @@ Please change the quantity done or the rounding precision of your unit of measur
         self.env['stock.move.line'].create(move_line_vals_list)
         StockMove.browse(partially_available_moves_ids).write({'state': 'partially_available'})
         StockMove.browse(assigned_moves_ids).write({'state': 'assigned'})
-        if self.env.context.get('bypass_entire_pack'):
-            return
-        self.mapped('picking_id')._check_entire_pack()
+        if not self.env.context.get('bypass_entire_pack'):
+            self.mapped('picking_id')._check_entire_pack()
         StockMove.browse(moves_to_redirect).move_line_ids._apply_putaway_strategy()
 
     def _action_cancel(self):
@@ -2230,3 +2237,16 @@ Please change the quantity done or the rounding precision of your unit of measur
             'views': [[False, "form"]],
             'res_id': self.id,
         }
+
+    def _get_moves_orig(self, moves=False):
+        self.ensure_one()
+        if not moves:
+            moves = self.env['stock.move']
+        if self in moves:
+            return self.env['stock.move']
+        if self.picking_type_id.code == 'incoming':
+            return self.env['stock.move']
+        moves |= self
+        for move in self.move_orig_ids:
+            moves |= move._get_moves_orig(moves)
+        return moves
