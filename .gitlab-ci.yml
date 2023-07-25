@@ -17,7 +17,7 @@ variables:
   ENTERPRISE_PROJECT_ID: 10004745
 
 before_script:
-  - RELEASE=$(echo $CI_COMMIT_REF_SLUG | sed "s/^\([[:digit:]][[:digit:]]\)-\([[:digit:]]\)/\1\.\2/g" | sed "s/-hibou//g")
+  - RELEASE=$(echo $CI_COMMIT_REF_SLUG | sed "s/^\([[:digit:]]\)-\([[:digit:]]\)/\1\.\2/g" | sed "s/-hibou//g")
   - RELEASE_DATE="$(echo $RELEASE | sed "s/-test//g")-$(date '+%Y-%m-%d')"
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
 
