@@ -447,7 +447,7 @@ export class WebsitePreview extends Component {
     _cleanIframeFallback() {
         // Remove autoplay in all iframes urls so videos are not
         // playing in the background
-        const iframesEl = this.iframefallback.el.contentDocument.querySelectorAll("iframe");
+        const iframesEl = this.iframefallback.el.contentDocument.querySelectorAll('iframe[src]:not([src=""])');
         for (const iframeEl of iframesEl) {
             const url = new URL(iframeEl.src);
             url.searchParams.delete('autoplay');
@@ -471,7 +471,7 @@ export class WebsitePreview extends Component {
         }
     }
     _onPageHide() {
-        this.lastHiddenPageURL = this.iframe.el.contentWindow.location.href;
+        this.lastHiddenPageURL = this.iframe.el && this.iframe.el.contentWindow.location.href;
         // Normally, at this point, the websiteRootInstance is already set to
         // `undefined`, as we want to do that as early as possible to prevent
         // the editor to be in an unstable state. But some events not managed

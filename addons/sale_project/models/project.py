@@ -300,8 +300,18 @@ class Project(models.Model):
         } for sol_read in sols.with_context(with_price_unit=True).read(['display_name', 'product_uom_qty', 'qty_delivered', 'qty_invoiced', 'product_uom'])]
 
     def _get_sale_items_domain(self, additional_domain=None):
-        sale_orders = self._get_sale_orders()
-        domain = [('order_id', 'in', sale_orders.ids), ('is_downpayment', '=', False), ('state', 'in', ['sale', 'done']), ('display_type', '=', False)]
+        sale_items = self._get_sale_order_items()
+        domain = [
+            ('order_id', 'in', sale_items.order_id.ids),
+            ('is_downpayment', '=', False),
+            ('state', 'in', ['sale', 'done']),
+            ('display_type', '=', False),
+            '|',
+                '|',
+                    ('project_id', 'in', self.ids),
+                    ('project_id', '=', False),
+                ('id', 'in', sale_items.ids),
+        ]
         if additional_domain:
             domain = expression.AND([domain, additional_domain])
         return domain
@@ -505,7 +515,15 @@ class Project(models.Model):
 
     def _get_profitability_items(self, with_action=True):
         profitability_items = super()._get_profitability_items(with_action)
-        domain = [('order_id', 'in', self.sudo()._get_sale_orders().ids)]
+        sale_items = self.sudo()._get_sale_order_items()
+        domain = [
+            ('order_id', 'in', sale_items.order_id.ids),
+            '|',
+                '|',
+                    ('project_id', 'in', self.ids),
+                    ('project_id', '=', False),
+                ('id', 'in', sale_items.ids),
+        ]
         revenue_items_from_sol = self._get_revenues_items_from_sol(
             domain,
             with_action,
@@ -594,7 +612,12 @@ class ProjectTask(models.Model):
         'sale.order.line', 'Sales Order Item',
         copy=True, tracking=True, index='btree_not_null', recursive=True,
         compute='_compute_sale_line', store=True, readonly=False,
-        domain="[('company_id', '=', company_id), ('is_service', '=', True), ('order_partner_id', '=?', partner_id), ('is_expense', '=', False), ('state', 'in', ['sale', 'done'])]",
+        domain="""[
+            ('company_id', '=', company_id),
+            '|', ('order_partner_id', 'child_of', partner_id if partner_id else []),
+                 ('order_partner_id', '=?', partner_id),
+            ('is_service', '=', True), ('is_expense', '=', False), ('state', 'in', ['sale', 'done'])
+        ]""",
         help="Sales Order Item to which the time spent on this task will be added in order to be invoiced to your customer.\n"
              "By default the sales order item set on the project will be selected. In the absence of one, the last prepaid sales order item that has time remaining will be used.\n"
              "Remove the sales order item in order to make this task non billable. You can also change or remove the sales order item of each timesheet entry individually.")

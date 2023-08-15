@@ -91,6 +91,10 @@ class AccountEdiXmlUBLBIS3(models.AbstractModel):
                 })
             if partner.country_id.code == "LU" and 'l10n_lu_peppol_identifier' in partner._fields and partner.l10n_lu_peppol_identifier:
                 vals['company_id'] = partner.l10n_lu_peppol_identifier
+            if partner.country_id.code == 'DK':
+                # DK-R-014: For Danish Suppliers it is mandatory to specify schemeID as "0184" (DK CVR-number) when
+                # PartyLegalEntity/CompanyID is used for AccountingSupplierParty
+                vals['company_id_attrs'] = {'schemeID': '0184'}
 
         return vals_list
 
@@ -351,7 +355,7 @@ class AccountEdiXmlUBLBIS3(models.AbstractModel):
             ) if intracom_delivery else None,
         }
 
-        for line in invoice.invoice_line_ids:
+        for line in invoice.invoice_line_ids.filtered(lambda x: x.display_type not in ('line_note', 'line_section')):
             if len(line.tax_ids.flatten_taxes_hierarchy().filtered(lambda t: t.amount_type != 'fixed')) != 1:
                 # [UBL-SR-48]-Invoice lines shall have one and only one classified tax category.
                 # /!\ exception: possible to have any number of ecotaxes (fixed tax) with a regular percentage tax

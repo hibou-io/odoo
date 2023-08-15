@@ -1706,10 +1706,14 @@ class _String(Field):
         if value is None:
             return False
         if callable(self.translate) and record.env.context.get('edit_translations'):
-            value_en = record.with_context(edit_translations=None, lang='en_US')[self.name]
-            terms_en = self.get_trans_terms(value_en)
             terms = self.get_trans_terms(value)
-            term_to_state = {term: "translated" if term_en != term else "to_translate" for term, term_en in zip(terms, terms_en)}
+            base_lang = record._get_base_lang()
+            if base_lang != (record.env.lang or 'en_US'):
+                base_value = record.with_context(edit_translations=None, lang=base_lang)[self.name]
+                base_terms = self.get_trans_terms(base_value)
+                term_to_state = {term: "translated" if base_term != term else "to_translate" for term, base_term in zip(terms, base_terms)}
+            else:
+                term_to_state = defaultdict(lambda: 'translated')
             # use a wrapper to let the frontend js code identify each term and its metadata in the 'edit_translations' context
             # pylint: disable=not-callable
             value = self.translate(
@@ -1816,7 +1820,10 @@ class _String(Field):
                     matches = get_close_matches(old_term_text, text2terms, 1, 0.9)
                     if matches:
                         closest_term = get_close_matches(old_term, text2terms[matches[0]], 1, 0)[0]
-                        translation_dictionary[closest_term] = translation_dictionary.pop(old_term)
+                        old_is_text = old_term == self.get_text_content(old_term)
+                        closest_is_text = closest_term == self.get_text_content(closest_term)
+                        if old_is_text or not closest_is_text:
+                            translation_dictionary[closest_term] = translation_dictionary.pop(old_term)
             # pylint: disable=not-callable
             new_translations = {
                 l: self.translate(lambda term: translation_dictionary.get(term, {l: None})[l], cache_value)
@@ -3759,6 +3766,13 @@ class PropertiesDefinition(Field):
         'name', 'string', 'type', 'comodel', 'default',
         'selection', 'tags', 'domain', 'view_in_kanban',
     )
+    # those keys will be removed if the types does not match
+    PROPERTY_PARAMETERS_MAP = {
+        'comodel': {'many2one', 'many2many'},
+        'domain': {'many2one', 'many2many'},
+        'selection': {'selection'},
+        'tags': {'tags'},
+    }
 
     def convert_to_column(self, value, record, values=None, validate=True):
         """Convert the value before inserting it in database.
@@ -3859,6 +3873,10 @@ class PropertiesDefinition(Field):
                     del property_definition['domain']
 
             result.append(property_definition)
+
+            for property_parameter, allowed_types in self.PROPERTY_PARAMETERS_MAP.items():
+                if property_definition.get('type') not in allowed_types:
+                    property_definition.pop(property_parameter, None)
 
         return result
 
