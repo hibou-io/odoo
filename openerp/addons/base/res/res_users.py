@@ -437,6 +437,9 @@ class res_users(osv.osv):
     def _login(self, db, login, password):
         if not password:
             return False
+        # cast to bytes in case it is wrapped in an xmlrpc binary object
+        # Hibou Patch to fix external libraries connecting.
+        password = bytes(password)
         user_id = False
         cr = self.pool.cursor()
         try:
