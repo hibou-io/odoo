@@ -22,6 +22,7 @@ export class LandingPage extends Component {
                 this.selfOrder.orders = [];
                 this.selfOrder.editedOrder = null;
             }
+            this.selfOrder.rpcLoading = false;
         });
 
         onMounted(() => {
@@ -100,7 +101,8 @@ export class LandingPage extends Component {
 
         if (
             this.selfOrder.config.self_ordering_takeaway &&
-            this.selfOrder.currentOrder.take_away === null
+            this.selfOrder.currentOrder.take_away === null &&
+            this.selfOrder.ordering
         ) {
             this.router.navigate("location");
         } else {

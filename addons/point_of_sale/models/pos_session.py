@@ -381,7 +381,8 @@ class PosSession(models.Model):
                           self.cash_journal_id.name))
 
                 st_line_vals['payment_ref'] = _("Cash difference observed during the counting (Loss)") + (_(' - opening') if is_opening else _(' - closing'))
-                st_line_vals['counterpart_account_id'] = self.cash_journal_id.loss_account_id.id
+                if not is_opening:
+                    st_line_vals['counterpart_account_id'] = self.cash_journal_id.loss_account_id.id
             else:
                 # self.cash_register_difference  > 0.0
                 if not self.cash_journal_id.profit_account_id:
@@ -390,7 +391,8 @@ class PosSession(models.Model):
                           self.cash_journal_id.name))
 
                 st_line_vals['payment_ref'] = _("Cash difference observed during the counting (Profit)") + (_(' - opening') if is_opening else _(' - closing'))
-                st_line_vals['counterpart_account_id'] = self.cash_journal_id.profit_account_id.id
+                if not is_opening:
+                    st_line_vals['counterpart_account_id'] = self.cash_journal_id.profit_account_id.id
 
             self.env['account.bank.statement.line'].create(st_line_vals)
 
@@ -1665,10 +1667,13 @@ class PosSession(models.Model):
         for tax in loaded_data['taxes_by_id'].values():
             tax['children_tax_ids'] = [loaded_data['taxes_by_id'][id] for id in tax['children_tax_ids']]
 
-        for pricelist in loaded_data['product.pricelist']:
-            if pricelist['id'] == self.config_id.pricelist_id.id:
-                loaded_data['default_pricelist'] = pricelist
-                break
+        if self.config_id.use_pricelist:
+            default_pricelist = next(
+                (pl for pl in loaded_data['product.pricelist'] if pl['id'] == self.config_id.pricelist_id.id),
+                False
+            )
+            if default_pricelist:
+                loaded_data['default_pricelist'] = default_pricelist
 
         fiscal_position_by_id = {fpt['id']: fpt for fpt in self._get_pos_ui_account_fiscal_position_tax(
             self._loader_params_account_fiscal_position_tax())}
@@ -1678,6 +1683,7 @@ class PosSession(models.Model):
         loaded_data['attributes_by_ptal_id'] = self._get_attributes_by_ptal_id()
         loaded_data['base_url'] = self.get_base_url()
         loaded_data['pos_has_valid_product'] = self._pos_has_valid_product()
+        loaded_data['pos_special_products_ids'] = self.env['pos.config']._get_special_products().ids
         loaded_data['open_orders'] = self.env['pos.order'].search([('session_id', '=', self.id), ('state', '=', 'draft')]).export_for_ui()
 
     @api.model
@@ -1697,10 +1703,10 @@ class PosSession(models.Model):
             'res.partner',
             'stock.picking.type',
             'res.users',
+            'product.product',
             'product.pricelist',
             'res.currency',
             'pos.category',
-            'product.product',
             'pos.combo',
             'pos.combo.line',
             'product.packaging',
@@ -1944,6 +1950,13 @@ class PosSession(models.Model):
                 'min_quantity',
                 ]
 
+    def _product_pricelist_item_domain_by_product(self, product_tmpl_ids, product_ids, pricelists):
+        return [
+            ('pricelist_id', 'in', [p['id'] for p in pricelists]),
+            '|', ('product_tmpl_id', '=', False), ('product_tmpl_id', 'in', product_tmpl_ids),
+            '|', ('product_id', '=', False), ('product_id', 'in', product_ids),
+        ]
+
     def _get_pos_ui_product_pricelist(self, params):
         pricelists = self.env['product.pricelist'].search_read(**params['search_params'])
         for pricelist in pricelists:
@@ -2103,6 +2116,7 @@ class PosSession(models.Model):
         :param custom_search_params: a dictionary containing params of a search_read()
         """
         params = self._loader_params_product_product()
+        self = self.with_context(**params['context'])
         # custom_search_params will take priority
         params['search_params'] = {**params['search_params'], **custom_search_params}
         products = self.env['product.product'].with_context(active_test=False).search_read(**params['search_params'])
@@ -2181,6 +2195,14 @@ class PosSession(models.Model):
     def _prepare_product_pricelists(self, pricelists):
         pricelist_by_id = {pricelist['id']: pricelist for pricelist in pricelists}
         pricelist_item_domain = [('pricelist_id', 'in', [p['id'] for p in pricelists])]
+
+        loaded_data = self._context.get('loaded_data')
+        if loaded_data:
+            pricelist_item_domain = self._product_pricelist_item_domain_by_product(
+                [p['product_tmpl_id'][0] for p in loaded_data['product.product']],
+                [p['id'] for p in loaded_data['product.product']],
+                pricelists)
+
         for item in self.env['product.pricelist.item'].search_read(pricelist_item_domain, self._product_pricelist_item_fields()):
             pricelist_by_id[item['pricelist_id'][0]]['items'].append(item)
 
@@ -2211,7 +2233,7 @@ class PosSession(models.Model):
         self.message_post(body=body, author_id=partner_id)
 
     def _pos_has_valid_product(self):
-        return self.env['product.product'].sudo().search_count([('available_in_pos', '=', True), ('list_price', '>', 0), '|', ('active', '=', False), ('active', '=', True)], limit=1) > 0
+        return self.env['product.product'].sudo().search_count([('available_in_pos', '=', True), ('list_price', '>=', 0), ('id', 'not in', self.env['pos.config']._get_special_products().ids), '|', ('active', '=', False), ('active', '=', True)], limit=1) > 0
 
     @api.model
     def _load_onboarding_data(self):
@@ -2246,6 +2268,16 @@ class PosSession(models.Model):
 
     def _get_closed_orders(self):
         return self.order_ids.filtered(lambda o: o.state not in ['draft', 'cancel'])
+
+    def get_pos_ui_product_pricelist_item_by_product(self, product_tmpl_ids, product_ids):
+        pricelists = self.env['product.pricelist'].search_read(**self._loader_params_product_pricelist()['search_params'])
+        pricelist_item_domain = [
+            ('pricelist_id', 'in', [p['id'] for p in pricelists]),
+            '|',
+            '&', ('product_id', '=', False), ('product_tmpl_id', 'in', product_tmpl_ids),
+            ('product_id', 'in', product_ids)]
+        return self.env['product.pricelist.item'].search_read(pricelist_item_domain, self._product_pricelist_item_fields())
+
 
 class ProcurementGroup(models.Model):
     _inherit = 'procurement.group'

@@ -418,6 +418,39 @@ class TestPacking(TestPackingCommon):
         with self.assertRaises(UserError):
             picking._action_done()
 
+    def test_pack_delivery_three_step_propagate_package_consumable(self):
+        """ Checks all works right in the following case:
+          * For a three-step delivery
+          * Put products in a package then validate the receipt.
+          * The automatically generated internal transfer should have package set by default.
+        """
+        prod = self.env['product.product'].create({'name': 'bad dragon', 'type': 'consu'})
+        ship_move = self.env['stock.move'].create({
+            'name': 'The ship move',
+            'product_id': prod.id,
+            'product_uom_qty': 5.0,
+            'product_uom': prod.uom_id.id,
+            'location_id': self.warehouse.wh_output_stock_loc_id.id,
+            'location_dest_id': self.env.ref('stock.stock_location_customers').id,
+            'warehouse_id':  self.warehouse.id,
+            'picking_type_id':  self.warehouse.out_type_id.id,
+            'procure_method': 'make_to_order',
+            'state': 'draft',
+        })
+
+        # create chained pick/pack moves to test with
+        ship_move._assign_picking()
+        ship_move._action_confirm()
+        pack_move = ship_move.move_orig_ids[0]
+        pick_move = pack_move.move_orig_ids[0]
+
+        picking = pick_move.picking_id
+        picking.action_confirm()
+        picking.action_put_in_pack()
+        self.assertTrue(picking.move_line_ids.result_package_id)
+        picking.button_validate()
+        self.assertEqual(pack_move.move_line_ids.result_package_id, picking.move_line_ids.result_package_id)
+
     def test_pack_in_receipt_two_step_single_putway(self):
         """ Checks all works right in the following specific corner case:
 
@@ -434,11 +467,9 @@ class TestPacking(TestPackingCommon):
         self.env.user.write({'groups_id': [(3, grp_pack.id)]})
         self.warehouse.reception_steps = 'two_steps'
         # Settings of receipt.
-        self.warehouse.in_type_id.show_operations = True
         self.warehouse.in_type_id.show_entire_packs = True
         self.warehouse.in_type_id.show_reserved = True
         # Settings of internal transfer.
-        self.warehouse.int_type_id.show_operations = True
         self.warehouse.int_type_id.show_entire_packs = True
         self.warehouse.int_type_id.show_reserved = True
 
@@ -475,17 +506,19 @@ class TestPacking(TestPackingCommon):
         receipt.action_confirm()
 
         # Adds quantities then packs them and valids the receipt.
-        receipt_form = Form(receipt)
-        with receipt_form.move_line_ids_without_package.edit(0) as move_line:
+        move_form = Form(receipt.move_ids_without_package[0], view='stock.view_stock_move_operations')
+        with move_form.move_line_ids.edit(0) as move_line:
             move_line.quantity = 1
-        with receipt_form.move_line_ids_without_package.edit(1) as move_line:
+        move_form = Form(receipt.move_ids_without_package[1], view='stock.view_stock_move_operations')
+        with move_form.move_line_ids.edit(0) as move_line:
             move_line.quantity = 1
+        move_form.save()
         receipt = receipt_form.save()
         receipt.move_ids.picked = True
         receipt.action_put_in_pack()
         receipt.button_validate()
 
-        receipt_package = receipt.package_level_ids_details[0]
+        receipt_package = receipt.package_level_ids[0]
         self.assertEqual(receipt_package.location_dest_id.id, receipt.location_dest_id.id)
         self.assertEqual(
             receipt_package.move_line_ids[0].location_dest_id.id,
@@ -500,8 +533,8 @@ class TestPacking(TestPackingCommon):
         ], order='id desc', limit=1)
         self.assertEqual(internal_transfer.origin, receipt.name)
         self.assertEqual(
-            len(internal_transfer.package_level_ids_details), 1)
-        internal_package = internal_transfer.package_level_ids_details[0]
+            len(internal_transfer.package_level_ids), 1)
+        internal_package = internal_transfer.package_level_ids[0]
         self.assertNotEqual(
             internal_package.location_dest_id.id,
             internal_transfer.location_dest_id.id)
@@ -520,11 +553,6 @@ class TestPacking(TestPackingCommon):
 
         # Cancels the internal transfer and creates a new one.
         internal_transfer.action_cancel()
-        # @api.depends('picking_type_id.show_operations')
-        # def _compute_show_operations(self):
-        #     ...
-        #     if self.env.context.get('force_detailed_view'):
-        #         picking.show_operations = True
         picking = self.env['stock.picking'].create({
             'state': 'draft',
             'picking_type_id':  self.warehouse.int_type_id.id,
@@ -534,12 +562,12 @@ class TestPacking(TestPackingCommon):
         # grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
         # self.env.user.write({'groups_id': [(3, grp_multi_loc.id)]})
         # Hence, `internal_form.location_id` shouldn't be changed
-        with internal_form.package_level_ids_details.new() as pack_line:
+        with internal_form.package_level_ids.new() as pack_line:
             pack_line.package_id = receipt_package.package_id
         internal_transfer = internal_form.save()
 
         # Checks the package fields have been correctly set.
-        internal_package = internal_transfer.package_level_ids_details[0]
+        internal_package = internal_transfer.package_level_ids[0]
         self.assertEqual(
             internal_package.location_dest_id.id,
             internal_transfer.location_dest_id.id)
@@ -578,11 +606,9 @@ class TestPacking(TestPackingCommon):
         self.env.user.write({'groups_id': [(3, grp_pack.id)]})
         self.warehouse.reception_steps = 'two_steps'
         # Settings of receipt.
-        self.warehouse.in_type_id.show_operations = True
         self.warehouse.in_type_id.show_entire_packs = True
         self.warehouse.in_type_id.show_reserved = True
         # Settings of internal transfer.
-        self.warehouse.int_type_id.show_operations = True
         self.warehouse.int_type_id.show_entire_packs = True
         self.warehouse.int_type_id.show_reserved = True
 
@@ -626,17 +652,19 @@ class TestPacking(TestPackingCommon):
         receipt.action_confirm()
 
         # Adds quantities then packs them and valids the receipt.
-        receipt_form = Form(receipt)
-        with receipt_form.move_line_ids_without_package.edit(0) as move_line:
+        move_form = Form(receipt.move_ids_without_package[0], view='stock.view_stock_move_operations')
+        with move_form.move_line_ids.edit(0) as move_line:
             move_line.quantity = 1
-        with receipt_form.move_line_ids_without_package.edit(1) as move_line:
+        move_form = Form(receipt.move_ids_without_package[1], view='stock.view_stock_move_operations')
+        with move_form.move_line_ids.edit(0) as move_line:
             move_line.quantity = 1
+        move_form.save()
         receipt = receipt_form.save()
         receipt.move_ids.picked = True
         receipt.action_put_in_pack()
         receipt.button_validate()
 
-        receipt_package = receipt.package_level_ids_details[0]
+        receipt_package = receipt.package_level_ids[0]
         self.assertEqual(receipt_package.location_dest_id.id, receipt.location_dest_id.id)
         self.assertEqual(
             receipt_package.move_line_ids[0].location_dest_id.id,
@@ -651,8 +679,8 @@ class TestPacking(TestPackingCommon):
         ], order='id desc', limit=1)
         self.assertEqual(internal_transfer.origin, receipt.name)
         self.assertEqual(
-            len(internal_transfer.package_level_ids_details), 1)
-        internal_package = internal_transfer.package_level_ids_details[0]
+            len(internal_transfer.package_level_ids), 1)
+        internal_package = internal_transfer.package_level_ids[0]
         self.assertEqual(
             internal_package.location_dest_id.id,
             internal_transfer.location_dest_id.id)
@@ -671,11 +699,6 @@ class TestPacking(TestPackingCommon):
 
         # Cancels the internal transfer and creates a new one.
         internal_transfer.action_cancel()
-        # @api.depends('picking_type_id.show_operations')
-        # def _compute_show_operations(self):
-        #     ...
-        #     if self.env.context.get('force_detailed_view'):
-        #         picking.show_operations = True
         picking = self.env['stock.picking'].create({
             'state': 'draft',
             'picking_type_id':  self.warehouse.int_type_id.id,
@@ -685,12 +708,12 @@ class TestPacking(TestPackingCommon):
         # grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
         # self.env.user.write({'groups_id': [(3, grp_multi_loc.id)]})
         # Hence, `internal_form.location_id` shouldn't be changed
-        with internal_form.package_level_ids_details.new() as pack_line:
+        with internal_form.package_level_ids.new() as pack_line:
             pack_line.package_id = receipt_package.package_id
         internal_transfer = internal_form.save()
 
         # Checks the package fields have been correctly set.
-        internal_package = internal_transfer.package_level_ids_details[0]
+        internal_package = internal_transfer.package_level_ids[0]
         self.assertEqual(
             internal_package.location_dest_id.id,
             internal_transfer.location_dest_id.id)
@@ -823,11 +846,6 @@ class TestPacking(TestPackingCommon):
         self.warehouse.delivery_steps = 'ship_only'
         package = self.env["stock.quant.package"].create({"name": "Src Pack"})
         self.env['stock.quant']._update_available_quantity(self.productA, self.stock_location, 100, package_id=package)
-        # Required for `package_level_ids_details` to be visible in the view
-        # <page string="Detailed Operations" invisible="not show_operations">
-        # <field name="package_level_ids_details"
-        #   invisible="not picking_type_entire_packs or not show_operations"
-        self.warehouse.out_type_id.show_operations = True
         self.warehouse.out_type_id.show_entire_packs = True
         picking = self.env['stock.picking'].create({
             'location_id': self.stock_location.id,
@@ -842,12 +860,12 @@ class TestPacking(TestPackingCommon):
         picking.action_confirm()
         picking.action_assign()
         with Form(picking) as picking_form:
-            with picking_form.package_level_ids_details.new() as package_level:
+            with picking_form.package_level_ids.new() as package_level:
                 package_level.package_id = package
         self.assertEqual(len(picking.move_ids), 1, 'Should have only 1 stock move')
         self.assertEqual(len(picking.move_ids), 1, 'Should have only 1 stock move')
         with Form(picking) as picking_form:
-            with picking_form.package_level_ids_details.edit(0) as package_level:
+            with picking_form.package_level_ids.edit(0) as package_level:
                 package_level.is_done = True
         action = picking.button_validate()
 
@@ -885,13 +903,8 @@ class TestPacking(TestPackingCommon):
                 move.product_id = self.productA
                 move.product_uom_qty = 75
         picking.action_assign()
-        # @api.depends('picking_type_id.show_operations')
-        # def _compute_show_operations(self):
-        #     ...
-        #     if self.env.context.get('force_detailed_view'):
-        #         picking.show_operations = True
         with Form(picking.with_context(force_detailed_view=True)) as picking_form:
-            with picking_form.package_level_ids_details.new() as package_level:
+            with picking_form.package_level_ids.new() as package_level:
                 package_level.package_id = package
         with Form(picking) as picking_form:
             picking_form.package_level_ids.remove(0)
@@ -972,18 +985,10 @@ class TestPacking(TestPackingCommon):
         moveB.picked = True
         picking.action_put_in_pack()
         picking.button_validate()
-
-        # Required for `package_level_ids_details` to be visible in the view
-        # <page string="Detailed Operations" invisible="not show_operations">
-        # <field name="package_level_ids_details"
-        #   invisible="not picking_type_entire_packs or not show_operations"
-        delivery_type.show_operations = True
         delivery_type.show_entire_packs = True
         picking, _, _ = create_picking(delivery_type, delivery_type.default_location_src_id, self.customer_location)
         packB = picking.package_level_ids[1]
-        with Form(picking) as picking_form:
-            with picking_form.package_level_ids_details.edit(0) as package_level:
-                package_level.is_done = True
+        picking.package_level_ids_details[0].is_done = True
 
         action_data = picking.button_validate()
         backorder_wizard = Form(self.env['stock.backorder.confirmation'].with_context(action_data['context'])).save()
@@ -1606,3 +1611,31 @@ class TestPacking(TestPackingCommon):
         })
         picking_03.action_confirm()
         self.assertEqual(move_03.move_line_ids.result_package_id, pack_2)
+
+    def test_compute_hide_picking_type_multiple_records(self):
+        """
+        Create two pickings and compute their respective hide picking types together.
+        """
+        picking1 = self.env['stock.picking'].create({
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+            'picking_type_id': self.env.ref('stock.picking_type_out').id,
+        })
+        self.env['stock.move'].create({
+            'name': self.productA.name,
+            'product_id': self.productA.id,
+            'product_uom_qty': 10,
+            'product_uom': self.productA.uom_id.id,
+            'picking_id': picking1.id,
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+        })
+        picking1.action_confirm()
+        picking2 = self.env['stock.picking'].create({
+            'location_id': self.stock_location.id,
+            'location_dest_id': self.customer_location.id,
+            'picking_type_id': self.env.ref('stock.picking_type_out').id,
+        })
+        (picking1 | picking2).with_context(default_picking_type_id=self.ref('stock.picking_type_out'))._compute_hide_picking_type()
+        self.assertTrue(picking1.hide_picking_type)
+        self.assertFalse(picking2.hide_picking_type)

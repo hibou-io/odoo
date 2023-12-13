@@ -13,6 +13,7 @@ class AccountMove(models.Model):
         selection=[
             ('ready', 'Ready to send'),
             ('to_send', 'Queued'),
+            ('skipped', 'Skipped'),
             ('processing', 'Pending Reception'),
             ('canceled', 'Canceled'),
             ('done', 'Done'),
@@ -23,6 +24,19 @@ class AccountMove(models.Model):
         copy=False,
     )
     peppol_is_demo_uuid = fields.Boolean(compute="_compute_peppol_is_demo_uuid")
+
+    @api.model
+    def fields_get(self, allfields=None, attributes=None):
+        res = super().fields_get(allfields, attributes)
+
+        # the orm_cache does not contain the new selections added in stable: clear the cache once
+        peppol_move_state_field = self._fields['peppol_move_state']
+        if ('skipped', "Skipped") not in peppol_move_state_field.get_description(self.env)['selection']:
+            self.env['ir.model.fields'].invalidate_model(['selection_ids'])
+            self.env['ir.model.fields.selection']._update_selection(
+                'account.move', 'peppol_move_state', peppol_move_state_field.selection)
+            self.env.registry.clear_cache()
+        return res
 
     def action_cancel_peppol_documents(self):
         # if the peppol_move_state is processing/done
@@ -44,6 +58,7 @@ class AccountMove(models.Model):
                 move.company_id.account_peppol_proxy_state == 'active',
                 move.partner_id.account_peppol_is_endpoint_valid,
                 move.state == 'posted',
+                move.move_type in ('out_invoice', 'out_refund', 'out_receipt'),
                 not move.peppol_move_state,
             ]):
                 move.peppol_move_state = 'ready'

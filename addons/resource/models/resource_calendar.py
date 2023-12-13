@@ -110,7 +110,7 @@ class ResourceCalendar(models.Model):
 
     @api.depends('company_id')
     def _compute_attendance_ids(self):
-        for calendar in self.filtered(lambda c: not c._origin or c._origin.company_id != c.company_id):
+        for calendar in self.filtered(lambda c: not c._origin or c._origin.company_id != c.company_id and c.company_id):
             company_calendar = calendar.company_id.resource_calendar_id
             calendar.update({
                 'two_weeks_calendar': company_calendar.two_weeks_calendar,
@@ -384,14 +384,14 @@ class ResourceCalendar(models.Model):
             resources_list = [resources]
         else:
             resources_list = list(resources) + [self.env['resource.resource']]
-        resource_ids = [r.id for r in resources_list]
         if domain is None:
             domain = [('time_type', '=', 'leave')]
         if not any_calendar:
             domain = domain + [('calendar_id', 'in', [False, self.id])]
         # for the computation, express all datetimes in UTC
+        # Public leave don't have a resource_id
         domain = domain + [
-            ('resource_id', 'in', resource_ids),
+            ('resource_id', 'in', [False] + [r.id for r in resources_list]),
             ('date_from', '<=', datetime_to_string(end_dt)),
             ('date_to', '>=', datetime_to_string(start_dt)),
         ]
@@ -488,7 +488,7 @@ class ResourceCalendar(models.Model):
             # take durations in days proportionally to what is left of the interval.
             interval_hours = (stop - start).total_seconds() / 3600
             day_hours[start.date()] += interval_hours
-            day_days[start.date()] += meta.duration_days * interval_hours / meta.duration_hours
+            day_days[start.date()] += sum(meta.mapped('duration_days')) * interval_hours / sum(meta.mapped('duration_hours'))
 
         return {
             # Round the number of days to the closest 16th of a day.

@@ -56,12 +56,14 @@ class StockPickingType(models.Model):
 
     @api.depends('code')
     def _compute_use_create_lots(self):
+        super()._compute_use_create_lots()
         for picking_type in self:
             if picking_type.code == 'mrp_operation':
                 picking_type.use_create_lots = True
 
     @api.depends('code')
     def _compute_use_existing_lots(self):
+        super()._compute_use_existing_lots()
         for picking_type in self:
             if picking_type.code == 'mrp_operation':
                 picking_type.use_existing_lots = True
@@ -98,6 +100,11 @@ class StockPicking(models.Model):
     def _compute_has_kits(self):
         for picking in self:
             picking.has_kits = any(picking.move_ids.mapped('bom_line_id'))
+
+    def action_detailed_operations(self):
+        action = super().action_detailed_operations()
+        action['context']['has_kits'] = self.has_kits
+        return action
 
     def _less_quantities_than_expected_add_documents(self, moves, documents):
         documents = super(StockPicking, self)._less_quantities_than_expected_add_documents(moves, documents)

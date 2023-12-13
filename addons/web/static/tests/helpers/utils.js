@@ -48,13 +48,14 @@ import {
  * @param {number} [hours]
  * @param {number} [minutes]
  * @param {number} [seconds]
+ * @param {number} [ms=0]
  */
-export function patchDate(year, month, day, hours, minutes, seconds) {
+export function patchDate(year, month, day, hours, minutes, seconds, ms = 0) {
     var RealDate = window.Date;
     var actualDate = new RealDate();
 
     // By default, RealDate uses the browser offset, so we must replace it with the offset fixed in luxon.
-    var fakeDate = new RealDate(year, month, day, hours, minutes, seconds);
+    var fakeDate = new RealDate(year, month, day, hours, minutes, seconds, ms);
     if (!(luxon.Settings.defaultZone instanceof luxon.FixedOffsetZone)) {
         throw new Error("luxon.Settings.defaultZone must be a FixedOffsetZone");
     }
@@ -1023,7 +1024,13 @@ export async function clickDropdown(target, fieldName) {
 }
 
 export async function clickOpenedDropdownItem(target, fieldName, itemContent) {
-    const dropdownItems = target.querySelectorAll(`[name='${fieldName}'] .dropdown ul li`);
+    const dropdowns = target.querySelectorAll(`[name='${fieldName}'] .dropdown .dropdown-menu`);
+    if (dropdowns.length === 0) {
+        throw new Error(`No dropdown found for field ${fieldName}`);
+    } else if (dropdowns.length > 1) {
+        throw new Error(`Found ${dropdowns.length} dropdowns for field ${fieldName}`);
+    }
+    const dropdownItems = dropdowns[0].querySelectorAll("li");
     const indexToClick = Array.from(dropdownItems)
         .map((html) => html.textContent)
         .indexOf(itemContent);

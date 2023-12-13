@@ -216,7 +216,7 @@ class Website(Home):
         fields = country.get_address_fields()
         return dict(fields=fields, states=[(st.id, st.name, st.code) for st in country.state_ids], phone_code=country.phone_code)
 
-    @http.route(['/robots.txt'], type='http', auth="public", website=True, sitemap=False)
+    @http.route(['/robots.txt'], type='http', auth="public", website=True, multilang=False, sitemap=False)
     def robots(self, **kwargs):
         return request.render('website.robots', {'url_root': request.httprequest.url_root}, mimetype='text/plain')
 
@@ -366,10 +366,11 @@ class Website(Home):
         for name, url, mod in current_website.get_suggested_controllers():
             if needle.lower() in name.lower() or needle.lower() in url.lower():
                 module_sudo = mod and request.env.ref('base.module_%s' % mod, False).sudo()
-                icon = mod and "<img src='%s' width='24px' height='24px' class='mr-2 rounded' /> " % (module_sudo and module_sudo.icon or mod) or ''
+                icon = mod and '%s' % (module_sudo and module_sudo.icon or mod) or ''
                 suggested_controllers.append({
                     'value': url,
-                    'label': '%s%s (%s)' % (icon, url, name),
+                    'icon':  icon,
+                    'label': '%s (%s)' % (url, name),
                 })
 
         return {

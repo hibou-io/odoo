@@ -41,6 +41,7 @@ export class Call extends Component {
 
     setup() {
         this.grid = useRef("grid");
+        this.call = useRef("call");
         this.notification = useService("notification");
         this.rtc = useState(useService("discuss.rtc"));
         this.state = useState({
@@ -90,19 +91,25 @@ export class Call extends Component {
         const filterVideos = this.props.thread.showOnlyVideo && this.props.thread.videoCount > 0;
         for (const session of this.props.thread.rtcSessions) {
             const target = session.raisingHand ? raisingHandCards : sessionCards;
-            const cameraStream = session.videoStreams.get("camera");
+            const cameraStream = session.isCameraOn
+                ? session.videoStreams.get("camera")
+                : undefined;
             if (!filterVideos || cameraStream) {
                 target.push({
                     key: "session_main_" + session.id,
                     session,
+                    type: "camera",
                     videoStream: cameraStream,
                 });
             }
-            const screenStream = session.videoStreams.get("screen");
+            const screenStream = session.isScreenSharingOn
+                ? session.videoStreams.get("screen")
+                : undefined;
             if (screenStream) {
                 target.push({
                     key: "session_secondary_" + session.id,
                     session,
+                    type: "screen",
                     videoStream: screenStream,
                 });
             }
@@ -134,53 +141,34 @@ export class Call extends Component {
     /** @returns {CardData[]} */
     get visibleMainCards() {
         const activeSession = this.props.thread.activeRtcSession;
+        this.state.insetCard = undefined;
         if (!activeSession) {
-            this.state.insetCard = undefined;
             return this.visibleCards;
         }
-        switch (activeSession.videoStreams.size) {
-            case 1:
-                if (activeSession.videoStreams.get("screen") === activeSession.mainVideoStream) {
-                    this.setInset(activeSession);
-                }
-                if (
-                    activeSession.videoStreams.get("camera") &&
-                    activeSession.videoStreams.get("camera") === activeSession.mainVideoStream
-                ) {
-                    this.state.insetCard = undefined;
-                }
-                if (!activeSession.mainVideoStream && activeSession.videoStreams.get("screen")) {
-                    this.setInset(activeSession, "screen");
-                }
-                break;
-            case 2: {
-                const videoType =
-                    activeSession.videoStreams.get("screen") === activeSession.mainVideoStream
-                        ? "camera"
-                        : "screen";
-                this.setInset(activeSession, videoType);
-                break;
-            }
+        const type = activeSession.mainVideoStreamType;
+        if (type === "screen" || activeSession.isScreenSharingOn) {
+            this.setInset(activeSession, type === "camera" ? "screen" : "camera");
         }
-
         return [
             {
                 key: "session_" + activeSession.id,
                 session: activeSession,
-                videoStream: activeSession.mainVideoStream,
+                type,
+                videoStream: activeSession.getStream(type),
             },
         ];
     }
 
     /**
      * @param {RtcSession} session
-     * @param {String} videoType
+     * @param {String} [videoType]
      */
     setInset(session, videoType) {
         this.state.insetCard = {
             key: "session_" + session.id,
             session,
-            videoStream: session.videoStreams.get(videoType),
+            type: videoType,
+            videoStream: session.getStream(videoType),
         };
     }
 
@@ -278,7 +266,7 @@ export class Call extends Component {
     }
 
     async enterFullScreen() {
-        const el = document.body;
+        const el = this.call.el;
         try {
             if (el.requestFullscreen) {
                 await el.requestFullscreen();

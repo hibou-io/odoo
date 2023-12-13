@@ -44,10 +44,13 @@ export class ThreadService {
     /**
      * @param {import("models).Thread} thread
      * @param {number} id
-     * @returns {Promise<import("models").Thread>}
+     * @returns {Promise<import("models").Thread|undefined>}
      */
     async fetchChannel(id) {
-        const [channelData] = await this.rpc("/discuss/channel/info", { channel_id: id });
+        const channelData = await this.rpc("/discuss/channel/info", { channel_id: id });
+        if (!channelData) {
+            return;
+        }
         return this.store.Thread.insert({
             ...channelData,
             model: "discuss.channel",
@@ -80,12 +83,13 @@ export class ThreadService {
     /**
      * @param {import("models").Thread} thread
      */
-    async markAsRead(thread) {
-        if (!thread.isLoaded) {
-            await thread.isLoadedDeferred;
-            await new Promise(setTimeout);
+    markAsRead(thread) {
+        const newestPersistentMessage = thread.newestPersistentNotEmptyOfAllMessage;
+        if (!newestPersistentMessage && !thread.isLoaded) {
+            thread.isLoadedDeferred
+                .then(() => new Promise(setTimeout))
+                .then(() => this.markAsRead(thread));
         }
-        const newestPersistentMessage = thread.newestPersistentMessage;
         thread.seen_message_id = newestPersistentMessage?.id ?? false;
         if (
             thread.message_unread_counter > 0 &&
@@ -95,9 +99,15 @@ export class ThreadService {
             this.rpc("/discuss/channel/set_last_seen_message", {
                 channel_id: thread.id,
                 last_message_id: newestPersistentMessage.id,
-            }).then(() => {
-                this.updateSeen(thread, newestPersistentMessage.id);
-            });
+            })
+                .then(() => {
+                    this.updateSeen(thread, newestPersistentMessage.id);
+                })
+                .catch((e) => {
+                    if (e.code !== 404) {
+                        throw e;
+                    }
+                });
         } else if (newestPersistentMessage) {
             this.updateSeen(thread);
         }
@@ -106,7 +116,7 @@ export class ThreadService {
         }
     }
 
-    updateSeen(thread, lastSeenId = thread.newestPersistentMessage?.id) {
+    updateSeen(thread, lastSeenId = thread.newestPersistentNotEmptyOfAllMessage?.id) {
         const lastReadIndex = thread.messages.findIndex((message) => message.id === lastSeenId);
         let newNeedactionCounter = 0;
         let newUnreadCounter = 0;
@@ -136,7 +146,7 @@ export class ThreadService {
             needactionMessages: [],
             message_unread_counter: 0,
             message_needaction_counter: 0,
-            seen_message_id: thread.newestPersistentMessage?.id,
+            seen_message_id: thread.newestPersistentNotEmptyOfAllMessage?.id,
         });
     }
 
@@ -181,6 +191,7 @@ export class ThreadService {
     async fetchMessages(thread, { after, before } = {}) {
         thread.status = "loading";
         if (thread.type === "chatter" && !thread.id) {
+            thread.isLoaded = true;
             return [];
         }
         try {
@@ -286,10 +297,13 @@ export class ThreadService {
      */
     async loadAround(thread, messageId) {
         if (!thread.messages.some(({ id }) => id === messageId)) {
+            thread.isLoaded = false;
+            thread.scrollTop = undefined;
             const { messages } = await this.rpc(this.getFetchRoute(thread), {
                 ...this.getFetchParams(thread),
                 around: messageId,
             });
+            thread.isLoaded = true;
             thread.messages = this.store.Message.insert(messages.reverse(), { html: true });
             thread.loadNewer = messageId ? true : false;
             thread.loadOlder = true;
@@ -302,8 +316,6 @@ export class ThreadService {
                 }
             }
             this._enrichMessagesWithTransient(thread);
-            // Give some time to the UI to update.
-            await new Promise((resolve) => setTimeout(() => requestAnimationFrame(resolve)));
         }
     }
 
@@ -320,15 +332,9 @@ export class ThreadService {
             for (const preview of previews) {
                 const thread = this.store.Thread.get({ model: "discuss.channel", id: preview.id });
                 const message = this.store.Message.insert(preview.last_message, { html: true });
-                if (!thread.isLoaded) {
-                    thread.messages.push(message);
-                    if (message.isNeedaction) {
-                        thread.needactionMessages.add(message);
-                    }
+                if (message.isNeedaction) {
+                    thread.needactionMessages.add(message);
                 }
-                thread.isLoaded = true;
-                thread.loadOlder = true;
-                thread.status = "ready";
             }
         }
     });
@@ -409,6 +415,7 @@ export class ThreadService {
         });
     }
 
+    /** @deprecated */
     sortChannels() {
         this.store.discuss.channels.threads.sort((t1, t2) =>
             String.prototype.localeCompare.call(t1.name, t2.name)
@@ -527,6 +534,7 @@ export class ThreadService {
     }
 
     async joinChannel(id, name) {
+        await this.env.services["mail.messaging"].isReady;
         await this.orm.call("discuss.channel", "add_members", [[id]], {
             partner_ids: [this.store.user.id],
         });
@@ -537,7 +545,6 @@ export class ThreadService {
             type: "channel",
             channel: { avatarCacheKey: "hello" },
         });
-        this.sortChannels();
         this.open(thread);
         return thread;
     }
@@ -546,11 +553,12 @@ export class ThreadService {
         const data = await this.orm.call("discuss.channel", "channel_get", [], {
             partners_to: [id],
         });
-        return this.store.Thread.insert({
+        const thread = this.store.Thread.insert({
             ...data,
             model: "discuss.channel",
             type: "chat",
         });
+        return thread;
     }
 
     executeCommand(thread, command, body = "") {
@@ -615,13 +623,12 @@ export class ThreadService {
             typeof thread.id === "string"
                 ? `mail.box_${thread.id}`
                 : `discuss.channel_${thread.id}`;
-        this.store.discuss.activeTab = !this.ui.isSmall
-            ? "all"
-            : thread.model === "mail.box"
-            ? "mailbox"
-            : ["chat", "group"].includes(thread.type)
-            ? "chat"
-            : "channel";
+        this.store.discuss.activeTab =
+            !this.ui.isSmall || thread.model === "mail.box"
+                ? "main"
+                : ["chat", "group"].includes(thread.type)
+                ? "chat"
+                : "channel";
         if (pushState) {
             this.router.pushState({ active_id: activeId });
         }
@@ -850,15 +857,25 @@ export class ThreadService {
         if (!persona) {
             return DEFAULT_AVATAR;
         }
+        const urlParams = {};
+        if (persona.write_date) {
+            urlParams.unique = persona.write_date;
+        }
         if (persona.is_company === undefined && this.store.self?.user?.isInternalUser) {
             this.personaService.fetchIsCompany(persona);
         }
         if (thread?.model === "discuss.channel") {
             if (persona.type === "partner") {
-                return url(`/discuss/channel/${thread.id}/partner/${persona.id}/avatar_128`);
+                return url(
+                    `/discuss/channel/${thread.id}/partner/${persona.id}/avatar_128`,
+                    urlParams
+                );
             }
             if (persona.type === "guest") {
-                return url(`/discuss/channel/${thread.id}/guest/${persona.id}/avatar_128`);
+                return url(
+                    `/discuss/channel/${thread.id}/guest/${persona.id}/avatar_128`,
+                    urlParams
+                );
             }
         }
         if (persona.type === "partner" && persona?.id) {
@@ -866,6 +883,7 @@ export class ThreadService {
                 field: "avatar_128",
                 id: persona.id,
                 model: "res.partner",
+                ...urlParams,
             });
             return avatar;
         }
@@ -874,6 +892,7 @@ export class ThreadService {
                 field: "avatar_128",
                 id: persona.user.id,
                 model: "res.users",
+                ...urlParams,
             });
             return avatar;
         }

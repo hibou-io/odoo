@@ -712,9 +712,9 @@ class TestSaleStock(TestSaleCommon, ValuationReconciliationTestCommon):
         initial_product = sale_order.order_line.product_id
 
         picking_form = Form(picking)
-        with picking_form.move_line_ids_without_package.edit(0) as move:
+        with picking_form.move_ids_without_package.edit(0) as move:
             move.quantity = 5
-        with picking_form.move_line_ids_without_package.new() as new_move:
+        with picking_form.move_ids_without_package.new() as new_move:
             new_move.product_id = product_inv_on_order
             new_move.quantity = 5
         picking = picking_form.save()
@@ -753,9 +753,9 @@ class TestSaleStock(TestSaleCommon, ValuationReconciliationTestCommon):
         picking = sale_order.picking_ids
 
         picking_form = Form(picking)
-        with picking_form.move_line_ids_without_package.edit(0) as move:
+        with picking_form.move_ids_without_package.edit(0) as move:
             move.quantity = 5
-        with picking_form.move_line_ids_without_package.new() as new_move:
+        with picking_form.move_ids_without_package.new() as new_move:
             new_move.product_id = product_inv_on_delivered
             new_move.quantity = 5
         picking = picking_form.save()
@@ -803,14 +803,14 @@ class TestSaleStock(TestSaleCommon, ValuationReconciliationTestCommon):
         delivery = sale_order.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing')
 
         picking_form = Form(pick)
-        with picking_form.move_line_ids_without_package.edit(0) as move:
+        with picking_form.move_ids_without_package.edit(0) as move:
             move.quantity = 10
         pick = picking_form.save()
         pick.move_ids.picked = True
         pick.button_validate()
 
         picking_form = Form(delivery)
-        with picking_form.move_line_ids_without_package.edit(0) as move:
+        with picking_form.move_ids_without_package.edit(0) as move:
             move.quantity = 10
         delivery = picking_form.save()
         delivery.move_ids.picked = True
@@ -833,9 +833,9 @@ class TestSaleStock(TestSaleCommon, ValuationReconciliationTestCommon):
         delivery = sale_order.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing')
 
         picking_form = Form(pick)
-        with picking_form.move_line_ids_without_package.edit(0) as move:
+        with picking_form.move_ids_without_package.edit(0) as move:
             move.quantity = 10
-        with picking_form.move_line_ids_without_package.new() as new_move:
+        with picking_form.move_ids_without_package.new() as new_move:
             new_move.product_id = product_inv_on_order
             new_move.quantity = 10
         pick = picking_form.save()
@@ -843,9 +843,9 @@ class TestSaleStock(TestSaleCommon, ValuationReconciliationTestCommon):
         pick.button_validate()
 
         picking_form = Form(delivery)
-        with picking_form.move_line_ids_without_package.edit(0) as move:
+        with picking_form.move_ids_without_package.edit(0) as move:
             move.quantity = 10
-        with picking_form.move_line_ids_without_package.new() as new_move:
+        with picking_form.move_ids_without_package.new() as new_move:
             new_move.product_id = product_inv_on_order
             new_move.quantity = 10
         delivery = picking_form.save()
@@ -1211,6 +1211,36 @@ class TestSaleStock(TestSaleCommon, ValuationReconciliationTestCommon):
         return_wizard = return_picking_form.save()
         # Check that the remaining quantity is set on the retrun
         self.assertEqual(return_wizard.product_return_moves.quantity, 8)
+
+    def test_create_picking_from_so(self):
+        sale_order = self._get_new_sale_order()
+        sale_order.action_confirm()
+        self.assertEqual(len(sale_order.picking_ids), 1)
+        context = {
+            'active_model': 'sale.order',
+            'active_id': sale_order.id
+        }
+        self.env['stock.picking'].with_context(context).create({
+            'picking_type_id': sale_order.picking_ids.picking_type_id.id,
+            'move_ids': [(0, 0, {
+                'name': 'test move',
+                'product_id': self.company_data['product_delivery_no'].id,
+                'product_uom_qty': 1,
+                'location_id': sale_order.picking_ids.location_id.id,
+                'location_dest_id': sale_order.picking_ids.location_dest_id.id,
+            })]
+        })
+        self.assertEqual(len(sale_order.picking_ids), 2)
+        self.env['stock.picking'].with_context(context).create({
+            'name': 'test move line',
+            'picking_type_id': sale_order.picking_ids.picking_type_id.id,
+            'move_line_ids': [(0, 0, {
+                'product_id': self.company_data['product_delivery_no'].id,
+                'location_id': sale_order.picking_ids.location_id.id,
+                'location_dest_id': sale_order.picking_ids.location_dest_id.id,
+            })]
+        })
+        self.assertEqual(len(sale_order.picking_ids), 3)
 
     def test_return_with_mto_and_multisteps(self):
         """

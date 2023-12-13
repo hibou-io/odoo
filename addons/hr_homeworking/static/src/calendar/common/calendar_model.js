@@ -2,6 +2,7 @@
 
 import { AttendeeCalendarModel } from "@calendar/views/attendee_calendar/attendee_calendar_model";
 import { serializeDateTime } from "@web/core/l10n/dates";
+import { getColor } from "@web/views/calendar/colors";
 import { patch } from "@web/core/utils/patch";
 
 const { Interval } = luxon;
@@ -35,11 +36,11 @@ patch(AttendeeCalendarModel.prototype, {
             const startDay = day.s;
             const dayISO = startDay.toISODate();
             const dayName = startDay.setLocale("en").weekdayLong.toLowerCase();
-            if (!(dayISO in events)) {
-                events[dayISO] = {};
-            }
             for (const employeeId in res) {
                 if (this.multiCalendar) {
+                    if (!(dayISO in events)) {
+                        events[dayISO] = {};
+                    }
                     if (res[employeeId].exceptions && dayISO in res[employeeId].exceptions) {
                         // check if exception for that date
                         const { location_type } = res[employeeId].exceptions[dayISO];
@@ -56,9 +57,9 @@ patch(AttendeeCalendarModel.prototype, {
                         }
                         const {location_type} = res[employeeId][locationKeyName];
                         if (location_type in events[dayISO]) {
-                            events[dayISO][location_type].push(this.createHomeworkingEventAt(res[employeeId], startDay, res[employeeId][`${dayName}_location_id`]));
+                            events[dayISO][location_type].push(this.createHomeworkingEventAt(res[employeeId], startDay, res[employeeId][locationKeyName]));
                         } else {
-                            events[dayISO][location_type] = [this.createHomeworkingEventAt(res[employeeId], startDay, res[employeeId][`${dayName}_location_id`])];
+                            events[dayISO][location_type] = [this.createHomeworkingEventAt(res[employeeId], startDay, res[employeeId][locationKeyName])];
                         }
                     }
                 } else {
@@ -72,7 +73,9 @@ patch(AttendeeCalendarModel.prototype, {
                     } else {
                         previousDay = dayISO;
                     }
-                    events[dayISO] = currentEvent;
+                    if (currentEvent.title) {
+                        events[dayISO] = currentEvent;
+                    }
                 }
             }
         }
@@ -111,10 +114,11 @@ patch(AttendeeCalendarModel.prototype, {
     get worklocations() {
         return this.data.worklocations;
     },
+
     mapPartnersToColor(data) {
         return data.filterSections.partner_ids.filters
             .filter(filter => filter.type !== "all" && filter.value)
-            .reduce((map, partner) => ({ ...map, [partner.value]: partner.colorIndex}), {})
+            .reduce((map, partner) => ({ ...map, [partner.value]: getColor(partner.colorIndex)}), {})
     },
 
     /**

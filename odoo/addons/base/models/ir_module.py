@@ -162,7 +162,7 @@ class Module(models.Model):
             if not module.name:
                 module.description_html = False
                 continue
-            path = os.path.join(module.name, '/static/description/index.html')
+            path = os.path.join(module.name, 'static/description/index.html')
             try:
                 with tools.file_open(path, 'rb') as desc_file:
                     doc = desc_file.read()
@@ -250,8 +250,11 @@ class Module(models.Model):
             else:
                 path = ''
             if path:
-                with tools.file_open(path, 'rb') as image_file:
-                    module.icon_image = base64.b64encode(image_file.read())
+                try:
+                    with tools.file_open(path, 'rb') as image_file:
+                        module.icon_image = base64.b64encode(image_file.read())
+                except FileNotFoundError:
+                    module.icon_image = ''
             countries = self.get_module_info(module.name).get('countries', [])
             country_code = len(countries) == 1 and countries[0]
             module.icon_flag = get_flag(country_code.upper()) if country_code else ''

@@ -504,7 +504,7 @@ class Task(models.Model):
     @api.depends('child_ids.allocated_hours')
     def _compute_subtask_allocated_hours(self):
         for task in self:
-            task.subtask_allocated_hours = sum(child_task.allocated_hours + child_task.subtask_allocated_hours for child_task in task.child_ids)
+            task.subtask_allocated_hours = sum(task.child_ids.mapped('allocated_hours'))
 
     @api.depends('child_ids')
     def _compute_subtask_count(self):
@@ -830,6 +830,15 @@ class Task(models.Model):
             if field not in self.SELF_WRITABLE_FIELDS:
                 raise AccessError(_('You have not write access of %s field.', field))
 
+    def _set_stage_on_project_from_task(self):
+        stage_ids_per_project = defaultdict(list)
+        for task in self:
+            if task.stage_id and task.stage_id not in task.project_id.type_ids and task.stage_id.id not in stage_ids_per_project[task.project_id]:
+                stage_ids_per_project[task.project_id].append(task.stage_id.id)
+
+        for project, stage_ids in stage_ids_per_project.items():
+            project.write({'type_ids': [Command.link(stage_id) for stage_id in stage_ids]})
+
     def _load_records_create(self, vals_list):
         for vals in vals_list:
             if vals.get('recurring_task'):
@@ -840,13 +849,6 @@ class Task(models.Model):
             if project_id:
                 self = self.with_context(default_project_id=project_id)
         tasks = super()._load_records_create(vals_list)
-        stage_ids_per_project = defaultdict(list)
-        for task in tasks:
-            if task.stage_id and task.stage_id not in task.project_id.type_ids and task.stage_id.id not in stage_ids_per_project[task.project_id]:
-                stage_ids_per_project[task.project_id].append(task.stage_id.id)
-
-        for project, stage_ids in stage_ids_per_project.items():
-            project.write({'type_ids': [Command.link(stage_id) for stage_id in stage_ids]})
 
         return tasks
 
@@ -943,6 +945,8 @@ class Task(models.Model):
             # if the portal user could really create the tasks based on the ir rule.
             tasks.with_user(self.env.user).check_access_rule('create')
         current_partner = self.env.user.partner_id
+        if tasks.project_id:
+            tasks._set_stage_on_project_from_task()
         for task in tasks:
             if task.project_id.privacy_visibility == 'portal':
                 task._portal_ensure_token()
@@ -1161,11 +1165,9 @@ class Task(models.Model):
             f"{field}.id": "id",
             f"{field}.name": "name",
         })
-        if not filtered_domain:
-            return False
         if additional_domain:
-            filtered_domain = expression.AND([filtered_domain, additional_domain])
-        return self.env[comodel].search(_change_operator(filtered_domain), order=order)
+            filtered_domain = expression.AND([_change_operator(filtered_domain), additional_domain])
+        return self.env[comodel].search(filtered_domain, order=order) if filtered_domain else False
 
     # ---------------------------------------------------
     # Subtasks

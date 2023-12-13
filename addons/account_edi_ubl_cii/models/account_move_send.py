@@ -53,7 +53,7 @@ class AccountMoveSend(models.TransientModel):
     @api.depends('enable_ubl_cii_xml')
     def _compute_checkbox_ubl_cii_xml(self):
         for wizard in self:
-            wizard.checkbox_ubl_cii_xml = wizard.enable_ubl_cii_xml and wizard.company_id.invoice_is_ubl_cii
+            wizard.checkbox_ubl_cii_xml = wizard.enable_ubl_cii_xml and (wizard.checkbox_ubl_cii_xml or wizard.company_id.invoice_is_ubl_cii)
 
     # -------------------------------------------------------------------------
     # ATTACHMENTS
@@ -99,11 +99,10 @@ class AccountMoveSend(models.TransientModel):
 
             # Failed.
             if errors:
-                invoice_data['error'] = "".join([
-                    _("Errors occured while creating the EDI document (format: %s):", builder._description),
-                    "\n",
-                    "<p><li>" + "</li><li>".join(errors) + "</li></p>",
-                ])
+                invoice_data['error'] = {
+                    'error_title': _("Errors occurred while creating the EDI document (format: %s):", builder._description),
+                    'errors': errors,
+                }
                 invoice_data['error_but_continue'] = True
             else:
                 invoice_data['ubl_cii_xml_attachment_values'] = {

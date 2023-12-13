@@ -62,7 +62,7 @@
     </template>
 
     <template id="template_header_stretch" inherit_id="website.template_header_stretch">
-        <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="before">
+        <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="before">
             <t t-call="website_sale.header_cart_link">
                 <t t-set="_icon" t-value="True"/>
                 <t t-set="_item_class" t-value="'border-start o_border_contrast'"/>
@@ -129,7 +129,7 @@
     </template>
 
     <template id="template_header_sales_four" inherit_id="website.template_header_sales_four">
-        <xpath expr="//t[@t-call='website.header_call_to_action_pill']" position="before">
+        <xpath expr="//t[@t-call='website.placeholder_header_call_to_action']" position="before">
             <t t-call="website_sale.header_cart_link">
                 <t t-set="_icon" t-value="True"/>
                 <t t-set="_link_class" t-value="'o_navlink_background_hover btn position-relative rounded-pill p-1 text-reset'"/>
@@ -199,7 +199,7 @@
                     <t t-set="bg_color" t-value="td_product['ribbon']['bg_color'] or ''"/>
                     <t t-set="text_color" t-value="td_product['ribbon']['text_color']"/>
                     <t t-set="bg_class" t-value="td_product['ribbon']['html_class']"/>
-                    <span t-attf-class="o_ribbon o_not_editable #{bg_class}" t-attf-style="#{text_color and ('color: %s; ' % text_color)}#{bg_color and 'background-color:' + bg_color}" t-field="product.website_ribbon_id.html"/>
+                    <span t-attf-class="o_ribbon o_not_editable #{bg_class}" t-attf-style="#{text_color and ('color: %s; ' % text_color)}#{bg_color and 'background-color:' + bg_color}" t-out="td_product['ribbon']['html'] or ''"/>
                 </a>
             </div>
             <div class="o_wsale_product_information position-relative d-flex flex-column flex-grow-1 flex-shrink-1">
@@ -215,7 +215,7 @@
                     <t t-set="template_price_vals" t-value="get_product_prices(product)"/>
                     <div class="o_wsale_product_btn"/>
                     <div class="product_price" itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer">
-                        <t t-if="'base_price' in template_price_vals and template_price_vals['base_price'] &gt; template_price_vals['price_reduce']">
+                        <t t-if="'base_price' in template_price_vals and (template_price_vals['base_price'] &gt; template_price_vals['price_reduce']) and (template_price_vals['price_reduce'] or not website.prevent_zero_price_sale)">
                             <del t-attf-class="text-muted me-1 h6 mb-0" style="white-space: nowrap;">
                                 <em class="small" t-esc="template_price_vals['base_price']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}" />
                             </del>
@@ -380,7 +380,7 @@
                                 <div class="mb16" id="category_header" t-att-data-editor-message="editor_msg" t-field="category.website_description"/>
                             </t>
 
-                            <div t-cache="pricelist,fiscal_position,products" t-if="products" class="o_wsale_products_grid_table_wrapper pt-3 pt-lg-0">
+                            <div t-if="products" class="o_wsale_products_grid_table_wrapper pt-3 pt-lg-0">
                                 <table class="table table-borderless h-100 m-0" t-att-data-ppg="ppg" t-att-data-ppr="ppr" t-att-data-default-sort="website.shop_default_sort" t-att-data-name="grid_block_name">
                                     <colgroup t-ignore="true">
                                         <!-- Force the number of columns (useful when only one row of (x < ppr) products) -->
@@ -409,10 +409,10 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div t-else="" class="text-center text-muted mt128 mb256">
+                            <div t-nocache="get the actual search" t-else="" class="text-center text-muted mt128 mb256">
                                 <t t-if="not search">
                                     <h3 class="mt8">No product defined</h3>
-                                    <p t-if="category">No product defined in category "<strong t-esc="category.display_name"/>".</p>
+                                    <p t-if="category">No product defined in this category.</p>
                                 </t>
                                 <t t-else="">
                                     <h3 class="mt8">No results</h3>
@@ -658,43 +658,50 @@
                     <input type="hidden" name="search" t-att-value="search"/>
 
                     <t t-foreach="attributes" t-as="a">
-                        <t t-set="_status" t-value="'inactive'"/>
-                        <t t-foreach="a.value_ids" t-as="v" t-if="v.id in attrib_set" t-set="_status" t-value="'active'"/>
+                        <t t-cache="a,attrib_set">
+                            <t t-set="_status" t-value="'inactive'"/>
+                            <t t-foreach="a.value_ids" t-as="v" t-if="v.id in attrib_set" t-set="_status" t-value="'active'"/>
 
-                        <div t-if="a.value_ids and len(a.value_ids) &gt; 1"
-                             t-attf-class="accordion-item border-top-0 {{(_status == 'active') and 'order-1' or 'order-2'}}">
-                            <h2 class="accordion-header mb-0" t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}_header">
-                                <button t-attf-class="o_wsale_offcanvas_title accordion-button rounded-0 {{ not attrib_values and 'collapsed'}}"
-                                        type="button"
-                                        t-att-data-status="_status"
-                                        data-bs-toggle="collapse"
-                                        t-attf-data-bs-target="#o_wsale_offcanvas_attribute_{{a.id}}"
-                                        t-att-aria-expanded="_status == 'active' and 'True' or 'False'"
-                                        t-attf-aria-controls="o_wsale_offcanvas_attribute_{{a.id}}">
-                                        <b t-out="a.name"/>
-                                </button>
-                            </h2>
-                            <div t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}"
-                                 t-attf-class="accordion-collapse collapse {{ (_status == 'active') and 'show'}}"
-                                 t-att-aria-expanded="(_status == 'active') and 'True' or 'False'"
-                                 t-attf-aria-labelledby="o_wsale_offcanvas_attribute_{{a.id}}_header">
+                            <div t-if="a.value_ids and len(a.value_ids) &gt; 1"
+                                 t-attf-class="accordion-item border-top-0 {{(_status == 'active') and 'order-1' or 'order-2'}}">
+                                <h2 class="accordion-header mb-0" t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}_header">
+                                    <button t-attf-class="o_wsale_offcanvas_title accordion-button rounded-0 {{ not attrib_values and 'collapsed'}}"
+                                            type="button"
+                                            t-att-data-status="_status"
+                                            data-bs-toggle="collapse"
+                                            t-attf-data-bs-target="#o_wsale_offcanvas_attribute_{{a.id}}"
+                                            t-att-aria-expanded="_status == 'active' and 'True' or 'False'"
+                                            t-attf-aria-controls="o_wsale_offcanvas_attribute_{{a.id}}">
+                                            <b t-out="a.name"/>
+                                    </button>
+                                </h2>
+                                <div t-attf-id="o_wsale_offcanvas_attribute_{{a.id}}"
+                                     t-attf-class="accordion-collapse collapse {{ (_status == 'active') and 'show'}}"
+                                     t-att-aria-expanded="(_status == 'active') and 'True' or 'False'"
+                                     t-attf-aria-labelledby="o_wsale_offcanvas_attribute_{{a.id}}_header">
 
-                                <div class="accordion-body pt-0">
-                                    <div class="list-group list-group-flush"
-                                         t-if="a.display_type == 'radio' or a.display_type == 'pills' or a.display_type == 'select'">
-                                        <div t-foreach="a.value_ids" t-as="v" class="list-group-item border-0 ps-0 pb-0">
-                                            <div class="form-check mb-1">
-                                                <input type="checkbox" name="attrib" class="form-check-input" t-att-id="'%s-%s' % (a.id,v.id)" t-att-value="'%s-%s' % (a.id,v.id)" t-att-checked="'checked' if v.id in attrib_set else None"/>
-                                                <label class="form-check-label fw-normal" t-att-for="'%s-%s' % (a.id,v.id)" t-field="v.name"/>
+                                    <div class="accordion-body pt-0">
+                                        <div t-if="a.display_type == 'color'" class="pt-1 pb-3">
+                                            <t t-call="website_sale.o_wsale_offcanvas_color_attribute"/>
+                                        </div>
+                                        <div t-elif="a.display_type in ('radio', 'pills', 'select')"
+                                             class="list-group list-group-flush">
+                                            <div t-foreach="a.value_ids" t-as="v" class="list-group-item border-0 ps-0 pb-0">
+                                                <div class="form-check mb-1">
+                                                    <input type="checkbox"
+                                                           name="attrib"
+                                                           class="form-check-input"
+                                                           t-att-id="'%s-%s' % (a.id,v.id)"
+                                                           t-att-value="'%s-%s' % (a.id,v.id)"
+                                                           t-att-checked="'checked' if v.id in attrib_set else None"/>
+                                                    <label class="form-check-label fw-normal" t-att-for="'%s-%s' % (a.id,v.id)" t-field="v.name"/>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div t-if="a.display_type == 'color'" class="pt-1 pb-3">
-                                        <t t-call="website_sale.o_wsale_offcanvas_color_attribute"/>
-                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </t>
                     </t>
                     <t t-if="opt_wsale_filter_tags and (opt_wsale_attributes or opt_wsale_attributes_top)">
                         <t t-set="_status" t-value="'inactive'"/>
@@ -837,7 +844,7 @@
                 <div class="accordion-header d-flex mb-1">
                     <t t-call="website_sale.categorie_link"/>
                     <button t-attf-id="o_wsale_cat_accordion_title_{{c.id}}"
-                            t-attf-class="accordion-button p-0 ms-3 {{not isOpen and 'collapsed'}} w-auto flex-grow-1"
+                            t-attf-class="accordion-button p-0 ms-3 {{not isOpen and 'collapsed'}} w-auto flex-grow-1 bg-transparent shadow-none"
                             t-attf-data-bs-target="#o_wsale_cat_accordion_{{c.id}}"
                             t-att-aria-expanded="isOpen and 'true' or 'false'"
                             t-attf-aria-controls="o_wsale_cat_accordion_{{c.id}}"
@@ -887,34 +894,39 @@
                         <i class="oi oi-close"/>
                     </a>
                     <t t-foreach="attributes" t-as="a">
-                        <div class="accordion-item nav-item mb-1 border-0" t-if="a.value_ids and len(a.value_ids) &gt; 1">
-                            <h6 class="mb-3">
-                                <b class="o_products_attributes_title d-none d-lg-block" t-field="a.name"/>
-                            </h6>
-                            <div t-attf-id="o_products_attributes_{{a.id}}" class="">
-                                <t t-if="a.display_type == 'select'">
-                                    <select class="form-select css_attribute_select mb-2" name="attrib">
-                                        <option value="" selected="true">-</option>
-                                        <t t-foreach="a.value_ids" t-as="v">
-                                            <option t-att-value="'%s-%s' % (a.id,v.id)" t-esc="v.name" t-att-selected="v.id in attrib_set" />
-                                        </t>
-                                    </select>
-                                </t>
-                                <t t-if="a.display_type in ('radio', 'pills', 'multi')">
-                                    <div class="flex-column mb-3">
+                        <t t-cache="a,attrib_set">
+                            <div class="accordion-item nav-item mb-1 border-0" t-if="a.value_ids and len(a.value_ids) &gt; 1">
+                                <h6 class="mb-3">
+                                    <b class="o_products_attributes_title d-none d-lg-block" t-field="a.name"/>
+                                </h6>
+                                <div t-attf-id="o_products_attributes_{{a.id}}" class="">
+                                    <t t-if="a.display_type == 'select'">
+                                        <select class="form-select css_attribute_select mb-2" name="attrib">
+                                            <option value="" selected="true">-</option>
+                                            <t t-foreach="a.value_ids" t-as="v">
+                                                <option t-att-value="'%s-%s' % (a.id,v.id)" t-esc="v.name" t-att-selected="v.id in attrib_set" />
+                                            </t>
+                                        </select>
+                                    </t>
+                                    <div t-elif="a.display_type == 'color'" class="mb-3">
+                                        <t t-call="website_sale.o_wsale_offcanvas_color_attribute"/>
+                                    </div>
+                                    <div t-elif="a.display_type in ('radio', 'pills', 'multi')" class="flex-column mb-3">
                                         <t t-foreach="a.value_ids" t-as="v">
                                             <div class="form-check mb-1">
-                                                <input type="checkbox" name="attrib" class="form-check-input" t-att-id="'%s-%s' % (a.id,v.id)" t-att-value="'%s-%s' % (a.id,v.id)" t-att-checked="'checked' if v.id in attrib_set else None"/>
+                                                <input type="checkbox"
+                                                       name="attrib"
+                                                       class="form-check-input"
+                                                       t-att-id="'%s-%s' % (a.id,v.id)"
+                                                       t-att-value="'%s-%s' % (a.id,v.id)"
+                                                       t-att-checked="'checked' if v.id in attrib_set else None"/>
                                                 <label class="form-check-label fw-normal" t-att-for="'%s-%s' % (a.id,v.id)" t-field="v.name"/>
                                             </div>
                                         </t>
                                     </div>
-                                </t>
-                                <div t-if="a.display_type == 'color'" class="mb-3">
-                                    <t t-call="website_sale.o_wsale_offcanvas_color_attribute"/>
                                 </div>
                             </div>
-                        </div>
+                        </t>
                     </t>
                     <t t-if="opt_wsale_filter_tags and opt_wsale_attributes"
                        t-call="website_sale.filter_products_tags"
@@ -989,6 +1001,7 @@
         <t t-set="navClass" t-valuef="light"/>
 
     <t t-cache="pricelist,product,fiscal_position">
+        <!-- TODO drop _get_first_possible_combination here -->
         <t t-set="combination" t-value="product._get_first_possible_combination()"/>
         <t t-set="combination_info" t-value="product._get_combination_info(combination, add_qty=add_qty)"/>
         <t t-set="product_variant" t-value="product.env['product.product'].browse(combination_info['product_id'])"/>
@@ -1022,7 +1035,8 @@
                                 <li class="breadcrumb-item o_not_editable">
                                     <a t-att-href="keep(category=0)">All Products</a>
                                 </li>
-                                <li t-if="category" class="breadcrumb-item">
+                                <li t-nocache="The category does not have to be cached, as the product can be accessed via different paths."
+                                    t-if="category" class="breadcrumb-item">
                                     <a t-att-href="keep('/shop/category/%s' % slug(category), category=0)" t-field="category.name" />
                                 </li>
                                 <li class="breadcrumb-item active">
@@ -1175,7 +1189,7 @@
         <div itemprop="description" position="after">
             <div class="oe_structure oe_structure_solo oe_unremovable oe_unmovable" id="oe_structure_website_sale_recommended_products" t-ignore="true" t-if="product.alternative_product_ids">
                 <section data-snippet="s_dynamic_snippet_products"
-                    class="oe_unmovable oe_unremovable s_dynamic_snippet_products o_wsale_alternative_products s_dynamic pt32 pb32 o_colored_level s_product_product_borderless_1 d-none"
+                    class="oe_unmovable oe_unremovable s_dynamic_snippet_products o_wsale_alternative_products s_dynamic pt32 pb32 o_colored_level s_product_product_borderless_1"
                     data-name="Alternative Products" style="background-image: none;" t-att-data-filter-id="product._get_alternative_product_filter()"
                     data-template-key="website_sale.dynamic_filter_template_product_product_borderless_1" data-product-category-id="all" data-number-of-elements="4"
                     data-number-of-elements-small-devices="1" data-number-of-records="16" data-carousel-interval="5000" data-bs-original-title="" title="">
@@ -1446,10 +1460,27 @@
                                     </div>
                                 </div>
                             </div>
-                            <t t-call="website_sale.navigation_buttons">
-                                <t t-set="_form_send_navigation" t-value="True"/>
-                                <t t-set="_cta_classes" t-valuef="s_website_form_send"/>
-                            </t>
+                            <div class="s_website_form_submit s_website_form_no_submit_option d-flex flex-column flex-lg-row align-items-lg-center pt-4">
+                                <a role="button"
+                                   name="website_sale_main_button"
+                                   class="s_website_form_send btn btn-primary order-lg-3 w-100 w-lg-auto ms-lg-auto"
+                                   href="/shop/confirm_order">
+                                    Continue checkout
+                                    <i class="fa fa-angle-right ms-2 fw-light"/>
+                                </a>
+
+                                <div class="position-relative d-flex d-lg-none w-100 justify-content-center align-items-center my-2 opacity-75">
+                                    <hr class="w-100"/>
+                                    <span class="px-3">or</span>
+                                    <hr class="w-100"/>
+                                </div>
+
+                                <a href="/shop/checkout" class="text-center">
+                                    <i class="fa fa-angle-left me-2 fw-light"/>
+                                    Return to shipping
+                                </a>
+                                <span id="s_website_form_result"/>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -1718,6 +1749,7 @@
             - _cta_classes: CSS classes to append on the primary navigation button; default `None`.
             - _form_send_navigation: Whether the primary button serves as a submit button for a
                                      form; default `None`.
+            - hide_payment_button: Whether the payment button should be hidden; default: False.
         -->
         <!-- Checkout context:
             - website_sale_order: The current order.
@@ -1738,12 +1770,12 @@
                                    name="csrf_token"
                                    t-att-value="request.csrf_token()"
                                    t-nocache="The csrf token must always be up to date."/>
-                            <t t-call="payment.submit_button">
+                            <t t-if="not hide_payment_button" t-call="payment.submit_button">
                                 <t t-set="submit_button_label">Confirm Order</t>
                             </t>
                         </form>
                     </div>
-                    <t t-else="" t-call="payment.submit_button"/>
+                    <t t-elif="not hide_payment_button" t-call="payment.submit_button"/>
                 </t>
                 <t t-else="">
                     <a role="button" name="website_sale_main_button"
@@ -1754,7 +1786,7 @@
                     </a>
                 </t>
             </t>
-            <div t-attf-class="position-relative #{_form_send_navigation and 'd-flex d-lg-none' or 'd-flex'} w-100 justify-content-center align-items-center my-2 opacity-75">
+            <div t-if="not hide_payment_button" t-attf-class="position-relative #{_form_send_navigation and 'd-flex d-lg-none' or 'd-flex'} w-100 justify-content-center align-items-center my-2 opacity-75">
                 <hr class="w-100"/>
                 <span class="px-3">or</span>
                 <hr class="w-100"/>
@@ -2023,7 +2055,12 @@
                                             <hr class="w-100"/>
                                         </div>
                                         <a role="button" href="#" class="a-submit a-submit-disable a-submit-loading btn btn-primary w-100 w-md-auto order-1 order-md-3">
-                                            <t t-out="'Continue checkout' if mode == ('new', 'billing') else 'Save address'"/>
+                                            <t t-if="mode == ('new', 'billing')">
+                                                Continue checkout
+                                            </t>
+                                            <t t-else="">
+                                                Save address
+                                            </t>
                                             <i class="fw-light fa fa-angle-right ms-2"/>
                                         </a>
                                     </div>
@@ -2071,6 +2108,7 @@
                 <div class="oe_structure" id="oe_structure_website_sale_payment_2"/>
             </t>
             <div class="col-12" t-if="errors">
+                <t t-set="hide_payment_button" t-value="True"/>
                 <t t-foreach="errors" t-as="error">
                     <div class="alert alert-danger" t-if="error" role="alert">
                         <h4>
@@ -2096,6 +2134,7 @@
                     <t t-call="payment.form"/>
                 </div>
                 <div t-else="" class="alert alert-warning">
+                    <t t-set="hide_payment_button" t-value="True"/>
                     <strong>No suitable payment option could be found.</strong><br/>
                     <div t-if="not request.env.is_admin()">
                         If you believe that it is an error, please contact the website administrator.
@@ -2482,12 +2521,15 @@
     </template>
 
     <template id="sale_order_portal_content_inherit_website_sale" name="Orders Followup Products Links" inherit_id="sale.sale_order_portal_content">
+        <xpath expr="//section[@id='details']//div[hasclass('table-responsive')]" position="attributes">
+            <attribute name="class" remove="table-responsive" separator=" "/>
+        </xpath>
         <xpath expr="//section[@id='details']//td[@id='product_name']/*" position="replace">
-            <a t-if="line.product_id.website_published" t-att-href="line.product_id.website_url">
+            <a t-if="line.product_id.website_published" t-att-href="line.product_id.website_url" class="d-block text-wrap" style="max-width: 35vw">
                 <span t-field="line.name" />
             </a>
             <t t-if="not line.product_id.website_published">
-                <span t-field="line.name" />
+                <span t-field="line.name" class="d-block text-wrap" style="max-width: 35vw"/>
             </t>
         </xpath>
     </template>
@@ -2649,13 +2691,13 @@
     </template>
 
     <template id="sale_order_re_order_btn" inherit_id="sale.sale_order_portal_template" name="Sale Order Order Again">
-        <xpath expr="//t[@t-set='entries']/div/div" position="after">
-            <div t-if="request.website.enabled_portal_reorder_button and sale_order.with_user(request.env.user).sudo()._is_reorder_allowed()" class="list-group-item flex-grow-1">
-                <button class="btn btn-primary w-100 o_wsale_reorder_button" t-att-data-sale-order-id="sale_order.id">
+        <xpath expr="//t[@t-set='entries']/div/div/div[hasclass('o_download_pdf')]" position="before">
+            <t t-if="request.website.enabled_portal_reorder_button and sale_order.with_user(request.env.user).sudo()._is_reorder_allowed()">
+                <button class="btn btn-primary o_wsale_reorder_button w-100" t-att-data-sale-order-id="sale_order.id">
                     <i class="fa fa-rotate-right me-1"/>
                     Order Again
                 </button>
-            </div>
+            </t>
         </xpath>
     </template>
 </odoo>

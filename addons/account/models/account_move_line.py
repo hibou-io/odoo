@@ -1,16 +1,20 @@
-import ast
 from collections import defaultdict
 from contextlib import contextmanager
 from datetime import date
+import logging
+import re
 
 from odoo import api, fields, models, Command, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.osv import expression
-from odoo.tools import frozendict, formatLang, format_date, float_compare
-from odoo.tools.sql import create_index
+from odoo.tools import frozendict, format_date, float_compare, Query
+from odoo.tools.sql import create_index, SQL
 from odoo.addons.web.controllers.utils import clean_action
 
 from odoo.addons.account.models.account_move import MAX_HASH_VERSION
+
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountMoveLine(models.Model):
@@ -256,10 +260,10 @@ class AccountMoveLine(models.Model):
     )
     matching_number = fields.Char(
         string="Matching #",
-        readonly=True,
+        copy=False,
         help="Matching number for this line, 'P' if it is only partially reconcile, or the name of "
              "the full reconcile if it exists.",
-    )
+    )  # can also start with `I` for imports: see `_reconcile_marked`
     is_account_reconcile = fields.Boolean(
         string='Account Reconcile',
         related='account_id.reconcile',
@@ -447,8 +451,9 @@ class AccountMoveLine(models.Model):
     def get_views(self, views, options=None):
         res = super().get_views(views, options)
         if res['views'].get('list') and self.env['ir.ui.view'].browse(res['views']['list']['id']).name == "account.move.line.payment.tree":
-            # We dont want any additionnal action in the "account.move.line.payment.tree" view toolbar
-            res['views']['list']['toolbar']['action'] = []
+            if toolbar := res['views']['list'].get('toolbar'):
+                # We dont want any additionnal action in the "account.move.line.payment.tree" view toolbar
+                toolbar['action'] = []
         return res
 
     # -------------------------------------------------------------------------
@@ -484,16 +489,14 @@ class AccountMoveLine(models.Model):
 
     @api.depends('product_id')
     def _compute_name(self):
-        for line in self:
+        for line in self.filtered(lambda l: l.move_id.inalterable_hash is False):
             if line.display_type == 'payment_term':
-                if not line.name:
-                    term_lines = line.move_id.line_ids.filtered(lambda l: l.display_type == 'payment_term') | line
-                    name = line.move_id.payment_reference or ''
-                    if len(term_lines) > 1:
-                        index = term_lines._ids.index(line.id) + 1
-                        name = _('%s installment #%s', name, index).lstrip()
-                    line.name = name
-                continue
+                term_lines = line.move_id.line_ids.filtered(lambda l: l.display_type == 'payment_term') | line
+                name = line.move_id.payment_reference or ''
+                if len(term_lines) > 1:
+                    index = term_lines._ids.index(line.id) + 1
+                    name = _('%s installment #%s', name, index).lstrip()
+                line.name = name
             if not line.product_id or line.display_type in ('line_section', 'line_note'):
                 continue
             if line.partner_id.lang:
@@ -1126,13 +1129,14 @@ class AccountMoveLine(models.Model):
             line.payment_date = line.discount_date if line.discount_date and date.today() <= line.discount_date else line.date_maturity
 
     def _search_payment_date(self, operator, value):
-        assert operator == '='
+        if operator == '=':
+            operator = '<='
         return [
                 '|',
                 '|',
-                '&', ('discount_date', '>=', str(date.today())), ('discount_date', '<=', value),
-                '&', ('discount_date', '<', str(date.today())), ('date_maturity', '<=', value),
-                '&', ('discount_date', '=', False), ('date_maturity', '<=', value),
+                '&', ('discount_date', '>=', str(date.today())), ('discount_date', operator, value),
+                '&', ('discount_date', '<', str(date.today())), ('date_maturity', operator, value),
+                '&', ('discount_date', '=', False), ('date_maturity', operator, value),
             ]
 
     def action_register_payment(self):
@@ -1225,7 +1229,7 @@ class AccountMoveLine(models.Model):
             account = line.account_id
             journal = line.move_id.journal_id
 
-            if account.deprecated:
+            if account.deprecated and not self.env.context.get('skip_account_deprecation_check'):
                 raise UserError(_('The account %s (%s) is deprecated.', account.name, account.code))
 
             account_currency = account.currency_id
@@ -1337,6 +1341,23 @@ class AccountMoveLine(models.Model):
 
             if common_tags:
                 raise ValidationError(_("Taxes exigible on payment and on invoice cannot be mixed on the same journal item if they share some tag."))
+
+    @api.constrains('matching_number', 'matched_debit_ids', 'matched_credit_ids')
+    def _constrains_matching_number(self):
+        for line in self:
+            if line.matching_number:
+                if not re.match(r'^((P?\d+)|(I.+))$', line.matching_number):
+                    raise Exception("Invalid matching number format")
+                elif line.matching_number.startswith('I') and (line.matched_debit_ids or line.matched_credit_ids):
+                    raise ValidationError(_("A temporary number can not be used in a real matching"))
+                elif line.matching_number.startswith('P') and not (line.matched_debit_ids or line.matched_credit_ids):
+                    raise Exception("Should have partials")
+                elif line.matching_number.startswith('P') and line.full_reconcile_id:
+                    raise Exception("Should not be partial number")
+                elif line.full_reconcile_id and line.matching_number != str(line.full_reconcile_id.id):
+                    raise Exception("Matching number should be the full reconcile")
+            elif line.matched_debit_ids or line.matched_credit_ids:
+                raise Exception("Should have number")
 
     # -------------------------------------------------------------------------
     # CRUD/ORM
@@ -1659,6 +1680,21 @@ class AccountMoveLine(models.Model):
             if self._context.get('include_business_fields'):
                 line._copy_data_extend_business_fields(values)
         return data_list
+
+    def _field_to_sql(self, alias: str, fname: str, query: (Query | None) = None) -> SQL:
+        if fname != 'payment_date':
+            return super()._field_to_sql(alias, fname, query)
+        return SQL("""
+            CASE
+                 WHEN discount_date >= %(today)s THEN discount_date
+                 ELSE date_maturity
+            END
+        """, today=fields.Date.context_today(self))
+
+    def _order_field_to_sql(self, alias: str, field_name: str, direction: SQL, nulls: SQL, query: Query) -> SQL:
+        if field_name != 'payment_date':
+            return super()._order_field_to_sql(alias, field_name, direction, nulls, query)
+        return SQL("%s %s %s", self._field_to_sql(alias, field_name, query), direction, nulls)
 
     def _search_panel_domain_image(self, field_name, domain, set_count=False, limit=False):
         if field_name != 'account_root_id' or set_count:
@@ -2885,6 +2921,29 @@ class AccountMoveLine(models.Model):
     def remove_move_reconcile(self):
         """ Undo a reconciliation """
         (self.matched_debit_ids + self.matched_credit_ids).unlink()
+
+    def _reconcile_marked(self):
+        """Process the pending reconciliation of entries marked (i.e. uring imports).
+
+        The entries can be marked using the string `I*` as matching number where `*` can be anything.
+        Once all the entries using identical numbers are posted, this function proceeds to do the real matching.
+        """
+        temp_numbers = list({
+            line.matching_number
+            for line in self
+            if line.matching_number and line.matching_number.startswith('I')
+        })
+        if temp_numbers:
+            for _matching_number, account, lines in self._read_group(
+                domain=[('matching_number', 'in', temp_numbers)],
+                groupby=['matching_number', 'account_id'],
+                aggregates=['id:recordset'],
+            ):
+                if all(move.state == 'posted' for move in lines.move_id):
+                    if not account.reconcile:
+                        _logger.info("%s has reconciled lines, changing the config", account.display_name)
+                        account.reconcile = True
+                    lines.with_context(no_exchange_difference=True, no_cash_basis=True).reconcile()
 
     # -------------------------------------------------------------------------
     # ANALYTIC

@@ -28,6 +28,7 @@ from odoo.tools import (
     formatLang,
     frozendict,
     get_lang,
+    groupby,
     index_exists,
     is_html_empty,
 )
@@ -174,6 +175,7 @@ class AccountMove(models.Model):
         string="Statement Line",
         copy=False,
         check_company=True,
+        index='btree_not_null',
     )
     statement_id = fields.Many2one(
         related="statement_line_id.statement_id"
@@ -226,6 +228,7 @@ class AccountMove(models.Model):
         comodel_name='account.move',
         string='First recurring entry',
         readonly=True, copy=False,
+        index='btree_not_null',
     )
     hide_post_button = fields.Boolean(compute='_compute_hide_post_button', readonly=True)
     to_check = fields.Boolean(
@@ -304,6 +307,7 @@ class AccountMove(models.Model):
         inverse='_inverse_partner_id',
         check_company=True,
         change_default=True,
+        index=True,
         ondelete='restrict',
     )
     commercial_partner_id = fields.Many2one(
@@ -1351,7 +1355,7 @@ class AccountMove(models.Model):
         for move in self:
             move.need_cancel_request = move._need_cancel_request()
 
-    @api.depends('partner_id', 'invoice_source_email', 'partner_id.name')
+    @api.depends('partner_id', 'invoice_source_email', 'partner_id.display_name')
     def _compute_invoice_partner_display_info(self):
         for move in self:
             vendor_display_name = move.partner_id.display_name
@@ -1395,11 +1399,11 @@ class AccountMove(models.Model):
 
     @api.depends('company_id.account_fiscal_country_id', 'fiscal_position_id', 'fiscal_position_id.country_id', 'fiscal_position_id.foreign_vat')
     def _compute_tax_country_id(self):
-        for record in self:
-            if record.fiscal_position_id.foreign_vat:
-                record.tax_country_id = record.fiscal_position_id.country_id
-            else:
-                record.tax_country_id = record.company_id.account_fiscal_country_id
+        foreign_vat_records = self.filtered(lambda r: r.fiscal_position_id.foreign_vat)
+        for fiscal_position_id, record_group in groupby(foreign_vat_records, key=lambda r: r.fiscal_position_id):
+            self.env['account.move'].concat(*record_group).tax_country_id = fiscal_position_id.country_id
+        for company_id, record_group in groupby((self-foreign_vat_records), key=lambda r: r.company_id):
+            self.env['account.move'].concat(*record_group).tax_country_id = company_id.account_fiscal_country_id
 
     @api.depends('tax_country_id')
     def _compute_tax_country_code(self):
@@ -1668,6 +1672,11 @@ class AccountMove(models.Model):
 
     @api.onchange('company_id')
     def _inverse_company_id(self):
+        for move in self:
+            # This can't be caught by a python constraint as it is only triggered at save and the compute method that
+            # needs this data to be set correctly before saving
+            if not move.company_id:
+                raise ValidationError(_("We can't leave this document without any company. Please select a company for this document."))
         self._conditional_add_to_compute('journal_id', lambda m: (
             not m.journal_id.filtered_domain(self.env['account.journal']._check_company_domain(m.company_id))
         ))
@@ -3050,23 +3059,75 @@ class AccountMove(models.Model):
     def _extend_with_attachments(self, attachments, new=False):
         """Main entry point to extend/enhance invoices with attachments.
 
-        Either coming from the chatter or the journal. It will unwrap all
-        attachments by priority then try to decode until it succeed.
+        Either coming from:
+        - The chatter when the user drops an attachment on an existing invoice.
+        - The journal when the user drops one or multiple attachments from the dashboard.
+        - The server mail alias when an alias is configured on the journal.
 
-        :returns: True if at least one document is successfully imported
+        It will unwrap all attachments by priority then try to decode until it succeed.
+
+        :param attachments: A recordset of ir.attachment.
+        :param new:         Indicate if the current invoice is a fresh one or an existing one.
+        :returns:           True if at least one document is successfully imported
         """
-        success = False
+        def close_file(file_data):
+            if file_data.get('on_close'):
+                file_data['on_close']()
 
-        # sorted by priority
-        for file_data in attachments._unwrap_edi_attachments():
-            if not success and (decoder := self._get_edi_decoder(file_data, new=new)):
+        def add_file_data_results(file_data, invoice):
+            passed_file_data_list.append(file_data)
+            attachment = file_data.get('attachment')
+            if attachment:
+                if attachments_by_invoice[attachment]:
+                    attachments_by_invoice[attachment] |= invoice
+                else:
+                    attachments_by_invoice[attachment] = invoice
+
+        file_data_list = attachments._unwrap_edi_attachments()
+        attachments_by_invoice = {
+            attachment: None
+            for attachment in attachments
+        }
+        invoices = self
+        current_invoice = self
+        passed_file_data_list = []
+        for file_data in file_data_list:
+
+            # The invoice has already been decoded by an embedded file.
+            if attachments_by_invoice.get(file_data['attachment']):
+                add_file_data_results(file_data, attachments_by_invoice[file_data['attachment']])
+                close_file(file_data)
+                continue
+
+            # When receiving an xml plus a pdf, since both are representing the same invoice, both needs
+            # to be linked to the same invoice.
+            if (
+                passed_file_data_list
+                and passed_file_data_list[-1]['filename'] != file_data['filename']
+                and passed_file_data_list[-1]['sort_weight'] != file_data['sort_weight']
+            ):
+                add_file_data_results(file_data, invoices[-1])
+                close_file(file_data)
+                continue
+
+            if passed_file_data_list and not new:
+                add_file_data_results(file_data, invoices[-1])
+                close_file(file_data)
+                continue
+
+            decoder = self._get_edi_decoder(file_data, new=new)
+            if decoder:
                 try:
                     with self.env.cr.savepoint():
-                        with self._get_edi_creation() as invoice:
+                        with current_invoice._get_edi_creation() as invoice:
                             # pylint: disable=not-callable
                             success = decoder(invoice, file_data, new)
-                        if success:
+                        if success or file_data['type'] == 'pdf':
                             invoice._link_bill_origin_to_purchase_orders(timeout=4)
+
+                            invoices |= invoice
+                            current_invoice = self.env['account.move']
+                            add_file_data_results(file_data, invoice)
 
                 except RedirectWarning:
                     raise
@@ -3076,11 +3137,11 @@ class AccountMove(models.Model):
                         file_data['filename'],
                         decoder.__name__
                     )
-                finally:
-                    if file_data.get('on_close'):
-                        file_data['on_close']()
 
-        return success
+            passed_file_data_list.append(file_data)
+            close_file(file_data)
+
+        return attachments_by_invoice
 
     # -------------------------------------------------------------------------
     # BUSINESS METHODS
@@ -3661,7 +3722,7 @@ class AccountMove(models.Model):
                     move.currency_id.name
                 ))
 
-            if move.line_ids.account_id.filtered(lambda account: account.deprecated):
+            if move.line_ids.account_id.filtered(lambda account: account.deprecated) and not self._context.get('skip_account_deprecation_check'):
                 raise UserError(_("A line of this move is using a deprecated account, you cannot post it."))
 
         if soft:
@@ -3706,6 +3767,7 @@ class AccountMove(models.Model):
         })
 
         draft_reverse_moves.reversed_entry_id._reconcile_reversed_moves(draft_reverse_moves, self._context.get('move_reverse_cancel', False))
+        to_post.line_ids._reconcile_marked()
 
         for invoice in to_post:
             invoice.message_subscribe([
@@ -4487,7 +4549,29 @@ class AccountMove(models.Model):
 
         # As we are coming from the mail, we assume that ONE of the attachments
         # will enhance the invoice thanks to EDI / OCR / .. capabilities
-        self._extend_with_attachments(attachments, new=False)
+        results = self._extend_with_attachments(attachments, new=bool(self._context.get('from_alias')))
+        attachments_per_invoice = defaultdict(self.env['ir.attachment'].browse)
+        for attachment, invoices in results.items():
+            invoices = invoices or self
+            for invoice in invoices:
+                attachments_per_invoice[invoice] |= attachment
+
+        for invoice, attachments in attachments_per_invoice.items():
+            if invoice == self:
+                invoice.attachment_ids = attachments.ids
+                new_message.attachment_ids = attachments.ids
+                message_values.update({'res_id': self.id, 'attachment_ids': [Command.link(attachment.id) for attachment in attachments]})
+                super(AccountMove, invoice)._message_post_after_hook(new_message, message_values)
+            else:
+                sub_new_message = new_message.copy({'attachment_ids': attachments.ids})
+                sub_message_values = {
+                    **message_values,
+                    'res_id': invoice.id,
+                    'attachment_ids': [Command.link(attachment.id) for attachment in attachments],
+                }
+                invoice.attachment_ids = attachments.ids
+                invoice.message_ids = [Command.set(sub_new_message.id)]
+                super(AccountMove, invoice)._message_post_after_hook(sub_new_message, sub_message_values)
 
         return res
 

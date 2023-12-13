@@ -1,28 +1,12 @@
-$o-mail-NotificationItem-background-color: $o-view-background-color !default;
-$o-mail-NotificationItem-hover-background-color: darken(
-    $o-mail-NotificationItem-background-color,
-    7%
-) !default;
-
-$o-mail-NotificationItem-muted-background-color: $gray-100 !default;
-$o-mail-NotificationItem-muted-hover-background-color:
-    darken($o-mail-NotificationItem-muted-background-color, 7%) !default;
-
 .o-mail-NotificationItem {
-    background-color: $o-mail-NotificationItem-background-color;
-
-    &:hover {
-        background-color: $o-mail-NotificationItem-hover-background-color;
+    &.o-important {
+        background-color: mix($o-gray-100, $o-gray-200) !important;
     }
-
-    &.o-muted {
-        background-color: $o-mail-NotificationItem-muted-background-color;
-
-        &:hover {
-            background-color: $o-mail-NotificationItem-muted-hover-background-color;
-        }
+    &:hover {
+        background-color: $o-gray-200 !important;
     }
 }
+
 
 .o-mail-NotificationItem-badge {
     padding: 3px 6px !important;
@@ -30,9 +14,10 @@ $o-mail-NotificationItem-muted-hover-background-color:
 
 .o-mail-NotificationItem-markAsRead {
     background-color: transparent !important;
+    font-size: 0.85rem !important;
+    color: $success !important;
 
     &:hover {
-        color: $success !important;
         background-color: rgba(0, 0, 0, 0.075) !important;
     }
 }

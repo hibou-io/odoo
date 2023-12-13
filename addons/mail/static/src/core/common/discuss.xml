@@ -2,8 +2,8 @@
 <templates xml:space="preserve">
 
 <t t-name="mail.Discuss">
-    <div class="o-mail-Discuss d-flex h-100 flex-grow-1 border-top" t-att-class="{ 'border-top': !store.inPublicPage, 'flex-column align-items-center bg-view': ui.isSmall }" t-ref="root">
-        <div t-if="ui.isSmall and store.discuss.activeTab === 'mailbox'" class="w-100 border-bottom" t-call="mail.Discuss.mobileTopbar" t-ref="mobileTopbar"/>
+    <div class="o-mail-Discuss d-flex h-100 flex-grow-1" t-att-class="{ 'border-top': !store.inPublicPage and !ui.isSmall, 'flex-column align-items-center bg-view': ui.isSmall }" t-ref="root">
+        <div t-if="ui.isSmall and store.discuss.activeTab === 'main'" class="w-100 border-bottom" t-call="mail.Discuss.mobileTopbar" t-ref="mobileTopbar"/>
         <div t-if="thread and (store.inPublicPage or !(ui.isSmall and ['chat', 'channel'].includes(store.discuss.activeTab)))" class="o-mail-Discuss-content d-flex flex-column h-100 w-100 bg-view overflow-auto" t-ref="content">
             <div class="o-mail-Discuss-header px-3 bg-view border-bottom d-flex flex-shrink-0 align-items-center">
                 <div t-if="thread and ['channel', 'group', 'chat'].includes(thread.type)" class="o-mail-Discuss-threadAvatar position-relative align-self-center align-items-center mt-2 mb-2 me-2">
@@ -22,7 +22,7 @@
                 <ImStatus t-if="thread and thread.type === 'chat' and thread.chatPartner" className="'me-1'" persona="thread.chatPartner" thread="thread" />
                 <div class="d-flex flex-grow-1 align-self-center align-items-center h-100 py-2">
                     <AutoresizeInput
-                        className="'o-mail-Discuss-threadName lead fw-bold flex-shrink-1 text-dark bg-view py-0'"
+                        className="'o-mail-Discuss-threadName lead fw-bold flex-shrink-1 text-dark py-0'"
                         enabled="thread.is_editable or thread.type === 'chat'"
                         onValidate.bind="renameThread"
                         value="thread.displayName"
@@ -31,7 +31,7 @@
                         <div class="flex-shrink-0 mx-2 py-2 border-start"/>
                         <t t-set="autogrowDescriptionPlaceholder">Add a description</t>
                         <AutoresizeInput
-                            className="'o-mail-Discuss-threadDescription flex-shrink-1 py-1 bg-view'"
+                            className="'o-mail-Discuss-threadDescription flex-shrink-1 py-1'"
                             enabled="thread.is_editable"
                             onValidate.bind="updateThreadDescription"
                             placeholder="thread.is_editable ? autogrowDescriptionPlaceholder : ''"
@@ -70,7 +70,7 @@
                 </div>
             </div>
         </div>
-        <div t-if="!thread and (!ui.isSmall or store.discuss.activeTab === 'mailbox')" class="d-flex flex-grow-1 align-items-center justify-content-center w-100 bg-view">
+        <div t-if="!thread and (!ui.isSmall or store.discuss.activeTab === 'main')" class="d-flex flex-grow-1 align-items-center justify-content-center w-100 bg-view">
             <h4 class="text-muted"><b><i>No conversation selected.</i></b></h4>
         </div>
     </div>

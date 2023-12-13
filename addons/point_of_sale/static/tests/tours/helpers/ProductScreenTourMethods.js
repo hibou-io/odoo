@@ -412,3 +412,18 @@ export function addCustomerNote(note) {
         ].flat()
     );
 }
+
+export function checkOrderlinesNumber(number) {
+    return [
+        {
+            content: `check orderlines number`,
+            trigger: `.order-container .orderline`,
+            run: () => {
+                const orderline_amount = $(".order-container .orderline").length;
+                if (orderline_amount !== number) {
+                    throw new Error(`Expected ${number} orderlines, got ${orderline_amount}`);
+                }
+            },
+        },
+    ];
+}

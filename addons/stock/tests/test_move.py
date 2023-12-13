@@ -2062,12 +2062,12 @@ class StockMove(TransactionCase):
             'location_id': self.stock_location.id,
             'location_dest_id': self.supplier_location.id,
             'product_id': self.product.id,
-            'product_uom': self.uom_unit.id,
-            'product_uom_qty': 100.0,
+            'product_uom': self.uom_dozen.id,
+            'product_uom_qty': 10.0,
         })
 
         self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product, self.stock_location), 150.0)
-        self.assertEqual(move1.availability, 100.0)
+        self.assertEqual(move1.availability, 120.0)
 
         # confirmation
         move1._action_confirm()
@@ -2077,7 +2077,7 @@ class StockMove(TransactionCase):
         move1._action_assign()
         self.assertEqual(move1.state, 'assigned')
         self.assertEqual(len(move1.move_line_ids), 1)
-        self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product, self.stock_location), 50.0)
+        self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product, self.stock_location), 30.0)
 
         # unreserve
         move1._do_unreserve()
@@ -4161,7 +4161,7 @@ class StockMove(TransactionCase):
         self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product_lot, self.stock_location), 1.0)
         self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product_lot, self.stock_location, lot_id=lot1, package_id=package1), 1.0)
 
-        move1.move_line_ids.write({'lot_id': lot2.id})
+        move1.move_line_ids.write({'lot_id': lot2})
 
         self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product_lot, self.stock_location), 1.0)
         self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product_lot, self.stock_location, lot_id=lot1), 0.0)
@@ -5991,8 +5991,7 @@ class StockMove(TransactionCase):
 
     def test_SML_location_selection(self):
         """
-        Suppose the setting 'Storage Categories' disabled and the option 'Show Detailed Operations'
-        for operation 'Internal Transfer' enabled.
+        Suppose the setting 'Storage Categories' disabled.
         A user creates an internal transfer from F to T, confirms it then adds a SML and selects
         another destination location L (with L a child of T). When the user completes the field
         `quantity`, the onchange should n't change the destination location L
@@ -6000,7 +5999,6 @@ class StockMove(TransactionCase):
 
         self.env.user.write({'groups_id': [(3, self.env.ref('stock.group_stock_storage_categories').id)]})
         internal_transfer = self.env.ref('stock.picking_type_internal')
-        internal_transfer.show_operations = True
 
         picking = self.env['stock.picking'].create({
             'picking_type_id': internal_transfer.id,
@@ -6020,8 +6018,8 @@ class StockMove(TransactionCase):
 
         picking.action_confirm()
 
-        with Form(picking) as form:
-            with form.move_line_ids_without_package.edit(0) as line:
+        with Form(picking.move_ids_without_package, view='stock.view_stock_move_operations') as form:
+            with form.move_line_ids.edit(0) as line:
                 line.location_dest_id = self.stock_location.child_ids[0]
                 line.quantity = 1
 
@@ -6157,3 +6155,42 @@ class StockMove(TransactionCase):
         self.assertEqual(receipt.state, 'done')
         self.assertEqual(len(receipt.move_line_ids), 1)
         self.assertEqual(receipt.move_line_ids.quantity, 1)
+
+    def test_skip_putaway_if_dest_loc_set_by_user(self):
+        """
+        Suppose the putaway rules and storage categories enabled. On the
+        detailed operations, the user adds a new line, set a specific
+        destination location and then the done quantity. In such cases, since
+        the user has defined himself the destination location, we should not try
+        to apply any putaway rule that would override his choice.
+        """
+        self.env.user.write({'groups_id': [(4, self.env.ref('stock.group_stock_storage_categories').id)]})
+
+        child_location = self.stock_location.child_ids[0]
+        in_type = self.env.ref('stock.picking_type_in')
+
+        in_type.show_operations = True
+
+        receipt = self.env['stock.picking'].create({
+            'location_id': self.customer_location.id,
+            'location_dest_id': self.stock_location.id,
+            'picking_type_id': in_type.id,
+            'move_ids': [(0, 0, {
+                'name': self.product.name,
+                'location_id': self.customer_location.id,
+                'location_dest_id': self.stock_location.id,
+                'product_id': self.product.id,
+                'product_uom': self.product.uom_id.id,
+                'product_uom_qty': 2.0,
+            })],
+        })
+        receipt.action_confirm()
+
+        with Form(receipt.move_ids, view='stock.view_stock_move_operations') as move_form:
+            with move_form.move_line_ids.edit(0) as line:
+                line.location_dest_id = child_location
+                line.quantity = 2
+
+        self.assertRecordValues(receipt.move_ids.move_line_ids[-1], [
+            {'location_dest_id': child_location.id, 'product_id': self.product.id, 'quantity': 2},
+        ])

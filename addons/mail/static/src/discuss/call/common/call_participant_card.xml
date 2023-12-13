@@ -19,7 +19,7 @@
             t-ref="root"
         >
             <!-- card -->
-            <CallParticipantVideo t-if="hasVideo" session="rtcSession" videoStream="props.cardData.videoStream"/>
+            <CallParticipantVideo t-if="hasVideo" session="rtcSession" type="props.cardData.type" inset="props.inset"/>
             <div t-else="" class="o-discuss-CallParticipantCard-avatar d-flex align-items-center justify-content-center h-100 w-100 rounded-1" t-att-class="{ 'o-minimized': props.minimized }" draggable="false">
                 <img alt="Avatar"
                         t-att-class="{
@@ -54,6 +54,9 @@
                         <i t-else="" class="fa fa-exclamation-triangle text-danger"/>
                     </span>
                     <span t-if="showConnectionState" class="d-flex flex-column justify-content-center me-1 p-2 rounded-circle o-discuss-CallParticipantCard-iconBlackBg" t-att-title="rtcSession.connectionState">
+                        <i class="fa fa-exclamation-triangle text-warning"/>
+                    </span>
+                    <span t-if="showServerState" class="d-flex flex-column justify-content-center me-1 p-2 rounded-circle o-discuss-CallParticipantCard-iconBlackBg" t-att-title="rtc.state.serverState">
                         <i class="fa fa-exclamation-triangle text-warning"/>
                     </span>
                     <span t-if="rtcSession.isScreenSharingOn and !props.minimized and !isOfActiveCall" class="user-select-none rounded-pill text-bg-danger d-flex align-items-center me-1 fw-bolder" title="live" aria-label="live">

@@ -7,8 +7,11 @@ from datetime import date, datetime, timedelta
 from odoo import fields, Command
 from odoo.tests import Form, HttpCase, tagged
 from odoo.addons.base.tests.common import SavepointCaseWithUserDemo
+
+import freezegun
 import pytz
 import re
+import base64
 
 
 class TestCalendar(SavepointCaseWithUserDemo):
@@ -296,11 +299,14 @@ class TestCalendar(SavepointCaseWithUserDemo):
 
         self.assertEqual(str(activity_id.date_deadline), '2018-10-16')
 
+    @freezegun.freeze_time('2023-10-06 10:00:00')
     def test_event_creation_mail(self):
         """
+        Freezegun used because we don't send mail for past events
         Check that mail are sent to the attendees on event creation
         Check that mail are sent to the added attendees on event edit
         Check that mail are NOT sent to the attendees when the event date is past
+        Check that mail have extra attachement added by the user
         """
 
         def _test_one_mail_per_attendee(self, partners):
@@ -310,6 +316,22 @@ class TestCalendar(SavepointCaseWithUserDemo):
                     ('notified_partner_ids', 'in', partner.id),
                     ])
                 self.assertEqual(len(mail), 1)
+
+        def _test_emails_has_attachment(self, partners):
+            # check that every email has an attachment
+            for partner in partners:
+                mail = self.env['mail.message'].sudo().search([
+                    ('notified_partner_ids', 'in', partner.id),
+                ])
+                extra_attachment = mail.attachment_ids.filtered(lambda attachment: attachment.name == "fileText_attachment.txt")
+                self.assertEqual(len(extra_attachment), 1)
+
+        attachment = self.env['ir.attachment'].create({
+            'datas': base64.b64encode(bytes("Event Attachment", 'utf-8')),
+            'name': 'fileText_attachment.txt',
+            'mimetype': 'text/plain'
+        })
+        self.env.ref('calendar.calendar_template_meeting_invitation').attachment_ids = attachment
 
         partners = [
             self.env['res.partner'].create({'name': 'testuser0', 'email': u'bob@example.com'}),
@@ -328,6 +350,7 @@ class TestCalendar(SavepointCaseWithUserDemo):
 
         # every partner should have 1 mail sent
         _test_one_mail_per_attendee(self, partners)
+        _test_emails_has_attachment(self, partners)
 
         # adding more partners to the event
         partners.extend([
@@ -350,7 +373,7 @@ class TestCalendar(SavepointCaseWithUserDemo):
             'allday': False,
             'recurrency': False,
             'partner_ids': partner_ids,
-            'start': "2023-10-09 08:00:00",
+            'start': "2023-10-04 08:00:00",
             'stop': "2023-10-10 08:00:00",
         })
 

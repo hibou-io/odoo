@@ -440,6 +440,12 @@
                 <t t-foreach="error_message" t-as="err"><t t-esc="err"/><br /></t>
             </div>
         </div>
+        <div t-if="not partner_can_edit_vat" class="col-12 d-none d-xl-block">
+            <small class="form-text text-muted">
+                Company name, VAT Number and country can not be changed once document(s) have been issued for your account.
+                <br/>Please contact us directly for that operation.
+            </small>
+        </div>
         <div t-attf-class="mb-3 #{error.get('name') and 'o_has_error' or ''} col-xl-6">
             <label class="col-form-label" for="name">Name</label>
             <input type="text" name="name" t-attf-class="form-control #{error.get('name') and 'is-invalid' or ''}" t-att-value="name or partner.name" />
@@ -468,9 +474,6 @@
             <input type="text" name="vat" t-attf-class="form-control #{error.get('vat') and 'is-invalid' or ''}" t-att-value="vat or partner.vat" t-att-disabled="None if partner_can_edit_vat else '1'" />
             <small t-if="not partner_can_edit_vat" class="form-text text-muted d-block d-xl-none">Changing VAT number is not allowed once document(s) have been issued for your account. Please contact us directly for this operation.</small>
         </div>
-        <div t-if="not partner_can_edit_vat" class="col-12 d-none d-xl-block">
-            <small class="form-text text-muted">Changing company name or VAT number is not allowed once document(s) have been issued for your account. <br/>Please contact us directly for this operation.</small>
-        </div>
         <div t-attf-class="mb-3 #{error.get('phone') and 'o_has_error' or ''} col-xl-6">
             <label class="col-form-label" for="phone">Phone</label>
             <input type="tel" name="phone" t-attf-class="form-control #{error.get('phone') and 'is-invalid' or ''}" t-att-value="phone or partner.phone" />
@@ -491,7 +494,7 @@
         </div>
         <div t-attf-class="mb-3 #{error.get('country_id') and 'o_has_error' or ''} col-xl-6">
             <label class="col-form-label" for="country_id">Country</label>
-            <select name="country_id" t-attf-class="form-select #{error.get('country_id') and 'is-invalid' or ''}">
+            <select name="country_id" t-attf-class="form-select #{error.get('country_id') and 'is-invalid' or ''}" t-att-disabled="None if partner_can_edit_vat else '1'">
                 <option value="">Country...</option>
                 <t t-foreach="countries or []" t-as="country">
                     <option t-att-value="country.id" t-att-selected="country.id == int(country_id) if country_id else country.id == partner.country_id.id">
@@ -499,6 +502,7 @@
                     </option>
                 </t>
             </select>
+            <small t-if="not partner_can_edit_vat" class="form-text text-muted d-block d-xl-none">Changing the country is not allowed once document(s) have been issued for your account. Please contact us directly for this operation.</small>
         </div>
         <div t-attf-class="mb-3 #{error.get('state_id') and 'o_has_error' or ''} col-xl-6">
             <label class="col-form-label label-optional" for="state_id">State / Province</label>
@@ -600,7 +604,7 @@
             <section t-if="debug and allow_api_keys">
                 <h4>
                 Developer API Keys
-                    <a href="https://www.odoo.com/documentation/master/developer/misc/api/external_api.html#api-keys" target="_blank">
+                    <a href="https://www.odoo.com/documentation/17.0/developer/misc/api/external_api.html#api-keys" target="_blank">
                         <i title="Documentation" class="fa fa-fw o_button_icon fa-info-circle"></i>
                     </a>
                 </h4>
@@ -712,13 +716,17 @@
     <template id="pager" name="Pager">
         <ul t-if="pager['page_count'] > 1" t-attf-class="#{ classname or '' } pagination m-0 #{_classes}" t-att-style="style or None">
             <li t-attf-class="page-item #{'disabled' if pager['page']['num'] == 1 else ''}">
-                <a t-att-href=" pager['page_previous']['url'] if pager['page']['num'] != 1 else None" t-attf-class="page-link #{extraLinkClass}">Prev</a>
+                <a t-att-href=" pager['page_previous']['url'] if pager['page']['num'] != 1 else None" t-attf-class="page-link #{extraLinkClass}">
+                    <span class="fa fa-chevron-left" role="img" aria-label="Previous" title="Previous"/>
+                </a>
             </li>
             <t t-foreach="pager['pages']" t-as="page">
                 <li t-attf-class="page-item #{'active' if page['num'] == pager['page']['num'] else ''}"> <a t-att-href="page['url']" t-attf-class="page-link #{extraLinkClass}" t-out="page['num']"/></li>
             </t>
             <li t-attf-class="page-item #{'disabled' if pager['page']['num'] == pager['page_count'] else ''}">
-                <a t-att-href="pager['page_next']['url'] if pager['page']['num'] != pager['page_count'] else None" t-attf-class="page-link #{extraLinkClass}">Next</a>
+                <a t-att-href="pager['page_next']['url'] if pager['page']['num'] != pager['page_count'] else None" t-attf-class="page-link #{extraLinkClass}">
+                    <span class="fa fa-chevron-right" role="img" aria-label="Next" title="Next"/>
+                </a>
             </li>
         </ul>
     </template>
@@ -805,7 +813,7 @@
         </div>
         <div t-attf-class="{{'offcanvas-body' if isOffcanvas else 'mt-3'}}">
             <div class="d-flex justify-content-start align-items-center gap-3 mb-4">
-                <img class="o_portal_contact_img rounded o_object_fit_cover" t-att-src="image_data_uri(user_id.partner_id.avatar_1024)" alt="Contact" width="50"/>
+                <img class="o_portal_contact_img rounded o_object_fit_cover" t-att-src="image_data_uri(user_id.partner_id.avatar_128)" alt="Contact" width="50"/>
                 <div class="d-flex flex-column justify-content-center">
                     <h5 class="mb-0" t-out="user_id.name"/>
                     <p class="mb-0 text-muted" t-out="user_id.company_name"/>

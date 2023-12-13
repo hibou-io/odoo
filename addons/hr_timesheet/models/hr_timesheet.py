@@ -50,7 +50,7 @@ class AccountAnalyticLine(models.Model):
     task_id = fields.Many2one(
         'project.task', 'Task', index='btree_not_null',
         compute='_compute_task_id', store=True, readonly=False,
-        domain="[('project_id.allow_timesheets', '=', True), ('project_id', '=?', project_id)]")
+        domain="[('allow_timesheets', '=', True), ('project_id', '=?', project_id)]")
     parent_task_id = fields.Many2one('project.task', related='task_id.parent_id', store=True)
     project_id = fields.Many2one(
         'project.project', 'Project', domain=_domain_project_id, index=True,
@@ -250,6 +250,24 @@ class AccountAnalyticLine(models.Model):
         return key + (self.env.company.timesheet_encode_uom_id,)
 
     @api.model
+    def get_views(self, views, options=None):
+        res = super().get_views(views, options)
+        if options and options.get('toolbar'):
+            wip_report_id = None
+
+            def get_wip_report_id():
+                return self.env['ir.model.data']._xmlid_to_res_id("mrp_account.wip_report", raise_if_not_found=False)
+
+            for view_data in res['views'].values():
+                print_data_list = view_data.get('toolbar', {}).get('print')
+                if print_data_list:
+                    if wip_report_id is None and re.search(r'widget="timesheet_uom(\w)*"', view_data['arch']):
+                        wip_report_id = get_wip_report_id()
+                    if wip_report_id:
+                        view_data['toolbar']['print'] = [print_data for print_data in print_data_list if print_data['id'] != wip_report_id]
+        return res
+
+    @api.model
     def _get_view(self, view_id=None, view_type='form', **options):
         """ Set the correct label for `unit_amount`, depending on company UoM """
         arch, view = super()._get_view(view_id, view_type, **options)
@@ -413,3 +431,21 @@ class AccountAnalyticLine(models.Model):
 
     def _default_user(self):
         return self.env.context.get('user_id', self.env.user.id)
+
+    @api.model
+    def _ensure_uom_hours(self):
+        uom_hours = self.env.ref('uom.product_uom_hour', raise_if_not_found=False)
+        if not uom_hours:
+            uom_hours = self.env['uom.uom'].create({
+                'name': "Hours",
+                'category_id': self.env.ref('uom.uom_categ_wtime').id,
+                'factor': 8,
+                'uom_type': "smaller",
+            })
+            self.env['ir.model.data'].create({
+                'name': 'product_uom_hour',
+                'model': 'uom.uom',
+                'module': 'uom',
+                'res_id': uom_hours.id,
+                'noupdate': True,
+            })

@@ -172,7 +172,7 @@ class ReportMoOverview(models.AbstractModel):
             'product_model': production.product_id._name,
             'product_id': production.product_id.id,
             'state': production.state,
-            'formatted_state': self._format_state(production),
+            'formatted_state': self._format_state(production, components),
             'quantity': production.product_qty if production.state != 'done' else production.qty_produced,
             'uom_name': production.product_uom_id.display_name,
             'uom_precision': self._get_uom_precision(production.product_uom_id.rounding),
@@ -191,22 +191,32 @@ class ReportMoOverview(models.AbstractModel):
     def _get_unit_cost(self, move):
         return move.product_id.uom_id._compute_price(move.product_id.standard_price, move.product_uom)
 
-    def _format_state(self, record):
-        if record._name != 'mrp.production' or record.state not in ('draft', 'confirmed') or not record.move_raw_ids:
+    def _format_state(self, record, components=False):
+        """ For MOs, provide a custom state based on the demand vs quantities available for components.
+        All other records types will provide their standard state value.
+        :param dict components: components in the structure provided by `_get_components_data`
+        :return: string to be used as custom state
+        """
+        if record._name != 'mrp.production' or record.state not in ('draft', 'confirmed') or not components:
             return dict(record._fields['state']._description_selection(self.env)).get(record.state)
         components_qty_to_produce = defaultdict(float)
         components_qty_reserved = defaultdict(float)
-        for move in record.move_raw_ids:
-            if move.product_id.detailed_type != 'product':
+        components_qty_free = defaultdict(float)
+        for component in components:
+            component = component["summary"]
+            product = component["product"]
+            if product.type != 'product':
                 continue
-            components_qty_to_produce[move.product_id] += move.product_qty
-            components_qty_reserved[move.product_id] += move.product_uom._compute_quantity(move.quantity, move.product_id.uom_id)
+            uom = component["uom"]
+            components_qty_to_produce[product] += uom._compute_quantity(component["quantity"], product.uom_id)
+            components_qty_reserved[product] += uom._compute_quantity(component["quantity_reserved"], product.uom_id)
+            components_qty_free[product] = uom._compute_quantity(component["quantity_free"], product.uom_id)
         producible_qty = record.product_qty
-        for product_id, comp_qty_to_produce in components_qty_to_produce.items():
-            if float_is_zero(comp_qty_to_produce, precision_rounding=product_id.uom_id.rounding):
+        for product, comp_qty_to_produce in components_qty_to_produce.items():
+            if float_is_zero(comp_qty_to_produce, precision_rounding=product.uom_id.rounding):
                 continue
             comp_producible_qty = float_round(
-                record.product_qty * (components_qty_reserved[product_id] + product_id.free_qty) / comp_qty_to_produce,
+                record.product_qty * (components_qty_reserved[product] + components_qty_free[product]) / comp_qty_to_produce,
                 precision_rounding=record.product_uom_id.rounding, rounding_method='DOWN'
             )
             if float_compare(comp_producible_qty, 0, precision_rounding=record.product_uom_id.rounding) <= 0:
@@ -255,7 +265,7 @@ class ReportMoOverview(models.AbstractModel):
                 operation_cycle = float_round(production.product_uom_qty / capacity, precision_rounding=1, rounding_method='UP')
                 bom_duration_expected = (operation_cycle * operation.time_cycle * 100.0 / operation.workcenter_id.time_efficiency) + \
                     operation.workcenter_id._get_expected_duration(production.product_id)
-                real_cost = expected_cost / workorder.duration_expected * bom_duration_expected
+                real_cost = expected_cost / (workorder.duration_expected or 1) * bom_duration_expected
             else:
                 real_cost = expected_cost
 
@@ -271,7 +281,7 @@ class ReportMoOverview(models.AbstractModel):
                 'quantity_decorator': self._get_comparison_decorator(workorder.duration_expected, wo_duration, 0.01),
                 'uom_name': operation_uom,
                 'production_id': production.id,
-                'unit_cost': expected_cost / workorder.duration_expected,
+                'unit_cost': expected_cost / (workorder.duration_expected or 1),
                 'mo_cost': mo_cost,
                 'real_cost': real_cost,
                 'currency_id': currency.id,
@@ -403,7 +413,7 @@ class ReportMoOverview(models.AbstractModel):
         else:
             replenish_data = self._get_replenishments_from_forecast(production, replenish_data)
         for count, move_raw in enumerate(production.move_raw_ids):
-            if production.state == 'done' and float_is_zero(move_raw.quantity_done, precision_rounding=move_raw.product_uom.rounding):
+            if production.state == 'done' and float_is_zero(move_raw.quantity, precision_rounding=move_raw.product_uom.rounding):
                 # If a product wasn't consumed in the MO by the time it is done, no need to display it on the final Overview.
                 continue
             component_index = f"{current_index}{count}"
@@ -431,8 +441,10 @@ class ReportMoOverview(models.AbstractModel):
             'model': product._name,
             'name': product.display_name,
             'product_model': product._name,
+            'product': product,
             'product_id': product.id,
             'quantity': quantity,
+            'uom': move_raw.product_uom,
             'uom_name': move_raw.product_uom.display_name,
             'uom_precision': self._get_uom_precision(move_raw.product_uom.rounding),
             'quantity_free': product.uom_id._compute_quantity(max(product.free_qty, 0), move_raw.product_uom) if product.type == 'product' else False,
@@ -441,7 +453,7 @@ class ReportMoOverview(models.AbstractModel):
             'receipt': self._check_planned_start(production.date_start, self._get_component_receipt(product, move_raw, production.warehouse_id, replenishments, replenish_data)),
             'unit_cost': self._get_unit_cost(move_raw),
             'mo_cost': currency.round(replenish_mo_cost + missing_quantity_cost),
-            'real_cost': currency.round(self._get_component_real_cost(move_raw, move_raw.product_uom_qty)),
+            'real_cost': currency.round(self._get_component_real_cost(move_raw, quantity)),
             'currency_id': currency.id,
             'currency': currency,
         }
@@ -520,7 +532,6 @@ class ReportMoOverview(models.AbstractModel):
                 'product_model': product._name,
                 'product_id': product.id,
                 'state': doc_in.state,
-                'formatted_state': self._format_state(doc_in),
                 'quantity': line_quantity,
                 'uom_name': move_raw.product_uom.display_name,
                 'uom_precision': self._get_uom_precision(forecast_line['uom_id']['rounding']),
@@ -543,6 +554,7 @@ class ReportMoOverview(models.AbstractModel):
             else:
                 replenishment['summary']['receipt'] = self._check_planned_start(production.date_start, self._get_replenishment_receipt(doc_in, replenishment.get('components', [])))
             replenishment['summary']['mo_cost_decorator'] = self._get_comparison_decorator(replenishment['summary']['real_cost'], replenishment['summary']['mo_cost'], replenishment['summary']['currency'].rounding)
+            replenishment['summary']['formatted_state'] = self._format_state(doc_in, replenishment['components']) if doc_in._name == 'mrp.production' else self._format_state(doc_in)
             replenishments.append(replenishment)
             forecast_line['already_used'] = True
             total_ordered += replenishment['summary']['quantity']

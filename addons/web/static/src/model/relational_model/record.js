@@ -239,11 +239,7 @@ export class Record extends DataPoint {
 
     toggleSelection(selected) {
         return this.model.mutex.exec(() => {
-            if (typeof selected === "boolean") {
-                this.selected = selected;
-            } else {
-                this.selected = !this.selected;
-            }
+            this._toggleSelection(selected);
         });
     }
 
@@ -1034,6 +1030,12 @@ export class Record extends DataPoint {
             if ("id" in this.activeFields) {
                 this._values.id = records[0].id;
             }
+            for (const fieldName in this.activeFields) {
+                const field = this.fields[fieldName];
+                if (["one2many", "many2many"].includes(field.type) && !field.relatedPropertyField) {
+                    this._changes[fieldName]?._clearCommands();
+                }
+            }
             this._changes = markRaw({});
             this.data = { ...this._values };
             this.dirty = false;
@@ -1083,6 +1085,7 @@ export class Record extends DataPoint {
     _switchMode(mode) {
         this.model._updateConfig(this.config, { mode }, { reload: false });
         if (mode === "readonly") {
+            this._noUpdateParent = false;
             this._invalidFields.clear();
         }
     }
@@ -1099,6 +1102,14 @@ export class Record extends DataPoint {
             this.model.action.doAction(action, { onClose: () => this._load() });
         } else {
             return this._load();
+        }
+    }
+
+    _toggleSelection(selected) {
+        if (typeof selected === "boolean") {
+            this.selected = selected;
+        } else {
+            this.selected = !this.selected;
         }
     }
 

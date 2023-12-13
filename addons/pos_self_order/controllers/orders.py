@@ -74,8 +74,9 @@ class PosSelfOrderController(http.Controller):
                 classic_lines.append(line)
 
         # combo lines must be created after classic_line, as they need the classic line identifier
-        lines = pos_config.env['pos.order.line'].create(classic_lines)
-        lines += pos_config.env['pos.order.line'].create(combo_lines)
+        # use user admin to avoid access rights issues
+        lines = pos_config.env['pos.order.line'].with_user(pos_config.self_ordering_default_user_id).create(classic_lines)
+        lines += pos_config.env['pos.order.line'].with_user(pos_config.self_ordering_default_user_id).create(combo_lines)
 
         order.write({
             'lines': lines,
@@ -222,6 +223,8 @@ class PosSelfOrderController(http.Controller):
             line_qty = line.get('qty')
             product = pos_config.env['product.product'].browse(int(line.get('product_id')))
             lst_price = pricelist._get_product_price(product, quantity=line_qty) if pricelist else product.lst_price
+            selected_attributes = fetched_attributes.browse(line.get('attribute_value_ids', []))
+            lst_price += sum([attr.price_extra for attr in selected_attributes])
 
             children = [l for l in lines if l.get('combo_parent_uuid') == line.get('uuid')]
             pos_combo_lines = combo_lines.browse([child.get('combo_line_id') for child in children])

@@ -1119,6 +1119,18 @@ export class ListRenderer extends Component {
                 await recordAfterResequence();
                 await this.props.list.enterEditMode(record);
                 this.cellToFocus = { column, record };
+                if (
+                    column.type === "field" &&
+                    record.fields[column.name].type === "boolean" &&
+                    (!column.widget || column.widget === "boolean")
+                ) {
+                    if (
+                        !this.isCellReadonly(column, record) &&
+                        !this.evalInvisible(column.invisible, record)
+                    ) {
+                        await record.update({ [column.name]: !record.data[column.name] });
+                    }
+                }
             }
         } else if (this.props.list.editedRecord && this.props.list.editedRecord !== record) {
             this.props.list.leaveEditMode();
@@ -1801,16 +1813,7 @@ export class ListRenderer extends Component {
         if (!this.canSelectRecord) {
             return;
         }
-        if (list.selection.length === list.records.length) {
-            list.records.forEach((record) => {
-                record.toggleSelection(false);
-                list.selectDomain(false);
-            });
-        } else {
-            list.records.forEach((record) => {
-                record.toggleSelection(true);
-            });
-        }
+        return list.toggleSelection();
     }
 
     toggleRecordSelection(record, ev) {

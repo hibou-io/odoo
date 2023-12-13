@@ -25,18 +25,6 @@ export class Persona extends Record {
         return super.insert(...arguments);
     }
 
-    update(data) {
-        super.update(data);
-        if (
-            this.type === "partner" &&
-            this.im_status !== "im_partner" &&
-            !this.is_public &&
-            !this._store.registeredImStatusPartners?.includes(this.id)
-        ) {
-            this._store.registeredImStatusPartners?.push(this.id);
-        }
-    }
-
     channelMembers = Record.many("ChannelMember");
     /** @type {number} */
     id;
@@ -61,6 +49,8 @@ export class Persona extends Record {
     /** @type {ImStatus} */
     im_status;
     isAdmin = false;
+    /** @type {string} */
+    write_date;
 
     /**
      * @returns {boolean}

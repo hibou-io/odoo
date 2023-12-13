@@ -5,7 +5,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 from unittest.mock import patch, PropertyMock
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.tests.common import users, tagged, HttpCase, warmup
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 
@@ -18,6 +18,11 @@ class TestDiscussFullPerformance(HttpCase):
         super().setUp()
         self.group_user = self.env.ref('base.group_user')
         self.password = 'Pl1bhD@2!kXZ'
+        self.env['mail.shortcode'].search([]).unlink()
+        self.shortcodes = self.env['mail.shortcode'].create([
+            {'source': 'hello', 'substitution': 'Hello, how may I help you?'},
+            {'source': 'bye', 'substitution': 'Thanks for your feedback. Goodbye!'},
+        ])
         self.users = self.env['res.users'].create([
             {
                 'email': 'e.e@example.com',
@@ -64,6 +69,7 @@ class TestDiscussFullPerformance(HttpCase):
     def test_init_messaging(self):
         """Test performance of `_init_messaging`."""
         self.channel_general = self.env.ref('mail.channel_all_employees')  # Unfortunately #general cannot be deleted. Assertions below assume data from a fresh db with demo.
+        self.channel_general.message_ids.unlink() # Remove messages to avoid depending on demo data.
         self.env['discuss.channel'].sudo().search([('id', '!=', self.channel_general.id)]).unlink()
         self.user_root = self.env.ref('base.user_root')
         # create public channels
@@ -100,7 +106,15 @@ class TestDiscussFullPerformance(HttpCase):
                 'channel_id': im_livechat_channel.id,
                 'previous_operator_id': self.users[0].partner_id.id,
             })['id'])
-        self.channel_livechat_2.with_user(self.env.ref('base.public_user')).sudo().message_post(body="test")
+        guest_sudo = self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.sudo()
+        self.make_jsonrpc_request("/mail/message/post", {
+            "post_data": {
+                "body": "test",
+                "message_type": "comment",
+            },
+            "thread_id": self.channel_livechat_2.id,
+            "thread_model": "discuss.channel",
+        }, headers={"Cookie": f"{guest_sudo._cookie_name}={guest_sudo._format_auth_cookie()};"})
         # add needaction
         self.users[0].notification_type = 'inbox'
         message = self.channel_channel_public_1.message_post(body='test', message_type='comment', author_id=self.users[2].partner_id.id, partner_ids=self.users[0].partner_id.ids)
@@ -157,12 +171,13 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.users[0].id,
                                 'isInternalUser': True,
                             },
+                            'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                         },
                     }], key=lambda member_data: member_data['id']))],
                     'custom_channel_name': False,
                     'id': self.channel_general.id,
                     'memberCount': len(self.group_user.users),
-                    'message_unread_counter': 5,
+                    'message_unread_counter': 0,
                     'model': "discuss.channel",
                     'create_uid': self.user_root.id,
                     'defaultDisplayMode': False,
@@ -208,6 +223,7 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.users[0].id,
                                 'isInternalUser': True,
                             },
+                            'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                         },
                     }], key=lambda member_data: member_data['id']))],
                     'custom_channel_name': False,
@@ -259,6 +275,7 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.users[0].id,
                                 'isInternalUser': True,
                             },
+                            'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                         },
                     }], key=lambda member_data: member_data['id']))],
                     'custom_channel_name': False,
@@ -310,6 +327,7 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.users[0].id,
                                 'isInternalUser': True,
                             },
+                            'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                         },
                     }], key=lambda member_data: member_data['id']))],
                     'custom_channel_name': False,
@@ -361,6 +379,7 @@ class TestDiscussFullPerformance(HttpCase):
                                 'id': self.users[0].id,
                                 'isInternalUser': True,
                             },
+                            'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                         },
                     }], key=lambda member_data: member_data['id']))],
                     'custom_channel_name': False,
@@ -413,6 +432,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[0].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                         {
@@ -434,6 +454,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[12].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                     ], key=lambda member_data: member_data['id']))],
@@ -501,6 +522,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[0].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                         {
@@ -522,6 +544,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[14].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                     ], key=lambda member_data: member_data['id']))],
@@ -589,6 +612,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[0].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                         {
@@ -610,6 +634,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[15].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                     ], key=lambda member_data: member_data['id']))],
@@ -677,6 +702,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[0].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                         {
@@ -698,6 +724,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[2].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                     ], key=lambda member_data: member_data['id']))],
@@ -765,6 +792,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[0].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
                             },
                         },
                         {
@@ -786,6 +814,7 @@ class TestDiscussFullPerformance(HttpCase):
                                     'id': self.users[3].id,
                                     'isInternalUser': True,
                                 },
+                                'write_date': fields.Datetime.to_string(self.users[3].partner_id.write_date),
                             },
                         },
                     ], key=lambda member_data: member_data['id']))],
@@ -952,13 +981,14 @@ class TestDiscussFullPerformance(HttpCase):
                                 'im_status': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.im_status,
                                 'name': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.name,
                                 'type': "guest",
+                                'write_date': fields.Datetime.to_string(self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.write_date),
                             },
                         },
                     ])],
                     'custom_channel_name': False,
                     'id': self.channel_livechat_2.id,
                     'memberCount': 2,
-                    'message_unread_counter': 0,
+                    'message_unread_counter': 1,
                     'model': "discuss.channel",
                     'create_uid': self.env.ref('base.public_user').id,
                     'defaultDisplayMode': False,
@@ -977,6 +1007,12 @@ class TestDiscussFullPerformance(HttpCase):
                     'rtcSessions': [('ADD', [])],
                     'seen_partners_info': [
                         {
+                            'fetched_message_id': next(res['message_id'] for res in self.channel_livechat_2._channel_last_message_ids()),
+                            'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).id,
+                            'guest_id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.guest_id).guest_id.id,
+                            'seen_message_id': next(res['message_id'] for res in self.channel_livechat_2._channel_last_message_ids()),
+                        },
+                        {
                             'fetched_message_id': False,
                             'id': self.channel_livechat_2.channel_member_ids.filtered(lambda m: m.partner_id == self.users[0].partner_id).id,
                             'partner_id': self.users[0].partner_id.id,
@@ -991,12 +1027,12 @@ class TestDiscussFullPerformance(HttpCase):
             'companyName': 'YourCompany',
             'shortcodes': [
                 {
-                    'id': 1,
+                    'id': self.shortcodes[0].id,
                     'source': 'hello',
                     'substitution': 'Hello, how may I help you?',
                 },
                 {
-                    'id': 2,
+                    'id': self.shortcodes[1].id,
                     'source': 'bye',
                     'substitution': 'Thanks for your feedback. Goodbye!',
                 },
@@ -1014,6 +1050,7 @@ class TestDiscussFullPerformance(HttpCase):
                 'out_of_office_date_end': False,
                 'type': "partner",
                 'user': False,
+                'write_date': fields.Datetime.to_string(self.user_root.partner_id.write_date),
             },
             'currentGuest': False,
             'current_partner': {
@@ -1029,6 +1066,7 @@ class TestDiscussFullPerformance(HttpCase):
                     'id': self.users[0].id,
                     'isInternalUser': True,
                 },
+                'write_date': fields.Datetime.to_string(self.users[0].partner_id.write_date),
             },
             'current_user_id': self.users[0].id,
             'current_user_settings': {

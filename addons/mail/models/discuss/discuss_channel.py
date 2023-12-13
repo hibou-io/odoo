@@ -206,8 +206,17 @@ class Channel(models.Model):
 
             # find partners to add from channel_member_ids
             membership_ids_cmd = vals.get('channel_member_ids', [])
-            if any(cmd[0] != 0 for cmd in membership_ids_cmd):
-                raise ValidationError(_('Invalid value when creating a channel with memberships, only 0 is allowed.'))
+            for cmd in membership_ids_cmd:
+                if cmd[0] != 0:
+                    raise ValidationError(_('Invalid value when creating a channel with memberships, only 0 is allowed.'))
+                for field_name in cmd[2]:
+                    if field_name not in ["partner_id", "guest_id", "is_pinned"]:
+                        raise ValidationError(
+                            _(
+                                "Invalid field “%(field_name)s” when creating a channel with members.",
+                                field_name=field_name,
+                            )
+                        )
             membership_pids = [cmd[2]['partner_id'] for cmd in membership_ids_cmd if cmd[0] == 0]
 
             partner_ids_to_add = partner_ids
@@ -240,6 +249,7 @@ class Channel(models.Model):
             all_emp_group = None
         if all_emp_group and all_emp_group in self:
             raise UserError(_('You cannot delete those groups, as the Whole Company group is required by other modules.'))
+        self.env['bus.bus']._sendmany([(channel, 'discuss.channel/delete', {'id': channel.id}) for channel in self])
 
     def write(self, vals):
         if 'channel_type' in vals:
@@ -523,20 +533,20 @@ class Channel(models.Model):
     def _notify_thread(self, message, msg_vals=False, **kwargs):
         # link message to channel
         rdata = super()._notify_thread(message, msg_vals=msg_vals, **kwargs)
-
-        message_format_values = message.message_format()[0]
-        bus_notifications = self._channel_message_notifications(message, message_format_values)
+        message_format = message.message_format()[0]
+        if "temporary_id" in self.env.context:
+            message_format["temporary_id"] = self.env.context["temporary_id"]
         # Last interest and is_pinned are updated for a channel when posting a message.
         # So a notification is needed to update UI, and it should come before the
         # notification of the message itself to ensure the channel automatically opens.
-        bus_notifications.insert(0, [self, 'discuss.channel/last_interest_dt_changed', {
-            'id': self.id,
-            'isServerPinned': True,
-            'last_interest_dt': fields.Datetime.now(),
-        }])
-        # sudo: bus.bus - sending on safe channel (target channel or partner)
-        self.env['bus.bus'].sudo()._sendmany(bus_notifications)
-        if self.is_chat or self.channel_type == 'group':
+        payload = {"id": self.id, "isServerPinned": True, "last_interest_dt": fields.Datetime.now()}
+        bus_notifications = [
+            (self, "discuss.channel/last_interest_dt_changed", payload),
+            (self, "discuss.channel/new_message", {"id": self.id, "message": message_format}),
+        ]
+        # sudo: bus.bus - sending on safe channel (discuss.channel)
+        self.env["bus.bus"].sudo()._sendmany(bus_notifications)
+        if self.is_chat or self.channel_type == "group":
             self._notify_thread_by_web_push(message, rdata, msg_vals, **kwargs)
         return rdata
 
@@ -624,23 +634,6 @@ class Channel(models.Model):
                 )
                 for channel_info in user_channels._channel_info():
                     notifications.append((partner, 'mail.record/insert', {"Thread": channel_info}))
-        return notifications
-
-    def _channel_message_notifications(self, message, message_format=False):
-        """ Generate the bus notifications for the given message
-            :param message : the mail.message to sent
-            :returns list of bus notifications (tuple (bus_channe, message_content))
-        """
-        message_format = dict(message_format or message.message_format()[0])
-        if 'temporary_id' in self.env.context:
-            message_format['temporary_id'] = self.env.context['temporary_id']
-        notifications = []
-        for channel in self:
-            payload = {
-                'id': channel.id,
-                'message': message_format,
-            }
-            notifications.append((channel, 'discuss.channel/new_message', payload))
         return notifications
 
     # ------------------------------------------------------------
@@ -737,7 +730,7 @@ class Channel(models.Model):
             return []
         channel_infos = []
         # sudo: discuss.channel.rtc.session - reading sessions of accessible channel is acceptable
-        rtc_sessions_by_channel = self.sudo().rtc_session_ids._mail_rtc_session_format_by_channel()
+        rtc_sessions_by_channel = self.sudo().rtc_session_ids._mail_rtc_session_format_by_channel(extra=True)
         current_partner, current_guest = self.env["res.partner"]._get_current_persona()
         self.env['discuss.channel'].flush_model()
         self.env['discuss.channel.member'].flush_model()
@@ -813,11 +806,12 @@ class Channel(models.Model):
                 # assumed to be smaller and it's important to know the member list for them
                 info['channelMembers'] = [('ADD', list(members_by_channel[channel]._discuss_channel_member_format().values()))]
                 info['seen_partners_info'] = sorted([{
-                    'id': cp.id,
-                    'partner_id': cp.partner_id.id,
-                    'fetched_message_id': cp.fetched_message_id.id,
-                    'seen_message_id': cp.seen_message_id.id,
-                } for cp in members_by_channel[channel] if cp.partner_id], key=lambda p: p['partner_id'])
+                    'id': cm.id,
+                    'partner_id' if cm.partner_id else 'guest_id': cm.partner_id.id if cm.partner_id else cm.guest_id.id,
+                    'fetched_message_id': cm.fetched_message_id.id,
+                    'seen_message_id': cm.seen_message_id.id,
+                } for cm in members_by_channel[channel]],
+                 key=lambda p: p.get('partner_id', p.get('guest_id')))
             # add RTC sessions info
             info.update({
                 'invitedMembers': [('ADD', list(invited_members_by_channel[channel]._discuss_channel_member_format(fields={'id': True, 'channel': {}, 'persona': {'partner': {'id', 'name', 'im_status'}, 'guest': {'id', 'name', 'im_status'}}}).values()))],
@@ -956,7 +950,7 @@ class Channel(models.Model):
 
     def _channel_seen(self, last_message_id=None, allow_older=False):
         """
-        Mark channel as seen by updating seen message id of the current logged partner
+        Mark channel as seen by updating seen message id of the current persona.
         :param last_message_id: the id of the message to be marked as seen, last message of the
         thread by default. This param SHOULD be required, the default behaviour is DEPRECATED and
         kept only for compatibility reasons.
@@ -974,25 +968,21 @@ class Channel(models.Model):
         if last_message_id is not False and not last_message:
             return
         self._set_last_seen_message(last_message, allow_older=allow_older)
-        data = {
-            'channel_id': self.id,
-            'last_message_id': last_message.id,
-            'partner_id': self.env.user.partner_id.id,
-        }
-        target = self if self.channel_type == 'chat' else self.env.user.partner_id
-        self.env['bus.bus']._sendone(target, 'discuss.channel.member/seen', data)
         return last_message.id
 
     def _set_last_seen_message(self, last_message, allow_older=False):
         """
-        Set last seen message of `self` channels for the current user.
+        Set last seen message of `self` channels for the current persona.
         :param last_message: the message to set as last seen message
         :param allow_order: whether to allow setting and older message
         as the last seen message.
         """
+        current_partner, current_guest = self.env["res.partner"]._get_current_persona()
+        if not current_partner and not current_guest:
+            return
         channel_member_domain = expression.AND([
             [('channel_id', 'in', self.ids)],
-            [('partner_id', '=', self.env.user.partner_id.id)],
+            [('partner_id', '=', current_partner.id) if current_partner else ('guest_id', '=', current_guest.id)],
             [] if allow_older else expression.OR([
                 [('seen_message_id', '=', False)],
                 [('seen_message_id', '<', last_message.id)]
@@ -1004,6 +994,21 @@ class Channel(models.Model):
             'seen_message_id': last_message.id,
             'last_seen_dt': fields.Datetime.now(),
         })
+        data = {
+            'channel_id': self.id,
+            'id': member.id,
+            'last_message_id': last_message.id,
+        }
+        data['partner_id' if current_partner else 'guest_id'] = current_partner.id if current_partner else current_guest.id
+        target = current_partner or current_guest
+        if self.channel_type in self._types_allowing_seen_infos():
+            target = self
+        self.env['bus.bus']._sendone(target, 'discuss.channel.member/seen', data)
+
+    def _types_allowing_seen_infos(self):
+        """ Return the channel types which allow sending seen infos notification
+        on the channel """
+        return ["chat", "group"]
 
     def channel_fetched(self):
         """ Broadcast the channel_fetched notification to channel members
@@ -1239,7 +1244,7 @@ class Channel(models.Model):
                  'type': 'customer',
                  'groups': [],
                  }
-                for partner in chat_channels.mapped("channel_partner_ids")
+                for partner in chat_channels.channel_member_ids.filtered(lambda member: not member.mute_until_dt).partner_id
             ]
         else:
             channel_rdata = recipients_data

@@ -192,7 +192,7 @@ class PosConfig(models.Model):
     @api.depends('company_id')
     def _compute_company_has_template(self):
         for config in self:
-            config.company_has_template = config.company_id.sudo()._existing_accounting() or config.company_id.chart_template
+            config.company_has_template = config.company_id.root_id.sudo()._existing_accounting() or config.company_id.chart_template
 
     def _compute_is_installed_account_accountant(self):
         account_accountant = self.env['ir.module.module'].sudo().search([('name', '=', 'account_accountant'), ('state', '=', 'installed')])
@@ -303,12 +303,12 @@ class PosConfig(models.Model):
                 if pm.journal_id and pm.journal_id.currency_id and pm.journal_id.currency_id != config.currency_id:
                     raise ValidationError(_("All payment methods must be in the same currency as the Sales Journal or the company currency if that is not set."))
 
-        if any(self.available_pricelist_ids.mapped(lambda pricelist: pricelist.currency_id != self.currency_id)):
-            raise ValidationError(_("All available pricelists must be in the same currency as the company or"
-                                    " as the Sales Journal set on this point of sale if you use"
-                                    " the Accounting application."))
-        if self.invoice_journal_id.currency_id and self.invoice_journal_id.currency_id != self.currency_id:
-            raise ValidationError(_("The invoice journal must be in the same currency as the Sales Journal or the company currency if that is not set."))
+            if config.use_pricelist and config.pricelist_id and any(config.available_pricelist_ids.mapped(lambda pricelist: pricelist.currency_id != config.currency_id)):
+                raise ValidationError(_("All available pricelists must be in the same currency as the company or"
+                                        " as the Sales Journal set on this point of sale if you use"
+                                        " the Accounting application."))
+            if config.invoice_journal_id.currency_id and config.invoice_journal_id.currency_id != config.currency_id:
+                raise ValidationError(_("The invoice journal must be in the same currency as the Sales Journal or the company currency if that is not set."))
 
     @api.constrains('iface_start_categ_id', 'iface_available_categ_ids')
     def _check_start_categ(self):
@@ -434,6 +434,8 @@ class PosConfig(models.Model):
                     "Unable to modify this PoS Configuration because you can't modify %s while a session is open.",
                     ", ".join(forbidden_fields)
                 ))
+
+        self._preprocess_x2many_vals_from_settings_view(vals)
         result = super(PosConfig, self).write(vals)
 
         self.sudo()._set_fiscal_position()
@@ -442,6 +444,41 @@ class PosConfig(models.Model):
         if 'is_order_printer' in vals:
             self._update_preparation_printers_menuitem_visibility()
         return result
+
+    def _preprocess_x2many_vals_from_settings_view(self, vals):
+        """ From the res.config.settings view, changes in the x2many fields always result to an array of link commands or a single set command.
+            - As a result, the items that should be unlinked are not properly unlinked.
+            - So before doing the write, we inspect the commands to determine which records should be unlinked.
+            - We only care about the link command.
+            - We can consider set command as absolute as it will replace all.
+        """
+        from_settings_view = self.env.context.get('from_settings_view')
+        if not from_settings_view:
+            # If vals is not from the settings view, we don't need to preprocess.
+            return
+
+        # Only ensure one when write is from settings view.
+        self.ensure_one()
+
+        fields_to_preprocess = []
+        for f in self.fields_get([]).values():
+            if f['type'] in ['many2many', 'one2many']:
+                fields_to_preprocess.append(f['name'])
+
+        for x2many_field in fields_to_preprocess:
+            if x2many_field in vals:
+                linked_ids = set(self[x2many_field].ids)
+
+                for command in vals[x2many_field]:
+                    if command[0] == 4:
+                        _id = command[1]
+                        if _id in linked_ids:
+                            linked_ids.remove(_id)
+
+                # Remaining items in linked_ids should be unlinked.
+                unlink_commands = [Command.unlink(_id) for _id in linked_ids]
+
+                vals[x2many_field] = unlink_commands + vals[x2many_field]
 
     def _get_forbidden_change_fields(self):
         forbidden_keys = ['module_pos_hr', 'module_pos_restaurant', 'available_pricelist_ids',
@@ -603,10 +640,12 @@ class PosConfig(models.Model):
             cash_journal = self.env['account.journal'].search([
                 *self.env['account.journal']._check_company_domain(company),
                 ('type', '=', 'cash'),
+                ('currency_id', 'in', [pos_config.currency_id.id, False]),
             ], limit=1)
             bank_journal = self.env['account.journal'].search([
                 *self.env['account.journal']._check_company_domain(company),
                 ('type', '=', 'bank'),
+                ('currency_id', 'in', [pos_config.currency_id.id, False]),
             ], limit=1)
             payment_methods = self.env['pos.payment.method']
             if cash_journal and len(cash_journal.pos_payment_method_ids.ids) == 0:
@@ -715,13 +754,21 @@ class PosConfig(models.Model):
                       COALESCE(pm.date, product_product.write_date) DESC
                 LIMIT %s
         """
-        self.env.cr.execute(query, params + [20000])
+        self.env.cr.execute(query, params + [self.get_limited_product_count()])
         product_ids = self.env.cr.fetchall()
         products = self.env['product.product'].search([('id', 'in', product_ids)])
         product_combo = products.filtered(lambda p: p['detailed_type'] == 'combo')
         product_in_combo = product_combo.combo_ids.combo_line_ids.product_id
         products_available = products | product_in_combo
         return products_available.read(fields)
+
+    def get_limited_product_count(self):
+        default_limit = 20000
+        config_param = self.env['ir.config_parameter'].sudo().get_param('point_of_sale.limited_product_count', default_limit)
+        try:
+            return int(config_param)
+        except (TypeError, ValueError, OverflowError):
+            return default_limit
 
     def get_limited_partners_loading(self):
         self.env.cr.execute("""
@@ -797,3 +844,8 @@ class PosConfig(models.Model):
             if pm.type == payment_type:
                 return pm
         return False
+
+    def _get_special_products(self):
+        default_discount_product = self.env.ref('point_of_sale.product_product_consumable', raise_if_not_found=False) or self.env['product.product']
+        default_tip_product = self.env.ref('point_of_sale.product_product_tip', raise_if_not_found=False) or self.env['product.product']
+        return default_tip_product | default_discount_product

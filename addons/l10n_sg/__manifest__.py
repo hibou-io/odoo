@@ -1,11 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
     'name': 'Singapore - Accounting',
-    'website': 'https://www.odoo.com/documentation/master/applications/finance/fiscal_localizations/singapore.html',
+    'website': 'https://www.odoo.com/documentation/17.0/applications/finance/fiscal_localizations/singapore.html',
     'icon': '/account/static/description/l10n.png',
     'countries': ['sg'],
     'author': 'Tech Receptives',
-    'version': '2.1',
+    'version': '2.2',
     'category': 'Accounting/Localizations/Account Charts',
     'description': """
 Singapore accounting chart and localization.

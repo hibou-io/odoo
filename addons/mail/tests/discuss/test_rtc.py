@@ -55,10 +55,6 @@ class TestChannelRTC(MailCommon):
                                     "type": "partner",
                                 },
                             },
-                            'isCameraOn': False,
-                            'isDeaf': False,
-                            'isSelfMuted': False,
-                            'isScreenSharingOn': False,
                         }])],
                     },
                 },
@@ -80,14 +76,11 @@ class TestChannelRTC(MailCommon):
                             "type": "partner",
                         },
                     },
-                    'isCameraOn': False,
-                    'isDeaf': False,
-                    'isSelfMuted': False,
-                    'isScreenSharingOn': False,
                 }]),
                 ('DELETE', [{'id': channel_member.rtc_session_ids.id - 1}]),
             ],
             'sessionId': channel_member.rtc_session_ids.id,
+            'serverInfo': None,
         })
 
     @users('employee')
@@ -105,6 +98,7 @@ class TestChannelRTC(MailCommon):
         with self.assertBus(
             [
                 (self.cr.dbname, 'discuss.channel', channel.id),  # update new session
+                (self.cr.dbname, 'discuss.channel', channel.id),  # channel_seen after posting join message
                 (self.cr.dbname, 'discuss.channel', channel.id),  # message_post "started a live conference" (not asserted below)
                 (self.cr.dbname, 'discuss.channel', channel.id),  # update of last interest (not asserted below)
                 (self.cr.dbname, 'res.partner', test_user.partner_id.id),  # incoming invitation
@@ -127,10 +121,6 @@ class TestChannelRTC(MailCommon):
                                     "type": "partner",
                                 },
                             },
-                            'isCameraOn': False,
-                            'isDeaf': False,
-                            'isSelfMuted': False,
-                            'isScreenSharingOn': False,
                         }])],
                     },
                 },
@@ -186,6 +176,7 @@ class TestChannelRTC(MailCommon):
         with self.assertBus(
             [
                 (self.cr.dbname, 'discuss.channel', channel.id),  # update new session
+                (self.cr.dbname, 'discuss.channel', channel.id),  # channel_seen after posting join message
                 (self.cr.dbname, 'discuss.channel', channel.id),  # message_post "started a live conference" (not asserted below)
                 (self.cr.dbname, 'discuss.channel', channel.id),  # update of last interest (not asserted below)
                 (self.cr.dbname, 'res.partner', test_user.partner_id.id),  # incoming invitation
@@ -209,10 +200,6 @@ class TestChannelRTC(MailCommon):
                                     "type": "partner",
                                 },
                             },
-                            'isCameraOn': False,
-                            'isDeaf': False,
-                            'isSelfMuted': False,
-                            'isScreenSharingOn': False,
                         }])],
                     },
                 },
@@ -232,10 +219,6 @@ class TestChannelRTC(MailCommon):
                                     "type": "partner",
                                 },
                             },
-                            'isCameraOn': False,
-                            'isDeaf': False,
-                            'isSelfMuted': False,
-                            'isScreenSharingOn': False,
                         }])],
                     },
                 },
@@ -362,10 +345,6 @@ class TestChannelRTC(MailCommon):
                                         "type": "partner",
                                     },
                                 },
-                                'isCameraOn': False,
-                                'isDeaf': False,
-                                'isSelfMuted': False,
-                                'isScreenSharingOn': False,
                             },
                         ])],
                     },
@@ -429,10 +408,6 @@ class TestChannelRTC(MailCommon):
                                         "type": "guest",
                                     },
                                 },
-                                'isCameraOn': False,
-                                'isDeaf': False,
-                                'isSelfMuted': False,
-                                'isScreenSharingOn': False,
                             },
                         ])],
                     },
@@ -640,9 +615,11 @@ class TestChannelRTC(MailCommon):
         channel_member_test_guest = channel.sudo().channel_member_ids.filtered(lambda member: member.guest_id == test_guest)
         found_bus_notifs = self.assertBusNotifications(
             [
-                (self.cr.dbname, 'res.partner', test_user.partner_id.id),  # channel joined (not asserted below)
-                (self.cr.dbname, 'discuss.channel', channel.id),  # message_post "invited" (not asserted below)
-                (self.cr.dbname, 'discuss.channel', channel.id),  # update of last interest (not asserted below)
+                (self.cr.dbname, 'discuss.channel', channel.id),  # channel joined -- seen (not asserted below)
+                (self.cr.dbname, 'res.partner', test_user.partner_id.id),  # channel joined  -- last_interrest (not asserted below)
+                (self.cr.dbname, 'discuss.channel', channel.id),  # message_post -- new_message (not asserted below)
+                (self.cr.dbname, 'discuss.channel', channel.id),  # message_post -- seen (not asserted below)
+                (self.cr.dbname, 'discuss.channel', channel.id),  # message_post -- last_interrest (not asserted below)
                 (self.cr.dbname, 'discuss.channel', channel.id),  # new members (not asserted below)
                 (self.cr.dbname, 'res.partner', test_user.partner_id.id),  # incoming invitation
                 (self.cr.dbname, 'mail.guest', test_guest.id),  # incoming invitation
@@ -670,10 +647,6 @@ class TestChannelRTC(MailCommon):
                                         "type": "partner",
                                     },
                                 },
-                                'isCameraOn': False,
-                                'isDeaf': False,
-                                'isSelfMuted': False,
-                                'isScreenSharingOn': False,
                             },
                         }
                     },
@@ -696,10 +669,6 @@ class TestChannelRTC(MailCommon):
                                         "type": "partner",
                                     },
                                 },
-                                'isCameraOn': False,
-                                'isDeaf': False,
-                                'isSelfMuted': False,
-                                'isScreenSharingOn': False,
                             },
                         }
                     },

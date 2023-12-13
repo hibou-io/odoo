@@ -735,7 +735,7 @@ class TestCustomFields(TestCommonCustomFields):
 
         # create a non-computed field, and assert how many queries it takes
         model_id = self.env['ir.model']._get_id('res.partner')
-        query_count = 38
+        query_count = 44
         with self.assertQueryCount(query_count):
             self.env.registry.clear_cache()
             self.env['ir.model.fields'].create({
@@ -850,7 +850,7 @@ class TestCustomFieldsPostInstall(TestCommonCustomFields):
         self.env.cr.execute("UPDATE ir_model_fields SET name = 'foo' WHERE id = %s", [field.id])
         with self.assertLogs('odoo.addons.base.models.ir_model') as log_catcher:
             # Trick to reload the registry. The above rename done through SQL didn't reload the registry. This will.
-            field.write({'field_description': 'foo'})
+            self.env.registry.setup_models(self.cr)
             self.assertIn(
                 f'The field `{field.name}` is not defined in the `{field.model}` Python class', log_catcher.output[0]
             )

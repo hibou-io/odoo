@@ -164,8 +164,8 @@ class Repair(models.Model):
     picking_product_ids = fields.One2many('product.product', compute='compute_picking_product_ids')
     picking_product_id = fields.Many2one(related="picking_id.product_id")
     # UI Fields
-    show_set_qty_button = fields.Boolean(compute='_compute_show_qty_button')
-    show_clear_qty_button = fields.Boolean(compute='_compute_show_qty_button')
+    show_set_qty_button = fields.Boolean(compute='_compute_show_qty_button')  # TODO: remove in master.
+    show_clear_qty_button = fields.Boolean(compute='_compute_show_qty_button')  # TODO: remove in master.
     unreserve_visible = fields.Boolean(
         'Allowed to Unreserve Production', compute='_compute_unreserve_visible',
         help='Technical field to check when we can unreserve')
@@ -255,19 +255,17 @@ class Repair(models.Model):
     def _compute_show_qty_button(self):
         self.show_set_qty_button = False
         self.show_clear_qty_button = False
-        for repair in self.filtered(lambda r: r.state not in ['cancel', 'done']):
-            if any(float_is_zero(m.quantity, precision_rounding=m.product_uom.rounding) and not float_is_zero(m.product_uom_qty, precision_rounding=m.product_uom.rounding) for m in repair.move_ids):
-                repair.show_set_qty_button = True
-            elif any(not float_is_zero(m.quantity, precision_rounding=m.product_uom.rounding) for m in repair.move_ids):
-                repair.show_clear_qty_button = True
 
     @api.depends('move_ids', 'state', 'move_ids.product_uom_qty')
     def _compute_unreserve_visible(self):
         for repair in self:
-            already_reserved = repair.state not in ('done', 'cancel') and any(repair.mapped('move_ids.move_line_ids.quantity'))
+            already_reserved = repair.state not in ('done', 'cancel') and any(repair.mapped('move_ids.move_line_ids.quantity_product_uom'))
 
             repair.unreserve_visible = already_reserved
-            repair.reserve_visible = repair.state in ('confirmed', 'under_repair') and any(move.product_uom_qty and move.state in ['confirmed', 'partially_available'] for move in repair.move_ids)
+            repair.reserve_visible = (
+                repair.state in ('confirmed', 'under_repair') and
+                any(not move.picked and move.product_uom_qty and move.state in ['confirmed', 'partially_available'] for move in repair.move_ids)
+            )
 
     @api.onchange('product_uom')
     def onchange_product_uom(self):
@@ -322,9 +320,6 @@ class Repair(models.Model):
 
     def action_assign(self):
         return self.move_ids._action_assign()
-
-    def action_clear_quantities_to_zero(self):
-        return self.move_ids.filtered(lambda m: float_compare(m.quantity, m.reserved_availability, precision_rounding=m.product_uom.rounding) == 0)._clear_quantities_to_zero()
 
     def action_create_sale_order(self):
         if any(repair.sale_order_id for repair in self):
@@ -385,6 +380,8 @@ class Repair(models.Model):
         no_service_policy = 'service_policy' not in self.env['product.template']
         #SOL qty delivered = repair.move_ids.quantity
         for repair in self:
+            if all(not move.picked for move in repair.move_ids):
+                repair.move_ids.picked = True
             if repair.sale_order_line_id:
                 ro_origin_product = repair.sale_order_line_id.product_template_id
                 # TODO: As 'service_policy' only appears with 'sale_project' module, isolate conditions related to this field in a 'sale_project_repair' module if it's worth
@@ -392,6 +389,7 @@ class Repair(models.Model):
                     repair.sale_order_line_id.qty_delivered = repair.sale_order_line_id.product_uom_qty
             if not repair.product_id:
                 continue
+
             if repair.product_id.product_tmpl_id.tracking != 'none' and not repair.lot_id:
                 raise ValidationError(_(
                     "Serial number is required for product to repair : %s",
@@ -412,6 +410,7 @@ class Repair(models.Model):
                 'partner_id': repair.partner_id.id,
                 'location_id': repair.location_id.id,
                 'location_dest_id': repair.location_id.id,
+                'picked': True,
                 'move_line_ids': [(0, 0, {
                     'product_id': repair.product_id.id,
                     'lot_id': repair.lot_id.id,
@@ -436,7 +435,6 @@ class Repair(models.Model):
             move_id = repair_move.get(repair.id, False)
             if move_id:
                 repair.move_id = move_id
-        self.sale_order_line_id.move_ids.picked = True
         all_moves = self.move_ids + product_moves
         all_moves._action_done()
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from markupsafe import Markup
 from werkzeug.urls import url_encode
 
 from odoo import _, api, fields, models, modules, tools, Command
@@ -40,7 +41,7 @@ class AccountMoveSend(models.TransientModel):
         readonly=False,
     )
     display_mail_composer = fields.Boolean(compute='_compute_send_mail_extra_fields')
-    send_mail_warning_message = fields.Text(compute='_compute_send_mail_extra_fields')
+    send_mail_warning_message = fields.Boolean(compute='_compute_send_mail_extra_fields')
     send_mail_readonly = fields.Boolean(compute='_compute_send_mail_extra_fields')
     mail_template_id = fields.Many2one(
         comodel_name='mail.template',
@@ -251,16 +252,9 @@ class AccountMoveSend(models.TransientModel):
     def _compute_send_mail_extra_fields(self):
         for wizard in self:
             wizard.display_mail_composer = wizard.mode == 'invoice_single'
-            wizard.send_mail_warning_message = False
-
             invoices_without_mail_data = wizard.move_ids.filtered(lambda x: not x.partner_id.email)
             wizard.send_mail_readonly = invoices_without_mail_data == wizard.move_ids
-
-            if wizard.mode == 'invoice_multi' and wizard.checkbox_send_mail and invoices_without_mail_data:
-                wizard.send_mail_warning_message = _(
-                    "The partners on the following invoices have no email address, "
-                    "so those invoices will not be sent: %s",
-                    ", ".join(invoices_without_mail_data.mapped('name')))
+            wizard.send_mail_warning_message = bool(invoices_without_mail_data) and (wizard.checkbox_send_mail or wizard.send_mail_readonly)
 
     @api.depends('mail_template_id')
     def _compute_mail_lang(self):
@@ -299,9 +293,58 @@ class AccountMoveSend(models.TransientModel):
             else:
                 wizard.mail_attachments_widget = []
 
+    @api.model
+    def _format_error_text(self, error):
+        """ Format the error that can be either a dict (complex format needed) or a string (simple format) into a
+        regular string.
+
+        :param error: the error to format.
+        :return: a text formatted error.
+        """
+        if isinstance(error, dict):
+            errors = '\n- '.join(error['errors'])
+            return f"{error['error_title']}\n- {errors}" if errors else error['error_title']
+        else:
+            return error
+
+    @api.model
+    def _format_error_html(self, error):
+        """ Format the error that can be either a dict (complex format needed) or a string (simple format) into a
+        valid html format.
+
+        :param error: the error to format.
+        :return: a html formatted error.
+        """
+        if isinstance(error, dict):
+            errors = Markup().join(Markup("<li>%s</li>") % error for error in error['errors'])
+            return Markup("%s<ul>%s</ul>") % (error['error_title'], errors)
+        else:
+            return error
+
     # -------------------------------------------------------------------------
     # BUSINESS ACTIONS
     # -------------------------------------------------------------------------
+
+    def action_open_partners_without_email(self, res_ids=None):
+        partners = self.move_ids.mapped("partner_id").filtered(lambda x: not x.email)
+        if len(partners) == 1:
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'res.partner',
+                'view_mode': 'form',
+                'target': 'current',
+                'res_id': partners.id,
+            }
+        else:
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'res.partner',
+                'view_mode': 'tree,form',
+                'target': 'current',
+                'name': _('Partners without email'),
+                'context': {'create': False, 'delete': False},
+                'domain': [('id', 'in', partners.ids)],
+            }
 
     @api.model
     def _need_invoice_document(self, invoice):
@@ -389,9 +432,9 @@ class AccountMoveSend(models.TransientModel):
         for move, move_data in moves_data.items():
             error = move_data['error']
             if allow_raising:
-                raise UserError(error)
+                raise UserError(self._format_error_text(error))
 
-            move.with_context(no_new_invoice=True).message_post(body=error)
+            move.with_context(no_new_invoice=True).message_post(body=self._format_error_html(error))
 
     @api.model
     def _hook_if_success(self, moves_data, from_cron=False, allow_fallback_pdf=False):

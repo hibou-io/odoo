@@ -551,7 +551,7 @@ class Product(models.Model):
             )
         else:
             self = self.with_context(product_tmpl_ids=self.product_tmpl_id.ids)
-        action = self.env['stock.quant'].action_view_inventory()
+        action = self.env['stock.quant'].action_view_quants()
         # note that this action is used by different views w/varying customizations
         if not self.env.context.get('is_stock_report'):
             action['domain'] = [('product_id', 'in', self.ids)]
@@ -595,12 +595,13 @@ class Product(models.Model):
         else:
             return self._get_rules_from_location(rule.location_src_id, seen_rules=seen_rules | rule)
 
-    def _get_date_with_security_lead_days(self, date, location, route_ids=False):
+    def _get_dates_info(self, date, location, route_ids=False):
         rules = self._get_rules_from_location(location, route_ids=route_ids)
-        for action, days in location.company_id._get_security_by_rule_action().items():
-            if action in rules.mapped('action'):
-                date -= relativedelta(days=days)
-        return date
+        delays, _ = rules.with_context(bypass_delay_description=True)._get_lead_days(self)
+        return {
+            'date_planned': date - relativedelta(days=delays['security_lead_days']),
+            'date_order': date - relativedelta(days=delays['security_lead_days'] + delays['purchase_delay']),
+        }
 
     def _get_only_qty_available(self):
         """ Get only quantities available, it is equivalent to read qty_available

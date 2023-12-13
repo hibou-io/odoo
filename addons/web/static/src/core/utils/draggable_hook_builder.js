@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import { clamp } from "@web/core/utils/numbers";
+import { closestScrollableX, closestScrollableY } from "@web/core/utils/scrolling";
 import { setRecurringAnimationFrame } from "@web/core/utils/timing";
 import { browser } from "../browser/browser";
 import { hasTouch, isBrowserFirefox, isIOS } from "../browser/feature_detection";
@@ -157,40 +158,7 @@ function getReturnValue(valueOrFn) {
  * @returns {(HTMLElement | null)[]}
  */
 function getScrollParents(el) {
-    return [getScrollParentX(el), getScrollParentY(el)];
-}
-
-/**
- * @param {HTMLElement} el
- * @returns {HTMLElement | null}
- */
-function getScrollParentX(el) {
-    if (!el) {
-        return null;
-    }
-    if (el.scrollWidth > el.clientWidth) {
-        const overflow = getComputedStyle(el).getPropertyValue("overflow");
-        if (/\bauto\b|\bscroll\b/.test(overflow)) {
-            return el;
-        }
-    }
-    return getScrollParentX(el.parentElement);
-}
-/**
- * @param {HTMLElement} el
- * @returns {HTMLElement | null}
- */
-function getScrollParentY(el) {
-    if (!el) {
-        return null;
-    }
-    if (el.scrollHeight > el.clientHeight) {
-        const overflow = getComputedStyle(el).getPropertyValue("overflow");
-        if (/\bauto\b|\bscroll\b/.test(overflow)) {
-            return el;
-        }
-    }
-    return getScrollParentY(el.parentElement);
+    return [closestScrollableX(el), closestScrollableY(el)];
 }
 
 /**
@@ -517,7 +485,7 @@ export function makeDraggableHook(hookParams) {
                 return (
                     !ctx.tolerance ||
                     Math.hypot(pointer.x - initialPosition.x, pointer.y - initialPosition.y) >=
-                        ctx.tolerance
+                    ctx.tolerance
                 );
             };
 
@@ -693,6 +661,9 @@ export function makeDraggableHook(hookParams) {
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1352061
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=339293
                 safePrevent(ev);
+                if (document.activeElement && !document.activeElement.contains(ev.target)) {
+                    document.activeElement.blur();
+                }
 
                 const { currentTarget, pointerId, target } = ev;
                 ctx.current.initialPosition = { ...ctx.pointer };
@@ -974,13 +945,18 @@ export function makeDraggableHook(hookParams) {
                 },
                 () => computeParams(params)
             );
+            // Firefox currently (119.0.1) does not handle our pointer events
+            // nicely when they happen from within the iframe. To work around
+            // this, we use mouse events instead of pointer events.
+            const useMouseEvents = isBrowserFirefox() && !hasTouch() && params.iframeWindow;
             // Effect depending on the `ref.el` to add triggering pointer events listener.
             setupHooks.setup(
                 (el) => {
                     if (el) {
                         const { add, cleanup } = makeCleanupManager();
                         const { addListener } = makeDOMHelpers({ add });
-                        addListener(el, "pointerdown", onPointerDown, { noAddedStyle: true });
+                        const event = useMouseEvents ? "mousedown" : "pointerdown";
+                        addListener(el, event, onPointerDown, { noAddedStyle: true });
                         if (hasTouch()) {
                             addListener(el, "contextmenu", safePrevent);
                             // Adds a non-passive listener on touchstart: this allows
@@ -989,7 +965,7 @@ export function makeDraggableHook(hookParams) {
                             // be fired. Note that we DO NOT want to prevent touchstart
                             // events since they're responsible of the native swipe
                             // scrolling.
-                            addListener(el, "touchstart", () => {}, {
+                            addListener(el, "touchstart", () => { }, {
                                 passive: false,
                                 noAddedStyle: true,
                             });
@@ -1007,10 +983,10 @@ export function makeDraggableHook(hookParams) {
             };
             // Other global event listeners.
             const throttledOnPointerMove = setupHooks.throttle(onPointerMove);
-            addWindowListener("pointermove", throttledOnPointerMove, {
+            addWindowListener(useMouseEvents ? "mousemove" : "pointermove", throttledOnPointerMove, {
                 passive: false,
             });
-            addWindowListener("pointerup", onPointerUp);
+            addWindowListener(useMouseEvents ? "mouseup" : "pointerup", onPointerUp);
             addWindowListener("pointercancel", onPointerCancel);
             addWindowListener("keydown", onKeyDown, { capture: true });
             setupHooks.teardown(() => dragEnd(null));

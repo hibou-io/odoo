@@ -1,9 +1,9 @@
 .o_popover_field_selector {
     &.o-popover-top > .popover-arrow::after {
-        border-top-color: map-get($theme-colors, 'primary');
+        border-top-color: #{$o-gray-300};
     }
     &.o-popover-bottom > .popover-arrow::after {
-        border-bottom-color: map-get($theme-colors, 'primary');
+        border-bottom-color: #{$o-gray-300};
     }
 }
 
@@ -17,8 +17,8 @@
     }
 
     .o_model_field_selector_popover_header, .o_model_field_selector_popover_footer {
-        color: color-contrast(map-get($theme-colors, 'primary'));
-        background: map-get($theme-colors, 'primary');
+        color: map-get($theme-colors, 'dark');
+        background: #{$o-gray-300};
         font-weight: bold;
         padding: 5px 0.4em;
 
@@ -28,15 +28,10 @@
             padding: 0px 35px;
             text-align: center;
         }
-        .o_model_field_selector_popover_search > .o_input, > input {
-            color: $o-main-text-color;
-            font-size: 115%;
-            border: none;
-            padding: 5px 0.4rem;
-        }
         .o_model_field_selector_popover_option {
             @include o-position-absolute($top: 0);
             padding: 8px;
+            cursor: pointer;
 
             &.o_model_field_selector_popover_prev_page {
                 left: 0;
@@ -45,7 +40,7 @@
                 right: 0;
             }
             &:hover {
-                background: darken(map-get($theme-colors, 'primary'), 10%);
+                color: darken(map-get($theme-colors, 'dark'), 10%);
             }
         }
     }
@@ -63,8 +58,9 @@
                 font-family: Arial;
                 font-size: 13px;
                 border-bottom: 1px solid mix($o-black, $dropdown-link-hover-bg, 8%);
-                &.active {
+                &.active button {
                     background: $dropdown-link-hover-bg;
+                    border: none;
                 }
                 .o_model_field_selector_popover_item_title {
                     font-size: 12px;

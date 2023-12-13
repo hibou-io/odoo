@@ -6,7 +6,7 @@ import { useService } from "@web/core/utils/hooks";
 import { ConnectionLostError, ConnectionAbortedError } from "@web/core/network/rpc_service";
 
 import { ProductCard } from "@point_of_sale/app/generic_components/product_card/product_card";
-import { Component, useState } from "@odoo/owl";
+import { Component, useState, useEffect, useRef } from "@odoo/owl";
 import { OfflineErrorPopup } from "@point_of_sale/app/errors/popups/offline_error_popup";
 import { ErrorPopup } from "@point_of_sale/app/errors/popups/error_popup";
 import { ProductInfoPopup } from "@point_of_sale/app/screens/product_screen/product_info_popup/product_info_popup";
@@ -21,13 +21,39 @@ export class ProductsWidget extends Component {
             previousSearchWord: "",
             currentOffset: 0,
             loadingDemo: false,
+            height: 0,
         });
+        this.productsWidgetRef = useRef("products-widget");
         this.pos = usePos();
         this.ui = useState(useService("ui"));
         this.popup = useService("popup");
         this.notification = useService("pos_notification");
         this.orm = useService("orm");
+        useEffect(() => {
+            const productsWidget = this.productsWidgetRef.el;
+            if (!productsWidget) {
+                return;
+            }
+            const observer = new ResizeObserver((entries) => {
+                if (!entries.length) {
+                    return;
+                }
+                const height = entries[0].contentRect.height;
+                this.state.height = height;
+            });
+            observer.observe(productsWidget);
+            return () => observer.disconnect();
+        });
     }
+
+    getShowCategoryImages() {
+        return (
+            Object.values(this.pos.db.category_by_id).some((category) => category.has_image) &&
+            !this.ui.isSmall &&
+            this.state.height >= 720
+        );
+    }
+
     /**
      * @returns {import("@point_of_sale/app/generic_components/category_selector/category_selector").Category[]}
      */
@@ -40,7 +66,7 @@ export class ProductsWidget extends Component {
             .map((id) => this.pos.db.category_by_id[id])
             .map((category) => {
                 const isRootCategory = category.id === this.pos.db.root_category_id;
-                const hasSeparator =
+                const showSeparator =
                     !isRootCategory &&
                     [
                         ...this.pos.db.get_category_ancestors_ids(this.pos.selectedCategoryId),
@@ -50,21 +76,13 @@ export class ProductsWidget extends Component {
                     id: category.id,
                     name: !isRootCategory ? category.name : "",
                     icon: isRootCategory ? "fa-home fa-2x" : "",
-                    separator: hasSeparator ? "fa-caret-right" : "",
+                    separator: "fa-caret-right",
+                    showSeparator,
                     imageUrl:
                         category?.has_image &&
                         `/web/image?model=pos.category&field=image_128&id=${category.id}&unique=${category.write_date}`,
                 };
             });
-    }
-    get categoriesHasImages() {
-        const categories = this.getCategories();
-        for (const category of categories) {
-            if (category.imageUrl) {
-                return true;
-            }
-        }
-        return false;
     }
 
     get selectedCategoryId() {
@@ -72,6 +90,9 @@ export class ProductsWidget extends Component {
     }
     get searchWord() {
         return this.pos.searchProductWord.trim();
+    }
+    getProductListToNotDisplay() {
+        return [this.pos.config.tip_product_id];
     }
     get productsToDisplay() {
         const { db } = this.pos;
@@ -81,6 +102,8 @@ export class ProductsWidget extends Component {
         } else {
             list = db.get_product_by_category(this.selectedCategoryId);
         }
+
+        list = list.filter((product) => !this.getProductListToNotDisplay().includes(product.id));
         return list.sort(function (a, b) {
             return a.display_name.localeCompare(b.display_name);
         });

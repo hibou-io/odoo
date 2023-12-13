@@ -15,6 +15,14 @@ from odoo.addons.hw_drivers.websocket_client import WebsocketClient
 _logger = logging.getLogger(__name__)
 
 try:
+    import schedule
+except ImportError:
+    schedule = None
+    # For now, it is intended to not be installed on the iot-box as it uses native Unix cron system
+    if platform.system() == 'Windows':
+        _logger.warning('Could not import library schedule')
+
+try:
     from dbus.mainloop.glib import DBusGMainLoop
 except ImportError:
     DBusGMainLoop = None
@@ -26,7 +34,7 @@ iot_devices = {}
 
 
 class Manager(Thread):
-    def send_alldevices(self, iot_client):
+    def send_alldevices(self, iot_client=None):
         """
         This method send IoT Box and devices informations to Odoo database
         """
@@ -67,7 +75,8 @@ class Manager(Thread):
                         'Accept': 'text/plain',
                     },
                 )
-                iot_client.iot_channel = json.loads(resp.data).get('result', '')
+                if iot_client:
+                    iot_client.iot_channel = json.loads(resp.data).get('result', '')
             except Exception as e:
                 _logger.error('Could not reach configured server')
                 _logger.error('A error encountered : %s ' % e)
@@ -103,8 +112,12 @@ class Manager(Thread):
             except Exception as e:
                 _logger.error("Error in %s: %s", str(interface), e)
 
+        # Set scheduled actions
+        schedule and schedule.every().day.at("00:00").do(helpers.get_certificate_status)
+
         #Setup the websocket connection
-        iot_client.start()
+        if helpers.get_odoo_server_url():
+            iot_client.start()
         # Check every 3 secondes if the list of connected devices has changed and send the updated
         # list to the connected DB.
         self.previous_iot_devices = []
@@ -114,6 +127,7 @@ class Manager(Thread):
                     self.previous_iot_devices = iot_devices.copy()
                     self.send_alldevices(iot_client)
                 time.sleep(3)
+                schedule and schedule.run_pending()
             except Exception:
                 # No matter what goes wrong, the Manager loop needs to keep running
                 _logger.error(format_exc())

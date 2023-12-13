@@ -54,7 +54,9 @@ export class CalendarCommonRenderer extends Component {
             if (this.props.model.scale === "day" || this.props.model.scale === "week") {
                 //Need to wait React
                 browser.setTimeout(() => {
-                    this.fc.api.scrollToTime("06:00:00");
+                    if (this.fc.api.view) {
+                        this.fc.api.scrollToTime("06:00:00");
+                    }
                 }, 0);
             }
         });
@@ -91,7 +93,7 @@ export class CalendarCommonRenderer extends Component {
             eventResize: this.onEventResize,
             eventResizeStart: this.onEventResizeStart,
             events: (_, successCb) => successCb(this.mapRecordsToEvents()),
-            firstDay: this.props.model.firstDayOfWeek % 7,
+            firstDay: this.props.model.firstDayOfWeek,
             header: false,
             height: "parent",
             locale: luxon.Settings.defaultLocale,
@@ -212,7 +214,6 @@ export class CalendarCommonRenderer extends Component {
     }
     onEventClick(info) {
         this.click(info);
-        info.el.classList.toggle("o_calendar_popover_open");
     }
     onEventRender(info) {
         const { el, event } = info;

@@ -22,19 +22,16 @@ class BaseImportModule(models.TransientModel):
         zip_data = base64.decodebytes(self.module_file)
         fp = BytesIO()
         fp.write(zip_data)
-        res = IrModule.import_zipfile(fp, force=self.force)
-        self.write({'state': 'done', 'import_message': res[0]})
-        context = dict(self.env.context, module_name=res[1])
-        # Return wizard otherwise it will close wizard and will not show result message to user.
+        res = IrModule._import_zipfile(fp, force=self.force, with_demo=self.with_demo)
         return {
-            'name': 'Import Module',
-            'view_mode': 'form',
-            'target': 'new',
-            'res_id': self.id,
-            'res_model': 'base.import.module',
-            'type': 'ir.actions.act_window',
-            'context': context,
+            'type': 'ir.actions.act_url',
+            'target': 'self',
+            'url': '/web',
         }
+
+    def get_dependencies_to_install_names(self):
+        module_ids = self.env['ir.module.module']._get_missing_dependencies_modules(base64.decodebytes(self.module_file))
+        return module_ids.mapped('name')
 
     def action_module_open(self):
         self.ensure_one()

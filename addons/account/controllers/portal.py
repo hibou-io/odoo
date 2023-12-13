@@ -16,11 +16,11 @@ class PortalAccount(CustomerPortal):
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
         if 'invoice_count' in counters:
-            invoice_count = request.env['account.move'].search_count(self._get_invoices_domain('in'), limit=1) \
+            invoice_count = request.env['account.move'].search_count(self._get_invoices_domain('out'), limit=1) \
                 if request.env['account.move'].check_access_rights('read', raise_exception=False) else 0
             values['invoice_count'] = invoice_count
         if 'bill_count' in counters:
-            bill_count = request.env['account.move'].search_count(self._get_invoices_domain('out'), limit=1) \
+            bill_count = request.env['account.move'].search_count(self._get_invoices_domain('in'), limit=1) \
                 if request.env['account.move'].check_access_rights('read', raise_exception=False) else 0
             values['bill_count'] = bill_count
         return values
@@ -131,7 +131,7 @@ class PortalAccount(CustomerPortal):
         except (AccessError, MissingError):
             return request.redirect('/my')
 
-        if report_type == 'pdf' and download:
+        if report_type == 'pdf' and download and invoice_sudo.state == 'posted':
             # Send & Print wizard with only the 'download' checkbox to get the official attachment(s)
             template = request.env.ref(invoice_sudo._get_mail_template())
             attachment_ids = invoice_sudo._generate_pdf_and_send_invoice(template, bypass_download=True, checkbox_send_mail=False, checkbox_download=True)

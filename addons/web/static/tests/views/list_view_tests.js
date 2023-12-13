@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, markup, onWillStart, xml } from "@odoo/owl";
+import { Component, markup, onRendered, onWillStart, xml } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { Domain } from "@web/core/domain";
 import { currencies } from "@web/core/currency";
@@ -591,6 +591,28 @@ QUnit.module("Views", (hooks) => {
             );
         }
     );
+
+    QUnit.test("basic list view and command palette", async function (assert) {
+        await makeView({
+            type: "list",
+            resModel: "foo",
+            serverData,
+            arch: '<tree><field name="foo"/></tree>',
+        });
+
+        triggerHotkey("control+k");
+        await nextTick();
+
+        assert.deepEqual(
+            getNodesTextContent(target.querySelectorAll(".o_command_hotkey")),
+            [
+                "NewALT + C",
+                "ActionsALT + U",
+                "Search...ALT + Q",
+                "Toggle search panelALT + SHIFT + Q"
+            ]
+        );
+    });
 
     QUnit.test('list with delete="0"', async function (assert) {
         await makeView({
@@ -2546,7 +2568,7 @@ QUnit.module("Views", (hooks) => {
     });
 
     QUnit.test("many2one field rendering with many2one widget", async function (assert) {
-        serverData.models.bar.records[0].display_name = false
+        serverData.models.bar.records[0].display_name = false;
         await makeView({
             type: "list",
             resModel: "foo",
@@ -2561,7 +2583,7 @@ QUnit.module("Views", (hooks) => {
     });
 
     QUnit.test("many2one field rendering when display_name is falsy", async function (assert) {
-        serverData.models.bar.records[0].display_name = false
+        serverData.models.bar.records[0].display_name = false;
         await makeView({
             type: "list",
             resModel: "foo",
@@ -3270,6 +3292,15 @@ QUnit.module("Views", (hooks) => {
     });
 
     QUnit.test("selection changes are triggered correctly", async function (assert) {
+        patchWithCleanup(ListController.prototype, {
+            setup() {
+                super.setup(...arguments);
+                onRendered(() => {
+                    assert.step("onRendered ListController");
+                });
+            },
+        });
+
         const list = await makeView({
             type: "list",
             resModel: "foo",
@@ -3281,6 +3312,7 @@ QUnit.module("Views", (hooks) => {
 
         assert.strictEqual(list.model.root.selection.length, 0, "no record should be selected");
         assert.notOk(tbody_selector.checked, "selection checkbox should be checked");
+        assert.verifySteps(["onRendered ListController"]);
 
         // tbody checkbox click
         await click(tbody_selector);
@@ -3294,10 +3326,12 @@ QUnit.module("Views", (hooks) => {
             "the correct record should be selected"
         );
         assert.ok(tbody_selector.checked, "selection checkbox should be checked");
+        assert.verifySteps(["onRendered ListController"]);
 
         await click(tbody_selector);
         assert.strictEqual(list.model.root.selection.length, 0, "no record should be selected");
         assert.notOk(tbody_selector.checked, "selection checkbox should be checked");
+        assert.verifySteps(["onRendered ListController"]);
 
         // head checkbox click
         await click(thead_selector);
@@ -3308,6 +3342,7 @@ QUnit.module("Views", (hooks) => {
             target.querySelectorAll("tbody tr").length,
             "all selection checkboxes should be checked"
         );
+        assert.verifySteps(["onRendered ListController"]);
 
         await click(thead_selector);
         assert.strictEqual(list.model.root.selection.length, 0, "no records should be selected");
@@ -3316,6 +3351,7 @@ QUnit.module("Views", (hooks) => {
             "tbody .o_list_record_selector input:checked",
             "no selection checkbox should be checked"
         );
+        assert.verifySteps(["onRendered ListController"]);
     });
 
     QUnit.test(
@@ -8669,7 +8705,7 @@ QUnit.module("Views", (hooks) => {
 
     QUnit.test("click on a button cell in a list view", async (assert) => {
         serverData.models.foo.records[0].foo = "bar";
-        await makeView({
+        const list = await makeView({
             type: "list",
             resModel: "foo",
             serverData,
@@ -8680,9 +8716,12 @@ QUnit.module("Views", (hooks) => {
                 </tree>`,
         });
 
-        // Need to set the line in edition.
-        await click(target, "td[name=foo]");
-        assert.strictEqual(window.getSelection().toString(), "bar");
+        patchWithCleanup(list.env.services.action, {
+            doActionButton: (action) => {
+                assert.step("doActionButton");
+                action.onClose();
+            },
+        });
 
         await click(target.querySelector(".o_data_cell.o_list_button"));
         assert.strictEqual(
@@ -8690,6 +8729,8 @@ QUnit.module("Views", (hooks) => {
             "bar",
             "Focus should have returned to the editable cell without throwing an error"
         );
+        assert.containsOnce(target, ".o_selected_row");
+        assert.verifySteps([]);
     });
 
     QUnit.test("click on a button in a list view", async function (assert) {
@@ -11531,10 +11572,10 @@ QUnit.module("Views", (hooks) => {
             .map((node) => {
                 if (node === arrowIcon) {
                     return "->";
-                } else if (node.nodeType === 3) {
+                } else if (node.nodeType === Node.TEXT_NODE) {
                     return node.nodeValue.trim();
                 } else {
-                    return false;
+                    return node.innerText?.trim();
                 }
             })
             .filter(Boolean);
@@ -11562,10 +11603,10 @@ QUnit.module("Views", (hooks) => {
             .map((node) => {
                 if (node === arrowIcon) {
                     return "->";
-                } else if (node.nodeType === 3) {
+                } else if (node.nodeType === Node.TEXT_NODE) {
                     return node.nodeValue.trim();
                 } else {
-                    return false;
+                    return node.innerText?.trim();
                 }
             })
             .filter(Boolean);

@@ -23,30 +23,32 @@ class Project(models.Model):
     _systray_view = 'activity'
 
     def _compute_attached_docs_count(self):
-        self.env.cr.execute(
-            """
-            WITH docs AS (
-                 SELECT res_id as id, count(*) as count
-                   FROM ir_attachment
-                  WHERE res_model = 'project.project'
-                    AND res_id IN %(project_ids)s
-               GROUP BY res_id
+        docs_count = {}
+        if self.ids:
+            self.env.cr.execute(
+                """
+                WITH docs AS (
+                     SELECT res_id as id, count(*) as count
+                       FROM ir_attachment
+                      WHERE res_model = 'project.project'
+                        AND res_id IN %(project_ids)s
+                   GROUP BY res_id
 
-              UNION ALL
+                  UNION ALL
 
-                 SELECT t.project_id as id, count(*) as count
-                   FROM ir_attachment a
-                   JOIN project_task t ON a.res_model = 'project.task' AND a.res_id = t.id
-                  WHERE t.project_id IN %(project_ids)s
-               GROUP BY t.project_id
+                     SELECT t.project_id as id, count(*) as count
+                       FROM ir_attachment a
+                       JOIN project_task t ON a.res_model = 'project.task' AND a.res_id = t.id
+                      WHERE t.project_id IN %(project_ids)s
+                   GROUP BY t.project_id
+                )
+                SELECT id, sum(count)
+                  FROM docs
+              GROUP BY id
+                """,
+                {"project_ids": tuple(self.ids)}
             )
-            SELECT id, sum(count)
-              FROM docs
-          GROUP BY id
-            """,
-            {"project_ids": tuple(self.ids)}
-        )
-        docs_count = dict(self.env.cr.fetchall())
+            docs_count = dict(self.env.cr.fetchall())
         for project in self:
             project.doc_count = docs_count.get(project.id, 0)
 
@@ -756,14 +758,16 @@ class Project(models.Model):
         self.ensure_one()
         if not self.user_has_groups('project.group_project_user'):
             return {}
+        show_profitability = self._show_profitability()
         panel_data = {
             'user': self._get_user_values(),
             'buttons': sorted(self._get_stat_buttons(), key=lambda k: k['sequence']),
             'currency_id': self.currency_id.id,
+            'show_project_profitability_helper': show_profitability and self._show_profitability_helper(),
         }
         if self.allow_milestones:
             panel_data['milestones'] = self._get_milestones()
-        if self._show_profitability():
+        if show_profitability:
             profitability_items = self._get_profitability_items()
             if self._get_profitability_sequence_per_invoice_type() and profitability_items and 'revenues' in profitability_items and 'costs' in profitability_items:  # sort the data values
                 profitability_items['revenues']['data'] = sorted(profitability_items['revenues']['data'], key=lambda k: k['sequence'])
@@ -796,6 +800,9 @@ class Project(models.Model):
     def _show_profitability(self):
         self.ensure_one()
         return True
+
+    def _show_profitability_helper(self):
+        return self.user_has_groups('analytic.group_analytic_accounting')
 
     def _get_profitability_aal_domain(self):
         return [('account_id', 'in', self.analytic_account_id.ids)]

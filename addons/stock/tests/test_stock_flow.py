@@ -1801,7 +1801,7 @@ class TestStockFlow(TestStockCommon):
             'route_ids': [(4, route_a.id), (4, route_b.id)]
         })
 
-        replenish_wizard = self.env['product.replenish'].create({
+        replenish_wizard = self.env['product.replenish'].with_context(default_product_tmpl_id=product.product_tmpl_id.id).create({
             'product_id': product.id,
             'product_tmpl_id': product.product_tmpl_id.id,
             'product_uom_id': self.uom_unit.id,
@@ -2213,12 +2213,10 @@ class TestStockFlow(TestStockCommon):
         self.assertEqual(move_a.quantity, 10)
         self.assertEqual(move_b.quantity, 10)
 
-        # test clear qty button without manual change
-        self.assertTrue(picking_in.show_clear_qty_button)
-        picking_in.action_clear_quantities_to_zero()
+        # test unreserve button without manual change
+        picking_in.do_unreserve()
         self.assertEqual(move_a.quantity, 0)
         self.assertEqual(move_b.quantity, 0)
-        self.assertFalse(picking_in.show_clear_qty_button)
 
         # test set qty button with manual change
         move_a.quantity = 5
@@ -2412,7 +2410,7 @@ class TestStockFlow(TestStockCommon):
         in_stock_picking = in_stock_move.picking_id
         in_stock_picking.button_validate()
 
-        self.assertEqual(out_move.move_line_ids.quantity, 1.0, 'The out move should be reserved')
+        self.assertEqual(out_move.move_line_ids.quantity_product_uom, 1.0, 'The out move should be reserved')
 
     def test_assign_done_sml_and_validate_it(self):
         """

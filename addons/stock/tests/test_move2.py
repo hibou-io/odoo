@@ -2294,7 +2294,6 @@ class TestSinglePicking(TestStockCommon):
         })
         # Changes config of receipt type to allow to edit move lines directly.
         picking_type = self.env['stock.picking.type'].browse(self.picking_type_in)
-        picking_type.show_operations = True
         picking_type.show_reserved = True
 
         receipt_form = Form(self.env['stock.picking'].with_context(
@@ -2306,9 +2305,16 @@ class TestSinglePicking(TestStockCommon):
         receipt_form.location_dest_id = stock_location
         receipt = receipt_form.save()
 
-        with receipt_form.move_line_ids_without_package.new() as move_line:
-            move_line.product_id = self.productA
-            move_line.quantity = 1.0
+        with receipt_form.move_ids_without_package.new() as move:
+            move.product_id = self.productA
+            move.quantity = 1.0
+
+
+        # with Form(receipt.move_ids_without_package, view='stock.view_stock_move_operations') as form:
+        #     with form.move_line_ids.new() as move_line:
+        #         # move_line.product_id = self.productA
+        #         move_line.location_dest_id = stock_location
+        #         move_line.quantity = 1.0
 
         receipt = receipt_form.save()
         # Checks receipt has still its destination location and checks its move
@@ -2433,7 +2439,7 @@ class TestStockUOM(TestStockCommon):
             'location_dest_id': self.stock_location
         })
         picking_in.action_confirm()
-        picking_in.action_clear_quantities_to_zero()
+        picking_in.do_unreserve()
 
         self.assertEqual(move.product_uom_qty, 60.00, 'Wrong T_GT quantity')
         self.assertEqual(move.product_qty, 134400.00, 'Wrong T_LBS quantity')
@@ -2616,7 +2622,7 @@ class TestStockUOM(TestStockCommon):
             ('lot_id', '=', quant_LtDA.lot_id.id),
             ('package_id', '=', quant_LtDA.package_id.id),
             ('owner_id', '=', quant_LtDA.owner_id.id),
-            ('quantity', '!=', 0)
+            ('quantity_product_uom', '!=', 0)
         ])
         reserved_on_move_lines_LtDA = sum(move_lines_LtDA.mapped('quantity_product_uom'))
 
@@ -2626,7 +2632,7 @@ class TestStockUOM(TestStockCommon):
             ('lot_id', '=', quant_GtDA.lot_id.id),
             ('package_id', '=', quant_GtDA.package_id.id),
             ('owner_id', '=', quant_GtDA.owner_id.id),
-            ('quantity', '!=', 0)
+            ('quantity_product_uom', '!=', 0)
         ])
         reserved_on_move_lines_GtDA = sum(move_lines_GtDA.mapped('quantity_product_uom'))
 
@@ -2736,7 +2742,7 @@ class TestRoutes(TestStockCommon):
         self.product1.write({'route_ids': [(4, resupply_route.id), (4, self.env.ref('stock.route_warehouse0_mto').id)]})
         self.wh = warehouse_1
 
-        replenish_wizard = self.env['product.replenish'].create({
+        replenish_wizard = self.env['product.replenish'].with_context(default_product_tmpl_id=self.product1.product_tmpl_id.id).create({
             'product_id': self.product1.id,
             'product_tmpl_id': self.product1.product_tmpl_id.id,
             'product_uom_id': self.uom_unit.id,

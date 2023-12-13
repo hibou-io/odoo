@@ -431,6 +431,7 @@ class Meeting(models.Model):
         default_rrule_values = self.recurrence_id.default_get(recurrence_fields)
         for event in self:
             if event.recurrency:
+                current_rrule = (event.rrule_type if event.rrule_type_ui == "custom" else event.rrule_type_ui)
                 event.update(defaults)  # default recurrence values are needed to correctly compute the recurrence params
                 event_values = event._get_recurrence_params()
                 rrule_values = {
@@ -439,7 +440,7 @@ class Meeting(models.Model):
                     if event.recurrence_id[field]
                 }
                 rrule_values = rrule_values or default_rrule_values
-                rrule_values['rrule_type'] = (event.rrule_type if event.rrule_type_ui == "custom" else event.rrule_type_ui) or defaults.pop('rrule_type')
+                rrule_values['rrule_type'] = current_rrule or rrule_values.get('rrule_type') or defaults['rrule_type']
                 event.update({**false_values, **defaults, **event_values, **rrule_values})
             else:
                 event.update(false_values)
@@ -680,7 +681,7 @@ class Meeting(models.Model):
             self.recurrence_id._setup_alarms(recurrence_update=True)
             if not self.recurrence_id:
                 self._setup_alarms()
-        attendee_update_events = self.filtered(lambda ev: ev.user_id != self.env.user)
+        attendee_update_events = self.filtered(lambda ev: ev.user_id and ev.user_id != self.env.user)
         if update_time and attendee_update_events:
             # Another user update the event time fields. It should not be auto accepted for the organizer.
             # This prevent weird behavior when a user modified future events time fields and
@@ -790,12 +791,12 @@ class Meeting(models.Model):
         added_partner_ids = []
         for command in partner_commands:
             op = command[0]
-            if op in (2, 3):  # Remove partner
+            if op in (2, 3, Command.delete, Command.unlink):  # Remove partner
                 removed_partner_ids += [command[1]]
-            elif op == 6:  # Replace all
+            elif op in (6, Command.set):  # Replace all
                 removed_partner_ids += set(self.partner_ids.ids) - set(command[2])  # Don't recreate attendee if partner already attend the event
                 added_partner_ids += set(command[2]) - set(self.partner_ids.ids)
-            elif op == 4:
+            elif op in (4, Command.link):
                 added_partner_ids += [command[1]] if command[1] not in self.partner_ids.ids else []
             # commands 0 and 1 not supported
 

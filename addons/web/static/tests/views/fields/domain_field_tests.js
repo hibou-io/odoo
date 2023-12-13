@@ -550,7 +550,7 @@ QUnit.module("Fields", (hooks) => {
 
             const webClient = await createWebClient({
                 serverData,
-                mockRPC(route, { method, args }) {
+                mockRPC(route, { method, args, domain }) {
                     if (method === "search_count") {
                         assert.step(JSON.stringify(args[0]));
                     }
@@ -558,7 +558,7 @@ QUnit.module("Fields", (hooks) => {
                         throw new Error("should not save");
                     }
                     if (route === "/web/domain/validate") {
-                        return false;
+                        return JSON.stringify(domain) === "[[\"abc\",\"=\",1]]";
                     }
                 },
             });
@@ -631,6 +631,9 @@ QUnit.module("Fields", (hooks) => {
                 mockRPC(route, { method, args }) {
                     if (method === "search_count") {
                         assert.step(JSON.stringify(args[0]));
+                    }
+                    if (route === "/web/domain/validate") {
+                        return true;
                     }
                 },
             });
@@ -955,6 +958,45 @@ QUnit.module("Fields", (hooks) => {
     });
 
     QUnit.test(
+        "edit domain button is available even while loading records count",
+        async function (assert) {
+            serverData.models.partner.fields.display_name.default = "[]";
+            patchWithCleanup(odoo, {
+                debug: true,
+            });
+            const searchCountDeffered = makeDeferred();
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                serverData,
+                arch: `
+                <form>
+                    <field name="display_name" widget="domain" options="{'model': 'partner', 'in_dialog': True}"/>
+                </form>`,
+                mockRPC: async (route) => {
+                    if (route === "/web/dataset/call_kw/partner/search_count") {
+                        await searchCountDeffered;
+                    }
+                    if (route === "/web/domain/validate") {
+                        return true;
+                    }
+                },
+            });
+            assert.containsNone(target, ".modal");
+            assert.containsOnce(target, ".o_field_domain_dialog_button");
+            await click(target, ".o_field_domain_dialog_button");
+            searchCountDeffered.resolve();
+            assert.containsOnce(target, ".modal");
+            await click(target, ".modal-footer .btn-primary");
+            assert.containsNone(target, ".modal");
+            assert.strictEqual(
+                target.querySelector(".o_domain_show_selection_button").textContent,
+                "5 record(s) "
+            );
+        }
+    );
+
+    QUnit.test(
         "quick check on save if domain has been edited via the  debug input",
         async function (assert) {
             patchWithCleanup(odoo, { debug: true });
@@ -1102,4 +1144,40 @@ QUnit.module("Fields", (hooks) => {
             '[("id", "=", 1)]'
         );
     });
+
+    QUnit.test(
+        "foldable domain field unfolds and hides caret when domain is invalid",
+        async function (assert) {
+            serverData.models.partner.records[0].foo = "[";
+
+            await makeView({
+                type: "form",
+                resModel: "partner",
+                resId: 1,
+                serverData,
+                arch: `
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="foo" widget="domain" options="{'model': 'partner_type', 'foldable': true}" />
+                        </group>
+                    </sheet>
+                </form>`,
+            });
+            assert.strictEqual(
+                target.querySelector(".o_field_domain span").textContent,
+                " Invalid domain "
+            );
+            assert.containsNone(target, ".fa-caret-down");
+            assert.strictEqual(
+                target.querySelector(".o_domain_selector_row").textContent,
+                " This domain is not supported. Reset domain"
+            );
+            await click(target, ".o_domain_selector_row button");
+            assert.strictEqual(
+                target.querySelector(".o_field_domain span").textContent,
+                "Match all records"
+            );
+        }
+    );
 });

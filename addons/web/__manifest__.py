@@ -51,7 +51,6 @@ This module provides the core of the Odoo Web Client.
 
             ('include', 'web._assets_core'),
 
-            'web/static/lib/jquery.ui/jquery-ui.css',
             'web/static/src/libs/fontawesome/css/font-awesome.css',
             'web/static/lib/odoo_ui_icons/*',
             'web/static/src/webclient/navbar/navbar.scss',
@@ -65,7 +64,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/src/polyfills/clipboard.js',
 
             'web/static/lib/jquery/jquery.js',
-            'web/static/lib/jquery.ui/jquery-ui.js',
             'web/static/lib/popper/popper.js',
             'web/static/lib/bootstrap/js/dist/dom/data.js',
             'web/static/lib/bootstrap/js/dist/dom/event-handler.js',
@@ -84,7 +82,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/lib/bootstrap/js/dist/scrollspy.js',
             'web/static/lib/bootstrap/js/dist/tab.js',
             'web/static/lib/bootstrap/js/dist/toast.js',
-            'web/static/src/legacy/js/libs/autocomplete.js',
             'web/static/src/legacy/js/libs/bootstrap.js',
             'web/static/src/legacy/js/libs/jquery.js',
 
@@ -115,8 +112,6 @@ This module provides the core of the Odoo Web Client.
 
             # Form style should be computed before
             'web/static/src/views/form/button_box/*.scss',
-
-            'web/static/src/legacy/utils.js',
 
             'web/static/src/legacy/xml/base.xml',
             # Don't include dark mode files in light mode
@@ -149,7 +144,6 @@ This module provides the core of the Odoo Web Client.
 
             ('include', 'web._assets_bootstrap_frontend'),
 
-            'web/static/lib/jquery.ui/jquery-ui.css',
             'web/static/src/libs/fontawesome/css/font-awesome.css',
             'web/static/lib/odoo_ui_icons/*',
             'web/static/lib/select2/select2.css',
@@ -173,7 +167,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/lib/owl/owl.js',
             'web/static/lib/owl/odoo_module.js',
             'web/static/lib/jquery/jquery.js',
-            'web/static/lib/jquery.ui/jquery-ui.js',
             'web/static/lib/popper/popper.js',
             'web/static/lib/bootstrap/js/dist/dom/data.js',
             'web/static/lib/bootstrap/js/dist/dom/event-handler.js',
@@ -193,7 +186,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/lib/bootstrap/js/dist/tab.js',
             'web/static/lib/bootstrap/js/dist/toast.js',
             'web/static/lib/select2/select2.js',
-            'web/static/src/legacy/js/libs/autocomplete.js',
             'web/static/src/legacy/js/libs/bootstrap.js',
             'web/static/src/legacy/js/libs/jquery.js',
             'web/static/src/legacy/js/core/class.js',
@@ -218,7 +210,6 @@ This module provides the core of the Odoo Web Client.
             'web/static/src/public/datetime_picker_widget.js',
             'web/static/src/libs/pdfjs.js',
 
-            'web/static/src/legacy/utils.js',
             'web/static/src/legacy/js/public/public_root.js',
             'web/static/src/legacy/js/public/public_root_instance.js',
             'web/static/src/legacy/js/public/public_widget.js',

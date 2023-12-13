@@ -150,7 +150,7 @@ class AssetsBundle(object):
             self._checksum_cache[asset_type] = hashlib.sha512(unique_descriptor.encode()).hexdigest()[:64]
         return self._checksum_cache[asset_type]
 
-    def get_asset_url(self, unique='%', extension='%', ignore_params=False):
+    def get_asset_url(self, unique=ANY_UNIQUE, extension='%', ignore_params=False):
         direction = '.rtl' if self.is_css(extension) and self.rtl else ''
         bundle_name = f"{self.name}{direction}.{extension}"
         return self.env['ir.asset']._get_asset_bundle_url(bundle_name, unique, self.assets_params, ignore_params)
@@ -197,6 +197,7 @@ class AssetsBundle(object):
         # avoid to invalidate cache if it's already empty (mainly useful for test)
 
         if attachments:
+            _logger.info('Deleting attachments %s (matching %s) because it was replaced with %s', attachments.ids, to_clean_pattern, keep_url)
             self._unlink_attachments(attachments)
             # clear_cache was removed
 
@@ -263,6 +264,7 @@ class AssetsBundle(object):
                 }
                 attachment = self.env['ir.attachment'].with_user(SUPERUSER_ID).create(values)
                 attachment_id = attachment.id
+                self.clean_attachments(extension)
 
         return self.env['ir.attachment'].sudo().browse(attachment_id)
 
@@ -305,6 +307,8 @@ class AssetsBundle(object):
             'url': url,
         }
         attachment = ira.with_user(SUPERUSER_ID).create(values)
+
+        _logger.info('Generating a new asset bundle attachment %s (id:%s)', attachment.url, attachment.id)
 
         self._clean_attachments(extension, url)
 
@@ -902,7 +906,7 @@ class XMLAsset(WebAsset):
         try:
             root = etree.fromstring(content.encode('utf-8'), parser=parser)
         except etree.XMLSyntaxError as e:
-            return f'<t t-name="parsing_error"><parsererror>Invalid XML template: {self.url} \n {e.msg} </parsererror></t>'
+            return f'<t t-name="parsing_error{self.url.replace("/","_")}"><parsererror>Invalid XML template: {self.url} \n {e.msg} </parsererror></t>'
         if root.tag in ('templates', 'template'):
             return ''.join(etree.tostring(el, encoding='unicode') for el in root)
         return etree.tostring(root, encoding='unicode')

@@ -32,14 +32,6 @@
     transform: scale(-1);
 }
 
-@include media-breakpoint-down(lg) {
-    @for $i from 0 through 12 {
-        .o_we_mobile_order_#{$i} {
-            order: $i;
-        }
-    }
-}
-
 // GRID LAYOUT
 .o_grid_mode {
     @include media-breakpoint-down(lg) {
@@ -76,6 +68,12 @@
         --gutter-x: 30px;
     }
 
+    .o_extra_menu_items .o_grid_mode {
+        display: flex !important;
+        row-gap: 0px !important;
+        column-gap: 0px !important;
+    }
+
     .o_grid_item_image {
         > img, > .media_iframe_video {
             width: 100% !important;
@@ -86,6 +84,17 @@
         &.o_grid_item_image_contain > img,
         > img[data-shape] {
             object-fit: contain !important;
+        }
+
+        // Allowing "cover" for some hover effects.
+        &:not(.o_grid_item_image_contain) > img[data-shape$="geo_square"] {
+            &:not(
+                [data-hover-effect="dolly_zoom"],
+                [data-hover-effect="outline"],
+                [data-hover-effect="image_mirror_blur"],
+            ) {
+                object-fit: cover !important;
+            }
         }
     }
 }

@@ -163,14 +163,6 @@ class Field(MetaField('DummyField', (object,), {})):
         ``default=None`` to discard default values for the field
     :type default: value or callable
 
-    :param dict states: a dictionary mapping state values to lists of UI attribute-value
-        pairs; possible attributes are: ``readonly``, ``required``.
-
-        .. warning:: Any state-based condition requires the ``state`` field value to be
-            available on the client-side UI. This is typically done by including it in
-            the relevant views, possibly made invisible if not relevant for the
-            end-user.
-
     :param str groups: comma-separated list of group xml ids (string); this
         restricts the field access to the users of the given groups only
 
@@ -318,10 +310,11 @@ class Field(MetaField('DummyField', (object,), {})):
     default = None                      # default(recs) returns the default value
 
     string = None                       # field label
+    export_string_translation = True    # whether the field label translations are exported
     help = None                         # field tooltip
     readonly = False                    # whether the field is readonly
     required = False                    # whether the field is required
-    states = None                       # set readonly and required depending on state
+    states = None                       # set readonly and required depending on state (deprecated)
     groups = None                       # csv list of group xml ids
     change_default = False              # whether the field may trigger a "user-onchange"
 
@@ -1199,7 +1192,7 @@ class Field(MetaField('DummyField', (object,), {})):
 
         elif self.store and record._origin and not (self.compute and self.readonly):
             # new record with origin: fetch from origin
-            value = self.convert_to_cache(record._origin[self.name], record)
+            value = self.convert_to_cache(record._origin[self.name], record, validate=False)
             env.cache.set(record, self, value)
 
         elif self.compute: #pylint: disable=using-constant-test
@@ -1213,14 +1206,18 @@ class Field(MetaField('DummyField', (object,), {})):
                     self.compute_value(recs)
                 except (AccessError, MissingError):
                     self.compute_value(record)
-                try:
-                    value = env.cache.get(record, self)
-                except CacheMiss:
+                    recs = record
+
+                missing_recs_ids = tuple(env.cache.get_missing_ids(recs, self))
+                if missing_recs_ids:
+                    missing_recs = record.browse(missing_recs_ids)
                     if self.readonly and not self.store:
-                        raise ValueError(f"Compute method failed to assign {record}.{self.name}") from None
-                    # fallback to null value if compute gives nothing
-                    value = self.convert_to_cache(False, record, validate=False)
-                    env.cache.set(record, self, value)
+                        raise ValueError(f"Compute method failed to assign {missing_recs}.{self.name}")
+                    # fallback to null value if compute gives nothing, do it for every unset record
+                    false_value = self.convert_to_cache(False, record, validate=False)
+                    env.cache.update(missing_recs, self, itertools.repeat(false_value))
+
+                value = env.cache.get(record, self)
 
         elif self.type == 'many2one' and self.delegate and not record.id:
             # parent record of a new record: new record, with the same
@@ -1690,7 +1687,7 @@ class _String(Field):
         return func(term)
 
     def convert_to_column(self, value, record, values=None, validate=True):
-        cache_value = self.convert_to_cache(value, record)
+        cache_value = self.convert_to_cache(value, record, validate)
         if cache_value is None:
             return None
         if callable(self.translate):
@@ -2020,7 +2017,7 @@ class Html(_String):
     _description_strip_classes = property(attrgetter('strip_classes'))
 
     def convert_to_column(self, value, record, values=None, validate=True):
-        return super().convert_to_column(self._convert(value, record, True), record, values, validate)
+        return super().convert_to_column(self._convert(value, record, validate=True), record, values, validate=False)
 
     def convert_to_cache(self, value, record, validate=True):
         return self._convert(value, record, validate)
@@ -2046,11 +2043,7 @@ class Html(_String):
             if record.user_has_groups('base.group_sanitize_override'):
                 return value
 
-            # This may cause an infinite recursion when accessing the field on a
-            # new record. Indeed, if record has no value in cache, we default
-            # on the field's value on record._origin and convert it to the
-            # cache format, which ends up here, accessing the field on record!
-            original_value = record[self.name] if record.id else None
+            original_value = record[self.name]
             if original_value:
                 # Note that sanitize also normalize
                 original_value_sanitized = html_sanitize(original_value, **sanitize_vals)
@@ -2305,8 +2298,9 @@ class Datetime(Field):
         return self.from_string(value)
 
     def convert_to_display_name(self, value, record):
-        assert record, 'Record expected'
-        return Datetime.to_string(Datetime.context_timestamp(record, Datetime.from_string(value)))
+        if not value:
+            return False
+        return Datetime.to_string(Datetime.context_timestamp(record, value))
 
 # http://initd.org/psycopg/docs/usage.html#binary-adaptation
 # Received data is returned as buffer (in Python 2) or memoryview (in Python 3).

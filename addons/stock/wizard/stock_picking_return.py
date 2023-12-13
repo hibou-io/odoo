@@ -74,7 +74,7 @@ class ReturnPicking(models.TransientModel):
                 location_id = wizard.picking_id.location_id.id
                 if wizard.picking_id.picking_type_id.return_picking_type_id.default_location_dest_id.return_location:
                     location_id = wizard.picking_id.picking_type_id.return_picking_type_id.default_location_dest_id.id
-                wizard.location_id = location_id
+                wizard.location_id = wizard.picking_id.picking_type_id.default_location_return_id.id or location_id
 
     @api.model
     def _prepare_stock_return_picking_line_vals_from_move(self, stock_move):
@@ -83,7 +83,7 @@ class ReturnPicking(models.TransientModel):
             if not move.origin_returned_move_id or move.origin_returned_move_id != stock_move:
                 continue
             if move.state in ('partially_available', 'assigned'):
-                quantity -= sum(move.move_line_ids.mapped('reserved_qty'))
+                quantity -= sum(move.move_line_ids.mapped('quantity'))
             elif move.state in ('done'):
                 quantity -= move.product_qty
         quantity = float_round(quantity, precision_rounding=stock_move.product_id.uom_id.rounding)

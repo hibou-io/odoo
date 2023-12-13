@@ -2,14 +2,16 @@
 <templates id="template" xml:space="preserve">
 
     <t t-name="point_of_sale.ProductsWidget">
-        <div class="products-widget d-flex flex-column flex-grow-1 overflow-auto">
-            <div class="products-widget-control d-flex bg-view shadow-sm" t-att-class="{'h-8 min-h-50': categoriesHasImages}">
+        <div class="products-widget d-flex flex-column flex-grow-1 overflow-auto" t-ref="products-widget">
+            <t t-set="showCategoryImages" t-value="getShowCategoryImages()" />
+            <div class="products-widget-control d-flex bg-view shadow-sm justify-content-between" t-att-class="{ 'h-12': showCategoryImages }">
                 <CategorySelector
                     categories="getCategories()"
                     onClick="(id) => this.pos.setSelectedCategoryId(id)"
+                    showImage="showCategoryImages"
                 />
                 <Input tModel="[pos, 'searchProductWord']"
-                    class="'ms-auto m-auto p-2'"
+                    class="'p-2'"
                     isSmall="ui.isSmall"
                     placeholder="'Search products...'"
                     icon="{type: 'fa', value: 'fa-search'}"

@@ -5,14 +5,19 @@
             <ReceiptHeader data="props.data.headerData" />
             <OrderWidget lines="props.data.orderlines" t-slot-scope="scope">
                 <t t-set="line" t-value="scope.line"/>
-                <Orderline line="omit(scope.line, 'customerNote')">
+                <Orderline line="omit(scope.line, 'customerNote')" class="{ 'pe-none': true }">
                     <li t-if="line.customerNote" class="customer-note w-100 p-2 my-1 rounded text-break">
                         <i class="fa fa-sticky-note me-1" role="img" aria-label="Customer Note" title="Customer Note"/>
                         <t t-esc="line.customerNote" />
                     </li>
                     <ul t-if="line.pack_lot_lines">
-                        <li t-foreach="line.get_lot_lines()" t-as="lot" t-key="lot.cid">
-                            SN <t t-esc="lot.lot_name"/>
+                        <li t-foreach="line.pack_lot_lines" t-as="lot" t-key="lot.cid">
+                            <t t-if="lot.order_line.product.tracking == 'lot'">
+                                Lot Number <t t-esc="lot.lot_name"/>
+                            </t>
+                            <t t-else="">
+                                SN <t t-esc="lot.lot_name"/>
+                            </t>
                         </li>
                     </ul>
                 </Orderline>
@@ -64,7 +69,7 @@
                 <span>ExVAT</span>
                 <span>Total</span>
                 <t t-foreach="props.data.tax_details" t-as="tax" t-key="tax.tax.id">
-                    <span />
+                    <span t-esc="tax.tax.letter || ''"/>
                     <span><t t-esc="tax.tax.amount"/> %</span>
                     <span t-esc="props.formatCurrency(tax.amount, false)" />
                     <span t-esc="props.formatCurrency(tax.base, false)" />

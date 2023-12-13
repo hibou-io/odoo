@@ -339,3 +339,146 @@ class MrpSubcontractingPurchaseTest(TestMrpSubcontractingCommon):
         account_move_credit_line = svl.account_move_id.line_ids.filtered(lambda l: l.credit > 0)
         self.assertEqual(account_move_credit_line.account_id.id, stock_in_acc_id)
         self.assertEqual(account_move_credit_line.credit, 5)
+
+    def test_return_and_decrease_pol_qty(self):
+        """
+        Buy and receive 10 subcontracted products. Return one. Then adapt the
+        demand on the PO to 9.
+        """
+        po = self.env['purchase.order'].create({
+            'partner_id': self.subcontractor_partner1.id,
+            'order_line': [(0, 0, {
+                'name': self.finished2.name,
+                'product_id': self.finished2.id,
+                'product_qty': 10,
+                'product_uom': self.finished2.uom_id.id,
+                'price_unit': 1,
+            })],
+        })
+        po.button_confirm()
+
+        receipt = po.picking_ids
+        receipt.move_ids.quantity = 10
+        receipt.button_validate()
+
+        return_form = Form(self.env['stock.return.picking'].with_context(active_id=receipt.id, active_model='stock.picking'))
+        wizard = return_form.save()
+        wizard.product_return_moves.quantity = 1.0
+        return_picking_id, _pick_type_id = wizard._create_returns()
+
+        return_picking = self.env['stock.picking'].browse(return_picking_id)
+        return_picking.move_ids.quantity = 1.0
+        return_picking.button_validate()
+
+        pol = po.order_line
+        pol.product_qty = 9.0
+
+        stock_location_id = self.warehouse.lot_stock_id
+        subco_location_id = self.env.company.subcontracting_location_id
+        self.assertEqual(pol.qty_received, 9.0)
+        self.assertEqual(pol.product_qty, 9.0)
+        self.assertEqual(len(po.picking_ids), 2)
+        self.assertRecordValues(po.picking_ids.move_ids, [
+            {'location_dest_id': stock_location_id.id, 'quantity': 10.0, 'state': 'done'},
+            {'location_dest_id': subco_location_id.id, 'quantity': 1.0, 'state': 'done'},
+        ])
+
+    def test_subcontracting_lead_days(self):
+        """ Test the lead days computation for subcontracting. Subcontracting delay =
+            max(Vendor lead time, Manufacturing lead time + DTPMO) + Days to Purchase + Purchase security lead time
+        """
+        rule = self.env['stock.rule'].search([('action', '=', 'buy')], limit=1)
+        self.env.company.manufacturing_lead = 114514   # should never be used
+
+        self.env.company.po_lead = 1
+        self.env.company.days_to_purchase = 2
+        # Case 1 Vendor lead time >= Manufacturing lead time + DTPMO
+        seller = self.env['product.supplierinfo'].create({
+            'product_tmpl_id': self.finished.product_tmpl_id.id,
+            'partner_id': self.subcontractor_partner1.id,
+            'price': 12.0,
+            'delay': 10
+        })
+        self.bom.produce_delay = 3
+        self.bom.days_to_prepare_mo = 4
+        delays, _ = rule._get_lead_days(self.finished, supplierinfo=seller)
+        self.assertEqual(delays['total_delay'], seller.delay + self.env.company.po_lead + self.env.company.days_to_purchase)
+        # Case 2 Vendor lead time < Manufacturing lead time + DTPMO
+        self.bom.produce_delay = 5
+        self.bom.days_to_prepare_mo = 6
+        delays, _ = rule._get_lead_days(self.finished, supplierinfo=seller)
+        self.assertEqual(delays['total_delay'], self.bom.produce_delay + self.bom.days_to_prepare_mo + self.env.company.po_lead + self.env.company.days_to_purchase)
+
+    def test_subcontracting_lead_days_on_overview(self):
+        """Test on the BOM overview, the lead days and resupply availability are
+        correctly computed. The dtpmo on the bom should be used for the lead days,
+        while the resupply availability should be based on the calculated dtpmo.
+        """
+        # should never be used
+        self.env.company.manufacturing_lead = 114514
+        # should be added in all cases
+        self.env.company.po_lead = 5
+        self.env.company.days_to_purchase = 5
+
+        rule = self.env['stock.rule'].search([('action', '=', 'buy')], limit=1)
+        (self.finished | self.comp1 | self.comp2).route_ids = [(6, None, [rule.route_id.id])]
+        self.comp2_bom.active = False
+        self.env['product.supplierinfo'].create({
+            'product_tmpl_id': self.finished.product_tmpl_id.id,
+            'partner_id': self.subcontractor_partner1.id,
+            'price': 648.0,
+            'delay': 15
+        })
+        self.env['product.supplierinfo'].create({
+            'product_tmpl_id': self.comp1.product_tmpl_id.id,
+            'partner_id': self.subcontractor_partner1.id,
+            'price': 648.0,
+            'delay': 10
+        })
+        self.env['product.supplierinfo'].create({
+            'product_tmpl_id': self.comp2.product_tmpl_id.id,
+            'partner_id': self.subcontractor_partner1.id,
+            'price': 648.0,
+            'delay': 6
+        })
+        self.bom.produce_delay = 10
+        self.bom.days_to_prepare_mo = 0
+
+        # Case 1: Vendor lead time >= Manufacturing lead time + DTPMO on BOM
+        bom_data = self.env['report.mrp.report_bom_structure']._get_bom_data(self.bom, self.warehouse, self.finished)
+        self.assertEqual(bom_data['lead_time'], 15 + 5 + 5 + 0,
+            "Lead time = Purchase lead time(finished) + Days to Purchase + Purchase security lead time + DTPMO on BOM")
+        self.assertEqual(bom_data['resupply_avail_delay'], 10 + 5 + 5 + 20,
+            "Component avail delay = Purchase lead time(comp1) + Days to Purchase + Purchase security lead time + Calculated DTPMO")
+
+        # Case 2: Vendor lead time < Manufacturing lead time + DTPMO on BOM
+        self.bom.action_compute_bom_days()
+        self.assertEqual(self.bom.days_to_prepare_mo, 10 + 5 + 5,
+            "DTPMO = Purchase lead time(comp1) + Days to Purchase + Purchase security lead time")
+        self.bom.days_to_prepare_mo = 10
+        bom_data = self.env['report.mrp.report_bom_structure']._get_bom_data(self.bom, self.warehouse, self.finished)
+        self.assertEqual(bom_data['lead_time'], 10 + 5 + 5 + 10,
+            "Lead time = Manufacturing lead time + Days to Purchase + Purchase security lead time + DTPMO on BOM")
+        self.assertEqual(bom_data['resupply_avail_delay'], 10 + 5 + 5 + 20,
+            "Component avail delay = Manufacturing lead time + Days to Purchase + Purchase security lead time + Calculated DTPMO")
+
+        # Update stock for components, calculate DTPMO should be 0
+        self.env['stock.quant']._update_available_quantity(self.comp1, self.warehouse.lot_stock_id, 100)
+        self.env['stock.quant']._update_available_quantity(self.comp2, self.warehouse.lot_stock_id, 100)
+        self.env.invalidate_all()   # invalidate cache to get updated qty_available
+        # Case 1: Vendor lead time >= Manufacturing lead time + DTPMO on BOM
+        self.bom.days_to_prepare_mo = 2
+        bom_data = self.env['report.mrp.report_bom_structure']._get_bom_data(self.bom, self.warehouse, self.finished)
+        self.assertEqual(bom_data['lead_time'], 15 + 5 + 5,
+            "Lead time = Purchase lead time(finished) + Days to Purchase + Purchase security lead time")
+        for component in bom_data['components']:
+            self.assertEqual(component['availability_state'], 'available')
+        # Case 2: Vendor lead time < Manufacturing lead time + DTPMO on BOM
+        self.bom.action_compute_bom_days()
+        self.assertEqual(self.bom.days_to_prepare_mo, 10 + 5 + 5,
+            "DTPMO = Purchase lead time(comp1) + Days to Purchase + Purchase security lead time")
+        bom_data = self.env['report.mrp.report_bom_structure']._get_bom_data(self.bom, self.warehouse, self.finished)
+        self.assertEqual(bom_data['lead_time'], 10 + 5 + 5 + 20,
+            "Lead time = Manufacturing lead time + Days to Purchase + Purchase security lead time + DTPMO on BOM")
+        for component in bom_data['components']:
+            self.assertEqual(component['availability_state'], 'available')

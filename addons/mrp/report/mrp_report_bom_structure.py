@@ -19,7 +19,7 @@ class ReportBomStructure(models.AbstractModel):
 
     @api.model
     def get_warehouses(self):
-        return self.env['stock.warehouse'].search_read([('company_id', '=', self.env.company.id)], fields=['id', 'name'])
+        return self.env['stock.warehouse'].search_read([('company_id', 'in', self.env.companies.ids)], fields=['id', 'name'])
 
     @api.model
     def _compute_current_production_capacity(self, bom_data):
@@ -37,18 +37,19 @@ class ReportBomStructure(models.AbstractModel):
     @api.model
     def _compute_production_capacities(self, bom_qty, bom_data):
         date_today = self.env.context.get('from_date', fields.date.today())
-        same_delay = bom_data['lead_time'] == bom_data['availability_delay']
+        lead_time = bom_data['lead_time'] - bom_data['bom'].days_to_prepare_mo
+        same_delay = lead_time == bom_data['availability_delay']
         res = {}
         if bom_data.get('producible_qty', 0):
             # Check if something is producible today, at the earliest time possible considering product's lead time.
             res['earliest_capacity'] = bom_data['producible_qty']
-            res['earliest_date'] = format_date(self.env, date_today + timedelta(days=bom_data['lead_time']))
+            res['earliest_date'] = format_date(self.env, date_today + timedelta(days=lead_time))
 
         if bom_data['availability_state'] != 'unavailable':
             if same_delay:
                 # Means that stock will be resupplied at date_today, so the whole manufacture can start at date_today.
                 res['earliest_capacity'] = bom_qty
-                res['earliest_date'] = format_date(self.env, date_today + timedelta(days=bom_data['lead_time']))
+                res['earliest_date'] = format_date(self.env, date_today + timedelta(days=bom_data['availability_delay']))
             else:
                 res['leftover_capacity'] = bom_qty - bom_data.get('producible_qty', 0)
                 res['leftover_date'] = format_date(self.env, date_today + timedelta(days=bom_data['availability_delay']))
@@ -247,7 +248,6 @@ class ReportBomStructure(models.AbstractModel):
             'route_type': route_info.get('route_type', ''),
             'route_name': route_info.get('route_name', ''),
             'route_detail': route_info.get('route_detail', ''),
-            'lead_time': route_info.get('lead_time', False),
             'currency': company.currency_id,
             'currency_id': company.currency_id.id,
             'product': product,
@@ -314,6 +314,8 @@ class ReportBomStructure(models.AbstractModel):
             bom_report_line['bom_cost'] *= bom_report_line['cost_share']
 
         availabilities = self._get_availabilities(product, current_quantity, product_info, bom_key, quantities_info, level, ignore_stock, components, report_line=bom_report_line)
+        # in case of subcontracting, lead_time will be calculated with components availability delay
+        bom_report_line['lead_time'] = route_info.get('lead_time', False)
         bom_report_line.update(availabilities)
 
         if level == 0:
@@ -380,8 +382,8 @@ class ReportBomStructure(models.AbstractModel):
     @api.model
     def _get_quantities_info(self, product, bom_uom, product_info, parent_bom=False, parent_product=False):
         return {
-            'free_qty': product.uom_id._compute_quantity(product.free_qty, bom_uom) if product.detailed_type == 'product' else False,
-            'on_hand_qty': product.uom_id._compute_quantity(product.qty_available, bom_uom) if product.detailed_type == 'product' else False,
+            'free_qty': max(product.uom_id._compute_quantity(product.free_qty, bom_uom), 0) if product.detailed_type == 'product' else 0,
+            'on_hand_qty': product.uom_id._compute_quantity(product.qty_available, bom_uom) if product.detailed_type == 'product' else 0,
             'stock_loc': 'in_stock',
         }
 
@@ -588,8 +590,9 @@ class ReportBomStructure(models.AbstractModel):
                 'route_type': 'manufacture',
                 'route_name': manufacture_rules[0].route_id.display_name,
                 'route_detail': bom.display_name,
-                'lead_time': bom.produce_delay + rules_delay + manufacturing_lead,
+                'lead_time': bom.produce_delay + rules_delay + manufacturing_lead + bom.days_to_prepare_mo,
                 'manufacture_delay': bom.produce_delay + rules_delay + manufacturing_lead,
+                'bom': bom,
             }
         return {}
 
@@ -609,7 +612,7 @@ class ReportBomStructure(models.AbstractModel):
         elif route_info:
             resupply_state, resupply_delay = self._get_resupply_availability(route_info, components)
 
-        if resupply_state == "unavailable" and route_info == {} and components and report_line:
+        if resupply_state == "unavailable" and route_info == {} and components and report_line and report_line['phantom_bom']:
             val = self._get_last_availability(report_line)
             return val
 

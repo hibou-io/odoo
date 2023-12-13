@@ -252,29 +252,29 @@ img.ms-auto, img.mx-auto {
 
 @for $index from 1 through 4 {
     .display-#{$index}-fs {
-        font-size: map-get($display-font-sizes, $index);
+        @include font-size(map-get($display-font-sizes, $index));
     }
 }
 .h1-fs {
-    font-size: $h1-font-size;
+    @include font-size($h1-font-size);
 }
 .h2-fs {
-    font-size: $h2-font-size;
+    @include font-size($h2-font-size);
 }
 .h3-fs {
-    font-size: $h3-font-size;
+    @include font-size($h3-font-size);
 }
 .h4-fs {
-    font-size: $h4-font-size;
+    @include font-size($h4-font-size);
 }
 .h5-fs {
-    font-size: $h5-font-size;
+    @include font-size($h5-font-size);
 }
 .h6-fs {
-    font-size: $h6-font-size;
+    @include font-size($h6-font-size);
 }
 .base-fs {
-    font-size: $font-size-base;
+    @include font-size($font-size-base);
 }
 
 div.media_iframe_video {
@@ -710,13 +710,6 @@ blockquote {
                     border-color: $-btn-primary-color;
                 }
             }
-
-            // Forms
-            @if ($-bg-color == $light and $-bg-color != $body-bg) {
-                --o-input-bg: #{$body-bg};
-                --o-input-border-color: var(--o-border-color);
-                --o-input-placeholder-color: #{rgba(color-contrast($body-bg), .5)};
-            }
         }
     }
 }
@@ -942,7 +935,7 @@ section, .oe_img_bg, [data-oe-shape-data] {
 
 // Autocomplete dropdowns
 .ui-autocomplete {
-    max-height: 50vh;
+    max-height: 45vh;
     overflow-y: auto;
     overflow-x: hidden;
 

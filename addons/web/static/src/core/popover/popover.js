@@ -1,28 +1,26 @@
 /** @odoo-module **/
 
 import { Component } from "@odoo/owl";
-import { useForwardRefToParent } from "../utils/hooks";
+import { useForwardRefToParent } from "@web/core/utils/hooks";
 import { usePosition } from "@web/core/position_hook";
+import { useActiveElement } from "@web/core/ui/ui_service";
 
 export class Popover extends Component {
     static animationTime = 200;
     setup() {
+        useActiveElement("ref");
         useForwardRefToParent("ref");
         this.shouldAnimate = this.props.animation;
-        this.position = usePosition(
-            "ref",
-            () => this.props.target,
-            {
-                onPositioned: (el, solution) => {
-                    (this.props.onPositioned || this.onPositioned.bind(this))(el, solution);
-                    if (this.props.fixedPosition) {
-                        // Prevent further positioning updates if fixed position is wanted
-                        this.position.lock();
-                    }
-                },
-                position: this.props.position,
-            }
-        );
+        this.position = usePosition("ref", () => this.props.target, {
+            onPositioned: (el, solution) => {
+                (this.props.onPositioned || this.onPositioned.bind(this))(el, solution);
+                if (this.props.fixedPosition) {
+                    // Prevent further positioning updates if fixed position is wanted
+                    this.position.lock();
+                }
+            },
+            position: this.props.position,
+        });
     }
     onPositioned(el, { direction, variant }) {
         const position = `${direction[0]}${variant[0]}`;
@@ -148,7 +146,7 @@ Popover.props = {
             // target may be inside an iframe, so get the Element constructor
             // to test against from its owner document's default view
             const Element = target?.ownerDocument?.defaultView.Element;
-            return Boolean(Element) && target instanceof Element;
+            return Boolean(Element) && (target instanceof Element || target instanceof window.Element);
         },
     },
     slots: {

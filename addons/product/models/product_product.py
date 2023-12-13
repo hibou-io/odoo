@@ -149,7 +149,7 @@ class ProductProduct(models.Model):
         works as intended :-)
         """
         for record in self:
-            record.write_date = max(record.write_date, record.product_tmpl_id.write_date)
+            record.write_date = max(record.write_date or self.env.cr.now(), record.product_tmpl_id.write_date)
 
     def _compute_image_1920(self):
         """Get the image from the template if no image is set on the variant."""
@@ -187,7 +187,7 @@ class ProductProduct(models.Model):
     def _get_placeholder_filename(self, field):
         image_fields = ['image_%s' % size for size in [1920, 1024, 512, 256, 128]]
         if field in image_fields:
-            return 'product/static/img/placeholder.png'
+            return 'product/static/img/placeholder_thumbnail.png'
         return super()._get_placeholder_filename(field)
 
     def init(self):
@@ -793,6 +793,9 @@ class ProductProduct(models.Model):
                                                           and product.product_tmpl_id.product_variant_ids)).mapped('product_tmpl_id')
         (tmpl_to_deactivate + tmpl_to_activate).toggle_active()
         return result
+
+    def get_contextual_price(self):
+        return self._get_contextual_price()
 
     def _get_contextual_price(self):
         self.ensure_one()

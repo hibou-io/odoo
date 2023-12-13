@@ -124,7 +124,7 @@ export class FormCompiler extends ViewCompiler {
      * @returns {Element}
      */
     compileButtonBox(el, params) {
-        if (!el.childNodes.length) {
+        if (!el.children.length) {
             return this.compileGenericNode(el, params);
         }
 
@@ -162,7 +162,7 @@ export class FormCompiler extends ViewCompiler {
                 );
             }
             if (child.tagName === "field") {
-                child.classList.add("d-inline-block", "mb-0");
+                child.classList.add("d-inline-block", "mb-0", "z-index-0");
             }
             append(mainSlot, this.compileNode(child, params, false));
             append(buttonBox, mainSlot);
@@ -655,7 +655,12 @@ export class FormCompiler extends ViewCompiler {
                 continue;
             }
             if (compiled.nodeName === "ButtonBox") {
-                compiled.setAttribute("t-if", "__comp__.env.inDialog");
+                let isVisibleExpr = "__comp__.env.inDialog";
+                if (compiled.hasAttribute("t-if")) {
+                    const formerTif = compiled.getAttribute("t-if");
+                    isVisibleExpr = `( ${formerTif} ) and ${isVisibleExpr}`;
+                }
+                compiled.setAttribute("t-if", isVisibleExpr);
             }
             if (getTag(child, true) === "field") {
                 compiled.setAttribute("showTooltip", true);

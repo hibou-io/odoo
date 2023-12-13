@@ -26,6 +26,7 @@ import {
     pagerNext,
     toggleSearchBarMenu,
     validateSearch,
+    toggleMenuItem,
 } from "@web/../tests/search/helpers";
 import { makeView, setupViewRegistries } from "@web/../tests/views/helpers";
 import { createWebClient, doAction } from "@web/../tests/webclient/helpers";
@@ -589,6 +590,35 @@ QUnit.module("Views", (hooks) => {
         await validateSearch(target);
         assert.containsN(target, ".o_kanban_group:nth-child(2) .o_kanban_record", 3);
         assert.verifySteps(["rendered"]);
+    });
+
+    QUnit.test("basic grouped rendering with no record", async (assert) => {
+        serverData.models.partner.records = [];
+
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban class="o_kanban_test">
+                    <field name="bar" />
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div>
+                                <field name="foo" />
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            groupBy: ["bar"],
+        });
+        assert.containsOnce(target, ".o_kanban_grouped");
+        assert.containsOnce(target, ".o_view_nocontent");
+        assert.containsOnce(
+            target,
+            ".o_control_panel_main_buttons .d-none.d-xl-inline-flex button.o-kanban-button-new",
+            "There should be a 'New' button even though there is no column when groupby is not a many2one"
+        );
     });
 
     QUnit.test(
@@ -5620,6 +5650,8 @@ QUnit.module("Views", (hooks) => {
         });
 
         assert.containsNone(target, ".o-kanban-button-new");
+        assert.containsN(target, ".o_kanban_group", 2);
+        assert.containsNone(target, ".o_kanban_quick_add");
     });
 
     QUnit.test("clicking on a link triggers correct event", async (assert) => {
@@ -10904,7 +10936,7 @@ QUnit.module("Views", (hooks) => {
 
     QUnit.test(
         "keyboard navigation on kanban when the focus is on a link that " +
-            "has an action and the kanban has no oe_kanban_global_... class",
+        "has an action and the kanban has no oe_kanban_global_... class",
         async (assert) => {
             await makeView({
                 type: "kanban",
@@ -13534,7 +13566,7 @@ QUnit.module("Views", (hooks) => {
         MyField.template = xml`<span t-esc="renderCount"/>`;
         registry.category("fields").add("my_field", { component: MyField });
 
-        serverData.models.partner.onchanges = { product_id: () => {} };
+        serverData.models.partner.onchanges = { product_id: () => { } };
 
         await makeView({
             type: "kanban",
@@ -13882,6 +13914,88 @@ QUnit.module("Views", (hooks) => {
             );
         }
     );
+
+
+    QUnit.test("searchbar filters are displayed directly", async (assert) => {
+        let def;
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban>
+                    <field name="foo"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            searchViewArch: `
+                <search>
+                    <filter name="some_filter" string="Some Filter" domain="[['foo', '!=', 'bar']]"/>
+                </search>`,
+            async mockRPC(route, args) {
+                if (args.method === "web_search_read") {
+                    await def;
+                }
+            },
+        });
+
+        assert.deepEqual(getFacetTexts(target), []);
+
+        // toggle a filter, and slow down the web_search_read rpc
+        def = makeDeferred();
+        await toggleSearchBarMenu(target);
+        await toggleMenuItem(target, "Some Filter");
+        assert.deepEqual(getFacetTexts(target), ["Some Filter"]);
+
+        def.resolve();
+        await nextTick();
+        assert.deepEqual(getFacetTexts(target), ["Some Filter"]);
+    });
+
+    QUnit.test("searchbar filters are displayed directly (with progressbar)", async (assert) => {
+        let def;
+        await makeView({
+            type: "kanban",
+            resModel: "partner",
+            serverData,
+            arch: `
+                <kanban>
+                    <progressbar field="state" colors='{"abc": "success", "def": "warning", "ghi": "danger"}' />
+                    <field name="foo"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div><field name="foo"/></div>
+                        </t>
+                    </templates>
+                </kanban>`,
+            groupBy: ["int_field"],
+            searchViewArch: `
+                <search>
+                    <filter name="some_filter" string="Some Filter" domain="[['foo', '!=', 'bar']]"/>
+                </search>`,
+            async mockRPC(route, args) {
+                if (args.method === "read_progress_bar") {
+                    await def;
+                }
+            },
+        });
+
+        assert.deepEqual(getFacetTexts(target), []);
+
+        // toggle a filter, and slow down the read_progress_bar rpc
+        def = makeDeferred();
+        await toggleSearchBarMenu(target);
+        await toggleMenuItem(target, "Some Filter");
+
+        assert.deepEqual(getFacetTexts(target), ["Some Filter"]);
+
+        def.resolve();
+        await nextTick();
+        assert.deepEqual(getFacetTexts(target), ["Some Filter"]);
+    });
 
     QUnit.test("group by properties and drag and drop", async (assert) => {
         assert.expect(10);

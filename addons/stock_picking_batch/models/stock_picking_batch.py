@@ -57,22 +57,20 @@ class StockPickingBatch(models.Model):
               - If not manually changed and transfers are added/removed/updated then this will be their earliest scheduled date
                 but this scheduled date will not be set for all transfers in batch.""")
     is_wave = fields.Boolean('This batch is a wave')
+    # To remove in master
     show_set_qty_button = fields.Boolean(compute='_compute_show_qty_button')
     show_clear_qty_button = fields.Boolean(compute='_compute_show_qty_button')
+    show_lots_text = fields.Boolean(compute='_compute_show_lots_text')
 
-    @api.depends('state',
-                 'picking_ids.show_set_qty_button',
-                 'picking_ids.show_clear_qty_button')
+    @api.depends()
     def _compute_show_qty_button(self):
         self.show_set_qty_button = False
         self.show_clear_qty_button = False
+
+    @api.depends('picking_type_id')
+    def _compute_show_lots_text(self):
         for batch in self:
-            if batch.state != 'in_progress':
-                continue
-            if any(p.show_set_qty_button for p in self.picking_ids):
-                batch.show_set_qty_button = True
-            elif any(p.show_clear_qty_button for p in self.picking_ids):
-                batch.show_clear_qty_button = True
+            batch.show_lots_text = batch.picking_ids and batch.picking_ids[0].show_lots_text
 
     @api.depends('company_id', 'picking_type_id', 'state')
     def _compute_allowed_picking_ids(self):
@@ -194,9 +192,6 @@ class StockPickingBatch(models.Model):
         self.ensure_one()
         return self.env.ref('stock_picking_batch.action_report_picking_batch').report_action(self)
 
-    def action_clear_quantities_to_zero(self):
-        self.picking_ids.filtered("show_clear_qty_button").action_clear_quantities_to_zero()
-
     def action_done(self):
         def has_no_quantity(picking):
             return all(not m.picked or float_is_zero(m.quantity, precision_rounding=m.product_uom.rounding) for m in picking.move_ids if m.state not in ('done', 'cancel'))
@@ -241,20 +236,13 @@ class StockPickingBatch(models.Model):
         """
         self.ensure_one()
         if self.state not in ('done', 'cancel'):
-            quantity_move_line_ids = self.move_line_ids.filtered(
-                lambda ml:
-                    float_compare(ml.quantity, 0.0, precision_rounding=ml.product_uom_id.rounding) > 0 and
-                    not ml.result_package_id
-            )
-            move_line_ids = quantity_move_line_ids.filtered(lambda ml: ml.picked)
-            if not move_line_ids:
-                move_line_ids = quantity_move_line_ids
+            move_line_ids = self.picking_ids[0]._package_move_lines()
             if move_line_ids:
                 res = move_line_ids.picking_id[0]._pre_put_in_pack_hook(move_line_ids)
-                if not res:
-                    package = move_line_ids.picking_id[0]._put_in_pack(move_line_ids, False)
-                    return move_line_ids.picking_id[0]._post_put_in_pack_hook(package)
-                return res
+                if res:
+                    return res
+                package = move_line_ids.picking_id._put_in_pack(move_line_ids)
+                return move_line_ids.picking_id[0]._post_put_in_pack_hook(package)
             raise UserError(_("Please add 'Done' quantities to the batch picking to create a new pack."))
 
     def action_view_reception_report(self):

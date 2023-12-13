@@ -344,7 +344,7 @@ class Website(models.Model):
 
     def _OLG_api_rpc(self, route, params):
         # For text content generation
-        return self._api_rpc(route, params, 'website.olg_api_endpoint', DEFAULT_OLG_ENDPOINT, timeout=300)
+        return self._api_rpc(route, params, 'website.olg_api_endpoint', DEFAULT_OLG_ENDPOINT, timeout=20)
 
     def get_cta_data(self, website_purpose, website_type):
         return {'cta_btn_text': False, 'cta_btn_href': '/contactus'}
@@ -702,7 +702,8 @@ class Website(models.Model):
                     rendered_snippets.append(rendered_snippet)
                 except ValueError as e:
                     logger.warning(e)
-            page_view_id.save(value=''.join(rendered_snippets), xpath="(//div[hasclass('oe_structure')])[last()]")
+            page_view_id.save(value=f'<div class="oe_structure">{"".join(rendered_snippets)}</div>',
+                              xpath="(//div[hasclass('oe_structure')])[last()]")
 
         # Configure the images
         images = custom_resources.get('images', {})
@@ -736,6 +737,41 @@ class Website(models.Model):
                     'res_id': attachment.id,
                     'noupdate': True,
                 })
+
+        def fallback_create_missing_industry_image(image_name, fallback_img_name):
+            """ If an industry did not specify an image, this method allows that
+            specific image to be using the same image as another fallback one.
+            """
+            image_name = f'website.{image_name}'
+            if (
+                image_name not in images.keys()
+                and f'website.{fallback_img_name}' in images.keys()
+            ):
+                extn_identifier = 'configurator_%s_%s' % (website.id, image_name.split('.')[1])
+                if extn_identifier not in names:
+                    attachment = self.env['ir.attachment'].create({
+                        'name': image_name,
+                        'website_id': website.id,
+                        'key': image_name,
+                        'type': 'binary',
+                        'raw': self.env.ref(f'website.configurator_{website.id}_{fallback_img_name}').raw,
+                        'public': True,
+                    })
+                    self.env['ir.model.data'].create({
+                        'name': extn_identifier,
+                        'module': 'website',
+                        'model': 'ir.attachment',
+                        'res_id': attachment.id,
+                        'noupdate': True,
+                    })
+
+        try:
+            # TODO: Remove this try/except, safety net because it was merged
+            #       to close to OXP.
+            fallback_create_missing_industry_image('s_banner_default_image_2', 's_image_text_default_image')
+            fallback_create_missing_industry_image('s_banner_default_image_3', 's_product_list_default_image_1')
+        except Exception:
+            pass
 
         return {'url': redirect_url, 'website_id': website.id}
 
@@ -1639,16 +1675,15 @@ class Website(models.Model):
         """
         fuzzy_term = False
         search_details = self._search_get_details(search_type, order, options)
+        count, results = self._search_exact(search_details, search, limit, order)
+        if count > 0:
+            return count, results, fuzzy_term
         if search and options.get('allowFuzzy', True):
             fuzzy_term = self._search_find_fuzzy_term(search_details, search)
             if fuzzy_term:
                 count, results = self._search_exact(search_details, fuzzy_term, limit, order)
                 if fuzzy_term.lower() == search.lower():
                     fuzzy_term = False
-            else:
-                count, results = self._search_exact(search_details, search, limit, order)
-        else:
-            count, results = self._search_exact(search_details, search, limit, order)
         return count, results, fuzzy_term
 
     def _search_exact(self, search_details, search, limit, order):

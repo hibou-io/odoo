@@ -82,7 +82,7 @@
                         <h2>
                             <field name="license_plate" class="oe_inline" placeholder="e.g. PAE 326"/>
                         </h2>
-                        <label for="tag_ids"/>
+                        <label for="tag_ids" class="me-3"/>
                         <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
                     </div>
                     <group col="2">
@@ -113,7 +113,7 @@
                     </group>
                     <field name="vehicle_properties" columns="2"/>
                     <notebook>
-                        <page string="Tax Info">
+                        <page string="Tax Info" name="page_tax_info">
                             <group>
                                 <group col="1" name="fiscality_group" string="Fiscality">
                                     <group col="1" name="fiscality_first_group">
@@ -128,7 +128,7 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Model">
+                        <page string="Model" name="page_model">
                             <group>
                                 <group string="Model">
                                     <field name="model_year"/>
@@ -311,10 +311,10 @@
                                             <field name="contract_count"/>
                                             Contract(s)
                                             <span t-if="record.contract_renewal_due_soon.raw_value and !record.contract_renewal_overdue.raw_value"
-                                                class="fa fa-exclamation-triangle" t-att-style="'color:orange'" role="img" aria-label="Warning: renewal due soon" title="Warning: renewal due soon">
+                                                class="fa fa-exclamation-triangle text-warning" role="img" aria-label="Warning: renewal due soon" title="Warning: renewal due soon">
                                             </span>
                                              <span t-if="record.contract_renewal_overdue.raw_value"
-                                                class="fa fa-exclamation-triangle" t-att-style="'color:red;'" role="img" aria-label="Attention: renewal overdue" title="Attention: renewal overdue">
+                                                class="fa fa-exclamation-triangle text-danger" role="img" aria-label="Attention: renewal overdue" title="Attention: renewal overdue">
                                             </span>
                                         </a>
                                         <field name="activity_ids" widget="kanban_activity"/>

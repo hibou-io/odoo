@@ -3,6 +3,7 @@
 import { _t } from "@web/core/l10n/translation";
 import { sprintf } from "@web/core/utils/strings";
 import { parseFloat } from "@web/views/fields/parsers";
+import { floatIsZero } from "@web/core/utils/numbers";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { ControlButtonsMixin } from "@point_of_sale/app/utils/control_buttons_mixin";
@@ -207,21 +208,19 @@ export class SaleOrderManagementScreen extends ControlButtonsMixin(Component) {
                         continue;
                     }
 
-                    const new_line = new Orderline(
-                        { env: this.env },
-                        {
-                            pos: this.pos,
-                            order: this.pos.get_order(),
-                            product: this.pos.db.get_product_by_id(line.product_id[0]),
-                            description: line.name,
-                            price: line.price_unit,
-                            tax_ids: orderFiscalPos ? undefined : line.tax_id,
-                            price_type: "manual",
-                            sale_order_origin_id: clickedOrder,
-                            sale_order_line_id: line,
-                            customer_note: line.customer_note,
-                        }
-                    );
+                    const line_values = {
+                        pos: this.pos,
+                        order: this.pos.get_order(),
+                        product: this.pos.db.get_product_by_id(line.product_id[0]),
+                        description: line.name,
+                        price: line.price_unit,
+                        tax_ids: orderFiscalPos ? undefined : line.tax_id,
+                        price_manually_set: false,
+                        sale_order_origin_id: clickedOrder,
+                        sale_order_line_id: line,
+                        customer_note: line.customer_note,
+                    };
+                    const new_line = new Orderline({ env: this.env }, line_values);
 
                     if (
                         new_line.get_product().tracking !== "none" &&
@@ -254,7 +253,19 @@ export class SaleOrderManagementScreen extends ControlButtonsMixin(Component) {
                     new_line.setQuantityFromSOL(line);
                     new_line.set_unit_price(line.price_unit);
                     new_line.set_discount(line.discount);
-                    this.pos.get_order().add_orderline(new_line);
+                    const product = this.pos.db.get_product_by_id(line.product_id[0]);
+                    const product_unit = product.get_unit();
+                    if (product_unit && !product.get_unit().is_pos_groupable) {
+                        let remaining_quantity = new_line.quantity;
+                        while (!floatIsZero(remaining_quantity, 6)) {
+                            const splitted_line = new Orderline({ env: this.env }, line_values);
+                            splitted_line.set_quantity(Math.min(remaining_quantity, 1.0));
+                            this.pos.get_order().add_orderline(splitted_line);
+                            remaining_quantity -= splitted_line.quantity;
+                        }
+                    } else {
+                        this.pos.get_order().add_orderline(new_line);
+                    }
                 }
             } else {
                 // apply a downpayment

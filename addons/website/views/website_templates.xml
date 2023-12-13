@@ -322,7 +322,7 @@
                     </button>
                 </li>
             </ul>
-            <div t-attf-class="offcanvas #{_side if _side else 'offcanvas-end'} o_navbar_mobile vh-100" id="top_menu_collapse_mobile">
+            <div t-attf-class="offcanvas #{_side if _side else 'offcanvas-end'} o_navbar_mobile" id="top_menu_collapse_mobile">
                 <div class="offcanvas-header justify-content-end o_not_editable">
                     <button type="button" class="nav-link btn-close" data-bs-dismiss="offcanvas" aria-label="Close"/>
                 </div>
@@ -352,10 +352,9 @@
                         <!-- Text element -->
                         <t t-call="website.placeholder_header_text_element">
                             <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
-                            <t t-set="_link_class" t-valuef="nav-link d-block p-1"/>
                         </t>
                         <!-- Social -->
-                        <t t-call="website.header_social_links_no_color">
+                        <t t-call="website.placeholder_header_social_links">
                             <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
                         </t>
                     </ul>
@@ -398,7 +397,7 @@
     <xpath expr="//t[@t-call='website.placeholder_header_text_element']" position="inside">
         <t t-set="_div_class" t-valuef="align-items-center mt-2 border-top pt-2 text-center o_border_contrast"/>
     </xpath>
-    <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="inside">
+    <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 text-center o_border_contrast"/>
     </xpath>
     <xpath expr="//t[@t-set='dropdown_toggler_classes']" position="attributes">
@@ -416,7 +415,7 @@
     <xpath expr="//t[@t-call='website.placeholder_header_text_element']" position="inside">
         <t t-set="_div_class" t-valuef="align-items-end mt-2 border-top pt-2 text-end o_border_contrast"/>
     </xpath>
-    <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="inside">
+    <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 text-end o_border_contrast"/>
     </xpath>
     <xpath expr="//t[@t-set='dropdown_toggler_classes']" position="attributes">
@@ -532,7 +531,7 @@
                         <t t-set="_dropdown_menu_class" t-valuef="dropdown-menu-end"/>
                     </t>
                 </ul>
-                <div class="offcanvas offcanvas-start o_navbar_mobile vh-100" id="top_menu_collapse">
+                <div class="offcanvas offcanvas-start o_navbar_mobile" id="top_menu_collapse">
                     <div class="offcanvas-header justify-content-end">
                         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"/>
                     </div>
@@ -564,10 +563,9 @@
                             <t t-call="website.placeholder_header_text_element">
                                 <t t-set="_txt_elt_content" t-valuef="phone_mail"/>
                                 <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
-                                <t t-set="_link_class" t-valuef="nav-link d-block p-1"/>
                             </t>
                             <!-- Social -->
-                            <t t-call="website.header_social_links_no_color">
+                            <t t-call="website.placeholder_header_social_links">
                                 <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
                             </t>
                         </ul>
@@ -616,7 +614,7 @@
     <xpath expr="//t[@t-call='website.placeholder_header_text_element']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 text-center o_border_contrast"/>
     </xpath>
-    <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="inside">
+    <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 text-center o_border_contrast"/>
     </xpath>
 </template>
@@ -628,7 +626,7 @@
     <xpath expr="//t[@t-call='website.placeholder_header_text_element']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 text-end o_border_contrast"/>
     </xpath>
-    <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="inside">
+    <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 text-end o_border_contrast"/>
     </xpath>
 </template>
@@ -660,8 +658,8 @@
                 <ul class="o_header_stretch_elts navbar-nav flex-shrink-0 ps-2">
                     <!-- Text element -->
                         <t t-call="website.placeholder_header_text_element">
+                            <t t-set="_txt_elt_content" t-valuef="mail_stretched"/>
                             <t t-set="_div_class" t-valuef="h-100 border-start o_border_contrast"/>
-                            <t t-set="_link_class" t-valuef="o_navlink_background_hover d-flex align-items-center h-100 text-reset"/>
                         </t>
                     <!-- Search bar -->
                     <t t-call="website.placeholder_header_search_box">
@@ -671,7 +669,7 @@
                         <t t-set="_classes" t-valuef="h-100 border-start o_border_contrast"/>
                     </t>
                     <!-- Social -->
-                    <t t-call="website.header_social_links_no_color">
+                    <t t-call="website.placeholder_header_social_links">
                         <t t-set="_div_class" t-valuef="d-flex align-items-center h-100 border-start px-2 o_border_contrast"/>
                     </t>
                     <!-- Language Selector -->
@@ -738,9 +736,7 @@
                         <!-- Social Links -->
                         <t t-call="website.placeholder_header_social_links"/>
                         <!-- Text element -->
-                        <t t-call="website.placeholder_header_text_element">
-                            <t t-set="_link_class" t-valuef="nav-link"/>
-                        </t>
+                        <t t-call="website.placeholder_header_text_element"/>
                     </ul>
                     <!-- Brand -->
                     <t t-call="website.placeholder_header_brand">
@@ -767,7 +763,7 @@
                             <t t-set="_dropdown_menu_class" t-valuef="dropdown-menu-end"/>
                         </t>
                         <!-- Call To Action -->
-                        <t t-call="website.header_call_to_action_pill"/>
+                        <t t-call="website.placeholder_header_call_to_action"/>
                     </ul>
                 </div>
                 <div class="d-flex justify-content-center w-100">
@@ -854,7 +850,7 @@
                             <t t-set="_submit_classes" t-valuef="rounded-end-pill pe-3 bg-o-color-3"/>
                         </t>
                         <!-- Call To Action -->
-                        <t t-call="website.header_call_to_action_pill"/>
+                        <t t-call="website.placeholder_header_call_to_action"/>
                     </ul>
                 </div>
             </div>
@@ -921,7 +917,7 @@
                     </t>
                     <ul class="o_header_sales_one_right_col navbar-nav align-items-center gap-1 flex-grow-1 justify-content-end">
                         <!-- Call To Action -->
-                        <t t-call="website.header_call_to_action_pill">
+                        <t t-call="website.placeholder_header_call_to_action">
                             <t t-set="_item_class" t-valuef="flex-grow-1"/>
                             <t t-set="_div_class" t-valuef="d-flex align-items-center"/>
                         </t>
@@ -960,7 +956,7 @@
                             <t t-set="_item_class" t-valuef="flex-basis-0 flex-grow-1 flex-shrink-0"/>
                         </t>
                         <!-- Social -->
-                        <t t-call="website.header_social_links_no_color"/>
+                        <t t-call="website.placeholder_header_social_links"/>
                     </ul>
                 </div>
             </div>
@@ -1015,7 +1011,7 @@
                             <!-- Social -->
                             <!-- Return empty placeholder if the element is not active to keep the right layout -->
                             <li class="o_header_sales_two_social_links_placeholder" t-if="is_view_active('website.header_social_links') == False"/>
-                            <t t-call="website.header_social_links_no_color">
+                            <t t-call="website.placeholder_header_social_links">
                                 <t t-set="_div_class" t-valuef="d-flex align-items-center justify-content-end h-100"/>
                             </t>
                         </ul>
@@ -1103,7 +1099,7 @@
                     <div class="container d-flex justify-content-between gap-3 h-100">
                         <ul class="navbar-nav align-items-center gap-3 py-1">
                             <!-- Social -->
-                            <t t-call="website.header_social_links_no_color"/>
+                            <t t-call="website.placeholder_header_social_links"/>
                             <!-- Text element -->
                             <t t-call="website.placeholder_header_text_element">
                                 <t t-set="_txt_elt_content" t-valuef="list"/>
@@ -1201,11 +1197,10 @@
                         <t t-call="website.placeholder_header_text_element">
                             <t t-set="_txt_elt_content" t-valuef="mail"/>
                             <t t-set="_div_class" t-valuef="d-flex align-items-center"/>
-                            <t t-set="_link_class" t-valuef="nav-link"/>
                             <t t-set="_item_class" t-valuef="position-relative"/>
                         </t>
                         <!-- Social -->
-                        <t t-call="website.header_social_links_no_color">
+                        <t t-call="website.placeholder_header_social_links">
                             <t t-set="_div_class" t-valuef="d-flex align-items-center"/>
                             <t t-set="_item_class" t-valuef="position-relative"/>
                         </t>
@@ -1251,7 +1246,7 @@
                             <li class="d-flex align-items-center gap-3 ms-auto mb-0">
                                 <ul class="navbar-nav gap-2">
                                     <!-- Call To Action -->
-                                    <t t-call="website.header_call_to_action_pill"/>
+                                    <t t-call="website.placeholder_header_call_to_action"/>
                                 </ul>
                             </li>
                         </ul>
@@ -1320,12 +1315,11 @@
                             </li>
                             <!-- Text element -->
                             <t t-call="website.placeholder_header_text_element">
-                                <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
-                                <t t-set="_link_class" t-valuef="nav-link d-block p-1"/>
                                 <t t-set="_txt_elt_content" t-valuef="phone_mail"/>
+                                <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
                             </t>
                             <!-- Social -->
-                            <t t-call="website.header_social_links_no_color">
+                            <t t-call="website.placeholder_header_social_links">
                                 <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast"/>
                             </t>
                         </ul>
@@ -1373,7 +1367,7 @@
     <xpath expr="//t[@t-call='website.placeholder_header_text_element']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast text-center"/>
     </xpath>
-    <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="inside">
+    <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast text-center"/>
     </xpath>
     <xpath expr="//t[@t-set='dropdown_toggler_classes']" position="attributes">
@@ -1391,7 +1385,7 @@
     <xpath expr="//t[@t-call='website.placeholder_header_text_element']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast text-end"/>
     </xpath>
-    <xpath expr="//t[@t-call='website.header_social_links_no_color']" position="inside">
+    <xpath expr="//t[@t-call='website.placeholder_header_social_links']" position="inside">
         <t t-set="_div_class" t-valuef="mt-2 border-top pt-2 o_border_contrast text-end"/>
     </xpath>
     <xpath expr="//t[@t-set='dropdown_toggler_classes']" position="attributes">
@@ -1459,7 +1453,7 @@
                             <t t-set="_dropdown_menu_class" t-valuef="dropdown-menu-end"/>
                         </t>
                         <!-- Call To Action -->
-                        <t t-call="website.header_call_to_action_pill"/>
+                        <t t-call="website.placeholder_header_call_to_action"/>
                     </ul>
                 </div>
             </t>
@@ -2199,29 +2193,23 @@
 </template>
 
 <template id="website.header_call_to_action_large" inherit_id="website.header_call_to_action" name="Header Call to Action - Large" primary="True">
-    <xpath expr="//a[hasclass('btn')]" position="attributes">
+    <xpath expr="//a[hasclass('oe_unremovable')]" position="attributes">
         <attribute name="class" remove="" add="w-100" separator=" "/>
     </xpath>
 </template>
 
 <template id="website.header_call_to_action_sidebar" inherit_id="website.header_call_to_action_large" name="Header Call to Action - Sidebar" primary="True">
-    <xpath expr="//div[hasclass('container')]" position="attributes">
+    <xpath expr="//section/div" position="attributes">
         <attribute name="class" remove="" add="p-0" separator=" "/>
     </xpath>
 </template>
 
 <template id="website.header_call_to_action_stretched" inherit_id="website.header_call_to_action" name="Header Call to Action - Stretched" primary="True">
-    <xpath expr="//div[hasclass('container')]" position="attributes">
+    <xpath expr="//section/div" position="attributes">
         <attribute name="class" remove="" add="h-100" separator=" "/>
     </xpath>
-    <xpath expr="//a[hasclass('btn')]" position="attributes">
+    <xpath expr="//a[hasclass('oe_unremovable')]" position="attributes">
         <attribute name="class" remove="" add="d-flex align-items-center h-100 rounded-0" separator=" "/>
-    </xpath>
-</template>
-
-<template id="website.header_call_to_action_pill" inherit_id="website.header_call_to_action" name="Header Call to Action - Pill" primary="True">
-    <xpath expr="//a[hasclass('btn')]" position="attributes">
-        <attribute name="class" remove="btn-primary" add="btn-fill-primary rounded-circle" separator=" "/>
     </xpath>
 </template>
 
@@ -2585,8 +2573,8 @@ Sitemap: <t t-esc="url_root"/>sitemap.xml
 <template id="website_search_box" name="Website Searchbox">
     <div t-attf-class="input-group #{_classes}" role="search">
         <t t-set="search_placeholder">Search...</t>
-        <input type="search" name="search" t-att-class="'search-query form-control oe_search_box %s' % _input_classes" t-att-placeholder="placeholder if placeholder else search_placeholder" t-att-value="search"/>
-        <button type="submit" t-att-class="'btn oe_search_button %s' % (_submit_classes or 'btn-primary')" aria-label="Search" title="Search">
+        <input type="search" name="search" t-att-class="'search-query form-control oe_search_box border-0 bg-light %s' % _input_classes" t-att-placeholder="placeholder if placeholder else search_placeholder" t-att-value="search"/>
+        <button type="submit" t-att-class="'btn oe_search_button %s' % (_submit_classes or 'btn-light')" aria-label="Search" title="Search">
             <i class="oi oi-search"/>
             <span t-if="search" class="oe_search_found">
                 <small>(<t t-out="search_count or 0"/> found)</small>
@@ -2854,23 +2842,6 @@ Sitemap: <t t-esc="url_root"/>sitemap.xml
         </li>
     </xpath>
 </template>
-<template id="website.header_social_links_no_color" inherit_id="website.header_social_links" name="Header Social Links - No Color" primary="True">
-    <xpath expr="//div[hasclass('s_social_media')]" position="attributes">
-        <attribute name="class" remove="" add="no_icon_color" separator=" "/>
-    </xpath>
-    <xpath expr="//a[hasclass('s_social_media_facebook')]" position="attributes">
-        <attribute name="class" remove="" add="text-reset" separator=" "/>
-    </xpath>
-    <xpath expr="//a[hasclass('s_social_media_twitter')]" position="attributes">
-        <attribute name="class" remove="" add="text-reset" separator=" "/>
-    </xpath>
-    <xpath expr="//a[hasclass('s_social_media_linkedin')]" position="attributes">
-        <attribute name="class" remove="" add="text-reset" separator=" "/>
-    </xpath>
-    <xpath expr="//a[hasclass('s_social_media_instagram')]" position="attributes">
-        <attribute name="class" remove="" add="text-reset" separator=" "/>
-    </xpath>
-</template>
 
 <!--
     This template allows to use the website_search_box_input many times keeping
@@ -2919,11 +2890,13 @@ Sitemap: <t t-esc="url_root"/>sitemap.xml
 <template id="website.header_text_element" inherit_id="website.placeholder_header_text_element" name="Header Text element" active="True">
     <xpath expr="." position="inside">
         <li t-attf-class="#{_item_class}">
-            <div t-attf-class="s_text_block #{_div_class} #{'d-flex flex-column flex-lg-row gap-1 gap-lg-4 align-items-lg-center' if _txt_elt_content == 'list' else ''}" data-name="Text">
-                <t t-if="_txt_elt_content == 'sentence'">
+            <t t-if="_txt_elt_content == 'sentence'">
+                <div t-attf-class="s_text_block #{_div_class}" data-name="Text">
                     <small>Free Returns and Standard Shipping</small>
-                </t>
-                <t t-elif="_txt_elt_content == 'list'">
+                </div>
+            </t>
+            <t t-elif="_txt_elt_content == 'list'">
+                <div t-attf-class="s_text_block d-flex flex-column flex-lg-row gap-1 gap-lg-4 align-items-lg-center #{_div_class}" data-name="Text">
                     <small class="d-flex align-items-center">
                         <i class="fa fa-1x fa-fw fa-usd fa-stack me-1"/>
                         Low Price Guarantee
@@ -2936,33 +2909,47 @@ Sitemap: <t t-esc="url_root"/>sitemap.xml
                         <i class="fa fa-1x fa-fw fa-truck fa-stack me-1"/>
                         Standard Shipping
                     </small>
-                </t>
-                <t t-elif="_txt_elt_content == 'phone_mail'">
-                    <a href="tel:+1 (650) 555-0111" t-attf-class="nav-link o_nav-link_secondary #{_link_class}">
+                </div>
+            </t>
+            <t t-elif="_txt_elt_content == 'phone_mail'">
+                <div t-attf-class="s_text_block #{_div_class}" data-name="Text">
+                    <a href="tel:+1 (650) 555-0111" class="nav-link o_nav-link_secondary">
                         <small>
                             <i class="fa fa-1x fa-fw fa-phone me-1"/>&#847; <!-- Empty character needed to be able to delete the icon. -->
                             <span class="o_force_ltr">+1 (650) 555-0111</span>
                         </small>
                     </a>
-                    <a href="mailto:info@yourcompany.example.com" t-attf-class="nav-link o_nav-link_secondary #{_link_class}">
+                    <a href="mailto:info@yourcompany.example.com" class="nav-link o_nav-link_secondary">
                         <small>
                             <i class="fa fa-1x fa-fw fa-envelope me-1"/>
-                             info@yourcompany.example.com
+                            info@yourcompany.example.com
                         </small>
                     </a>
-                </t>
-                <t t-elif="_txt_elt_content == 'mail'">
-                    <a href="mailto:info@yourcompany.example.com" t-attf-class="nav-link o_nav-link_secondary #{_link_class}">
+                </div>
+            </t>
+            <t t-elif="_txt_elt_content == 'mail'">
+                <div t-attf-class="s_text_block #{_div_class}" data-name="Text">
+                    <a href="mailto:info@yourcompany.example.com" class="nav-link o_nav-link_secondary">
                         <small><i class="fa fa-1x fa-fw fa-envelope me-1"/> info@yourcompany.example.com</small>
                     </a>
-                </t>
-                <t t-else="">
-                    <a href="tel:+1 (650) 555-0111" t-attf-class="nav-link o_nav-link_secondary p-2 #{_link_class}">
+                </div>
+            </t>
+            <t t-elif="_txt_elt_content == 'mail_stretched'">
+                <div t-attf-class="s_text_block #{_div_class}" data-name="Text">
+                    <a href="tel:+1 (650) 555-0111" class="nav-link o_nav-link_secondary p-2 o_navlink_background_hover d-flex align-items-center h-100 text-reset">
                         <i class="fa fa-1x fa-fw fa-phone me-1"/>
                         <span class="o_force_ltr"><small>+1 (650) 555-0111</small></span>
                     </a>
-                </t>
-            </div>
+                </div>
+            </t>
+            <t t-else="">
+                <div t-attf-class="s_text_block #{_div_class}" data-name="Text">
+                    <a href="tel:+1 (650) 555-0111" class="nav-link o_nav-link_secondary p-2">
+                        <i class="fa fa-1x fa-fw fa-phone me-1"/>
+                        <span class="o_force_ltr"><small>+1 (650) 555-0111</small></span>
+                    </a>
+                </div>
+            </t>
         </li>
     </xpath>
 </template>

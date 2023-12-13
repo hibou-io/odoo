@@ -398,18 +398,17 @@ class WebsiteSale(payment_portal.PaymentPortal):
                     max_price = max_price if max_price >= available_min_price else available_max_price
                     post['max_price'] = max_price
 
-        if filter_by_tags_enabled:
-            if (
-                search_product.product_tag_ids
-                or search_product.product_variant_ids.additional_product_tag_ids
-            ):
-                ProductTag = request.env['product.tag']
-                all_tags = ProductTag.search(
-                    [('product_ids.is_published', '=', True), ('visible_on_ecommerce', '=', True)]
-                    + website_domain
-                )
-            else:
-                all_tags = []
+        ProductTag = request.env['product.tag']
+        if filter_by_tags_enabled and search_product:
+            all_tags = ProductTag.search(
+                expression.AND([
+                    [('product_ids.is_published', '=', True), ('visible_on_ecommerce', '=', True)],
+                    website_domain
+                ])
+            )
+        else:
+            all_tags = ProductTag
+
         categs_domain = [('parent_id', '=', False)] + website_domain
         if search:
             search_categories = Category.search(
@@ -423,7 +422,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         if category:
             url = "/shop/category/%s" % slug(category)
 
-        pager = website.pager(url=url, total=product_count, page=page, step=ppg, scope=7, url_args=post)
+        pager = website.pager(url=url, total=product_count, page=page, step=ppg, scope=5, url_args=post)
         offset = pager['offset']
         products = search_product[offset:offset + ppg]
 
@@ -870,6 +869,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         )
 
         values['notification_info'] = self._get_cart_notification_information(order, [values['line_id']])
+        values['notification_info']['warning'] = values.pop('warning', '')
         request.session['website_sale_cart_quantity'] = order.cart_quantity
 
         if not order.cart_quantity:
@@ -1221,7 +1221,6 @@ class WebsiteSale(payment_portal.PaymentPortal):
         values, errors = {}, {}
 
         partner_id = int(kw.get('partner_id', -1))
-
         if order._is_public_order():
             mode = ('new', 'billing')
             can_edit_vat = True
@@ -1235,9 +1234,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 else:
                     address_mode = kw.get('mode')
                     if not address_mode:
-                        if partner_id == order.partner_invoice_id:
+                        if partner_id == order.partner_invoice_id.id:
                             address_mode = 'billing'
-                        elif partner_id == order.partner_shipping_id:
+                        elif partner_id == order.partner_shipping_id.id:
                             address_mode = 'shipping'
 
                     # Make sure the address exists and belongs to the customer of the SO
@@ -1249,13 +1248,11 @@ class WebsiteSale(payment_portal.PaymentPortal):
                     if address_mode == 'billing':
                         billing_partners = partners_sudo.filtered(lambda p: p.type != 'delivery')
                         if partner_sudo not in billing_partners:
-                            kw.pop('partner_id')
-                            mode = ('new', address_mode)
+                            raise Forbidden()
                     elif address_mode == 'shipping':
                         shipping_partners = partners_sudo.filtered(lambda p: p.type != 'invoice')
                         if partner_sudo not in shipping_partners:
-                            kw.pop('partner_id')
-                            mode = ('new', address_mode)
+                            raise Forbidden()
 
                     can_edit_vat = partner_sudo.can_edit_vat()
 

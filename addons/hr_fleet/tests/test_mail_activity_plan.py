@@ -44,7 +44,7 @@ class TestActivitySchedule(ActivityScheduleHRCase):
         form = self._instantiate_activity_schedule_wizard(employees)
         form.plan_id = self.plan_fleet
         self.assertEqual(form.plan_assignation_summary,
-                         '<ul><li>To-Do - Fleet Manager: Car return</li></ul>')
+                         '<ul><li>To-Do: Car return</li></ul>')
         self.assertFalse(form.has_error)
         wizard = form.save()
         wizard.action_schedule_plan()
@@ -60,7 +60,7 @@ class TestActivitySchedule(ActivityScheduleHRCase):
         self.assertTrue(form.has_error)
         n_error = form.error.count('<li>')
         self.assertEqual(n_error, 1)
-        self.assertIn(f"Employee's vehicle {self.employee_1.name} is not linked to a fleet manager.", form.error)
+        self.assertIn(f"The vehicle of employee {self.employee_1.name} is not linked to a fleet manager.", form.error)
         with self.assertRaises(ValidationError):
             form.save()
 

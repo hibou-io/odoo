@@ -164,13 +164,13 @@ publicWidget.registry.websiteForum = publicWidget.Widget.extend({
                 offset: '10',
                 animation: false,
                 html: true,
-                customClass: 'o_wforum_bio_popover_container',
+                customClass: 'o_wforum_bio_popover_container shadow-sm',
             });
         });
 
         this.$('#post_reply').on('shown.bs.collapse', function (e) {
             const replyEl = document.querySelector('#post_reply');
-            const scrollingElement = dom.closestScrollable(replyEl.parentNode);
+            const scrollingElement = $(replyEl.parentNode).closestScrollable()[0];
             dom.scrollTo(replyEl, {
                 forcedOffset: $(scrollingElement).innerHeight() - $(replyEl).innerHeight(),
             });

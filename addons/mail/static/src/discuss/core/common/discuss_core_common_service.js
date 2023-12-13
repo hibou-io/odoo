@@ -1,5 +1,6 @@
 /* @odoo-module */
 
+import { Record } from "@mail/core/common/record";
 import { reactive } from "@odoo/owl";
 
 import { _t } from "@web/core/l10n/translation";
@@ -23,12 +24,18 @@ export class DiscussCoreCommon {
         this.threadService = services["mail.thread"];
     }
 
+    /** @returns {import("models").Thread} */
+    insertInitChannel(data) {
+        return this.createChannelThread(data);
+    }
+
     setup() {
         this.messagingService.isReady.then((data) => {
-            for (const channelData of data.channels) {
-                this.createChannelThread(channelData);
-            }
-            this.threadService.sortChannels();
+            Record.MAKE_UPDATE(() => {
+                for (const channelData of data.channels) {
+                    this.insertInitChannel(channelData);
+                }
+            });
             this.busService.subscribe("discuss.channel/joined", (payload) => {
                 const { channel, invited_by_user_id: invitedByUserId } = payload;
                 const thread = this.store.Thread.insert({
@@ -48,9 +55,6 @@ export class DiscussCoreCommon {
                 const channel = this.store.Thread.get({ model: "discuss.channel", id });
                 if (channel) {
                     channel.last_interest_dt = last_interest_dt;
-                    if (channel.type !== "channel") {
-                        this.threadService.sortChannels();
-                    }
                 }
             });
             this.busService.subscribe("discuss.channel/leave", (payload) => {
@@ -61,6 +65,36 @@ export class DiscussCoreCommon {
                 this.notificationService.add(_t("You unsubscribed from %s.", thread.displayName), {
                     type: "info",
                 });
+                thread.delete();
+            });
+            this.busService.subscribe("discuss.channel/delete", (payload) => {
+                const thread = this.store.Thread.insert({
+                    id: payload.id,
+                    model: "discuss.channel",
+                });
+                const filteredStarredMessages = [];
+                let starredCounter = 0;
+                for (const msg of this.store.discuss.starred.messages) {
+                    if (!msg.originThread?.eq(thread)) {
+                        filteredStarredMessages.push(msg);
+                    } else {
+                        starredCounter++;
+                    }
+                }
+                this.store.discuss.starred.messages = filteredStarredMessages;
+                this.store.discuss.starred.counter -= starredCounter;
+                this.store.discuss.inbox.messages = this.store.discuss.inbox.messages.filter(
+                    (msg) => !msg.originThread?.eq(thread)
+                );
+                this.store.discuss.inbox.counter -= thread.message_needaction_counter;
+                this.store.discuss.history.messages = this.store.discuss.history.messages.filter(
+                    (msg) => !msg.originThread?.eq(thread)
+                );
+                this.threadService.closeChatWindow?.(thread);
+                if (thread.eq(this.store.discuss.thread)) {
+                    this.threadService.setDiscussThread(this.store.discuss.inbox);
+                }
+                thread.messages.splice(0, thread.messages.length);
                 thread.delete();
             });
             this.busService.addEventListener("notification", ({ detail: notifications }) => {
@@ -112,33 +146,44 @@ export class DiscussCoreCommon {
                 }
             });
             this.busService.subscribe("discuss.channel.member/fetched", (payload) => {
-                const { channel_id, last_message_id, partner_id } = payload;
-                const channel = this.store.Thread.get({ model: "discuss.channel", id: channel_id });
-                if (channel) {
-                    const seenInfo = channel.seenInfos.find(
-                        (seenInfo) => seenInfo.partner.id === partner_id
-                    );
-                    if (seenInfo) {
-                        seenInfo.lastFetchedMessage = { id: last_message_id };
-                    }
-                }
+                const { channel_id, id, last_message_id, partner_id } = payload;
+                this.store.ChannelMember.insert({
+                    id,
+                    lastFetchedMessage: { id: last_message_id },
+                    persona: { type: "partner", id: partner_id },
+                    thread: { id: channel_id, model: "discuss.channel" },
+                });
             });
             this.busService.subscribe("discuss.channel.member/seen", (payload) => {
-                const { channel_id, last_message_id, partner_id } = payload;
+                const { channel_id, guest_id, id, last_message_id, partner_id } = payload;
                 const channel = this.store.Thread.get({ model: "discuss.channel", id: channel_id });
                 if (!channel) {
                     // for example seen from another browser, the current one has no
                     // knowledge of the channel
                     return;
                 }
-                if (partner_id && partner_id === this.store.user?.id) {
-                    this.threadService.updateSeen(channel, last_message_id);
+                const member = id
+                    ? this.store.ChannelMember.insert({
+                          id,
+                          persona: {
+                              id: partner_id ?? guest_id,
+                              type: partner_id ? "partner" : "guest",
+                          },
+                          thread: { id: channel_id, model: "discuss.channel" },
+                      })
+                    : channel.channelMembers.find((member) => {
+                          const persona = this.store.Persona.get({
+                              type: partner_id ? "partner" : "guest",
+                              id: partner_id ?? guest_id,
+                          });
+                          return persona?.eq(member.persona);
+                      });
+                if (!member) {
+                    return;
                 }
-                const seenInfo = channel.seenInfos.find(
-                    (seenInfo) => seenInfo.partner.id === partner_id
-                );
-                if (seenInfo) {
-                    seenInfo.lastSeenMessage = { id: last_message_id };
+                member.lastSeenMessage = { id: last_message_id };
+                if (member.persona.eq(this.store.self)) {
+                    this.threadService.updateSeen(channel, last_message_id);
                 }
             });
             this.env.bus.addEventListener("mail.message/delete", ({ detail: { message } }) => {
@@ -174,7 +219,6 @@ export class DiscussCoreCommon {
             partners_to,
         });
         const channel = this.createChannelThread(data);
-        this.threadService.sortChannels();
         this.threadService.open(channel);
         return channel;
     }
@@ -203,12 +247,10 @@ export class DiscussCoreCommon {
         const { id, message: messageData } = notif.payload;
         let channel = this.store.Thread.get({ model: "discuss.channel", id });
         if (!channel || !channel.type) {
-            const [channelData] = await this.rpc("/discuss/channel/info", { channel_id: id });
-            channel = this.store.Thread.insert({
-                model: "discuss.channel",
-                type: channelData.channel_type,
-                ...channelData,
-            });
+            channel = await this.threadService.fetchChannel(id);
+            if (!channel) {
+                return;
+            }
         }
         if (!channel.is_pinned) {
             this.threadService.pin(channel);
@@ -286,7 +328,7 @@ export const discussCoreCommon = {
      */
     start(env, services) {
         const discussCoreCommon = reactive(new DiscussCoreCommon(env, services));
-        discussCoreCommon.setup();
+        discussCoreCommon.setup(env, services);
         return discussCoreCommon;
     },
 };

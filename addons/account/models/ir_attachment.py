@@ -30,12 +30,10 @@ class IrAttachment(models.Model):
     # EDI
     # -------------------------------------------------------------------------
 
-    @api.model
     def _decode_edi_xml(self, filename, content):
         """Decodes an xml into a list of one dictionary representing an attachment.
         :returns:           A list with a dictionary.
         """
-        self.ensure_one()
         try:
             xml_tree = etree.fromstring(content)
         except Exception as e:
@@ -45,8 +43,10 @@ class IrAttachment(models.Model):
         to_process = []
         if xml_tree is not None:
             to_process.append({
+                'attachment': self,
                 'filename': filename,
                 'content': content,
+                'attachment': self,
                 'xml_tree': xml_tree,
                 'sort_weight': 10,
                 'type': 'xml',
@@ -69,7 +69,7 @@ class IrAttachment(models.Model):
         to_process = []
         try:
             for xml_name, xml_content in pdf_reader.getAttachments():
-                to_process.extend(self._decode_edi_xml(xml_name, xml_content))
+                to_process.extend(self.env['ir.attachment']._decode_edi_xml(xml_name, xml_content))
         except (NotImplementedError, StructError, PdfReadError) as e:
             _logger.warning("Unable to access the attachments of %s. Tried to decrypt it, but %s.", filename, e)
 
@@ -153,11 +153,11 @@ class IrAttachment(models.Model):
         """
         to_process = []
 
-        for attachement in self:
-            supported_formats = attachement._get_edi_supported_formats()
+        for attachment in self:
+            supported_formats = attachment._get_edi_supported_formats()
             for supported_format in supported_formats:
-                if supported_format['check'](attachement):
-                    to_process += supported_format['decoder'](attachement.name, attachement.raw)
+                if supported_format['check'](attachment):
+                    to_process += supported_format['decoder'](attachment.name, attachment.raw)
 
         to_process.sort(key=lambda x: x['sort_weight'])
 

@@ -5,7 +5,7 @@ from odoo.exceptions import ValidationError
 from odoo.osv import expression
 from odoo.tools import format_amount
 
-ACCOUNT_DOMAIN = "['&', '&', ('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable','liability_payable','asset_cash','liability_credit_card','off_balance')), ('company_id', '=', current_company_id)]"
+ACCOUNT_DOMAIN = "['&', ('deprecated', '=', False), ('account_type', 'not in', ('asset_receivable','liability_payable','asset_cash','liability_credit_card','off_balance'))]"
 
 class ProductCategory(models.Model):
     _inherit = "product.category"
@@ -193,7 +193,7 @@ class ProductProduct(models.Model):
             taxes_before_included = all(tax.price_include for tax in flattened_taxes_before_fp)
 
             if set(product_taxes.ids) != set(product_taxes_after_fp.ids) and taxes_before_included:
-                taxes_res = flattened_taxes_before_fp.compute_all(
+                taxes_res = flattened_taxes_before_fp.with_context(round=False, round_base=False).compute_all(
                     product_price_unit,
                     quantity=1.0,
                     currency=currency,
@@ -203,7 +203,7 @@ class ProductProduct(models.Model):
                 product_price_unit = taxes_res['total_excluded']
 
                 if any(tax.price_include for tax in flattened_taxes_after_fp):
-                    taxes_res = flattened_taxes_after_fp.compute_all(
+                    taxes_res = flattened_taxes_after_fp.with_context(round=False, round_base=False).compute_all(
                         product_price_unit,
                         quantity=1.0,
                         currency=currency,
@@ -218,7 +218,7 @@ class ProductProduct(models.Model):
 
         # Apply currency rate.
         if currency != product_currency:
-            product_price_unit = product_currency._convert(product_price_unit, currency, company, document_date)
+            product_price_unit = product_currency._convert(product_price_unit, currency, company, document_date, round=False)
 
         return product_price_unit
 
@@ -245,17 +245,21 @@ class ProductProduct(models.Model):
             # cut Sales Description from the name
             name = name.split('\n')[0]
         domains = []
-        for value, domain in (
-            (name, ('name', 'ilike', name)),
-            (default_code, ('default_code', '=', default_code)),
-            (barcode, ('barcode', '=', barcode)),
-        ):
-            if value is not None:
-                domains.append([domain])
+        if default_code:
+            domains.append([('default_code', '=', default_code)])
+        if barcode:
+            domains.append([('barcode', '=', barcode)])
 
-        domain = expression.AND([
-            expression.OR(domains),
-            self.env['product.product']._check_company_domain(company),
-            extra_domain,
-        ])
-        return self.env['product.product'].search(domain, limit=1)
+        # Search for the product with the exact name, then ilike the name
+        name_domains = [('name', '=', name)], [('name', 'ilike', name)] if name else []
+        for name_domain in name_domains:
+            product = self.env['product.product'].search(
+                expression.AND([
+                    expression.OR(domains + [name_domain]),
+                    self.env['product.product']._check_company_domain(company),
+                ]),
+                limit=1,
+            )
+            if product:
+                return product
+        return self.env['product.product']

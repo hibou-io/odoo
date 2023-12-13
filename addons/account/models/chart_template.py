@@ -172,7 +172,7 @@ class AccountChartTemplate(models.AbstractModel):
         reload_template = template_code == company.chart_template
         company.chart_template = template_code
 
-        if not reload_template and (not company._existing_accounting() or self.env.ref('base.module_account').demo):
+        if not reload_template and (not company.root_id._existing_accounting() or self.env.ref('base.module_account').demo):
             for model in ('account.move',) + TEMPLATE_MODELS[::-1]:
                 if not company.parent_id:
                     self.env[model].sudo().with_context(active_test=False).search([('company_id', 'child_of', company.id)]).with_context({MODULE_UNINSTALL_FLAG: True}).unlink()
@@ -201,7 +201,7 @@ class AccountChartTemplate(models.AbstractModel):
         if install_demo and self.ref('base.module_account').demo and not reload_template:
             try:
                 with self.env.cr.savepoint():
-                    self._load_data(self._get_demo_data(company))
+                    self.sudo()._load_data(self._get_demo_data(company))
                     self._post_load_demo_data(company)
             except Exception:
                 # Do not rollback installation of CoA if demo data failed
@@ -251,7 +251,7 @@ class AccountChartTemplate(models.AbstractModel):
         if account_group_count:
             data.pop('account.group', None)
 
-        current_taxes = self.env['account.tax'].search([
+        current_taxes = self.env['account.tax'].with_context(active_test=False).search([
             *self.env['account.tax']._check_company_domain(company),
         ])
         unique_tax_name_key = lambda t: (t.name, t.type_tax_use, t.tax_scope, t.company_id)
@@ -376,7 +376,7 @@ class AccountChartTemplate(models.AbstractModel):
 
         # Set the currency to the fiscal country's currency
         vals = {key: val for key, val in template_data.items() if filter_properties(key)}
-        if not company._existing_accounting():
+        if not company.root_id._existing_accounting():
             if company.parent_id:
                 vals['currency_id'] = company.parent_id.currency_id.id
             else:
@@ -812,6 +812,13 @@ class AccountChartTemplate(models.AbstractModel):
             }
             for model, templates in data.items()
         }
+        # add the prefix to the "children_tax_ids" value for group-type taxes
+        for tax_data in data['account.tax'].values():
+            if tax_data.get('amount_type') == 'group':
+                children_taxes = tax_data['children_tax_ids'].split(',')
+                for idx, child_tax in enumerate(children_taxes):
+                    children_taxes[idx] = f"{chart_template_code}_{child_tax}"
+                tax_data['children_tax_ids'] = ','.join(children_taxes)
         self._load_data(data)
 
     # --------------------------------------------------------------------------------

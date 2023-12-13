@@ -4,9 +4,9 @@ from odoo.osv import expression
 from odoo.tools.float_utils import float_round
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.misc import clean_context, formatLang
-from odoo.tools import frozendict, groupby
+from odoo.tools import frozendict, groupby, split_every
 
-from collections import Counter, defaultdict
+from collections import defaultdict
 from markupsafe import Markup
 
 import ast
@@ -59,7 +59,7 @@ class AccountTaxGroup(models.Model):
              "If not set, the tax group will be displayed after the 'Untaxed amount' subtotal.",
     )
 
-    @api.depends('company_id.account_fiscal_country_id')
+    @api.depends('company_id')
     def _compute_country_id(self):
         for group in self:
             group.country_id = group.company_id.account_fiscal_country_id or group.company_id.country_id
@@ -183,24 +183,29 @@ class AccountTax(models.Model):
     is_used = fields.Boolean(string="Tax used", compute='_compute_is_used')
     repartition_lines_str = fields.Char(string="Repartition Lines", tracking=True, compute='_compute_repartition_lines_str')
 
-    @api.constrains('company_id', 'name', 'type_tax_use', 'tax_scope')
+    @api.constrains('company_id', 'name', 'type_tax_use', 'tax_scope', 'country_id')
     def _constrains_name(self):
-        domains = []
-        for record in self:
-            if record.type_tax_use != 'none':
-                domains.append([
-                    ('company_id', 'child_of', record.company_id.root_id.id),
-                    ('name', '=', record.name),
-                    ('type_tax_use', '=', record.type_tax_use),
-                    ('tax_scope', '=', record.tax_scope),
-                    ('country_id', '=', record.country_id.id),
-                    ('id', '!=', record.id),
-                ])
-        if duplicates := self.search(expression.OR(domains)):
-            raise ValidationError(
-                _("Tax names must be unique!")
-                + "\n" + "\n".join(f"- {duplicate.name} in {duplicate.company_id.name}" for duplicate in duplicates)
-            )
+        for taxes in split_every(100, self.ids, self.browse):
+            domains = []
+            for tax in taxes:
+                if tax.type_tax_use != 'none':
+                    domains.append([
+                        ('company_id', 'child_of', tax.company_id.root_id.id),
+                        ('name', '=', tax.name),
+                        ('type_tax_use', '=', tax.type_tax_use),
+                        ('tax_scope', '=', tax.tax_scope),
+                        ('country_id', '=', tax.country_id.id),
+                        ('id', '!=', tax.id),
+                    ])
+            if duplicates := self.search(expression.OR(domains)):
+                raise ValidationError(
+                    _("Tax names must be unique!")
+                    + "\n" + "\n".join(_(
+                        "- %(name)s in %(company)s",
+                        name=duplicate.name,
+                        company=duplicate.company_id.name,
+                    ) for duplicate in duplicates)
+                )
 
     @api.constrains('tax_group_id')
     def validate_tax_group_id(self):
@@ -214,7 +219,7 @@ class AccountTax(models.Model):
             if tax.is_used:
                 raise ValidationError(_("This tax has been used in transactions. For that reason, it is forbidden to modify this field."))
 
-    @api.depends('company_id.account_fiscal_country_id')
+    @api.depends('company_id')
     def _compute_country_id(self):
         for tax in self:
             tax.country_id = tax.company_id.account_fiscal_country_id or tax.company_id.country_id or tax.country_id
@@ -238,23 +243,54 @@ class AccountTax(models.Model):
                 ('country_id', '=', False),
             ], limit=1)
 
-    def _hook_compute_is_used(self):
+    def _hook_compute_is_used(self, tax_to_compute):
         '''
-            To be overriden to add taxed transactions in the computation of `is_used`
-            Should return a Counter containing a dictionary {record: int} where
-            the record is an account.tax object. The int should be greater than 0
-            if the tax is used in a transaction.
+            Override to compute the ids of taxes used in other modules. It takes
+            as parameter a set of tax ids. It should return a set containing the
+            ids of the taxes from that input set that are used in transactions.
         '''
-        return Counter()
+        return set()
 
     def _compute_is_used(self):
-        taxes_in_transactions_ctr = (
-            Counter(dict(self.env['account.move.line']._read_group([], groupby=['tax_ids'], aggregates=['__count']))) +
-            Counter(dict(self.env['account.reconcile.model.line']._read_group([], groupby=['tax_ids'], aggregates=['__count']))) +
-            self._hook_compute_is_used()
-        )
+        used_taxes = set()
+
+        # Fetch for taxes used in account moves
+        self.env['account.move.line'].flush_model(['tax_ids'])
+        self.env.cr.execute("""
+            SELECT id
+            FROM account_tax
+            WHERE EXISTS(
+                SELECT 1
+                FROM account_move_line_account_tax_rel AS line
+                WHERE account_tax_id IN %s
+                AND account_tax.id = line.account_tax_id
+            )
+        """, [tuple(self.ids)])
+        used_taxes.update([tax[0] for tax in self.env.cr.fetchall()])
+        taxes_to_compute = set(self.ids) - used_taxes
+
+        # Fetch for taxes used in reconciliation
+        if taxes_to_compute:
+            self.env['account.reconcile.model.line'].flush_model(['tax_ids'])
+            self.env.cr.execute("""
+                SELECT id
+                FROM account_tax
+                WHERE EXISTS(
+                    SELECT 1
+                    FROM account_reconcile_model_line_account_tax_rel AS reco
+                    WHERE account_tax_id IN %s
+                    AND account_tax.id = reco.account_tax_id
+                )
+            """, [tuple(taxes_to_compute)])
+            used_taxes.update([tax[0] for tax in self.env.cr.fetchall()])
+            taxes_to_compute -= used_taxes
+
+        # Fetch for tax used in other modules
+        if taxes_to_compute:
+            used_taxes.update(self._hook_compute_is_used(taxes_to_compute))
+
         for tax in self:
-            tax.is_used = bool(taxes_in_transactions_ctr[tax])
+            tax.is_used = tax.id in used_taxes
 
     @api.depends('repartition_line_ids.account_id', 'repartition_line_ids.factor_percent', 'repartition_line_ids.use_in_tax_closing', 'repartition_line_ids.tag_ids')
     def _compute_repartition_lines_str(self):
@@ -419,7 +455,11 @@ class AccountTax(models.Model):
         for tax in self:
             if not tax._check_m2m_recursion('children_tax_ids'):
                 raise ValidationError(_("Recursion found for tax %r.", tax.name))
-            if any(child.type_tax_use not in ('none', tax.type_tax_use) or child.tax_scope != tax.tax_scope for child in tax.children_tax_ids):
+            if any(
+                child.type_tax_use not in ('none', tax.type_tax_use)
+                or child.tax_scope not in (tax.tax_scope, False)
+                for child in tax.children_tax_ids
+            ):
                 raise ValidationError(_('The application scope of taxes in a group must be either the same as the group or left empty.'))
 
     @api.constrains('company_id')
@@ -722,7 +762,9 @@ class AccountTax(models.Model):
         #   Line 2: sum(taxes) = 10920 - 2176 = 8744
         #   amount_tax = 4311 + 8744 = 13055
         #   amount_total = 31865 + 13055 = 37920
-        base = currency.round(price_unit * quantity)
+        base = price_unit * quantity
+        if self._context.get('round_base', True):
+            base = currency.round(base)
 
         # For the computation of move lines, we could have a negative base value.
         # In this case, compute all with positive values and negate them at the end.
@@ -777,7 +819,9 @@ class AccountTax(models.Model):
                         store_included_tax_total = False
                 i -= 1
 
-        total_excluded = currency.round(recompute_base(base, incl_fixed_amount, incl_percent_amount, incl_division_amount))
+        total_excluded = recompute_base(base, incl_fixed_amount, incl_percent_amount, incl_division_amount)
+        if self._context.get('round_base', True):
+            total_excluded = currency.round(total_excluded)
 
         # 4) Iterate the taxes in the sequence order to compute missing tax amounts.
         # Start the computation of accumulated amounts at the total_excluded value.

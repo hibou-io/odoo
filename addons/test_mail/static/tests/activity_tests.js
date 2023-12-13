@@ -241,6 +241,157 @@ QUnit.module("test_mail", {}, function () {
         );
     });
 
+    QUnit.test("activity view: Activity rendering with done activities", async function (assert) {
+        const activityTypeUpload = pyEnv["mail.activity.type"].create({
+            category: "upload_file",
+            name: "Test Upload document",
+            keep_done: true,
+        });
+        pyEnv["mail.activity"].create(
+            Object.entries(["done", "done", "done", "done", "planned", "planned", "planned"]).map(
+                ([idx, state]) => ({
+                    active: state !== "done",
+                    activity_type_id: activityTypeUpload,
+                    attachment_ids:
+                        state === "done"
+                            ? [
+                                  pyEnv["ir.attachment"].create({
+                                      name: `attachment ${idx}`,
+                                      create_date: serializeDate(
+                                          DateTime.now().minus({ days: idx })
+                                      ),
+                                      create_uid: pyEnv.currentUserId,
+                                  }),
+                              ]
+                            : [],
+                    can_write: true,
+                    date_deadline: serializeDate(DateTime.now().plus({ days: idx })),
+                    date_done:
+                        state === "done"
+                            ? serializeDate(DateTime.now().minus({ days: idx }))
+                            : false,
+                    display_name: `Upload folders ${idx}`,
+                    state: state,
+                    user_id: pyEnv["res.users"].create({ display_name: `user${idx}` }),
+                })
+            )
+        );
+        const [meetingRecord, officeRecord] = pyEnv["mail.test.activity"].search([]);
+        const uploadDoneActs = pyEnv["mail.activity"].searchRead([
+            ["activity_type_id", "=", activityTypeUpload],
+            ["active", "=", false],
+        ]);
+        const uploadPlannedActs = pyEnv["mail.activity"].searchRead([
+            ["activity_type_id", "=", activityTypeUpload],
+        ]);
+        pyEnv["mail.test.activity"].write([meetingRecord], {
+            activity_ids: [
+                uploadPlannedActs[0].id,
+                uploadPlannedActs[1].id,
+                uploadPlannedActs[2].id,
+                uploadDoneActs[0].id,
+            ],
+        });
+        pyEnv["mail.test.activity"].write([officeRecord], {
+            activity_ids: [uploadDoneActs[1].id, uploadDoneActs[2].id, uploadDoneActs[3].id],
+        });
+        const { openView } = await start({
+            serverData,
+        });
+        await openView({
+            res_model: "mail.test.activity",
+            views: [[false, "activity"]],
+        });
+        const domActivity = document.querySelector(".o_activity_view");
+        const domHeaderUpload = domActivity.querySelector(
+            "table thead tr:first-child th:nth-child(6)"
+        );
+        const selRowMeetingCellUpload = "table tbody tr:first-child td:nth-child(6)";
+        const domRowMeetingCellUpload = domActivity.querySelector(selRowMeetingCellUpload);
+        const selRowOfficeCellUpload = "table tbody tr:nth-child(2) td:nth-child(6)";
+        const domRowOfficeCellUpload = domActivity.querySelector(selRowOfficeCellUpload);
+
+        // Headers
+        await contains(".o_column_progress .progress-bar:first-child[data-tooltip='3 Planned']", {
+            target: domHeaderUpload,
+        });
+        await contains(".o_animated_number", {
+            target: domHeaderUpload,
+            text: "3",
+        });
+        await contains(".o_column_progress_aggregated_on", {
+            target: domHeaderUpload,
+            text: "7",
+        });
+        // Cells avatars
+        await contains(
+            `.o-mail-Avatar img[data-src='/web/image/res.users/${uploadPlannedActs[0].user_id[0]}/avatar_128'`,
+            { target: domRowMeetingCellUpload }
+        );
+        await contains(
+            `.o-mail-Avatar img[data-src='/web/image/res.users/${uploadPlannedActs[1].user_id[0]}/avatar_128'`,
+            { target: domRowMeetingCellUpload }
+        );
+        await contains(
+            `.o-mail-Avatar img[data-src='/web/image/res.users/${uploadPlannedActs[2].user_id[0]}/avatar_128'`,
+            { target: domRowMeetingCellUpload, count: 0 }
+        );
+        await contains(`.o-mail-Avatar`, { target: domRowOfficeCellUpload, count: 0 }); // all activity are done
+        // Cells counters
+        await contains(".o-mail-ActivityCell-counter", {
+            target: domRowMeetingCellUpload,
+            text: "3 / 4",
+        });
+        await contains(".o-mail-ActivityCell-counter", {
+            text: "3",
+            target: domRowOfficeCellUpload,
+        });
+        // Cells dates
+        await contains(".o-mail-ActivityCell-deadline", {
+            text: luxon.DateTime.fromISO(uploadPlannedActs[0].date_deadline).toLocaleString(
+                luxon.DateTime.DATE_SHORT
+            ),
+            target: domRowMeetingCellUpload,
+        });
+        await contains(".o-mail-ActivityCell-deadline", {
+            text: luxon.DateTime.fromISO(uploadDoneActs[1].date_done).toLocaleString(
+                luxon.DateTime.DATE_SHORT
+            ),
+            target: domRowOfficeCellUpload,
+        });
+        // Activity list popovers content
+        await click(domActivity, `${selRowMeetingCellUpload} > div`);
+        await contains(".o-mail-ActivityListPopover .badge.text-bg-success", { text: "3" }); // 3 planned
+        for (const actIdx of [0, 1, 2]) {
+            await contains(".o-mail-ActivityListPopoverItem", {
+                text: uploadPlannedActs[actIdx].user_id[1],
+            });
+        }
+        await contains(".o-mail-ActivityListPopoverItem", { text: "Due in 4 days" });
+        await contains(".o-mail-ActivityListPopoverItem", { text: "Due in 5 days" });
+        await contains(".o-mail-ActivityListPopoverItem", { text: "Due in 6 days" });
+        await contains(".o-mail-ActivityListPopover .badge.text-bg-secondary", { text: "1" }); // 1 done
+        await contains(".o-mail-ActivityListPopoverItem", { text: uploadDoneActs[0].user_id[1] });
+        await contains(".o-mail-ActivityListPopoverItem", {
+            text: luxon.DateTime.fromISO(uploadDoneActs[0].date_done).toLocaleString(
+                luxon.DateTime.DATE_SHORT
+            ),
+        });
+
+        await click(domActivity, `${selRowOfficeCellUpload} > div`);
+        await contains(".o-mail-ActivityListPopover .badge.text-bg-secondary", { text: "3" }); // 3 done
+        for (const actIdx of [1, 2, 3]) {
+            await contains(".o-mail-ActivityListPopoverItem", {
+                text: luxon.DateTime.fromISO(uploadDoneActs[actIdx].date_done).toLocaleString(
+                    luxon.DateTime.DATE_SHORT
+                ),
+            });
+            await contains(".o-mail-ActivityListPopoverItem", {
+                text: uploadDoneActs[actIdx].user_id[1],
+            });
+        }
+    });
+
     QUnit.test(
         "activity view: a pager can be used when there are more than the limit of 100 activities to display",
         async function (assert) {
@@ -538,6 +689,49 @@ QUnit.module("test_mail", {}, function () {
         ]);
     });
 
+    QUnit.test("activity view: Mark as done with keep done enabled", async function (assert) {
+        const emailActType = pyEnv["mail.activity.type"].search([["name", "=", "Email"]])[0];
+        pyEnv["mail.activity.type"].write([emailActType], {
+            keep_done: true,
+        });
+        const { openView } = await start({
+            serverData,
+        });
+        await openView({
+            res_model: "mail.test.activity",
+            views: [[false, "activity"]],
+            context: { active_test: false },
+        });
+        const domActivity = document.querySelector(".o_activity_view");
+        const domHeaderEmail = domActivity.querySelector(
+            "table thead tr:first-child th:nth-child(2)"
+        );
+        const selRowOfficeCellEmail = "table tbody tr:nth-child(2) td:nth-child(2)";
+
+        await contains(".o_animated_number", {
+            target: domHeaderEmail,
+            text: "2",
+        });
+        await contains(".o_column_progress_aggregated_on", {
+            target: domHeaderEmail,
+            text: "2",
+        });
+        await click(domActivity, `${selRowOfficeCellEmail} > div`);
+        await click(
+            document,
+            ".o-mail-ActivityListPopoverItem .o-mail-ActivityListPopoverItem-markAsDone"
+        );
+        await click(document, ".o-mail-ActivityMarkAsDone button[aria-label='Done']");
+        await contains(".o_animated_number", {
+            target: domHeaderEmail,
+            text: "1",
+        });
+        await contains(".o_column_progress_aggregated_on", {
+            target: domHeaderEmail,
+            text: "2",
+        });
+    });
+
     QUnit.test("activity view: no group_by_menu and no comparison_menu", async function (assert) {
         assert.expect(4);
 
@@ -685,6 +879,41 @@ QUnit.module("test_mail", {}, function () {
             // select a record to schedule an activity for it (this triggers a do_action)
             await testUtils.dom.click($modal.find(".o_data_row:last .o_data_cell"));
             assert.verifySteps(["doAction"]);
+        }
+    );
+
+    QUnit.test("activity view: Domain should not reset on load", async function (assert) {
+            Object.assign(serverData.views, {
+                "mail.test.activity,false,list":
+                    '<tree string="MailTestActivity"><field name="name"/></tree>',
+            });
+            const { env, openView } = await start({
+                serverData,
+            });
+            await openView({
+                res_model: "mail.test.activity",
+                views: [[false, "activity"]],
+                domain: [['id', '=', 1]],
+            });
+            patchWithCleanup(env.services.action, {
+                doAction(action, options) {
+                    assert.step("doAction");
+                    options.onClose();
+                },
+            });
+
+            await click(document.querySelector(".o_activity_view .o_record_selector"));
+            // search create dialog
+            await click(document.querySelector(".modal-lg .o_data_row .o_data_cell"));
+            assert.verifySteps(["doAction"]);
+
+            await click(document.querySelector(".o_activity_view .o_record_selector"));
+            // again open search create dialog
+            assert.strictEqual(
+                document.querySelectorAll(".modal-lg .o_data_row").length,
+                1,
+                "Should contains only one record after calling schedule activity which load view again"
+            );
         }
     );
 

@@ -1,6 +1,7 @@
 /* @odoo-module */
 
 import { getPyEnv } from "@bus/../tests/helpers/mock_python_environment";
+import { timings } from "@bus/misc";
 
 import { loadEmoji } from "@web/core/emoji_picker/emoji_picker";
 import { loadLamejs } from "@mail/discuss/voice_message/common/voice_message_service";
@@ -34,27 +35,13 @@ registryNamesToCloneWithCleanup.push("mock_server_callbacks", "discuss.model");
 function getOpenDiscuss(webClient, { context = {}, params = {}, ...props } = {}) {
     return async function openDiscuss(pActiveId) {
         const actionOpenDiscuss = {
+            context: { ...context, active_id: pActiveId },
             // hardcoded actionId, required for discuss_container props validation.
             id: 104,
-            context,
             params,
             tag: "mail.action_discuss",
             type: "ir.actions.client",
         };
-        const activeId =
-            pActiveId ?? context.active_id ?? params.default_active_id ?? "mail.box_inbox";
-        let [threadModel, threadId] =
-            typeof activeId === "number" ? ["discuss.channel", activeId] : activeId.split("_");
-        if (threadModel === "discuss.channel") {
-            threadId = parseInt(threadId, 10);
-        }
-        // TODO-DISCUSS-REFACTORING: remove when activeId will be handled.
-        webClient.env.services["mail.thread"].setDiscussThread(
-            webClient.env.services["mail.store"].Thread.insert({
-                model: threadModel,
-                id: threadId,
-            })
-        );
         await doAction(webClient, actionOpenDiscuss, { props });
     };
 }
@@ -153,6 +140,10 @@ async function addSwitchTabDropdownItem(rootTarget, tabTarget) {
  */
 export async function start(param0 = {}) {
     const { discuss = {}, hasTimeControl } = param0;
+    patchWithCleanup(timings, {
+        // make throttle instantaneous during tests
+        throttle: (func) => func,
+    });
     const advanceTime = hasTimeControl ? getAdvanceTime() : undefined;
     let target = param0["target"] || getFixture();
     if (param0.asTab) {

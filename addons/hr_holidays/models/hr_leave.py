@@ -152,7 +152,8 @@ class HolidaysRequest(models.Model):
 
     employee_id = fields.Many2one(
         'hr.employee', compute='_compute_from_employee_ids', store=True, string='Employee', index=True, readonly=False, ondelete="restrict",
-        tracking=True, compute_sudo=False)
+        tracking=True, compute_sudo=False,
+        domain=lambda self: self._get_employee_domain())
     employee_company_id = fields.Many2one(related='employee_id.company_id', string="Employee Company", store=True)
     company_id = fields.Many2one('res.company', compute='_compute_company_id', store=True)
     active_employee = fields.Boolean(related='employee_id.active', string='Employee Active')
@@ -196,8 +197,8 @@ class HolidaysRequest(models.Model):
         string='Allocation Mode', readonly=False, required=True, default='employee',
         help='By Employee: Allocation/Request for individual Employee, By Employee Tag: Allocation/Request for group of employees in category')
     employee_ids = fields.Many2many(
-        'hr.employee', compute='_compute_from_holiday_type', store=True, string='Employees', readonly=True, groups="hr_holidays.group_hr_holidays_responsible")
-    allowed_employee_ids = fields.Many2many('hr.employee', compute='_compute_allowed_employee_ids')
+        'hr.employee', compute='_compute_from_holiday_type', store=True, string='Employees', readonly=True, groups="hr_holidays.group_hr_holidays_responsible",
+        domain=lambda self: self._get_employee_domain())
     multi_employee = fields.Boolean(
         compute='_compute_from_employee_ids', store=True, compute_sudo=False,
         help='Holds whether this allocation concerns more than 1 employee')
@@ -421,16 +422,18 @@ class HolidaysRequest(models.Model):
                 holiday.employee_id = False
             holiday.multi_employee = (len(holiday.employee_ids) > 1)
 
-    @api.depends_context('uid')
-    def _compute_allowed_employee_ids(self):
-        allowed_employees = self.env['hr.employee'].search([
+    def _get_employee_domain(self):
+        domain = [
             ('active', '=', True),
-            ('company_id', 'in', self.env.companies.ids)])
+            ('company_id', 'in', self.env.companies.ids),
+        ]
         if not self.env.user.has_group('hr_holidays.group_hr_holidays_user'):
-            user = self.env.user
-            self.allowed_employee_ids = allowed_employees.filtered(lambda emp: emp.user_id == user or emp.leave_manager_id == user)
-        else:
-            self.allowed_employee_ids = allowed_employees
+            domain += [
+                '|',
+                ('user_id', '=', self.env.uid),
+                ('leave_manager_id', '=', self.env.uid),
+            ]
+        return domain
 
     @api.depends('holiday_type')
     def _compute_from_holiday_type(self):
@@ -746,12 +749,13 @@ Attempting to double-book your time off won't magically make your vacation 2x be
             leave_type = leave.holiday_status_id
             if leave_type.requires_allocation == 'no':
                 continue
-            employee = leave.employee_id
+            employees = leave._get_employees_from_holiday_type()
             date_from = leave.date_from.date()
-            leave_data = leave_type.get_allocation_data(employee, date_from)
+            leave_data = leave_type.get_allocation_data(employees, date_from)
             max_excess = leave_type.max_allowed_negative if leave_type.allows_negative else 0
-            if leave_data[employee][0][1]['total_virtual_excess'] > max_excess:
-                raise ValidationError(_("You don't have a valid allocation to cover that request."))
+            for employee in employees:
+                if leave_data[employee][0][1]['total_virtual_excess'] > max_excess:
+                    raise ValidationError(_("There is no valid allocation to cover that request."))
 
     ####################################################
     # ORM Overrides methods

@@ -688,9 +688,6 @@ class MrpProduction(models.Model):
             if order.state in ['confirmed', 'progress', 'to_close'] and order.product_id.tracking == 'serial' and \
                     float_compare(order.product_qty, 1, precision_rounding=order.product_uom_id.rounding) > 0 and \
                     float_compare(order.qty_producing, order.product_qty, precision_rounding=order.product_uom_id.rounding) < 0:
-                moves_with_tracking = order.move_raw_ids.filtered(lambda m: m.has_tracking)
-                if any(len(m.move_line_ids.lot_id) > 1 for m in moves_with_tracking):
-                    continue
                 order.show_serial_mass_produce = True
 
     @api.depends('state', 'move_finished_ids')
@@ -741,7 +738,7 @@ class MrpProduction(models.Model):
                 continue
             days_delay = production.bom_id.produce_delay
             date_finished = production.date_start + relativedelta(days=days_delay)
-            if date_finished == production.date_start:
+            if production._should_postpone_date_finished(date_finished):
                 workorder_expected_duration = sum(self.workorder_ids.mapped('duration_expected'))
                 date_finished = date_finished + relativedelta(minutes=workorder_expected_duration or 60)
             production.date_finished = date_finished
@@ -754,7 +751,8 @@ class MrpProduction(models.Model):
             list_move_raw = [Command.link(move.id) for move in production.move_raw_ids.filtered(lambda m: not m.bom_line_id)]
             if not production.bom_id and not production._origin.product_id:
                 production.move_raw_ids = list_move_raw
-            if any(move.bom_line_id.bom_id != production.bom_id for move in production.move_raw_ids if move.bom_line_id):
+            if any(move.bom_line_id.bom_id != production.bom_id or move.bom_line_id._skip_bom_line(production.product_id)\
+                for move in production.move_raw_ids if move.bom_line_id):
                 production.move_raw_ids = [Command.clear()]
             if production.bom_id and production.product_id and production.product_qty > 0:
                 # keep manual entries
@@ -1200,13 +1198,18 @@ class MrpProduction(models.Model):
             if move.manual_consumption and move.picked:
                 continue
 
-            if move._should_bypass_set_qty_producing():
+            # sudo needed for portal users
+            if move.sudo()._should_bypass_set_qty_producing():
                 continue
 
             new_qty = float_round((self.qty_producing - self.qty_produced) * move.unit_factor, precision_rounding=move.product_uom.rounding)
             move._set_quantity_done(new_qty)
-            if (not move.manual_consumption and not move._origin.manual_consumption):
+            if not move.manual_consumption:
                 move.picked = True
+
+    def _should_postpone_date_finished(self, date_finished):
+        self.ensure_one()
+        return date_finished == self.date_start
 
     def _update_raw_moves(self, factor):
         self.ensure_one()
@@ -1516,13 +1519,15 @@ class MrpProduction(models.Model):
 
             done_qty_by_product = defaultdict(float)
             for move in order.move_raw_ids:
-                quantity = move.product_uom._compute_quantity(move.quantity, move.product_id.uom_id)
+                quantity = move.product_uom._compute_quantity(move._get_picked_quantity(), move.product_id.uom_id)
                 rounding = move.product_id.uom_id.rounding
-                if not (move.product_id in expected_qty_by_product or float_is_zero(quantity, precision_rounding=rounding)) or not move.picked:
-                    issues.append((order, move.product_id, quantity, 0.0))
+                # extra lines with non-zero qty picked
+                if move.product_id not in expected_qty_by_product and move.picked and not float_is_zero(quantity, precision_rounding=rounding):
+                    issues.append((order, move.product_id, 0.0, quantity))
                     continue
-                done_qty_by_product[move.product_id] += quantity
+                done_qty_by_product[move.product_id] += quantity if move.picked else 0.0
 
+            # origin lines from bom with different qty
             for product, qty_to_consume in expected_qty_by_product.items():
                 quantity = done_qty_by_product.get(product, 0.0)
                 if float_compare(qty_to_consume, quantity, precision_rounding=product.uom_id.rounding) != 0:
@@ -1727,7 +1732,7 @@ class MrpProduction(models.Model):
             if diff > 0 and not cancel_remaining_qty:
                 amounts[production].append(production.product_qty - total_amount)
                 has_backorder_to_ignore[production] = True
-            elif diff < 0 or production.state in ['done', 'cancel']:
+            elif not self.env.context.get('allow_more') and (diff < 0 or production.state in ['done', 'cancel']):
                 raise UserError(_("Unable to split with more than the quantity to produce."))
 
         backorder_vals_list = []
@@ -1810,38 +1815,40 @@ class MrpProduction(models.Model):
         assigned_moves = set()
         partially_assigned_moves = set()
         move_lines_to_unlink = set()
+        moves_to_consume = self.env['stock.move']
         for initial_move, backorder_moves in move_to_backorder_moves.items():
-            # Create `stock.move.line` for consumed but non-reserved components
-            if initial_move.raw_material_production_id and not initial_move.move_line_ids and set_consumed_qty:
+            # Create `stock.move.line` for consumed but non-reserved components and for by-products
+            if set_consumed_qty and (initial_move.raw_material_production_id or (initial_move.production_id and initial_move.product_id != production.product_id)):
                 ml_vals = initial_move._prepare_move_line_vals()
                 backorder_move_to_ignore = backorder_moves[-1] if has_backorder_to_ignore[initial_move.raw_material_production_id] else self.env['stock.move']
-                for move in list(initial_move + backorder_moves - backorder_move_to_ignore):
-                    new_ml_vals = dict(
-                        ml_vals,
-                        quantity=move.product_uom_qty,
-                        move_id=move.id
-                    )
-                    move_lines_vals.append(new_ml_vals)
+                for move in (initial_move + backorder_moves - backorder_move_to_ignore):
+                    if not initial_move.move_line_ids:
+                        new_ml_vals = dict(
+                            ml_vals,
+                            quantity=move.product_uom_qty,
+                            move_id=move.id
+                        )
+                        move_lines_vals.append(new_ml_vals)
+                    moves_to_consume |= move
 
         for initial_move, backorder_moves in move_to_backorder_moves.items():
             ml_by_move = []
             product_uom = initial_move.product_id.uom_id
-            for move_line in initial_move.move_line_ids:
-                if initial_move.picked:
-                    continue
-                available_qty = move_line.product_uom_id._compute_quantity(move_line.quantity, product_uom)
-                if float_compare(available_qty, 0, precision_rounding=move_line.product_uom_id.rounding) <= 0:
-                    continue
-                ml_by_move.append((available_qty, move_line, move_line.copy_data()[0]))
+            if not initial_move.picked:
+                for move_line in initial_move.move_line_ids:
+                    available_qty = move_line.product_uom_id._compute_quantity(move_line.quantity, product_uom, rounding_method="HALF-UP")
+                    if float_compare(available_qty, 0, precision_rounding=product_uom.rounding) <= 0:
+                        continue
+                    ml_by_move.append((available_qty, move_line, move_line.copy_data()[0]))
 
             moves = list(initial_move | backorder_moves)
 
             move = moves and moves.pop(0)
-            move_qty_to_reserve = move.product_qty
+            move_qty_to_reserve = move.product_qty  # Product UoM
 
             for index, (quantity, move_line, ml_vals) in enumerate(ml_by_move):
                 taken_qty = min(quantity, move_qty_to_reserve)
-                taken_qty_uom = product_uom._compute_quantity(taken_qty, move_line.product_uom_id)
+                taken_qty_uom = product_uom._compute_quantity(taken_qty, move_line.product_uom_id, rounding_method="HALF-UP")
                 if float_is_zero(taken_qty_uom, precision_rounding=move_line.product_uom_id.rounding):
                     continue
                 move_line.write({
@@ -1860,7 +1867,7 @@ class MrpProduction(models.Model):
                 while float_compare(quantity, 0, precision_rounding=product_uom.rounding) > 0 and move:
                     # Do not create `stock.move.line` if there is no initial demand on `stock.move`
                     taken_qty = min(move_qty_to_reserve, quantity)
-                    taken_qty_uom = product_uom._compute_quantity(taken_qty, move_line.product_uom_id)
+                    taken_qty_uom = product_uom._compute_quantity(taken_qty, move_line.product_uom_id, rounding_method="HALF-UP")
                     if move == initial_move:
                         move_line.quantity += taken_qty_uom
                     elif not float_is_zero(taken_qty_uom, precision_rounding=move_line.product_uom_id.rounding):
@@ -1906,6 +1913,8 @@ class MrpProduction(models.Model):
         self.env['stock.move.line'].browse(move_lines_to_unlink).write({'move_id': False})
         self.env['stock.move.line'].browse(move_lines_to_unlink).unlink()
         self.env['stock.move.line'].create(move_lines_vals)
+
+        moves_to_consume.write({'picked': True})
 
         workorders_to_cancel = self.env['mrp.workorder']
         for production in self:
@@ -1982,6 +1991,7 @@ class MrpProduction(models.Model):
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'do_multi_print',
+                    'context': {},
                     'params': {
                         'reports': report_actions,
                     }
@@ -2273,8 +2283,7 @@ class MrpProduction(models.Model):
         if 'confirmed' in self.mapped('state'):
             production.move_raw_ids._adjust_procure_method()
             (production.move_raw_ids | production.move_finished_ids).write({'state': 'confirmed'})
-            production.workorder_ids._action_confirm()
-            production.state = 'confirmed'
+            production.action_confirm()
 
         self.with_context(skip_activity=True)._action_cancel()
         # set the new deadline of origin moves (stock to pre prod)
@@ -2490,7 +2499,7 @@ class MrpProduction(models.Model):
             if move.has_tracking != 'serial' or not move.picked:
                 continue
             for move_line in move.move_line_ids:
-                if float_is_zero(move_line.quantity, precision_rounding=move_line.product_uom_id.rounding):
+                if not move_line.picked or float_is_zero(move_line.quantity, precision_rounding=move_line.product_uom_id.rounding):
                     continue
                 message = _('The serial number %(number)s used for component %(component)s has already been consumed',
                     number=move_line.lot_id.name,
@@ -2554,10 +2563,17 @@ class MrpProduction(models.Model):
             removed = self.env['stock.move.line'].search_count([
                 ('lot_id', '=', lot.id),
                 ('state', '=', 'done'),
-                ('location_dest_id.scrap_location', '=', True)
+                ('location_id.scrap_location', '=', False),
+                ('location_dest_id.scrap_location', '=', True),
+            ])
+            unremoved = self.env['stock.move.line'].search_count([
+                ('lot_id', '=', lot.id),
+                ('state', '=', 'done'),
+                ('location_id.scrap_location', '=', True),
+                ('location_dest_id.scrap_location', '=', False),
             ])
             # Either removed or unbuild
-            if not ((duplicates_unbuild or removed) and duplicates - duplicates_unbuild - removed == 0):
+            if not ((duplicates_unbuild or removed) and duplicates - duplicates_unbuild - removed + unremoved == 0):
                 return True
         # Check presence of same sn in current production
         duplicates = co_prod_move_lines.filtered(lambda ml: ml.quantity and ml.lot_id == lot)
@@ -2618,10 +2634,10 @@ class MrpProduction(models.Model):
                 continue
             rounding = move.product_uom.rounding
             if move.manual_consumption:
-                if move.has_tracking in ('serial', 'lot') and (any(not line.lot_id for line in move.move_line_ids if line.quantity) or not move.picked):
+                if move.has_tracking in ('serial', 'lot') and (not move.picked or any(not line.lot_id for line in move.move_line_ids if line.quantity and line.picked)):
                     missing_lot_id_products += "\n  - %s" % move.product_id.display_name
         if missing_lot_id_products:
-            error_msg = _("You need to supply Lot/Serial Number for products and 'picked' them:") + missing_lot_id_products
+            error_msg = _("You need to supply Lot/Serial Number for products and 'consume' them:") + missing_lot_id_products
             raise UserError(error_msg)
 
     def _get_autoprint_done_report_actions(self):

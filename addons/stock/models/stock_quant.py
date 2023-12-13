@@ -617,7 +617,7 @@ class StockQuant(models.Model):
         # Fetch the available packages and contents
         query = self._where_calc(domain)
         query_str, params = query.select('package_id', 'SUM(quantity - reserved_quantity) AS available_qty')
-        query_str += ' GROUP BY package_id ORDER BY available_qty DESC'
+        query_str += ' GROUP BY package_id HAVING SUM(quantity - reserved_quantity) > 0 ORDER BY available_qty DESC'
         self._cr.execute(query_str, params)
         qty_by_package = self._cr.fetchall()
 
@@ -728,7 +728,7 @@ class StockQuant(models.Model):
         elif removal_strategy == 'lifo':
             return domain, 'in_date DESC, id DESC'
         elif removal_strategy == 'closest':
-            return domain, 'location_id ASC, id DESC'
+            return domain, False
         elif removal_strategy == 'least_packages':
             if qty > 0:
                 return self._run_least_packages_removal_strategy_astar(domain, qty), 'in_date ASC, id'
@@ -741,7 +741,7 @@ class StockQuant(models.Model):
         if removal_strategy == 'lifo':
             reverse = True
         elif removal_strategy == 'closest':
-            key = lambda q: (q.location_id, -q.id)
+            key = lambda q: (q.location_id.complete_name, -q.id)
         return key, reverse
 
     def _get_gather_domain(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False):
@@ -770,11 +770,13 @@ class StockQuant(models.Model):
         removal_strategy = self._get_removal_strategy(product_id, location_id)
         domain = self._get_gather_domain(product_id, location_id, lot_id, package_id, owner_id, strict)
         domain, order = self._get_removal_strategy_domain_order(domain, removal_strategy, qty)
-        if self:
+        if self.ids:
             sort_key = self._get_removal_strategy_sort_key(removal_strategy)
             res = self.filtered_domain(domain).sorted(key=sort_key[0], reverse=sort_key[1])
         else:
             res = self.search(domain, order=order)
+        if removal_strategy == "closest":
+            res = res.sorted(lambda q: (q.location_id.complete_name, -q.id))
         return res.sorted(lambda q: not q.lot_id)
 
     def _get_available_quantity(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, allow_negative=False):

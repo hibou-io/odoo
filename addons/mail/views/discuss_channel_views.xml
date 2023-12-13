@@ -66,6 +66,10 @@
                             <field name="channel_type" groups="base.group_no_one"/>
                             <field name="description" placeholder="Topics discussed in this group..."/>
                         </group>
+                        <group class="o_label_nowrap" groups="base.group_no_one">
+                            <field name="sfu_channel_uuid"/>
+                            <field name="sfu_server_url"/>
+                        </group>
                         <notebook>
                             <page string="Privacy" name="privacy">
                                 <group class="o_label_nowrap">
@@ -80,8 +84,8 @@
                                 <field name="channel_type" invisible="1"/>
                                 <field name="channel_member_ids" mode="tree" context="{'active_test': False}" readonly="channel_type == 'chat'">
                                     <tree string="Members" editable="bottom">
-                                        <field name="partner_id" readonly="id"/>
-                                        <field name="guest_id" readonly="id"/>
+                                        <field name="partner_id" readonly="id or guest_id" required="not guest_id"/>
+                                        <field name="guest_id" readonly="id or partner_id" required="not partner_id"/>
                                     </tree>
                                 </field>
                             </page>

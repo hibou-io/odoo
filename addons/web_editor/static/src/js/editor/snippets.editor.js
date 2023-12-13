@@ -2,7 +2,7 @@
 
 import { Mutex } from "@web/core/utils/concurrency";
 import { clamp } from "@web/core/utils/numbers";
-import Dialog from "@web/legacy/js/core/dialog";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import dom from "@web/legacy/js/core/dom";
 import Widget from "@web/legacy/js/core/widget";
 import { useDragAndDrop } from "@web_editor/js/editor/drag_and_drop";
@@ -207,7 +207,10 @@ var SnippetEditor = Widget.extend({
                 isCurrent: targetEl === this.$target[0],
             });
         }
+        // TODO In master differentiate device-based visibility.
+        this._toggleVisibilityStatusIgnoreDeviceVisibility = true;
         await this.toggleTargetVisibility(true);
+        this._toggleVisibilityStatusIgnoreDeviceVisibility = false;
     },
     /**
      * Notifies all the associated snippet options that the template which
@@ -318,7 +321,7 @@ var SnippetEditor = Widget.extend({
         // right border as it interferes with proper scrolling. (e.g. modal)
         const handleEReadonlyEl = this.$el[0].querySelector('.o_handle.e.readonly');
         if (handleEReadonlyEl) {
-            handleEReadonlyEl.style.width = dom.hasScrollableContent(targetEl) ? 0 : '';
+            handleEReadonlyEl.style.width = $(targetEl).hasScrollableContent() ? 0 : '';
         }
     },
     /**
@@ -885,6 +888,17 @@ var SnippetEditor = Widget.extend({
      * @param {boolean} [show]
      */
     _toggleVisibilityStatus: function (show) {
+        // TODO In master differentiate device-based visibility.
+        if (this._toggleVisibilityStatusIgnoreDeviceVisibility) {
+            if (this.$target[0].matches(".o_snippet_mobile_invisible, .o_snippet_desktop_invisible")) {
+                const isMobilePreview = weUtils.isMobileView(this.$target[0]);
+                const isMobileHidden = this.$target[0].classList.contains("o_snippet_mobile_invisible");
+                if (isMobilePreview === isMobileHidden) {
+                    // Preview mode and hidden type are the same.
+                    show = false;
+                }
+            }
+        }
         if (show === undefined) {
             show = !this.isTargetVisible();
         }
@@ -993,14 +1007,6 @@ var SnippetEditor = Widget.extend({
      * @private
      */
     _onDragAndDropStart({ helper, addStyle }) {
-        // If the helper is inside the iframe, we want pointer events on the
-        // frame element so that they reach the window and properly apply
-        // the cursor.
-        const frameElement = helper.ownerDocument.defaultView.frameElement;
-        if (frameElement) {
-            addStyle(frameElement, { pointerEvents: "auto" });
-        }
-
         this.options.wysiwyg.odooEditor.observerUnactive('dragAndDropMoveSnippet');
         this.trigger_up('drag_and_drop_start');
         this.options.wysiwyg.odooEditor.automaticStepUnactive();
@@ -1344,8 +1350,9 @@ var SnippetEditor = Widget.extend({
             // Defining the column grid area with its position.
             const gridProp = gridUtils._getGridProperties(rowEl);
 
-            const top = parseFloat(this.$target[0].style.top);
-            const left = parseFloat(this.$target[0].style.left);
+            const style = window.getComputedStyle(this.$target[0]);
+            const top = parseFloat(style.top);
+            const left = parseFloat(style.left);
 
             const rowStart = Math.round(top / (gridProp.rowSize + gridProp.rowGap)) + 1;
             const columnStart = Math.round(left / (gridProp.columnSize + gridProp.columnGap)) + 1;
@@ -1729,8 +1736,8 @@ var SnippetsMenu = Widget.extend({
         'click .o_we_invisible_entry': '_onInvisibleEntryClick',
         'click #snippet_custom .o_rename_btn': '_onRenameBtnClick',
         'click #snippet_custom .o_delete_btn': '_onDeleteBtnClick',
-        'mousedown': '_onMouseDown',
-        'mouseup': '_onMouseUp',
+        'pointerdown': '_onMouseDown',
+        'pointerup': '_onMouseUp',
         'input .o_snippet_search_filter_input': '_onSnippetSearchInput',
         'click .o_snippet_search_filter_reset': '_onSnippetSearchResetClick',
         'click .o_we_website_top_actions button[data-action=save]': '_onSaveRequest',
@@ -1826,6 +1833,7 @@ var SnippetsMenu = Widget.extend({
 
         this.orm = this.bindService("orm");
         this.notification = this.bindService("notification");
+        this.dialog = this.bindService("dialog");
     },
     /**
      * @override
@@ -1887,7 +1895,7 @@ var SnippetsMenu = Widget.extend({
 
         const toolbarEl = this._toolbarWrapperEl.firstChild;
         toolbarEl.classList.remove('oe-floating');
-        this.options.wysiwyg.toolbarEl.style.display = 'none';
+        this.options.wysiwyg.toolbarEl.classList.add('d-none');
         this.options.wysiwyg.setupToolbar(toolbarEl);
         this._addToolbar();
         this._checkEditorToolbarVisibilityCallback = this._checkEditorToolbarVisibility.bind(this);
@@ -2415,7 +2423,7 @@ var SnippetsMenu = Widget.extend({
             $selectorSiblings = $(unique(($selectorSiblings || $()).add($selectorChildren.children()).get()));
         }
 
-        var noDropZonesSelector = '[data-invisible="1"], .o_we_no_overlay, :not(:visible), :not(:o_editable)';
+        var noDropZonesSelector = '[data-invisible="1"], .o_we_no_overlay, :not(:visible)';
         if ($selectorSiblings) {
             $selectorSiblings.not(`.oe_drop_zone, .oe_drop_clone, ${noDropZonesSelector}`).each(function () {
                 var data;
@@ -2827,6 +2835,13 @@ var SnippetsMenu = Widget.extend({
     _computeSelectorFunctions: function (selector, exclude, target, noCheck, isChildren, excludeParent) {
         var self = this;
 
+        // TODO in master: FOR_DROP should be a param of the function.
+        const forDropID = 'FOR_DROP';
+        const forDrop = exclude && exclude.startsWith(forDropID);
+        if (forDrop) {
+            exclude = exclude.substring(forDropID.length);
+        }
+
         // The `:not(.o_editable_media)` part is handled outside of the selector
         // (see filterFunc).
         // Note: the `:not([contenteditable="true"])` part was there for that
@@ -2844,9 +2859,22 @@ var SnippetsMenu = Widget.extend({
             if ($(this).is(exclude)) {
                 return false;
             }
-            // `o_editable_media` bypasses the `o_not_editable` class.
-            if (this.classList.contains('o_editable_media')) {
+            if (noCheck) {
+                // When noCheck is true, we only check the exclude.
+                return true;
+            }
+            // `o_editable_media` bypasses the `o_not_editable` class except for
+            // drag & drop.
+            if (!forDrop && this.classList.contains('o_editable_media')) {
                 return weUtils.shouldEditableMediaBeEditable(this);
+            }
+            if (forDrop && !isChildren) {
+                // it's a drop-in.
+                return !$(this)
+                    .is('.o_not_editable :not([contenteditable="true"]), .o_not_editable');
+            }
+            if (isChildren) {
+                return !$(this).is('.o_not_editable *');
             }
             return !$(this)
                 .is('.o_not_editable:not(.s_social_media) :not([contenteditable="true"])');
@@ -2944,8 +2972,8 @@ var SnippetsMenu = Widget.extend({
                 'base_target': target,
                 'selector': self._computeSelectorFunctions(selector, exclude, target, noCheck),
                 '$el': $style,
-                'drop-near': $style.data('drop-near') && self._computeSelectorFunctions($style.data('drop-near'), '', false, noCheck, true, excludeParent),
-                'drop-in': $style.data('drop-in') && self._computeSelectorFunctions($style.data('drop-in'), '', false, noCheck),
+                'drop-near': $style.data('drop-near') && self._computeSelectorFunctions($style.data('drop-near'), 'FOR_DROP', false, noCheck, true, excludeParent),
+                'drop-in': $style.data('drop-in') && self._computeSelectorFunctions($style.data('drop-in'), 'FOR_DROP', false, noCheck),
                 'drop-exclude-ancestor': this.dataset.dropExcludeAncestor,
                 'drop-lock-within': this.dataset.dropLockWithin,
                 'data': Object.assign({string: $style.attr('string')}, $style.data()),
@@ -3094,7 +3122,7 @@ var SnippetsMenu = Widget.extend({
         }
 
         var def;
-        if (!$snippet[0].classList.contains('o_no_parent_editor')) {
+        if (this._allowParentsEditors($snippet)) {
             var $parent = globalSelector.closest($snippet.parent());
             if ($parent.length) {
                 def = this._createSnippetEditor($parent);
@@ -3569,7 +3597,7 @@ var SnippetsMenu = Widget.extend({
         // Don't scroll if $el is added to a visible popup that does not fill
         // the page (otherwise the page would scroll to a random location).
         const modalEl = $el[0].closest('.modal');
-        if (modalEl && !dom.hasScrollableContent(modalEl)) {
+        if (modalEl && !$(modalEl).hasScrollableContent()) {
             return;
         }
         return dom.scrollTo($el[0], {extraOffset: 50, $scrollable: $scrollable});
@@ -3688,6 +3716,13 @@ var SnippetsMenu = Widget.extend({
      */
     _isMobile() {
         return weUtils.isMobileView(this.$body[0]);
+    },
+    /**
+     * @private
+     */
+    _allowParentsEditors($snippet) {
+        return !this.options.enableTranslation
+            && !$snippet[0].classList.contains("o_no_parent_editor");
     },
 
     //--------------------------------------------------------------------------
@@ -3923,54 +3958,38 @@ var SnippetsMenu = Widget.extend({
      * @param {Event} ev
      */
     _onInstallBtnClick: function (ev) {
-        var self = this;
         var $snippet = $(ev.currentTarget).closest('[data-module-id]');
         var moduleID = $snippet.data('moduleId');
         var name = $snippet.attr('name');
-        new Dialog(this, {
+        const bodyText = _t("Do you want to install %s App?", name);
+        const linkText = _t("More info about this app.");
+        const linkUrl = '/web#id=' + encodeURIComponent(moduleID) + '&view_type=form&model=ir.module.module&action=base.open_module_tree';
+        this.dialog.add(ConfirmationDialog, {
             title: _t("Install %s", name),
-            size: 'medium',
-            $content: $('<div/>', {text: _t("Do you want to install the %s App?", name)}).append(
-                $('<a/>', {
-                    target: '_blank',
-                    href: '/web#id=' + encodeURIComponent(moduleID) + '&view_type=form&model=ir.module.module&action=base.open_module_tree',
-                    text: _t("More info about this app."),
-                    class: 'ml4',
-                })
-            ),
-            buttons: [{
-                text: _t("Save and Install"),
-                classes: 'btn-primary',
-                click: function () {
-                    this.$footer.find('.btn').toggleClass('o_hidden');
-                    this.orm.call("ir.module.module", "button_immediate_install", [[moduleID]]).then(() => {
-                        self.trigger_up('request_save', {
-                            invalidateSnippetCache: true,
-                            _toMutex: true,
-                            reloadWebClient: true,
-                        });
-                    }).catch(reason => {
-                        if (reason instanceof RPCError) {
-                            this.close();
-                            const message = markup(_t("Could not install module <strong>%s</strong>", escape(name)));
-                            self.notification.add(message, {
-                                type: 'danger',
-                                sticky: true,
-                            });
-                        } else {
-                            return Promise.reject(reason);
-                        }
+            body: markup(`${escape(bodyText)}\n<a href="${linkUrl}" target="_blank">${escape(linkText)}</a>`),
+            confirm: async () => {
+                try {
+                    await this.orm.call("ir.module.module", "button_immediate_install", [[moduleID]]);
+                    this.trigger_up('request_save', {
+                        invalidateSnippetCache: true,
+                        _toMutex: true,
+                        reloadWebClient: true,
                     });
-                },
-            }, {
-                text: _t("Install in progress"),
-                icon: 'fa-spin fa-circle-o-notch fa-spin mr8',
-                classes: 'btn-primary disabled o_hidden',
-            }, {
-                text: _t("Cancel"),
-                close: true,
-            }],
-        }).open();
+                } catch (e) {
+                    if (e instanceof RPCError) {
+                        const message = escape(_t("Could not install module %s", name));
+                        this.notification.add(message, {
+                            type: "danger",
+                            sticky: true,
+                        });
+                    } else {
+                        throw e;
+                    }
+                }
+            },
+            confirmLabel: _t("Save and Install"),
+            cancel: () => {},
+        });
     },
     /**
      * @private
@@ -4012,26 +4031,20 @@ var SnippetsMenu = Widget.extend({
         const $snippet = $(ev.target).closest('.oe_snippet');
         const snippetId = parseInt(ev.currentTarget.dataset.snippetId);
         ev.stopPropagation();
-        new Dialog(this, {
-            size: 'medium',
-            title: _t('Confirmation'),
-            $content: $('<div><p>' + _t("Are you sure you want to delete the snippet: %s?", $snippet.attr('name')) + '</p></div>'),
-            buttons: [{
-                text: _t("Yes"),
-                close: true,
-                classes: 'btn-primary',
-                click: async () => {
-                    await this.orm.call("ir.ui.view", "delete_snippet", [], {
-                        'view_id': snippetId,
-                        'template_key': this.options.snippets,
-                    });
-                    await this._loadSnippetsTemplates(true);
-                },
-            }, {
-                text: _t("No"),
-                close: true,
-            }],
-        }).open();
+        const message = _t("Are you sure you want to delete the snippet %s?", $snippet[0].getAttribute("name"));
+        this.dialog.add(ConfirmationDialog, {
+            body: message,
+            confirm: async () => {
+                await this.orm.call("ir.ui.view", "delete_snippet", [], {
+                    'view_id': snippetId,
+                    'template_key': this.options.snippets,
+                });
+                await this._loadSnippetsTemplates(true);
+            },
+            cancel: () => null,
+            confirmLabel: _t("Yes"),
+            cancelLabel: _t("No"),
+        });
     },
     /**
      * @private
@@ -4045,8 +4058,8 @@ var SnippetsMenu = Widget.extend({
             <we-input class="o_we_user_value_widget w-100 mx-1">
                 <div>
                     <input type="text" autocomplete="chrome-off" value="${snippetName}" class="text-start"/>
-                    <we-button class="o_we_confirm_btn o_we_text_success fa fa-check" title="${confirmText}"/>
-                    <we-button class="o_we_cancel_btn o_we_text_danger fa fa-times" title="${cancelText}"/>
+                    <we-button class="o_we_confirm_btn o_we_text_success fa fa-check" title="${confirmText}"></we-button>
+                    <we-button class="o_we_cancel_btn o_we_text_danger fa fa-times" title="${cancelText}"></we-button>
                 </div>
             </we-input>
         `);
@@ -4100,7 +4113,8 @@ var SnippetsMenu = Widget.extend({
      */
     _onMouseUp(ev) {
         const snippetEl = ev.target.closest('.oe_snippet');
-        if (snippetEl) {
+        if (snippetEl && !snippetEl.querySelector(".o_we_already_dragging")
+                    && !ev.target.matches(".o_rename_btn")) {
             this._showSnippetTooltip($(snippetEl));
         }
     },
@@ -4443,16 +4457,44 @@ var SnippetsMenu = Widget.extend({
      * Preview on mobile.
      */
     _onMobilePreviewClick() {
-        this.trigger_up('request_mobile_preview');
-
         // TODO refactor things to make this more understandable -> on mobile
         // edition, update the UI. But to do it properly and inside the mutex
         // this simulates what happens when a snippet option is used.
         this._execWithLoadingEffect(async () => {
+            const initialBodySize = this.$body[0].clientWidth;
+            this.trigger_up('request_mobile_preview');
+
             // TODO needed so that mobile edition is considered before updating
             // the UI but this is clearly random. The trigger_up above should
-            // properly await for the rerender somehow.
-            await new Promise(resolve => setTimeout(resolve));
+            // properly await for the rerender somehow or, better, the UI update
+            // should not depend on the mobile re-render entirely.
+            let count = 0;
+            do {
+                await new Promise(resolve => setTimeout(resolve, 1));
+            // Technically, should not be possible to fall into an infinite loop
+            // but extra safety as a stable fix.
+            } while (count++ < 1000 && Math.abs(this.$body[0].clientWidth - initialBodySize) < 1);
+
+            // Reload images inside grid items so that no image disappears when
+            // activating mobile preview.
+            const $gridItemEls = this.getEditableArea().find('div.o_grid_item');
+            for (const gridItemEl of $gridItemEls) {
+                gridUtils._reloadLazyImages(gridItemEl);
+            }
+
+            const isMobilePreview = weUtils.isMobileView(this.$body[0]);
+            for (const invisibleOverrideEl of this.getEditableArea().find('.o_snippet_mobile_invisible, .o_snippet_desktop_invisible')) {
+                const isMobileHidden = invisibleOverrideEl.classList.contains("o_snippet_mobile_invisible");
+                invisibleOverrideEl.classList.remove('o_snippet_override_invisible');
+                if (isMobilePreview === isMobileHidden) {
+                    invisibleOverrideEl.dataset.invisible = '1';
+                } else {
+                    delete invisibleOverrideEl.dataset.invisible;
+                }
+            }
+
+            // This is async but using the main editor mutex, currently locked.
+            this._updateInvisibleDOM();
 
             return new Promise(resolve => {
                 this.trigger_up('snippet_option_update', {
@@ -4460,19 +4502,6 @@ var SnippetsMenu = Widget.extend({
                 });
             });
         }, false);
-
-        // Reload images inside grid items so that no image disappears when
-        // activating mobile preview.
-        const $gridItemEls = this.getEditableArea().find('div.o_grid_item');
-        for (const gridItemEl of $gridItemEls) {
-            gridUtils._reloadLazyImages(gridItemEl);
-        }
-        for (const invisibleOverrideEl of this.getEditableArea().find('.o_snippet_mobile_invisible, .o_snippet_desktop_invisible')) {
-            invisibleOverrideEl.classList.remove('o_snippet_override_invisible');
-            invisibleOverrideEl.dataset.invisible = '1';
-        }
-        // This is async but using the main editor mutex.
-        this._updateInvisibleDOM();
     },
     /**
      * Undo..

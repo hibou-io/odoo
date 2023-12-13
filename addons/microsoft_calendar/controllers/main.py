@@ -53,6 +53,7 @@ class MicrosoftCalendarController(CalendarController):
                 })
 
             # If App authorized, and user access accepted, We launch the synchronization
+            sync_context.update({'dont_notify': True})
             need_refresh = request.env.user.sudo().with_context(sync_context)._sync_microsoft_calendar()
 
             # If synchronization has been stopped or paused
@@ -68,12 +69,3 @@ class MicrosoftCalendarController(CalendarController):
             }
 
         return {"status": "success"}
-
-    @http.route()
-    def check_calendar_credentials(self):
-        res = super().check_calendar_credentials()
-        get_param = request.env['ir.config_parameter'].sudo().get_param
-        client_id = get_param('microsoft_calendar_client_id')
-        client_secret = get_param('microsoft_calendar_client_secret')
-        res['microsoft_calendar'] = bool(client_id and client_secret)
-        return res

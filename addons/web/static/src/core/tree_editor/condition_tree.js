@@ -639,24 +639,22 @@ function _expressionFromTree(tree, options, isRoot = false) {
         return formatAST(operator === "=" ? not(pathAST) : pathAST);
     }
 
+    let valueAST = toAST(value);
     if (
-        pathAST.type === 5 &&
-        isValidPath(pathAST, options) &&
-        ["in", "not in"].includes(operator)
+        ["in", "not in"].includes(operator) &&
+        !(value instanceof Expression) &&
+        ![4, 10].includes(valueAST.type)
     ) {
-        const setIteratorAST = isX2Many(pathAST, options) ? pathAST : { type: 4, value: [pathAST] };
+        valueAST = { type: 4, value: [valueAST] };
+    }
 
-        const valueAST = toAST(value);
-        const otherIteratorAST = [4, 10].includes(valueAST.type)
-            ? valueAST
-            : { type: 4, value: [valueAST] };
-
+    if (pathAST.type === 5 && isX2Many(pathAST, options) && ["in", "not in"].includes(operator)) {
         const ast = {
             type: 8,
             fn: {
                 type: 15,
                 obj: {
-                    args: [setIteratorAST],
+                    args: [pathAST],
                     type: 8,
                     fn: {
                         type: 5,
@@ -665,7 +663,7 @@ function _expressionFromTree(tree, options, isRoot = false) {
                 },
                 key: "intersection",
             },
-            args: [otherIteratorAST],
+            args: [valueAST],
         };
         return formatAST(operator === "not in" ? not(ast) : ast);
     }
@@ -676,7 +674,7 @@ function _expressionFromTree(tree, options, isRoot = false) {
         type: 7,
         op,
         left: pathAST,
-        right: toAST(value),
+        right: valueAST,
     });
 }
 

@@ -119,6 +119,46 @@ class TestSanitizer(BaseCase):
         for attr in ['javascript']:
             self.assertNotIn(attr, sanitized_html, 'html_sanitize did not remove enough unwanted attributes')
 
+    def test_outlook_mail_sanitize(self):
+        case = """<div class="WordSection1">
+<p class="MsoNormal">Here is a test mail<o:p></o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class="MsoNormal">With a break line<o:p></o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class="MsoNormal">Then two<o:p></o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<div>
+<div style="border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0in 0in 0in">
+<p class="MsoNormal"><b>From:</b> Mitchell Admin &lt;dummy@example.com&gt;
+<br>
+<b>Sent:</b> Monday, November 20, 2023 8:34 AM<br>
+<b>To:</b> test user &lt;dummy@example.com&gt;<br>
+<b>Subject:</b> test (#23)<o:p></o:p></p>
+</div>
+</div>"""
+
+        expected = """<div class="WordSection1">
+<p class="MsoNormal">Here is a test mail</p>
+<p class="MsoNormal">&nbsp;</p>
+<p class="MsoNormal">With a break line</p>
+<p class="MsoNormal">&nbsp;</p>
+<p class="MsoNormal">&nbsp;</p>
+<p class="MsoNormal">Then two</p>
+<p class="MsoNormal">&nbsp;</p>
+<div>
+<div style="border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0in 0in 0in">
+<p class="MsoNormal"><b>From:</b> Mitchell Admin &lt;dummy@example.com&gt;
+<br>
+<b>Sent:</b> Monday, November 20, 2023 8:34 AM<br>
+<b>To:</b> test user &lt;dummy@example.com&gt;<br>
+<b>Subject:</b> test (#23)</p>
+</div>
+</div></div>"""
+
+        result = html_sanitize(case)
+        self.assertEqual(result, expected)
+
     def test_sanitize_unescape_emails(self):
         not_emails = [
             '<blockquote cite="mid:CAEJSRZvWvud8c6Qp=wfNG6O1+wK3i_jb33qVrF7XyrgPNjnyUA@mail.gmail.com" type="cite">cat</blockquote>',
@@ -346,7 +386,7 @@ class TestHtmlTools(BaseCase):
             ('<div><p>First <br/>Second <br/>Third Paragraph</p><p>--<br/>Signature paragraph with a <a href="./link">link</a></p></div>',
              'First Second Third Paragraph -- Signature paragraph with a link'),
             ('<p>Now =&gt; processing&nbsp;entities&#8203;and extra whitespace too.  </p>',
-             'Now =&gt; processing&nbsp;entities\u200band extra whitespace too.'),
+             'Now => processing\xa0entities\u200band extra whitespace too.'),
             ('<div>Look what happens with <p>unmatched tags</div>', 'Look what happens with unmatched tags'),
             ('<div>Look what happens with <p unclosed tags</div> Are we good?', 'Look what happens with Are we good?')
         ]
@@ -499,6 +539,15 @@ class TestEmailTools(BaseCase):
             '',
         ]
 
+    def test_email_domain_normalize(self):
+        cases = [
+            ("Test.Com", "test.com", "Should have normalized domain"),
+            ("email@test.com", False, "Domain is not valid, should return False"),
+            (False, False, "Domain is not valid, should retunr False"),
+        ]
+        for source, expected, msg in cases:
+            self.assertEqual(email_domain_normalize(source), expected, msg)
+
     def test_email_normalize(self):
         """ Test 'email_normalize'. Note that it is built on 'email_split' so
         some use cases are already managed in 'test_email_split(_and_format)'
@@ -520,7 +569,7 @@ class TestEmailTools(BaseCase):
             'deboulonneur@example.com',
             'deboulonneur@example.comdéboulonneur',
             False,
-            '@example.com',  # funny
+            False,  # need fix over 'getadresses'
             'deboulonneur.😊@example.com',
             'déboulonneur@examplé.com',
             'DéBoulonneur@examplé.com',
@@ -530,7 +579,7 @@ class TestEmailTools(BaseCase):
             f'"{format_name}" <deboulonneur@example.com>',
             f'"{format_name}" <deboulonneur@example.comdéboulonneur>',
             f'"{format_name}" <@>',
-            f'"{format_name}" <@example.com>',
+            f'"{format_name}" <@>',
             f'"{format_name}" <deboulonneur.😊@example.com>',
             f'"{format_name}" <déboulonneur@examplé.com>',
             f'"{format_name}" <DéBoulonneur@examplé.com>',
@@ -540,7 +589,7 @@ class TestEmailTools(BaseCase):
             f'{format_name_ascii} <deboulonneur@example.com>',
             f'{format_name_ascii} <deboulonneur@example.xn--comdboulonneur-ekb>',
             f'{format_name_ascii} <@>',
-            f'{format_name_ascii} <@example.com>',
+            f'{format_name_ascii} <@>',
             f'{format_name_ascii} <deboulonneur.😊@example.com>',
             f'{format_name_ascii} <déboulonneur@xn--exampl-gva.com>',
             f'{format_name_ascii} <DéBoulonneur@xn--exampl-gva.com>',
@@ -593,9 +642,57 @@ class TestEmailTools(BaseCase):
             ("'(ss)' <123@gmail.com>, 'foo' <foo@bar>", ['123@gmail.com', 'foo@bar']),  # comma + single-quoting
             ('"john@gmail.com"<johnny@gmail.com>', ['johnny@gmail.com']),  # double-quoting
             ('"<jg>" <johnny@gmail.com>', ['johnny@gmail.com']),  # double-quoting with brackets
+            ('@gmail.com', ['@gmail.com']),  # no left-part
+            # '@domain' corner cases -- all those return a '@gmail.com' (or equivalent)
+            # email address when going through 'getaddresses'
+            # - multi @
+            ('fr@ncois.th@notgmail.com', ['fr@ncois.th']),
+            ('f@r@nc.gz,ois@notgmail.com', ['r@nc.gz', 'ois@notgmail.com']),  # still failing, but differently from 'getaddresses' alone
+            ('@notgmail.com esteban_gnole@coldmail.com@notgmail.com', ['esteban_gnole@coldmail.com']),
+            # - multi emails (with invalid)
+            (
+                'Ivan@dezotos.com Cc iv.an@notgmail.com',
+                ['Ivan@dezotos.com', 'iv.an@notgmail.com']
+            ),
+            (
+                'ivan-dredi@coldmail.com ivan.dredi@notgmail.com',
+                ['ivan-dredi@coldmail.com', 'ivan.dredi@notgmail.com']
+            ),
+            (
+                '@notgmail.com ivan@coincoin.com.ar jeanine@coincoin.com.ar',
+                ['ivan@coincoin.com.ar', 'jeanine@coincoin.com.ar']
+            ),
+            (
+                '@notgmail.com whoareyou@youhou.com.   ivan.dezotos@notgmail.com',
+                ['whoareyou@youhou.com', 'ivan.dezotos@notgmail.com']
+            ),
+            (
+                'francois@nc.gz CC: ois@notgmail.com ivan@dezotos.com',
+                ['francois@nc.gz', 'ois@notgmail.com', 'ivan@dezotos.com']
+            ),
+            (
+                'francois@nc.gz CC: ois@notgmail.com,ivan@dezotos.com',
+                ['francois@nc.gzCC', 'ois@notgmail.com', 'ivan@dezotos.com']
+            ),
+            # - separated with '/''
+            (
+                'ivan.plein@dezotos.com / ivan.plu@notgmail.com',
+                ['ivan.plein@dezotos.com', 'ivan.plu@notgmail.com']
+            ),
+            (
+                '@notgmail.com ivan.parfois@notgmail.com/ ivan.souvent@notgmail.com',
+                ['ivan.parfois@notgmail.com', 'ivan.souvent@notgmail.com']
+            ),
+            # - separated with '-''
+            ('ivan@dezotos.com - ivan.dezotos@notgmail.com', ['ivan@dezotos.com', 'ivan.dezotos@notgmail.com']),
+            (
+                'car.pool@notgmail.com - co (TAMBO) Registration car.warsh@notgmail.com',
+                ['car.pool@notgmail.com', 'car.warsh@notgmail.com']
+            ),
         ]
-        for text, expected in cases:
-            self.assertEqual(email_split(text), expected, 'email_split is broken')
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(email_split(source), expected)
 
     def test_email_split_and_format(self):
         """ Test 'email_split_and_format', notably in case of multi encapsulation
@@ -629,7 +726,7 @@ class TestEmailTools(BaseCase):
             # multi
             ['deboulonneur@example.com'],
             ['deboulonneur@example.com', 'deboulonneur2@example.com'],
-            ['@example.com'],  # funny one
+            ['deboulonneur@example.com', 'deboulonneur2@example.com'],  # need fix over 'getadresses'
             # format / misc
             ['deboulonneur@example.com'],
             ['"Super Déboulonneur" <deboulonneur@example.com>', '"Super Déboulonneur 2" <deboulonneur2@example.com>'],
@@ -676,16 +773,16 @@ class TestEmailTools(BaseCase):
 
     def test_email_formataddr(self):
         """ Test custom 'formataddr', notably with IDNA support """
-        email = 'joe@example.com'
+        email_base = 'joe@example.com'
         email_idna = 'joe@examplé.com'
         cases = [
             # (name, address),          charsets            expected
-            (('', email),               ['ascii', 'utf-8'], 'joe@example.com'),
-            (('joe', email),            ['ascii', 'utf-8'], '"joe" <joe@example.com>'),
-            (('joe doe', email),        ['ascii', 'utf-8'], '"joe doe" <joe@example.com>'),
-            (('joe"doe', email),        ['ascii', 'utf-8'], '"joe\\"doe" <joe@example.com>'),
-            (('joé', email),            ['ascii'],          '=?utf-8?b?am/DqQ==?= <joe@example.com>'),
-            (('joé', email),            ['utf-8'],          '"joé" <joe@example.com>'),
+            (('', email_base),          ['ascii', 'utf-8'], 'joe@example.com'),
+            (('joe', email_base),       ['ascii', 'utf-8'], '"joe" <joe@example.com>'),
+            (('joe doe', email_base),   ['ascii', 'utf-8'], '"joe doe" <joe@example.com>'),
+            (('joe"doe', email_base),   ['ascii', 'utf-8'], '"joe\\"doe" <joe@example.com>'),
+            (('joé', email_base),       ['ascii'],          '=?utf-8?b?am/DqQ==?= <joe@example.com>'),
+            (('joé', email_base),       ['utf-8'],          '"joé" <joe@example.com>'),
             (('', email_idna),          ['ascii'],          'joe@xn--exampl-gva.com'),
             (('', email_idna),          ['utf-8'],          'joe@examplé.com'),
             (('joé', email_idna),       ['ascii'],          '=?utf-8?b?am/DqQ==?= <joe@xn--exampl-gva.com>'),
@@ -699,22 +796,23 @@ class TestEmailTools(BaseCase):
                     self.assertEqual(formataddr(pair, charset), expected)
 
     def test_extract_rfc2822_addresses(self):
-        tests = [
+        cases = [
             ('"Admin" <admin@example.com>', ['admin@example.com']),
             ('"Admin" <admin@example.com>, Demo <demo@test.com>', ['admin@example.com', 'demo@test.com']),
             ('admin@example.com', ['admin@example.com']),
             ('"Admin" <admin@example.com>, Demo <malformed email>', ['admin@example.com']),
             ('admin@éxample.com', ['admin@xn--xample-9ua.com']),
-            ('"admin@éxample.com" <admin@éxample.com>', ['admin@xn--xample-9ua.com']),
+            # formatted input containing email
+            ('"admin@éxample.com" <admin@éxample.com>', ['admin@xn--xample-9ua.com', 'admin@xn--xample-9ua.com']),
+            ('"Robert Le Grand" <robert@notgmail.com>', ['robert@notgmail.com']),
+            ('"robert@notgmail.com" <robert@notgmail.com>', ['robert@notgmail.com', 'robert@notgmail.com']),
+            # accents
+            ('DéBoulonneur@examplé.com', ['DéBoulonneur@xn--exampl-gva.com']),
         ]
 
-        for (rfc2822_email, expected) in tests:
-            self.assertEqual(extract_rfc2822_addresses(rfc2822_email), expected)
-
-    def test_email_domain_normalize(self):
-        self.assertEqual(email_domain_normalize("Test.Com"), "test.com", "Should have normalized the domain")
-        self.assertEqual(email_domain_normalize("email@test.com"), False, "The domain is not valid, should return False")
-        self.assertEqual(email_domain_normalize(False), False, "The domain is not valid, should return False")
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(extract_rfc2822_addresses(source), expected)
 
     def test_single_email_re(self):
         """ Test 'single_email_re', matching text input containing only one email """

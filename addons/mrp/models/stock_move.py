@@ -122,7 +122,7 @@ class StockMove(models.Model):
     unit_factor = fields.Float('Unit Factor', compute='_compute_unit_factor', store=True)
     is_done = fields.Boolean(
         'Done', compute='_compute_is_done', store=True)
-    order_finished_lot_id = fields.Many2one('stock.lot', string="Finished Lot/Serial Number", related="raw_material_production_id.lot_producing_id", store=True)
+    order_finished_lot_id = fields.Many2one('stock.lot', string="Finished Lot/Serial Number", related="raw_material_production_id.lot_producing_id", store=True, index='btree_not_null')
     should_consume_qty = fields.Float('Quantity To Consume', compute='_compute_should_consume_qty', digits='Product Unit of Measure')
     cost_share = fields.Float(
         "Cost Share (%)", digits=(5, 2),  # decimal = 2 is important for rounding calculations!!
@@ -138,9 +138,11 @@ class StockMove(models.Model):
     @api.depends('state', 'product_id', 'operation_id')
     def _compute_manual_consumption(self):
         for move in self:
-            if move.state != 'draft':
-                continue
-            move.manual_consumption = move._is_manual_consumption()
+            # when computed for new_id in onchange, use value from _origin
+            if move != move._origin:
+                move.manual_consumption = move._origin.manual_consumption
+            elif move.state == 'draft':
+                move.manual_consumption = move._is_manual_consumption()
 
     @api.depends('bom_line_id')
     def _compute_description_bom_line(self):
@@ -285,6 +287,8 @@ class StockMove(models.Model):
     def write(self, vals):
         if self.env.context.get('force_manual_consumption'):
             vals['manual_consumption'] = True
+        if vals.get('manual_consumption'):
+            vals['picked'] = True
         if 'product_uom_qty' in vals and 'move_line_ids' in vals:
             # first update lines then product_uom_qty as the later will unreserve
             # so possibly unlink lines
@@ -305,6 +309,10 @@ class StockMove(models.Model):
         to_assign = self.env['stock.move']
         self._adjust_procure_method()
         for move in self:
+            if float_compare(move.product_uom_qty - old_qties.get(move.id, 0), 0, precision_rounding=move.product_uom.rounding) < 0\
+                    and move.procure_method == 'make_to_order'\
+                    and all(m.state == 'done' for m in move.move_orig_ids):
+                continue
             if float_compare(move.product_uom_qty, 0, precision_rounding=move.product_uom.rounding) > 0:
                 if move._should_bypass_reservation() \
                         or move.picking_type_id.reservation_method == 'at_confirm' \
@@ -313,6 +321,8 @@ class StockMove(models.Model):
 
             if move.procure_method == 'make_to_order':
                 procurement_qty = move.product_uom_qty - old_qties.get(move.id, 0)
+                possible_reduceable_qty = -sum(move.move_orig_ids.filtered(lambda m: m.state not in ('done', 'cancel') and m.product_uom_qty).mapped('product_uom_qty'))
+                procurement_qty = max(procurement_qty, possible_reduceable_qty)
                 values = move._prepare_procurement_values()
                 origin = move._prepare_procurement_origin()
                 procurements.append(self.env['procurement.group'].Procurement(
@@ -366,14 +376,14 @@ class StockMove(models.Model):
             # delete the move with original product which is not relevant anymore
             moves_ids_to_unlink.add(move.id)
 
-        move_to_unlink = self.env['stock.move'].browse(moves_ids_to_unlink).sudo()
-        move_to_unlink.quantity = 0
-        move_to_unlink._action_cancel()
-        move_to_unlink.unlink()
         if phantom_moves_vals_list:
             phantom_moves = self.env['stock.move'].create(phantom_moves_vals_list)
             phantom_moves._adjust_procure_method()
             moves_ids_to_return |= phantom_moves.action_explode().ids
+        move_to_unlink = self.env['stock.move'].browse(moves_ids_to_unlink).sudo()
+        move_to_unlink.quantity = 0
+        move_to_unlink._action_cancel()
+        move_to_unlink.unlink()
         return self.env['stock.move'].browse(moves_ids_to_return)
 
     def action_show_details(self):
@@ -436,7 +446,7 @@ class StockMove(models.Model):
     def _get_backorder_move_vals(self):
         self.ensure_one()
         return {
-            'state': 'confirmed',
+            'state': 'draft' if self.state == 'draft' else 'confirmed',
             'reservation_date': self.reservation_date,
             'date_deadline': self.date_deadline,
             'manual_consumption': self._is_manual_consumption(),
@@ -572,6 +582,6 @@ class StockMove(models.Model):
         res = super()._get_relevant_state_among_moves()
         if res == 'partially_available'\
                 and self.raw_material_production_id\
-                and all(float_compare(move.quantity, move.should_consume_qty, precision_rounding=move.product_uom.rounding) == 0 for move in self):
+                and all(move.should_consume_qty and float_compare(move.quantity, move.should_consume_qty, precision_rounding=move.product_uom.rounding) >= 0 for move in self):
             res = 'assigned'
         return res

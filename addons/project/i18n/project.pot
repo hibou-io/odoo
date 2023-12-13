@@ -559,8 +559,9 @@ msgid "Activity Exception Decoration"
 msgstr ""
 
 #. module: project
-#: model:ir.ui.menu,name:project.mail_activity_plan_menu_config_task
-msgid "Activity Plan"
+#: model:ir.actions.act_window,name:project.mail_activity_plan_action_config_project_task_plan
+#: model:ir.ui.menu,name:project.mail_activity_plan_menu_config_project
+msgid "Activity Plans"
 msgstr ""
 
 #. module: project
@@ -591,6 +592,7 @@ msgid "Add Milestone"
 msgstr ""
 
 #. module: project
+#: model_terms:ir.actions.act_window,help:project.mail_activity_plan_action_config_project_task_plan
 #: model_terms:ir.actions.act_window,help:project.mail_activity_plan_action_config_task_plan
 msgid "Add a new plan"
 msgstr ""
@@ -1192,6 +1194,11 @@ msgstr ""
 msgid ""
 "Communicate with customers on the task using the email gateway. Attach logo designs to the task, so that information flows from\n"
 "      designers to the workers who print the t-shirt."
+msgstr ""
+
+#. module: project
+#: model_terms:ir.ui.view,arch_db:project.portal_my_task
+msgid "Communication history"
 msgstr ""
 
 #. module: project
@@ -1799,15 +1806,17 @@ msgid "Draft"
 msgstr ""
 
 #. module: project
-#: model:ir.model.fields.selection,name:project.selection__project_share_wizard__access_mode__edit
-msgid "Edit"
+#. odoo-python
+#: code:addons/project/models/project_task_type.py:0
+#, python-format
+msgid ""
+"Each user should have at least one personal stage. Create a new stage to "
+"which the tasks can be transferred after the selected ones are deleted."
 msgstr ""
 
 #. module: project
-#. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_header.js:0
-#, python-format
-msgid "Edit Personal Stage"
+#: model:ir.model.fields.selection,name:project.selection__project_share_wizard__access_mode__edit
+msgid "Edit"
 msgstr ""
 
 #. module: project
@@ -2640,11 +2649,6 @@ msgid "Message Delivery error"
 msgstr ""
 
 #. module: project
-#: model_terms:ir.ui.view,arch_db:project.portal_my_task
-msgid "Message and communication history"
-msgstr ""
-
-#. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__message_ids
 #: model:ir.model.fields,field_description:project.field_project_project__message_ids
 #: model:ir.model.fields,field_description:project.field_project_task__message_ids
@@ -3166,6 +3170,20 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_confirm_form
 msgid ""
 "People invited to collaborate on the project will have portal access rights."
+msgstr ""
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/res_partner.py:0
+#, python-format
+msgid "Partner company cannot be different from its assigned projects' company"
+msgstr ""
+
+#. module: project
+#. odoo-python
+#: code:addons/project/models/res_partner.py:0
+#, python-format
+msgid "Partner company cannot be different from its assigned tasks' company"
 msgstr ""
 
 #. module: project
@@ -5337,15 +5355,6 @@ msgstr ""
 #: code:addons/project/static/src/project_sharing/components/chatter/chatter_composer.xml:0
 #, python-format
 msgid "You must be"
-msgstr ""
-
-#. module: project
-#. odoo-python
-#: code:addons/project/models/project_task_type.py:0
-#, python-format
-msgid ""
-"You should at least have one personal stage. Create a new stage to which the"
-" tasks can be transferred after this one is deleted."
 msgstr ""
 
 #. module: project

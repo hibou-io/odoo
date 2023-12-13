@@ -1,12 +1,13 @@
 /** @odoo-modules **/
 
 import { _t } from "@web/core/l10n/translation";
-import Dialog from "@web/legacy/js/core/dialog";
+import { Dialog } from "@web/core/dialog/dialog";
+import { useChildRef } from "@web/core/utils/hooks";
 import weSnippetEditor from "@web_editor/js/editor/snippets.editor";
 import wSnippetOptions from "@website/js/editor/snippets.options";
 import wUtils from "@website/js/utils";
 import * as OdooEditorLib from "@web_editor/js/editor/odoo-editor/src/utils/utils";
-import { renderToElement } from "@web/core/utils/render";
+import { Component, onMounted, useRef, useState } from "@odoo/owl";
 import { throttleForAnimation } from "@web/core/utils/timing";
 import {
     applyTextHighlight,
@@ -14,7 +15,6 @@ import {
     switchTextHighlight,
     getCurrentTextHighlight
 } from "@website/js/text_processing";
-
 const getDeepRange = OdooEditorLib.getDeepRange;
 const getTraversedNodes = OdooEditorLib.getTraversedNodes;
 
@@ -52,6 +52,7 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
     init() {
         this._super(...arguments);
         this.notification = this.bindService("notification");
+        this.dialog = this.bindService("dialog");
     },
     /**
      * @override
@@ -192,43 +193,53 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
             $apiKeyHelp.empty().text(message);
         }
 
-        const $content = $(renderToElement('website.s_google_map_modal', {
-            apiKey: apiKey,
-        }));
-        if (!apiKeyValidation.isValid && apiKeyValidation.message) {
-            applyError.call($content, apiKeyValidation.message);
-        }
+        const GoogleMapAPIKeyDialog = class extends Component {
+            static template = "website.s_google_map_modal";
+            static components = { Dialog };
+            static props = {
+                onMounted: Function,
+                close: Function,
+                confirm: Function
+            };
+            setup() {
+                this.modalRef = useChildRef();
+                this.state = useState({ apiKey: apiKey });
+                this.apiKeyInput = useRef("apiKeyInput");
+                onMounted(() => this.props.onMounted(this.modalRef));
+            }
+            onClickSave() {
+                this.props.confirm(this.modalRef, this.state.apiKey);
+            }
+        };
 
         return new Promise(resolve => {
             let invalidated = false;
-            const dialog = new Dialog(this, {
-                size: 'medium',
-                title: _t("Google Map API Key"),
-                buttons: [
-                    {text: _t("Save"), classes: 'btn-primary', click: async (ev) => {
-                        const valueAPIKey = dialog.$('#api_key_input').val();
-                        if (!valueAPIKey) {
-                            applyError.call(dialog.$el, _t("Enter an API Key"));
-                            return;
-                        }
-                        const $button = $(ev.currentTarget);
-                        $button.prop('disabled', true);
-                        const res = await this._validateGMapAPIKey(valueAPIKey);
-                        if (res.isValid) {
-                            await this.orm.write("website", [websiteId], { google_maps_api_key: valueAPIKey });
-                            invalidated = true;
-                            dialog.close();
-                        } else {
-                            applyError.call(dialog.$el, res.message);
-                        }
-                        $button.prop("disabled", false);
-                    }},
-                    {text: _t("Cancel"), close: true}
-                ],
-                $content: $content,
+            this.dialog.add(GoogleMapAPIKeyDialog, {
+                onMounted: (modalRef) => {
+                    if (!apiKeyValidation.isValid && apiKeyValidation.message) {
+                        applyError.call($(modalRef.el), apiKeyValidation.message);
+                    }
+                },
+                confirm: async (modalRef, valueAPIKey) => {
+                    if (!valueAPIKey) {
+                        applyError.call($(modalRef.el), _t("Enter an API Key"));
+                        return;
+                    }
+                    const $button = $(modalRef.el).find("button");
+                    $button.prop('disabled', true);
+                    const res = await this._validateGMapAPIKey(valueAPIKey);
+                    if (res.isValid) {
+                        await this.orm.write("website", [websiteId], {google_maps_api_key: valueAPIKey});
+                        invalidated = true;
+                        return true;
+                    } else {
+                        applyError.call($(modalRef.el), res.message);
+                    }
+                    $button.prop("disabled", false);
+                }
+            }, {
+                onClose: () => resolve(invalidated),
             });
-            dialog.on('closed', this, () => resolve(invalidated));
-            dialog.open();
         });
     },
     /**
@@ -316,10 +327,11 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
     _addToolbar() {
         this._super(...arguments);
         this.$('#o_we_editor_toolbar_container > we-title > span').after($(`
-            <div class="btn fa fa-fw fa-2x o_we_highlight_animated_text d-none
+            <we-button class="fa fa-fw o_we_link o_we_highlight_animated_text d-none
                 ${this.$body.hasClass('o_animated_text_highlighted') ? 'fa-eye text-success' : 'fa-eye-slash'}"
                 title="${_t('Highlight Animated Text')}"
-                aria-label="Highlight Animated Text"/>
+                aria-label="Highlight Animated Text">
+            </we-button>
         `));
         this._toggleTextOptionsButton(".o_we_animate_text");
         this._toggleHighlightAnimatedTextButton();
@@ -492,6 +504,18 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
         return buttonEl.dataset.textSelector.slice(1);
     },
 
+    /**
+     * The goal here is to disable parents editors for `s_popup` snippets
+     * since they should not display their parents options.
+     * TODO: Update in master to set the `o_no_parent_editor` class in the
+     * snippet's XML.
+     *
+     * @override
+     */
+    _allowParentsEditors($snippet) {
+        return this._super(...arguments) && !$snippet[0].classList.contains("s_popup");
+    },
+
     //--------------------------------------------------------------------------
     // Handlers
     //--------------------------------------------------------------------------
@@ -605,7 +629,7 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      * @param {Event} ev
      */
     _onAnimateTextClick(ev) {
-        const target = ev.target;
+        const target = ev.currentTarget;
         this._handleTextOptions(target, [
             this._getOptionTextClass(target),
             "o_animate",
@@ -625,7 +649,7 @@ const wSnippetMenu = weSnippetEditor.SnippetsMenu.extend({
      * @param {Event} ev
      */
     _onTextHighlightClick(ev) {
-        const target = ev.target;
+        const target = ev.currentTarget;
         this._handleTextOptions(target, [
             this._getOptionTextClass(target),
             "o_text_highlight_underline",
@@ -681,6 +705,12 @@ weSnippetEditor.SnippetEditor.include({
      */
     async start() {
         await this._super(...arguments);
+        // When a SnippetEditor is destroyed before the start() has ended
+        // (which can happen when a widget is immediately removed, as start()
+        // is async but destroy() is not), it could create a useless observer.
+        if (this.isDestroyed()) {
+            return;
+        }
         this._adaptOnOptionResize = throttleForAnimation(this._adaptOnOptionResize.bind(this));
         this.editorResizeObserver = new window.ResizeObserver(entries => {
             // In addition to window resizing, every editor's option that
@@ -700,7 +730,7 @@ weSnippetEditor.SnippetEditor.include({
      * @override
      */
     destroy() {
-        this.editorResizeObserver.disconnect();
+        this.editorResizeObserver?.disconnect();
         return this._super(...arguments);
     },
     /**

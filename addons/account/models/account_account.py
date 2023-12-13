@@ -688,6 +688,7 @@ class AccountAccount(models.Model):
             WHERE full_reconcile_id IS NULL and account_id IN %s
         """
         self.env.cr.execute(query, [tuple(self.ids)])
+        self.env['account.move.line'].invalidate_model(['amount_residual', 'amount_residual_currency', 'reconciled'])
 
     def _toggle_reconcile_to_false(self):
         '''Toggle the `reconcile´ boolean from True -> False
@@ -801,6 +802,9 @@ class AccountAccount(models.Model):
             'template': '/account/static/xls/coa_import_template.xlsx'
         }]
 
+    def _merge_method(self, destination, source):
+        raise UserError(_("You cannot merge accounts."))
+
 
 class AccountGroup(models.Model):
     _name = "account.group"
@@ -843,8 +847,7 @@ class AccountGroup(models.Model):
             prefix = group.code_prefix_start and str(group.code_prefix_start)
             if prefix and group.code_prefix_end != group.code_prefix_start:
                 prefix += '-' + str(group.code_prefix_end)
-            name = (prefix and (prefix + ' ') or '') + group.name
-            group.display_name = name
+            group.display_name = ' '.join(filter(None, [prefix, group.name]))
 
 
     @api.model

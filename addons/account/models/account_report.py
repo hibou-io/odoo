@@ -36,7 +36,11 @@ class AccountReport(models.Model):
     variant_report_ids = fields.One2many(string="Variants", comodel_name='account.report', inverse_name='root_report_id')
     section_report_ids = fields.Many2many(string="Sections", comodel_name='account.report', relation="account_report_section_rel", column1="main_report_id", column2="sub_report_id")
     section_main_report_ids = fields.Many2many(string="Section Of", comodel_name='account.report', relation="account_report_section_rel", column1="sub_report_id", column2="main_report_id")
-    use_sections = fields.Boolean(string="Composite Report", store=True, readonly=False, compute="_compute_use_sections")
+    use_sections = fields.Boolean(
+        string="Composite Report",
+        compute="_compute_use_sections", store=True, readonly=False,
+        help="Create a structured report with multiple sections for convenient navigation and simultaneous printing.",
+    )
     chart_template = fields.Selection(string="Chart of Accounts", selection=lambda self: self.env['account.chart.template']._select_chart_template())
     country_id = fields.Many2one(string="Country", comodel_name='res.country')
     only_tax_exigible = fields.Boolean(
@@ -663,10 +667,11 @@ class AccountReportExpression(models.Model):
         to_expand = self.filtered(lambda x: x.engine == 'aggregation')
         while to_expand:
             domains = []
+            sub_expressions = self.env['account.report.expression']
 
             for candidate_expr in to_expand:
                 if candidate_expr.formula == 'sum_children':
-                    result |= candidate_expr.report_line_id.children_ids.expression_ids.filtered(lambda e: e.label == candidate_expr.label)
+                    sub_expressions |= candidate_expr.report_line_id.children_ids.expression_ids.filtered(lambda e: e.label == candidate_expr.label)
                 else:
                     labels_by_code = candidate_expr._get_aggregation_terms_details()
 
@@ -679,9 +684,10 @@ class AccountReportExpression(models.Model):
                         domains.append(dependency_domain)
 
             if domains:
-                sub_expressions = self.env['account.report.expression'].search(osv.expression.OR(domains))
-                to_expand = sub_expressions.filtered(lambda x: x.engine == 'aggregation' and x not in result)
-                result |= sub_expressions
+                sub_expressions |= self.env['account.report.expression'].search(osv.expression.OR(domains))
+
+            to_expand = sub_expressions.filtered(lambda x: x.engine == 'aggregation' and x not in result)
+            result |= sub_expressions
 
         return result
 

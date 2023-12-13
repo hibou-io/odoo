@@ -4,7 +4,7 @@
 from psycopg2 import IntegrityError
 
 from odoo.exceptions import ValidationError
-from odoo.tests.common import TransactionCase, HttpCase, tagged
+from odoo.tests.common import Form, TransactionCase, HttpCase, tagged
 from odoo.tools import mute_logger
 from odoo import Command
 
@@ -424,6 +424,19 @@ class TestIrModel(TransactionCase):
         self.assertEqual(monetary_field.currency_field, "x_good_currency",
                          "The currency field in monetary should have x_good_currency as name")
 
+@tagged('-at_install', 'post_install')
+class TestIrModelEdition(TransactionCase):
+    def test_new_ir_model_fields_related(self):
+        """Check that related field are handled correctly on new field"""
+        model = self.env['ir.model'].create({
+            'name': 'Bananas',
+            'model': 'x_bananas'
+        })
+        with self.debug_mode():
+            form = Form(self.env['ir.model.fields'].with_context(default_model_id=model.id))
+            form.related = 'id'
+            self.assertEqual(form.ttype, 'integer')
+
 @tagged('test_eval_context')
 class TestEvalContext(TransactionCase):
 
@@ -443,6 +456,16 @@ class TestEvalContext(TransactionCase):
 @tagged('-at_install', 'post_install')
 class TestIrModelFieldsTranslation(HttpCase):
     def test_ir_model_fields_translation(self):
+        # modify en_US translation
+        field = self.env['ir.model.fields'].search([('model_id.model', '=', 'res.users'), ('name', '=', 'login')])
+        self.assertEqual(field.with_context(lang='en_US').field_description, 'Login')
+        # check the name column of res.users is displayed as 'Login'
+        self.start_tour("/web", 'ir_model_fields_translation_en_tour', login="admin")
+        field.update_field_translations('field_description', {'en_US': 'Login2'})
+        # check the name column of res.users is displayed as 'Login2'
+        self.start_tour("/web", 'ir_model_fields_translation_en_tour2', login="admin")
+
+        # modify fr_FR translation
         self.env['res.lang']._activate_lang('fr_FR')
         field = self.env['ir.model.fields'].search([('model_id.model', '=', 'res.users'), ('name', '=', 'login')])
         field.update_field_translations('field_description', {'fr_FR': 'Identifiant'})
@@ -450,7 +473,7 @@ class TestIrModelFieldsTranslation(HttpCase):
         admin = self.env['res.users'].search([('login', '=', 'admin')], limit=1)
         admin.lang = 'fr_FR'
         # check the name column of res.users is displayed as 'Identifiant'
-        self.start_tour("/web", 'ir_model_fields_translation_tour', login="admin")
+        self.start_tour("/web", 'ir_model_fields_translation_fr_tour', login="admin")
         field.update_field_translations('field_description', {'fr_FR': 'Identifiant2'})
         # check the name column of res.users is displayed as 'Identifiant2'
-        self.start_tour("/web", 'ir_model_fields_translation_tour2', login="admin")
+        self.start_tour("/web", 'ir_model_fields_translation_fr_tour2', login="admin")
