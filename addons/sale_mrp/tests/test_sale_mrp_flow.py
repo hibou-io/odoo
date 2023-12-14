@@ -1692,7 +1692,7 @@ class TestSaleMrpFlow(ValuationReconciliationTestCommon):
 
         # Create a SO for product Main Kit Product
         order_form = Form(self.env['sale.order'])
-        order_form.partner_id = self.env.ref('base.res_partner_2')
+        order_form.partner_id = self.env['res.partner'].create({'name': 'Test Partner'})
         with order_form.order_line.new() as line:
             line.product_id = main_kit_product
             line.product_uom_qty = 1
@@ -1797,7 +1797,7 @@ class TestSaleMrpFlow(ValuationReconciliationTestCommon):
         # Create environment
         self.env.company.currency_id = self.env.ref('base.USD')
         self.env.company.anglo_saxon_accounting = True
-        self.partner = self.env.ref('base.res_partner_1')
+        self.partner = self.env['res.partner'].create({'name': 'Test Partner'})
         self.category = self.env.ref('product.product_category_1').copy({'name': 'Test category', 'property_valuation': 'real_time', 'property_cost_method': 'fifo'})
         account_receiv = self.env['account.account'].create({'name': 'Receivable', 'code': 'RCV00', 'account_type': 'asset_receivable', 'reconcile': True})
         account_income = self.env['account.account'].create({'name': 'Income', 'code': 'INC00', 'account_type': 'asset_current', 'reconcile': True})
@@ -1927,7 +1927,7 @@ class TestSaleMrpFlow(ValuationReconciliationTestCommon):
 
     def test_reconfirm_cancelled_kit(self):
         so = self.env['sale.order'].create({
-            'partner_id': self.env.ref('base.res_partner_1').id,
+            'partner_id': self.env['res.partner'].create({'name': 'Test Partner'}).id,
             'order_line': [
                 (0, 0, {
                     'name': self.kit_1.name,
@@ -2203,7 +2203,7 @@ class TestSaleMrpFlow(ValuationReconciliationTestCommon):
         in_moves._action_done()
 
         so = self.env['sale.order'].create({
-            'partner_id': self.env.ref('base.res_partner_1').id,
+            'partner_id': self.env['res.partner'].create({'name': 'Test Partner'}).id,
             'order_line': [
                 (0, 0, {
                     'name': kit.name,
@@ -2238,6 +2238,57 @@ class TestSaleMrpFlow(ValuationReconciliationTestCommon):
         cogs_aml = amls.filtered(lambda aml: aml.account_id == categ.property_account_expense_categ_id)
         self.assertEqual(cogs_aml.debit, 10)
         self.assertEqual(cogs_aml.credit, 0)
+
+    def test_kit_avco_amls_reconciliation(self):
+        self.stock_account_product_categ.property_cost_method = 'average'
+
+        compo01, compo02, kit = self.env['product.product'].create([{
+            'name': name,
+            'type': 'product',
+            'standard_price': price,
+            'categ_id': self.stock_account_product_categ.id,
+            'invoice_policy': 'delivery',
+        } for name, price in [
+            ('Compo 01', 10),
+            ('Compo 02', 20),
+            ('Kit', 0),
+        ]])
+
+        self.env['stock.quant']._update_available_quantity(compo01, self.company_data['default_warehouse'].lot_stock_id, 1)
+        self.env['stock.quant']._update_available_quantity(compo02, self.company_data['default_warehouse'].lot_stock_id, 1)
+
+        self.env['mrp.bom'].create({
+            'product_id': kit.id,
+            'product_tmpl_id': kit.product_tmpl_id.id,
+            'product_uom_id': kit.uom_id.id,
+            'product_qty': 1.0,
+            'type': 'phantom',
+            'bom_line_ids': [
+                (0, 0, {'product_id': compo01.id, 'product_qty': 1.0}),
+                (0, 0, {'product_id': compo02.id, 'product_qty': 1.0}),
+            ],
+        })
+
+        so = self.env['sale.order'].create({
+            'partner_id': self.partner_a.id,
+            'order_line': [
+                (0, 0, {
+                    'name': kit.name,
+                    'product_id': kit.id,
+                    'product_uom_qty': 1.0,
+                    'product_uom': kit.uom_id.id,
+                    'price_unit': 5,
+                    'tax_id': False,
+                })],
+        })
+        so.action_confirm()
+        so.picking_ids.move_line_ids.qty_done = 1
+        so.picking_ids.button_validate()
+
+        invoice = so._create_invoices()
+        invoice.action_post()
+
+        self.assertEqual(len(invoice.line_ids.filtered('reconciled')), 1)
 
     def test_avoid_removing_kit_bom_in_use(self):
         so = self.env['sale.order'].create({

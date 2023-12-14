@@ -3,9 +3,9 @@
 # 	* hr_expense
 # 
 # Translators:
-# Lucia Pacheco, 2022
 # Martin Trigaux, 2023
 # Braulio D. López Vázquez <bdl@odoo.com>, 2023
+# Lucia Pacheco, 2023
 # Fernanda Alvarez, 2023
 # Iran Villalobos López, 2023
 # 
@@ -203,7 +203,7 @@ msgstr "Seudónimo"
 #. module: hr_expense
 #: model:res.groups,name:hr_expense.group_hr_expense_user
 msgid "All Approver"
-msgstr "Todos los aprobadores"
+msgstr "Aprobador total"
 
 #. module: hr_expense
 #: model:ir.actions.act_window,name:hr_expense.action_hr_expense_sheet_all_all
@@ -2003,6 +2003,18 @@ msgid "There are no expense reports to approve."
 msgstr "No hay ningún reporte de gastos por aprobar."
 
 #. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/product_product.py:0
+#, python-format
+msgid ""
+"There are unposted expenses linked to this category. Updating the category "
+"cost will change expense amounts. Make sure it is what you want to do."
+msgstr ""
+"Hay gastos sin publicar en esta categoría. Actualizar la categoría del costo"
+" cambiará las cantidades de los gastos. Asegúrese de que es lo que desea "
+"hacer. "
+
+#. module: hr_expense
 #. odoo-javascript
 #: code:addons/hr_expense/static/src/js/tours/hr_expense.js:0
 #, python-format
@@ -2314,6 +2326,12 @@ msgstr "No puede rechazar sus propios gastos."
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
 #, python-format
+msgid "You cannot report expenses for different companies in the same report."
+msgstr "No puede incluir gastos de diferentes empresas en el mismo reporte."
+
+#. module: hr_expense
+#: code:addons/hr_expense/models/hr_expense.py:0
+#, python-format
 msgid "You cannot report expenses for different employees in the same report."
 msgstr ""
 "No puede reportar gastos para diferentes empleados en el mismo reporte."
@@ -2421,4 +2439,5 @@ msgid ""
 "The private address of the employee is required to post the expense report. "
 "Please add it on the employee form."
 msgstr ""
-"Se requiere la dirección privada del empleado para publicar el informe de gastos. Por favor, agréguelo en el formulario de empleado."
+"La dirección privada del empleado es necesaria para publicar el reporte de "
+"gastos. Agréguela al formulario del empleado. "

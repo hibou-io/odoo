@@ -4232,9 +4232,8 @@ msgid ""
 "Recursion error!  A product with a Bill of Material should not have itself "
 "in its BoM or child BoMs!"
 msgstr ""
-"Se encontró un error en la recurrencia. Recuerde que un producto con una "
-"lista de materiales no puede incluirse a si mismo en su LdM o en la "
-"sublista."
+"Ocurrió un error de recurrencia. Recuerde que un producto con una lista de "
+"materiales no puede incluirse a si mismo en su LdM o en la sublista."
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_bom__code
@@ -4654,8 +4653,8 @@ msgid ""
 "Some of your byproducts are tracked, you have to specify a manufacturing "
 "order in order to retrieve the correct byproducts."
 msgstr ""
-"Algunos de sus subproductos están siendo rastreados, debe especificar una "
-"orden de fabricación para recuperar los subproductos correctos."
+"Algunos de sus subproductos están rastreados, debe especificar una orden de "
+"fabricación para recuperar los subproductos correctos."
 
 #. module: mrp
 #. odoo-python
@@ -4665,8 +4664,8 @@ msgid ""
 "Some of your components are tracked, you have to specify a manufacturing "
 "order in order to retrieve the correct components."
 msgstr ""
-"Se realiza un seguimiento de algunos de sus componentes, debe especificar "
-"una orden de fabricación para recuperar los componentes correctos."
+"Algunos de sus componentes están rastreados, debe especificar una orden de "
+"fabricación para recuperar los componentes correctos."
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
@@ -5012,6 +5011,16 @@ msgstr "El componente %s no debe ser el mismo que el del producto a producir."
 
 #. module: mrp
 #. odoo-python
+#: code:addons/mrp/models/mrp_bom.py:0
+#, python-format
+msgid ""
+"The current configuration is incorrect because it would create a cycle "
+"between these products: %s."
+msgstr ""
+"La configuración actual no es correcta, crearía un ciclo entre estos "
+"productos: %s."
+
+#. module: mrp
 #: code:addons/mrp/models/stock_orderpoint.py:0
 #, python-format
 msgid "The following replenishment order has been generated"
@@ -5681,9 +5690,9 @@ msgid ""
 "is useful if you have long lead time and if you produce based on sales "
 "forecasts."
 msgstr ""
-"Es útil usar un reporte de plan maestro de producción  para planear sus "
-"operaciones de reordenamiento y fabricación si ha tenido tiempo y si se ha "
-"producido según el pronóstico de ventas."
+"Usar un reporte de plan maestro de producción es útil para planear sus "
+"operaciones de reordenamiento y fabricación si el plazo de entrega es largo "
+"y si produce según el pronóstico de ventas."
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_production_split__valid_details
@@ -5695,6 +5704,18 @@ msgstr "Válido"
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_production_backorder_form
 msgid "Validate"
 msgstr "Validar"
+
+#. module: mrp
+#. odoo-python
+#: code:addons/addons/mrp/wizard/mrp_consumption_warning.py:0
+#: code:addons/mrp/wizard/mrp_consumption_warning.py:0
+#, python-format
+msgid ""
+"Values cannot be set and validated because a Lot/Serial Number needs to be specified for a tracked product that is having its consumed amount increased:\n"
+"- "
+msgstr ""
+"No puede establecer y validar valores, debe especificar el número de serie o"
+" lote para un producto con trazabilidad que aumentó su cantidad consumida."
 
 #. module: mrp
 #. odoo-javascript
@@ -6425,13 +6446,6 @@ msgstr ""
 #, python-format
 msgid "You need to provide a lot for the finished product."
 msgstr "Debe proporcionar un lote para el producto terminado."
-
-#. module: mrp
-#. odoo-python
-#: code:addons/mrp/wizard/mrp_consumption_warning.py:0
-#, python-format
-msgid "You need to supply Lot/Serial Number"
-msgstr "Debe proporcionar un número de lote o de serie"
 
 #. module: mrp
 #. odoo-python

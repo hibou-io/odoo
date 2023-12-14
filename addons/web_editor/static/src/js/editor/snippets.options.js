@@ -4337,7 +4337,6 @@ registry.sizing = SnippetOptionWidget.extend({
         let resizeValues = this._getSize();
         this.$handles.on('mousedown', function (ev) {
             ev.preventDefault();
-            self.options.wysiwyg.odooEditor.automaticStepUnactive('resizing');
 
             // If the handle has the class 'readonly', don't allow to resize.
             // (For the grid handles when we are in mobile view).
@@ -4437,6 +4436,8 @@ registry.sizing = SnippetOptionWidget.extend({
                 directions.push(props);
             }
 
+            self.options.wysiwyg.odooEditor.automaticStepUnactive('resizing');
+
             const cursor = $handle.css('cursor') + '-important';
             const $body = $(this.ownerDocument.body);
             $body.addClass(cursor);
@@ -4510,6 +4511,8 @@ registry.sizing = SnippetOptionWidget.extend({
                     $handlers.removeClass('o_active').dequeue();
                 });
 
+                self.options.wysiwyg.odooEditor.automaticStepActive('resizing');
+
                 if (directions.every(dir => dir.begin === dir.current)) {
                     return;
                 }
@@ -4517,8 +4520,6 @@ registry.sizing = SnippetOptionWidget.extend({
                 setTimeout(function () {
                     self.options.wysiwyg.odooEditor.historyStep();
                 }, 0);
-
-                self.options.wysiwyg.odooEditor.automaticStepActive('resizing');
             };
             $body.on('mousemove', bodyMouseMove);
             $body.on('mouseup', bodyMouseUp);
@@ -5434,7 +5435,9 @@ registry.ReplaceMedia = SnippetOptionWidget.extend({
      * @see this.selectClass for parameters
      */
     async replaceMedia() {
-        this.options.wysiwyg.openMediaDialog({ node: this.$target[0] });
+        // TODO for now, this simulates a double click on the media,
+        // to be refactored when the new editor is merged
+        this.$target.dblclick();
     },
     /**
      * Makes the image a clickable link by wrapping it in an <a>.
@@ -5456,7 +5459,9 @@ registry.ReplaceMedia = SnippetOptionWidget.extend({
                 this.$target[0].src = src;
             }
         } else {
-            parentEl.replaceWith(this.$target[0]);
+            const fragment = document.createDocumentFragment();
+            fragment.append(...parentEl.childNodes);
+            parentEl.replaceWith(fragment);
         }
     },
     /**

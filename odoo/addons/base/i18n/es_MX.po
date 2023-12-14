@@ -8,9 +8,11 @@
 # Braulio D. López Vázquez <bdl@odoo.com>, 2023
 # Lucia Pacheco, 2023
 # Aimée Mendoza Sánchez, 2023
-# Iran Villalobos López, 2023
-# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023
 # Fernanda Alvarez, 2023
+# Alfonso González, 2023
+# Iran Villalobos López, 2023
+# Wil Odoo, 2023
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023
 # 
 msgid ""
 msgstr ""
@@ -18,7 +20,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-05-23 08:23+0000\n"
 "PO-Revision-Date: 2022-09-22 05:44+0000\n"
-"Last-Translator: Fernanda Alvarez, 2023\n"
+"Last-Translator: Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023\n"
 "Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1327,11 +1329,11 @@ msgstr ""
 "    Los archivos de prueba se separan por fuentes de donde se tomaron:\n"
 "    \n"
 "    * el documento factur-x (de FNFE)\n"
-"    * el documento peppol-bis-invoice-3 (el repositorio de github: https://github.com/OpenPEPPOL/peppol-bis-invoice-3/tree/master/rules/examples contains examples)\n"
+"    * el documento peppol-bis-invoice-3 (el siguiente repositorio de GitHub incluye ejemplos: https://github.com/OpenPEPPOL/peppol-bis-invoice-3/tree/master/rules/examples)\n"
 "    * odoo, estos archivos pasan todas las pruebas de validación (usando ecosio o el validador FNFE)\n"
 "    \n"
-"    Probamos que los ejemplos externos se importen correctamente (divisa, cantidad total y coincidencia fiscal total).\n"
-"    También probamos que la generación de xml desde odoo con parámetros dados resulta exactamente en el mismo xml que se espera, \n"
+"    Probamos que los ejemplos externos se importen de forma correcta (divisa, cantidad total y coincidencia fiscal total).\n"
+"    También probamos que la generación de xml desde Odoo con parámetros dados resulta exactamente en el mismo xml que se espera, \n"
 "    válido.\n"
 "    "
 
@@ -5333,12 +5335,12 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"Este módulo añade un atajo a uno o varios casos de oportunidades en el sistema CRM.\n"
+"Este módulo agrega un atajo a uno o varios casos de oportunidades en el sistema CRM.\n"
 "===========================================================================\n"
 "\n"
-"Este atajo permite generar un pedido basado en un caso seleccionado.\n"
-"Si hay varios casos diferentes abiertos (una lista), se genera un pedido por caso.\n"
-"El caso se cierra y se vincula al pedido generado.\n"
+"Este atajo le permite generar una orden de ventas según el caso seleccionado.\n"
+"Si hay varios casos diferentes abiertos (una lista), genera una orden por caso.\n"
+"El caso se cierra y se vincula a la orden de venta generada.\n"
 "\n"
 "Le sugerimos que instale este módulo si instaló tanto el módulo de compras\n"
 "como el de CRM."
@@ -5365,12 +5367,12 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"Este módulo agrega características genéricas para registrar una base de datos de Odoo en el proxy responsable por recibir la información (por medio de peticiones de servicios web).\n"
-"- Un edi_proxy_user tine una identificación única en un formato específico (por ejemplo, el vat para Peppol) que \n"
+"Este módulo agrega características genéricas para registrar una base de datos de Odoo en el proxy responsable de recibir la información (por medio de peticiones de servicios web).\n"
+"- Un edi_proxy_user tiene una identificación única en un formato específico (por ejemplo, el IVA para Peppol) que \n"
 "permite identificarlo al recibir un documento que se dirige a él. Se vincula con una empresa específica en una base\n"
 "de datos de Odoo.\n"
-"- Las características de cifrado permite decodificar toda la información del usuario al recibirlo de un proxy.\n"
-"- La autenticación ofrece un nivel adicional de seguridad para evitar la personificación en caso de que alguien obtenga acceso a la date de baso de un usuario.\n"
+"- Las características de cifrado permiten decodificar toda la información del usuario al recibirlo de un proxy.\n"
+"- La autenticación ofrece un nivel adicional de seguridad para evitar la personificación en caso de que alguien obtenga acceso a la base de datos de un usuario.\n"
 "    "
 
 #. module: base
@@ -5442,7 +5444,7 @@ msgstr ""
 "Este módulo tiene como objetivo gestionar la asistencia de los empleados.\n"
 "==================================================\n"
 "\n"
-"Mantiene la cuenta de las asistencias de los empleados dependiendo de las acciones (Check in / Check out) que realicen."
+"Lleva el número de asistencias de los empleados según las acciones que realicen (como registrar su entrada o salida)."
 
 #. module: base
 #: model:ir.module.module,description:base.module_pos_hr
@@ -5523,18 +5525,18 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"Este módulo permite publicar sus revendedores / partners en su sitio web y enviarles oportunidades / clientes potenciales entrantes.\n"
+"Este módulo permite que publique a sus distribuidores y socios en su sitio web y enviarles leads y oportunidades entrantes.\n"
 "\n"
 "\n"
-"** Publique un partner **\n"
+"**Publique un socio**\n"
 "\n"
-"Para publicar un partner, establezca un * Nivel * en su formulario de contacto (en la sección Asignación de partner) y haga clic en el botón * Publicar *.\n"
+"Para publicar a un socio, establezca un *Nivel* en su formulario de contacto (en la sección Asignación de contacto) y haga clic en el botón *Publicar*.\n"
 "\n"
-"** Reenviar clientes potenciales **\n"
+"**Reenviar leads**\n"
 "\n"
-"El reenvío de clientes potenciales se puede realizar para uno o varios clientes potenciales a la vez. La acción está disponible en la sección * Partner asignado * de la vista del formulario de cliente potencial / oportunidad y en el menú * Acción * de la vista de lista.\n"
+"El reenvío de leads se puede realizar para uno o varios leads a la vez. La acción está disponible en la sección *Contacto asignado* de la vista del formulario de lead u oportunidad y en el menú *Acción* de la vista de lista.\n"
 "\n"
-"La asignación automática se calcula a partir del peso de los niveles de socios y la geolocalización. Los socios obtienen clientes potenciales que se encuentran a su alrededor.\n"
+"La asignación automática se calcula a partir de los niveles de socios y la geolocalización. Los socios reciben los leads que se encuentran cerca de ellos.\n"
 "\n"
 "    "
 
@@ -5641,8 +5643,8 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"Este módulo presenta un nuevo bloque de construcción con una herramienta de lista de correo que se puede añadir en cualquier página de su web.\n"
-"Con un simple clic, sus visitantes pueden suscribirse a las listas de correo gestionadas en la aplicación marketing por email.\n"
+"Este módulo presenta un nuevo bloque de construcción con una herramienta de lista de correo que se puede agregar a cualquier página de su sitio web.\n"
+"Con un simple clic, sus visitantes pueden suscribirse a las listas de correo gestionadas en la aplicación Marketing por correo electrónico.\n"
 "    "
 
 #. module: base
@@ -5677,7 +5679,7 @@ msgstr ""
 "Este módulo proporciona estructura para la mensajería instantánea de SMS\n"
 "----------------------------------------------------\n"
 "\n"
-"El servicio lo presta la plataforma de la aplicación de compras de Odoo.\n"
+"El servicio lo proporciona la plataforma de compras dentro de la aplicación de Odoo.\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_contacts
@@ -6224,16 +6226,16 @@ msgstr ""
 "Este módulo de Odoo le ayudará a gestionar todos sus vehículos, los\n"
 "contratos a los que están asociados esos vehículos, así como como los servicios, costos\n"
 "y muchas otras funciones que son necesarias para gestionar su flota\n"
-"de vehículo(s).\n"
+"de vehículos.\n"
 "\n"
 "Características principales\n"
 "-------------\n"
 "* Agregue vehículos a su flota\n"
 "* Gestione los contratos de sus vehículos\n"
-"* Recordatorio cuando se acerca la fecha de conclusión de un contrato.\n"
-"* Agregue servicios y valores de odómetro para todos sus servicios\n"
+"* Reciba un recordatorio cuando se aproxime la fecha de conclusión de un contrato.\n"
+"* Agregue servicios y valores de kilometraje a todos sus vehículos\n"
 "* Muestre todos los costos asociados a un vehículo o a un tipo de servicio\n"
-"* Análisis en gráfica de los costos\n"
+"* Reciba un análisis gráfico de los costos\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_purchase_price_diff
@@ -7710,7 +7712,7 @@ msgstr "Un módulo para probar HTTP"
 #. module: base
 #: model:ir.module.module,description:base.module_test_lint
 msgid "A module to test Odoo code with various linters."
-msgstr "Un módulo para comprobar el código Odoo con varias linters."
+msgstr "Un módulo para comprobar el código de Odoo con varios linters."
 
 #. module: base
 #: model:ir.module.module,description:base.module_test_impex
@@ -8352,7 +8354,7 @@ msgstr "Añadir"
 #. module: base
 #: model:ir.actions.act_window,name:base.action_view_base_language_install
 msgid "Add Languages"
-msgstr "Añadir idiomas"
+msgstr "Agregar idiomas"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_mail_bot
@@ -8842,7 +8844,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_holidays
 msgid "Allocate PTOs and follow leaves requests"
-msgstr "Asigne PTO y siga las peticiones de permisos"
+msgstr "Asigne tiempo personal y lleve un seguimiento de las solicitudes"
 
 #. module: base
 #: model:ir.module.module,description:base.module_website_event_crm
@@ -8877,7 +8879,7 @@ msgid ""
 "(karma, badges, etc..)"
 msgstr ""
 "Permite entrar al perfil del sitio web de los usuarios para ver sus "
-"estadísticas (recompensas, insignias, etc.)"
+"estadísticas (karma, insignias, etc...)"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_slides_forum
@@ -13308,6 +13310,19 @@ msgstr "Mensaje de error que aparece cuando se viola la restricción."
 
 #. module: base
 #. odoo-python
+#: code:addons/translate.py:0
+#, python-format
+msgid ""
+"Error while parsing view:\n"
+"\n"
+"%s"
+msgstr ""
+"Ocurrió un error al procesar la vista:\n"
+"\n"
+"%s"
+
+#. module: base
+#. odoo-python
 #: code:addons/base/models/ir_ui_view.py:0
 #, python-format
 msgid ""
@@ -16065,8 +16080,8 @@ msgstr "Versión instalada"
 #: model:ir.module.module,description:base.module_bus
 msgid "Instant Messaging Bus allow you to send messages to users, in live."
 msgstr ""
-"El canal de mensajería instantánea te permite enviar mensajes en vivo a las "
-"usuarios."
+"El canal de mensajería instantánea le permite enviar mensajes en tiempo real"
+" a los usuarios."
 
 #. module: base
 #. odoo-python
@@ -16201,6 +16216,12 @@ msgstr ""
 #, python-format
 msgid "Invalid 'group by' parameter"
 msgstr "Parámetro 'agrupar por' no valido"
+
+#. module: base
+#: code:addons/template_inheritance.py:0
+#, python-format
+msgid "Invalid Expression while parsing xpath %r"
+msgstr "Expresión no válida al procesar xpath %r"
 
 #. module: base
 #: code:addons/base/models/ir_default.py:0
@@ -16362,6 +16383,17 @@ msgstr "Tipo no válido"
 #, python-format
 msgid "Invalid value for %s.%s: %s"
 msgstr "Valor no valido para %s.%s:%s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_default.py:0
+#, python-format
+msgid ""
+"Invalid value for %s.%s: %s is out of bounds (integers should be between "
+"-2,147,483,648 and 2,147,483,647)"
+msgstr ""
+"Valor invalido para %s.%s: %s esta fuera de los limites (integros deben "
+"estar entre -2,147,483,648 y 2,147,483,647)"
 
 #. module: base
 #. odoo-python
@@ -17726,7 +17758,7 @@ msgstr "Gestione cabinas de evento"
 #. module: base
 #: model:ir.module.module,summary:base.module_event_booth_sale
 msgid "Manage event booths sale"
-msgstr "Gestione la venta de cabinas de eventos"
+msgstr "Gestione la venta de estands de eventos"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_sale_stock
@@ -18444,7 +18476,7 @@ msgstr "Categoría de módulo"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.module_view_kanban
 msgid "Module Info"
-msgstr "Más información"
+msgstr "Información del módulo"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_module__shortdesc
@@ -24580,6 +24612,23 @@ msgid "Send text messages when project/task stage move"
 msgstr "Envía mensajes de texto cuando la etapa de proyecto/tarea se mueva"
 
 #. module: base
+#: model:ir.module.module,description:base.module_delivery_ups
+msgid ""
+"This is the legacy integration with UPS that is no longer supported. Please "
+"install the new \"UPS Shipping\" module and uninstall this one as soon as "
+"possible. This integration will stop working in 2024."
+msgstr ""
+"Esta es la integración de sistemas heredados con UPS que ya no es "
+"compatible. Instale el nuevo modulo de \"UPS Shipping\" y desinstale este "
+"tan pronto como le sea posible. Esta integración dejará de funcionar en el "
+"2024. "
+
+#. module: base
+#: model:ir.module.module,summary:base.module_delivery_ups_rest
+msgid "Send your shippings through UPS and track them online"
+msgstr "Haga sus envíos a través de UPS y rastréelos en línea"
+
+#. module: base
 #: model:ir.module.module,summary:base.module_survey
 msgid "Send your surveys or share them live."
 msgstr "Envíe sus encuestas o compártalas en vivo "
@@ -27231,7 +27280,7 @@ msgstr "Segumiento a equipo y administración de solicitudes de mantenimiento"
 #. module: base
 #: model:ir.module.module,summary:base.module_crm
 msgid "Track leads and close opportunities"
-msgstr "Seguimiento de leads y oportunidades cercanas"
+msgstr "Da seguimiento a leads y cierra oportunidades"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_helpdesk
@@ -27466,6 +27515,16 @@ msgstr "Tipo:"
 #: model:res.partner.industry,full_name:base.res_partner_industry_U
 msgid "U - ACTIVITIES OF EXTRATERRITORIAL ORGANISATIONS AND BODIES"
 msgstr "U - ACTIVIDADES DE ORGANIZACIONES Y CUERPOS EXTRATERRITORIALES"
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_delivery_ups
+msgid "UPS Shipping (Legacy)"
+msgstr "UPS Shipping (sistema heredado)"
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_delivery_ups_rest
+msgid "UPS Shipping"
+msgstr "Envíos por UPS"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_module__url

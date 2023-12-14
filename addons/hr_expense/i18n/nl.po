@@ -1002,7 +1002,7 @@ msgstr "Google Play Store"
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_sheet_view_search
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_view_search
 msgid "Group By"
-msgstr "Groepeer op"
+msgstr "Groeperen op"
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_sheet__is_multiple_currency
@@ -2008,6 +2008,18 @@ msgid "There are no expense reports to approve."
 msgstr "Er zijn geen onkostendeclaraties om goed te keuren."
 
 #. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/product_product.py:0
+#, python-format
+msgid ""
+"There are unposted expenses linked to this category. Updating the category "
+"cost will change expense amounts. Make sure it is what you want to do."
+msgstr ""
+"Er zijn nog niet geboekte kosten gekoppeld aan deze categorie. Als je de "
+"categoriekosten bijwerkt, veranderen de onkostenbedragen. Zorg ervoor dat "
+"dit is wat je wilt doen."
+
+#. module: hr_expense
 #. odoo-javascript
 #: code:addons/hr_expense/static/src/js/tours/hr_expense.js:0
 #, python-format
@@ -2325,6 +2337,14 @@ msgstr "Je kunt je eigen declaraties niet afwijzen"
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
 #, python-format
+msgid "You cannot report expenses for different companies in the same report."
+msgstr ""
+"Je kan geen onkosten melden voor verschillende bedrijven in dezelfde "
+"declaratie."
+
+#. module: hr_expense
+#: code:addons/hr_expense/models/hr_expense.py:0
+#, python-format
 msgid "You cannot report expenses for different employees in the same report."
 msgstr ""
 "Je kunt geen onkosten melden voor verschillende werknemers in dezelfde "
@@ -2434,4 +2454,5 @@ msgid ""
 "The private address of the employee is required to post the expense report. "
 "Please add it on the employee form."
 msgstr ""
-"Het privéadres van de werknemer is vereist om de onkostennota te kunnen posten. Voeg deze dan toe op het werknemersformulier."
+"Het privéadres van de werknemer is vereist om de onkostendeclaratie te "
+"kunnen maken. Voeg dit toe op het werknemersformulier."

@@ -6,6 +6,7 @@
 # Bohdan Lisnenko, 2022
 # Martin Trigaux, 2022
 # Camille Dantinne <cmd@odoo.com>, 2023
+# Wil Odoo, 2023
 # Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023
 # 
 msgid ""
@@ -1073,6 +1074,13 @@ msgstr "Можна опублікувати"
 #. odoo-python
 #: code:addons/website_sale/controllers/main.py:0
 #, python-format
+msgid "Can not resequence a video at first position."
+msgstr "Неможливо змінити послідовність відео з першої позиції."
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/main.py:0
+#, python-format
 msgid "Can not resequence embedded image/video with a non compatible image."
 msgstr ""
 "Неможливо змінити послідовність вбудованого зображення/відео з несумісним "
@@ -1210,6 +1218,17 @@ msgstr ""
 "операції."
 
 #. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/main.py:0
+#, python-format
+msgid ""
+"Changing your name is not allowed once documents have been issued for your "
+"account. Please contact us directly for this operation."
+msgstr ""
+"Зміна імені не дозволяється після оформлення документів на ваш обліковий "
+"запис. Будь ласка, зв'яжіться з нами безпосередньо для цієї операції."
+
+#. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
 msgid "Checkout Pages"
 msgstr "Сторінки оформлення замовлення"
@@ -1298,7 +1317,10 @@ msgid "Companies"
 msgstr "Компанії"
 
 #. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_form_editor.js:0
 #: model_terms:ir.ui.view,arch_db:website_sale.address
+#, python-format
 msgid "Company Name"
 msgstr "Назва компанії"
 
@@ -2467,8 +2489,8 @@ msgstr "Не визначено товару"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
-msgid "No product defined in category \""
-msgstr "У категорії не визначено товару \""
+msgid "No product defined in this category."
+msgstr ""
 
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.website_sale_visitor_product_action
@@ -2754,6 +2776,13 @@ msgstr "Система відкривання на основі педалі"
 #: model_terms:ir.ui.view,arch_db:website_sale.address
 msgid "Phone"
 msgstr "Телефон"
+
+#. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_form_editor.js:0
+#, python-format
+msgid "Phone Number"
+msgstr "Номер телефону"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -3784,8 +3813,8 @@ msgstr "Пропоновані аксесуари в кошику електро
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address
-msgid "TIN / VAT"
-msgstr "ІПН/ПДВ"
+msgid "VAT"
+msgstr "ПДВ"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
@@ -4441,6 +4470,20 @@ msgid ""
 msgstr ""
 "Тут відображатиметься ваш динамічний фрагмент...\n"
 "Це повідомлення відображається, оскільки ви не надали фільтр і шаблон для використання."
+
+#. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_form_editor.js:0
+#, python-format
+msgid "Your Email"
+msgstr "Ваша електронна пошта"
+
+#. module: website_sale
+#. odoo-javascript
+#: code:addons/website_sale/static/src/js/website_sale_form_editor.js:0
+#, python-format
+msgid "Your Name"
+msgstr "Ваше ім’я"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.cart_lines

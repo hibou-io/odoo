@@ -1019,7 +1019,7 @@ msgstr "قم بتحليل تقدم مشاريعك وأداء موظفيك. "
 #: model_terms:ir.ui.view,arch_db:project.view_task_project_user_search
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form
 msgid "Ancestor Task"
-msgstr "سلف المهمة"
+msgstr "المهمة الأصلية "
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_month__april
@@ -2650,6 +2650,8 @@ msgid ""
 "your tasks. Tasks in a folded stage are considered as closed (not applicable"
 " to personal stages)."
 msgstr ""
+"إذا كان مفعلاً، سيتم عرض هذه المرحلة كمطوية في عرض كانبان لمشاريعك. تعد "
+"المهام في المرحلة المطوية مغلقة. (لا ينطبق على المراحل الشخصية). "
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task_type__rating_template_id
@@ -3126,6 +3128,13 @@ msgstr "اترك تعليقًا"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/js/tours/project.js:0
+#, python-format
+msgid "Let's create your first <b>stage</b>."
+msgstr "فلنقم بإنشاء <b>مرحلتك</b> الأولى. "
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/js/tours/project.js:0
 #: code:addons/project/static/src/js/tours/project.js:0
 #, python-format
 msgid "Let's create your first <b>project</b>."
@@ -3137,6 +3146,13 @@ msgstr "فلنقم بإنشاء <b>مشروعك</b> الأول. "
 #, python-format
 msgid "Let's create your first <b>task</b>."
 msgstr "فلنقم بإنشاء <b>مهمتك</b> الأولى. "
+
+#. module: project
+#. odoo-javascript
+#: code:addons/project/static/src/js/tours/project.js:0
+#, python-format
+msgid "Let's create your second <b>stage</b>."
+msgstr "فلنقم بإنشاء <b>مرحلتك</b> الثانية. "
 
 #. module: project
 #. odoo-javascript
@@ -3567,6 +3583,11 @@ msgstr "تاريخ التكرار القادم "
 #: model:ir.model.fields,field_description:project.field_project_task__recurrence_message
 msgid "Next Recurrencies"
 msgstr "التكرارات التالية "
+
+#. module: project
+#: model_terms:ir.ui.view,arch_db:project.portal_tasks_list
+msgid "No Customer"
+msgstr "لا يوجد عميل "
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.portal_tasks_list

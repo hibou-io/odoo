@@ -387,7 +387,7 @@ class WebsiteSale(http.Controller):
         if category:
             url = "/shop/category/%s" % slug(category)
 
-        pager = website.pager(url=url, total=product_count, page=page, step=ppg, scope=7, url_args=post)
+        pager = website.pager(url=url, total=product_count, page=page, step=ppg, scope=5, url_args=post)
         offset = pager['offset']
         products = search_product[offset:offset + ppg]
 
@@ -410,6 +410,8 @@ class WebsiteSale(http.Controller):
             request.session['website_sale_shop_layout_mode'] = layout_mode
 
         products_prices = lazy(lambda: products._get_sales_prices(pricelist))
+
+        fiscal_position_id = website._get_current_fiscal_position_id(request.env.user.partner_id)
 
         values = {
             'search': fuzzy_search_term or search,
@@ -435,6 +437,7 @@ class WebsiteSale(http.Controller):
             'products_prices': products_prices,
             'get_product_prices': lambda product: lazy(lambda: products_prices[product.id]),
             'float_round': tools.float_round,
+            'fiscal_position_id': fiscal_position_id,
         }
         if filter_by_price_enabled:
             values['min_price'] = min_price or available_min_price
@@ -582,6 +585,8 @@ class WebsiteSale(http.Controller):
         other_image = product_images[new_image_idx]
         source_field = hasattr(image_to_resequence, 'video_url') and image_to_resequence.video_url and 'video_url' or 'image_1920'
         target_field = hasattr(other_image, 'video_url') and other_image.video_url and 'video_url' or 'image_1920'
+        if target_field == 'video_url' and image_res_model == 'product.product':
+            raise ValidationError(_("Can not resequence a video at first position."))
         previous_data = other_image[target_field]
         other_image[source_field] = image_to_resequence[source_field]
         image_to_resequence[target_field] = previous_data
@@ -947,11 +952,11 @@ class WebsiteSale(http.Controller):
             name_change = partner_su and 'name' in data and data['name'] != partner_su.name
             email_change = partner_su and 'email' in data and data['email'] != partner_su.email
 
-            # Prevent changing the partner name if invoices have been issued.
-            if name_change and not partner_su.can_edit_vat():
+            # Prevent changing the billing partner name if invoices have been issued.
+            if mode[1] == 'billing' and name_change and not partner_su.can_edit_vat():
                 error['name'] = 'error'
                 error_message.append(_(
-                    "Changing your name is not allowed once invoices have been issued for your"
+                    "Changing your name is not allowed once documents have been issued for your"
                     " account. Please contact us directly for this operation."
                 ))
 
@@ -1462,7 +1467,7 @@ class WebsiteSale(http.Controller):
         }
         return {
             'website_sale_order': order,
-            'errors': [],
+            'errors': self._get_shop_payment_errors(order),
             'partner': order.partner_invoice_id,
             'order': order,
             'payment_action_id': request.env.ref('payment.action_payment_provider').id,
@@ -1480,6 +1485,15 @@ class WebsiteSale(http.Controller):
             'transaction_route': f'/shop/payment/transaction/{order.id}',
             'landing_route': '/shop/payment/validate',
         }
+
+    def _get_shop_payment_errors(self, order):
+        """ Check that there is no error that should block the payment.
+
+        :param sale.order order: The sales order to pay
+        :return: A list of errors (error_title, error_message)
+        :rtype: list[tuple]
+        """
+        return []
 
     @http.route('/shop/payment', type='http', auth='public', website=True, sitemap=False)
     def shop_payment(self, **post):
@@ -1539,6 +1553,12 @@ class WebsiteSale(http.Controller):
         else:
             order = request.env['sale.order'].sudo().browse(sale_order_id)
             assert order.id == request.session.get('sale_last_order_id')
+
+        errors = self._get_shop_payment_errors(order)
+        if errors:
+            first_error = errors[0]  # only display first error
+            error_msg = f"{first_error[0]}\n{first_error[1]}"
+            raise ValidationError(error_msg)
 
         tx = order.get_portal_last_transaction() if order else order.env['payment.transaction']
 
@@ -1625,6 +1645,7 @@ class WebsiteSale(http.Controller):
         attribute = request.env['product.attribute'].browse(attribute_id)
         if 'display_type' in options:
             attribute.write({'display_type': options['display_type']})
+            request.env['ir.qweb'].clear_caches()
 
     @http.route(['/shop/config/website'], type='json', auth='user')
     def _change_website_config(self, **options):

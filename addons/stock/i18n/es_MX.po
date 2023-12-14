@@ -3,11 +3,11 @@
 # 	* stock
 # 
 # Translators:
-# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2022
 # Martin Trigaux, 2022
 # Braulio D. López Vázquez <bdl@odoo.com>, 2023
 # Lucia Pacheco, 2023
 # Aimée Mendoza Sánchez, 2023
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023
 # Iran Villalobos López, 2023
 # Fernanda Alvarez, 2023
 # 
@@ -3846,17 +3846,17 @@ msgstr "Dominio inválido para el operando izquierdo %s"
 
 #. module: stock
 #. odoo-python
-#: code:addons/stock/models/product.py:0
+#: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
 #, python-format
 msgid "Invalid domain operator %s"
 msgstr "Dominio inválido para el operador %s"
 
 #. module: stock
 #. odoo-python
-#: code:addons/stock/models/product.py:0
+#: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
 #, python-format
-msgid "Invalid domain right operand %s"
-msgstr "Dominio inválido para el operando derecho %s"
+msgid "Invalid domain right operand '%s'. It must be of type Integer/Float"
+msgstr "Dominio de operando derecho no válido '%s'. Debe ser Entero/Flotante"
 
 #. module: stock
 #. odoo-python
@@ -4074,8 +4074,8 @@ msgstr ""
 msgid ""
 "It is not possible to unreserve more products of %s than you have in stock."
 msgstr ""
-"No es posible anular la reserva de más productos que los %s que tiene en "
-"existencias."
+"No es posible anular la reserva de más productos de los que %s tiene en "
+"existencia."
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__move_type
@@ -5222,7 +5222,7 @@ msgstr "Número de acciones"
 #: model:ir.model.fields,field_description:stock.field_stock_assign_serial__next_serial_count
 #: model:ir.model.fields,field_description:stock.field_stock_move__next_serial_count
 msgid "Number of SN"
-msgstr "Número de serie"
+msgstr "Cantidad de NS"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_lot__message_has_error_counter
@@ -6381,14 +6381,12 @@ msgstr "Llevar a"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 msgid "Put in Pack"
-msgstr "Poner en paquete"
+msgstr "Incluir en el paquete"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Put your products in packs (e.g. parcels, boxes) and track them"
-msgstr ""
-"Empaquete productos (por ejemplo, partidas, cajas) y lleve el seguimiento de"
-" ellos"
+msgstr "Empaquete productos (por ejemplo, partidas, cajas) y rastréelos"
 
 #. module: stock
 #: model:ir.model,name:stock.model_stock_putaway_rule
@@ -8769,6 +8767,17 @@ msgstr ""
 "No se puede usar este reporte para %s hechos y no hechos al mismo tiempo"
 
 #. module: stock
+#. odoo-python
+#: code:addons/stock/models/stock_picking.py:0
+#, python-format
+msgid ""
+"This sequence prefix is already being used by another operation type. It is "
+"recommended that you select a unique prefix to avoid issues and/or repeated "
+"reference values or assign the existing reference sequence to this operation"
+" type."
+msgstr ""
+
+#. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__property_stock_production
 #: model:ir.model.fields,help:stock.field_product_template__property_stock_production
 msgid ""
@@ -10116,10 +10125,10 @@ msgstr ""
 #. odoo-python
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
-msgid "You cannot split a stock move that has been set to 'Done'."
+msgid "You cannot split a stock move that has been set to 'Done' or 'Cancel'."
 msgstr ""
 "No puede dividir un movimiento de existencias que se haya establecido como "
-"'hecho'."
+"'Realizado' o 'Cancelado'."
 
 #. module: stock
 #. odoo-python
@@ -10184,6 +10193,17 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:stock.view_backorder_confirmation
 msgid "You have processed less products than the initial demand."
 msgstr "Ha procesado menos productos que la demanda inicial."
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"You have product(s) in stock that have lot/serial number tracking enabled. \n"
+"Switch off tracking on all the products before switching off this setting."
+msgstr ""
+"Algunos productos en sus existencias tienen el número de lote o serie de seguimiento habilitado. \n"
+"Deshabilite el seguimiento de todos los productos antes de desactivar este ajuste."
 
 #. module: stock
 #. odoo-python

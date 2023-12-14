@@ -3707,17 +3707,17 @@ msgstr "잘못된 도메인 왼쪽 피연산자 %s"
 
 #. module: stock
 #. odoo-python
-#: code:addons/stock/models/product.py:0
+#: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
 #, python-format
 msgid "Invalid domain operator %s"
 msgstr "잘못된 도메인 피연산자 %s"
 
 #. module: stock
 #. odoo-python
-#: code:addons/stock/models/product.py:0
+#: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
 #, python-format
-msgid "Invalid domain right operand %s"
-msgstr "잘못된 도메인 오른쪽 피연산자 %s"
+msgid "Invalid domain right operand '%s'. It must be of type Integer/Float"
+msgstr "도메인의 우측 피연산자 값 '%s' 항목이 잘못되었습니다. 값은 반드시 정수 또는 부동 소수점 형식이어야 합니다."
 
 #. module: stock
 #. odoo-python
@@ -5757,7 +5757,7 @@ msgstr "선행 작업"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__route_id
 msgid "Preferred Route"
-msgstr ""
+msgstr "선호하는 경로"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_replenish__route_ids
@@ -8462,6 +8462,17 @@ msgid "This report cannot be used for done and not done %s at the same time"
 msgstr "이 보고서는 %s 항목을 동시에 완료 및 미완료로 사용할 수 없습니다. "
 
 #. module: stock
+#. odoo-python
+#: code:addons/stock/models/stock_picking.py:0
+#, python-format
+msgid ""
+"This sequence prefix is already being used by another operation type. It is "
+"recommended that you select a unique prefix to avoid issues and/or repeated "
+"reference values or assign the existing reference sequence to this operation"
+" type."
+msgstr ""
+
+#. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__property_stock_production
 #: model:ir.model.fields,help:stock.field_product_template__property_stock_production
 msgid ""
@@ -8616,7 +8627,7 @@ msgstr "전체 경로"
 #: model_terms:ir.ui.view,arch_db:stock.view_production_lot_form
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form
 msgid "Traceability"
-msgstr "추적"
+msgstr "추적가능성"
 
 #. module: stock
 #. odoo-javascript
@@ -8627,7 +8638,7 @@ msgstr "추적"
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_inventory
 #, python-format
 msgid "Traceability Report"
-msgstr "추적 보고서"
+msgstr "추적가능성 보고서"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_config_settings__module_product_expiry
@@ -9732,8 +9743,8 @@ msgstr "임시 이동을 분할할 수 없습니다. 먼저 확인해야 합니�
 #. odoo-python
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
-msgid "You cannot split a stock move that has been set to 'Done'."
-msgstr "'완료'로 설정된 재고 이동을 분할할 수 없습니다."
+msgid "You cannot split a stock move that has been set to 'Done' or 'Cancel'."
+msgstr "'완료' 또는 '취소'로 설정된 재고 이동 항목은 분할할 수 없습니다."
 
 #. module: stock
 #. odoo-python
@@ -9791,6 +9802,17 @@ msgstr "아직 <i>완료</i> 수량을 기록하지 않았습니다. <i>적용</
 #: model_terms:ir.ui.view,arch_db:stock.view_backorder_confirmation
 msgid "You have processed less products than the initial demand."
 msgstr "요청 수량보다 적은 수의 품목을 처리했습니다."
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"You have product(s) in stock that have lot/serial number tracking enabled. \n"
+"Switch off tracking on all the products before switching off this setting."
+msgstr ""
+"재고 추적이 활성화된 Lot/일련번호 품목이 존재합니다.\n"
+"이 설정을 해제하기 전에 모든 품목에서 추적 기능을 해제해 주십시오."
 
 #. module: stock
 #. odoo-python

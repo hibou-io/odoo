@@ -7,6 +7,7 @@ import {
     editSelect,
     getFixture,
     getNodesTextContent,
+    makeDeferred,
     mockDownload,
     nextTick,
     triggerEvent,
@@ -640,6 +641,46 @@ QUnit.module("ViewDialogs", (hooks) => {
         await click(target, ".o_select_button");
     });
 
+    QUnit.test("toggling import compatibility after adding an expanded field", async function (assert) {
+        assert.expect(1);
+
+        mockDownload(({ url, data }) => {
+            assert.ok(
+                JSON.parse(data.data)["import_compat"],
+                "request to generate the file must have 'import_compat' as true"
+            );
+            return Promise.resolve();
+        });
+
+        await makeView({
+            serverData,
+            type: "list",
+            resModel: "partner",
+            arch: `<tree><field name="foo"/></tree>`,
+            actionMenus: {},
+            mockRPC(route, args) {
+                if (route === "/web/export/formats") {
+                    return Promise.resolve([
+                        { tag: "csv", label: "CSV" },
+                    ]);
+                }
+                if (route === "/web/export/get_fields") {
+                    if (!args.parent_field) {
+                        return Promise.resolve(fetchedFields.root);
+                    }
+                    return Promise.resolve(fetchedFields[args.prefix]);
+                }
+            },
+        });
+
+        await openExportDataDialog();
+        await click(target, "[data-field_id='activity_ids']");
+        await click(target, "[data-field_id='activity_ids/partner_ids'] .o_add_field");
+        await click(target, ".o_import_compat input");
+        await click(target, "[data-field_id='activity_ids']");
+        await click(target, ".o_select_button");
+    });
+
     QUnit.test("Export dialog: many2many fields are extendable", async function (assert) {
         await makeView({
             serverData,
@@ -1253,4 +1294,38 @@ QUnit.module("ViewDialogs", (hooks) => {
             await click(target.querySelector(".o_list_export_xlsx"));
         }
     );
+
+    QUnit.test("Export dialog: disable button during export", async function (assert) {
+        await makeView({
+            serverData,
+            type: "list",
+            resModel: "partner",
+            arch: `
+                <tree><field name="foo"/></tree>`,
+            actionMenus: {},
+            mockRPC(route, args) {
+                if (route === "/web/export/formats") {
+                    return Promise.resolve([{ tag: "xls", label: "Excel" }]);
+                }
+                if (route === "/web/export/get_fields") {
+                    return Promise.resolve(fetchedFields.root);
+                }
+            },
+        });
+        const def = makeDeferred();
+        mockDownload(() => def);
+
+        await openExportDataDialog();
+
+        const exportButton = target.querySelector(".o_select_button");
+        assert.notOk(exportButton.disabled, "export button is clickable before the first click");
+
+        await click(exportButton);
+        assert.ok(exportButton.disabled, "export button is disabled during export");
+
+        def.resolve();
+        await nextTick();
+
+        assert.notOk(exportButton.disabled, "export button is enabled after export");
+    });
 });

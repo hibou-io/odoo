@@ -1395,7 +1395,7 @@ msgstr "Số lỗi"
 #: model:ir.model.fields,help:hr_expense.field_hr_expense__message_needaction_counter
 #: model:ir.model.fields,help:hr_expense.field_hr_expense_sheet__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "Số tin nhắn cần xử lý"
 
 #. module: hr_expense
 #: model:ir.model.fields,help:hr_expense.field_hr_expense__message_has_error_counter
@@ -2000,6 +2000,15 @@ msgid "There are no expense reports to approve."
 msgstr "Không có báo cáo chi phí cần phê duyệt."
 
 #. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/product_product.py:0
+#, python-format
+msgid ""
+"There are unposted expenses linked to this category. Updating the category "
+"cost will change expense amounts. Make sure it is what you want to do."
+msgstr ""
+
+#. module: hr_expense
 #. odoo-javascript
 #: code:addons/hr_expense/static/src/js/tours/hr_expense.js:0
 #, python-format
@@ -2313,6 +2322,14 @@ msgstr "Bạn không thể từ chối chi phí của mình"
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense.py:0
 #, python-format
+msgid "You cannot report expenses for different companies in the same report."
+msgstr ""
+"Bạn không thể báo cáo chi phí của những công ty khác nhau trong cùng một báo"
+" cáo."
+
+#. module: hr_expense
+#: code:addons/hr_expense/models/hr_expense.py:0
+#, python-format
 msgid "You cannot report expenses for different employees in the same report."
 msgstr ""
 "Bạn không thể báo cáo chi phí cho các nhân viên khác nhau trong cùng một báo"
@@ -2421,4 +2438,3 @@ msgid ""
 "The private address of the employee is required to post the expense report. "
 "Please add it on the employee form."
 msgstr ""
-"Địa chỉ riêng của nhân viên được yêu cầu đăng báo cáo chi phí. Vui lòng thêm nó vào biểu mẫu nhân viên."

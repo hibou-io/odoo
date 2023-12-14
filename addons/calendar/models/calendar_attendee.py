@@ -5,7 +5,7 @@ import base64
 import logging
 
 from collections import defaultdict
-from odoo import api, fields, models, _
+from odoo import api, Command, fields, models, _
 from odoo.addons.base.models.res_partner import _tz_get
 from odoo.exceptions import UserError
 
@@ -113,9 +113,9 @@ class Attendee(models.Model):
                 event_id = attendee.event_id.id
                 ics_file = ics_files.get(event_id)
 
-                attachment_values = []
+                attachment_values = [Command.set(mail_template.attachment_ids.ids)]
                 if ics_file:
-                    attachment_values = [
+                    attachment_values += [
                         (0, 0, {'name': 'invitation.ics',
                                 'mimetype': 'text/calendar',
                                 'datas': base64.b64encode(ics_file)})
@@ -129,7 +129,7 @@ class Attendee(models.Model):
                     'subject',
                     attendee.ids,
                     compute_lang=True)[attendee.id]
-                attendee.event_id.with_context(no_document=True).message_notify(
+                attendee.event_id.with_context(no_document=True).sudo().message_notify(
                     email_from=attendee.event_id.user_id.email_formatted or self.env.user.email_formatted,
                     author_id=attendee.event_id.user_id.partner_id.id or self.env.user.partner_id.id,
                     body=body,

@@ -550,6 +550,18 @@ msgstr ""
 " de carte de crédit invalide."
 
 #. module: account_payment
+#. odoo-python
+#: code:addons/account_payment/models/payment_provider.py:0
+#, python-format
+msgid ""
+"To uninstall this module, please remove first the corresponding payment "
+"method line in the outgoing payments tab defined on the bank journal."
+msgstr ""
+"Pour désinstaller ce module, supprimez d'abord la ligne du mode de paiement "
+"correspondante dans l'onglet des paiements sortants défini sur le journal de"
+" banque."
+
+#. module: account_payment
 #: model:ir.model.fields,field_description:account_payment.field_account_bank_statement_line__transaction_ids
 #: model:ir.model.fields,field_description:account_payment.field_account_move__transaction_ids
 #: model:ir.model.fields,field_description:account_payment.field_account_payment__transaction_ids
@@ -582,6 +594,17 @@ msgid ""
 msgstr ""
 "Vous ne pouvez pas supprimer un mode de paiement associé à un fournisseur à l'état activé ou en test.\n"
 "Fournisseur(s) lié(s) : %s"
+
+#. module: account_payment
+#. odoo-python
+#: code:addons/account_payment/models/payment_provider.py:0
+#, python-format
+msgid ""
+"You cannot uninstall this module as payment method transactions already "
+"exist."
+msgstr ""
+"Nous ne pouvez pas désinstaller ce mode puisqu'il existe déjà des "
+"transactions avec ce mode de paiement."
 
 #. module: account_payment
 #. odoo-python

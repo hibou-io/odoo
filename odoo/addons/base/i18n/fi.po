@@ -33,10 +33,12 @@
 # Svante Suominen <svante.suominen@web-veistamo.fi>, 2022
 # Antti Oksman <antti.oksman@web-veistamo.fi>, 2022
 # Veikko Väätäjä <veikko.vaataja@gmail.com>, 2022
-# Richard Mouthier <rmo@odoo.com>, 2022
 # Konsta Aavaranta, 2023
 # Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2023
 # Martin Trigaux, 2023
+# Tuomas Suutari <tuomas.suutari@anders.fi>, 2023
+# Atte Isopuro <atte.isopuro@web-veistamo.fi>, 2023
+# Richard Mouthier <rmo@odoo.com>, 2023
 # Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023
 # 
 msgid ""
@@ -6971,7 +6973,7 @@ msgstr "\"%s\" ei näyttäisi olevan kenttään \"%%(field)s\" tarkoitettu numer
 #: code:addons/base/models/ir_fields.py:0
 #, python-format
 msgid "'%s' does not seem to be a valid JSON for field '%%(field)s'"
-msgstr "'%s' ei näytä olevan kelvollinen JSON kentälle '%%(kenttä)s'"
+msgstr "'%s' ei näytä olevan kelvollinen JSON kentälle '%%(field)s'"
 
 #. module: base
 #. odoo-python
@@ -13352,6 +13354,19 @@ msgstr "Virheilmoitus, joka palautetaan, kun rajoitusta rikotaan."
 
 #. module: base
 #. odoo-python
+#: code:addons/translate.py:0
+#, python-format
+msgid ""
+"Error while parsing view:\n"
+"\n"
+"%s"
+msgstr ""
+"Virhe näkymää jäsentäessä:\n"
+"\n"
+"%s"
+
+#. module: base
+#. odoo-python
 #: code:addons/base/models/ir_ui_view.py:0
 #, python-format
 msgid ""
@@ -14427,7 +14442,7 @@ msgstr ""
 #, python-format
 msgid ""
 "Found multiple matches for value '%s' in field '%%(field)s' (%d matches)"
-msgstr "Löytyi useita osumia arvolle '%s' kentässä '%%(kenttä)s' (%d osumaa)"
+msgstr "Löytyi useita osumia arvolle '%s' kentässä '%%(field)s' (%d osumaa)"
 
 #. module: base
 #: model:res.country,name:base.fr
@@ -16235,10 +16250,16 @@ msgid "Invalid 'group by' parameter"
 msgstr "Virheellinen 'group by' -parametri"
 
 #. module: base
+#: code:addons/template_inheritance.py:0
+#, python-format
+msgid "Invalid Expression while parsing xpath %r"
+msgstr "Virheellinen lauseke xpathin jäsentämisen aikana %r"
+
+#. module: base
 #: code:addons/base/models/ir_default.py:0
 #, python-format
 msgid "Invalid JSON format in Default Value field."
-msgstr ""
+msgstr "Oletusarvo-kentän JSON-muoto on virheellinen."
 
 #. module: base
 #: code:addons/models.py:0
@@ -16394,6 +16415,17 @@ msgstr "Virheellinen tyyppi"
 #, python-format
 msgid "Invalid value for %s.%s: %s"
 msgstr "Virheellinen arvo: %s.%s: %s"
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_default.py:0
+#, python-format
+msgid ""
+"Invalid value for %s.%s: %s is out of bounds (integers should be between "
+"-2,147,483,648 and 2,147,483,647)"
+msgstr ""
+"Virheellinen arvo %s.%s: %s on rajojen ulkopuolella (kokonaislukujen pitäisi"
+" olla välillä -2 147 483 648 ja +2 147 483 647)"
 
 #. module: base
 #. odoo-python
@@ -24607,6 +24639,22 @@ msgid "Send text messages when project/task stage move"
 msgstr "Lähetä tekstiviestejä, kun projekti/tehtävävaihe siirtyy"
 
 #. module: base
+#: model:ir.module.module,description:base.module_delivery_ups
+msgid ""
+"This is the legacy integration with UPS that is no longer supported. Please "
+"install the new \"UPS Shipping\" module and uninstall this one as soon as "
+"possible. This integration will stop working in 2024."
+msgstr ""
+"Tämä on UPS:n vanha integrointi, jota ei enää tueta. Asenna uusi \"UPS "
+"Shipping\" -moduuli ja poista tämä mahdollisimman pian. Tämä integraatio "
+"lakkaa toimimasta vuonna 2024."
+
+#. module: base
+#: model:ir.module.module,summary:base.module_delivery_ups_rest
+msgid "Send your shippings through UPS and track them online"
+msgstr "Lähetä lähetyksesi UPSin kautta ja seuraa niitä verkossa"
+
+#. module: base
 #: model:ir.module.module,summary:base.module_survey
 msgid "Send your surveys or share them live."
 msgstr "Lähetä kyselytutkimuksia tai jaa niitä suorassa lähetyksessä."
@@ -25300,7 +25348,6 @@ msgstr "Aloita asetusten määrittäminen"
 #: model_terms:ir.ui.view,arch_db:base.view_company_form
 #: model_terms:ir.ui.view,arch_db:base.view_country_state_form
 #: model_terms:ir.ui.view,arch_db:base.view_country_state_tree
-#: model_terms:ir.ui.view,arch_db:base.view_module_filter
 #: model_terms:ir.ui.view,arch_db:base.view_partner_address_form
 #: model_terms:ir.ui.view,arch_db:base.view_partner_form
 #: model_terms:ir.ui.view,arch_db:base.view_res_bank_form
@@ -25343,6 +25390,7 @@ msgstr "Osavaltiot/Maakunnat"
 #: model:ir.model.fields,field_description:base.field_ir_module_module__state
 #: model:ir.model.fields,field_description:base.field_ir_module_module_dependency__state
 #: model:ir.model.fields,field_description:base.field_ir_module_module_exclusion__state
+#: model_terms:ir.ui.view,arch_db:base.view_module_filter
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
 msgid "Status"
 msgstr "Tila"
@@ -27490,6 +27538,16 @@ msgid "U - ACTIVITIES OF EXTRATERRITORIAL ORGANISATIONS AND BODIES"
 msgstr "U - EKSTRATERRITORIAALISTEN JÄRJESTÖJEN JA ELINTEN TOIMINTA"
 
 #. module: base
+#: model:ir.module.module,shortdesc:base.module_delivery_ups
+msgid "UPS Shipping (Legacy)"
+msgstr "UPS Shipping (Legacy)"
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_delivery_ups_rest
+msgid "UPS Shipping"
+msgstr "UPS Toimitus"
+
+#. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_module__url
 #: model:ir.model.fields.selection,name:base.selection__ir_attachment__type__url
 #: model_terms:ir.ui.view,arch_db:base.view_attachment_search
@@ -27563,7 +27621,7 @@ msgstr ""
 #: code:addons/base/models/ir_fields.py:0
 #, python-format
 msgid "Unable to import field type '%s'  "
-msgstr ""
+msgstr "Kenttätyyppiä '%s' ei voida tuoda"
 
 #. module: base
 #. odoo-python
@@ -28981,6 +29039,8 @@ msgid ""
 "Deleting the template users is not allowed. Deleting this profile will "
 "compromise critical functionalities."
 msgstr ""
+"Mallikäyttäjien poistaminen ei ole sallittua. Tämän profiilin poistaminen "
+"vaarantaa kriittiset toiminnot."
 
 #. module: base
 #: model:ir.model.constraint,message:base.constraint_res_users_login_key
@@ -29148,6 +29208,13 @@ msgstr ""
 
 #. module: base
 #. odoo-python
+#: code:addons/base/models/ir_config_parameter.py:0
+#, python-format
+msgid "You cannot delete the %s record."
+msgstr "Et voi poistaa %s-tietuetta."
+
+#. module: base
+#. odoo-python
 #: code:addons/base/models/res_lang.py:0
 #, python-format
 msgid ""
@@ -29179,6 +29246,13 @@ msgid ""
 msgstr ""
 "Et voi vähentää kirjanpitokirjauksessa jo käytetyn valuutan desimaalien "
 "määrää."
+
+#. module: base
+#. odoo-python
+#: code:addons/base/models/ir_config_parameter.py:0
+#, python-format
+msgid "You cannot rename config parameters with keys %s"
+msgstr "Et voi nimetä uudelleen asetusparametrejä, joilla on avainarvoja %s"
 
 #. module: base
 #. odoo-python
