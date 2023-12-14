@@ -1464,7 +1464,7 @@
                     <input type="text" name="company_name" t-attf-class="form-control #{error.get('company_name') and 'is-invalid' or ''}" t-att-value="'commercial_company_name' in checkout and checkout['commercial_company_name'] or 'company_name' in checkout and checkout['company_name']" t-att-readonly="'1' if 'vat' in checkout and checkout['vat'] and not can_edit_vat else None" t-att-title="company_name_not_editable_message if 'vat' in checkout and checkout['vat'] and not can_edit_vat else None" />
                 </div>
                 <div t-attf-class="form-group #{error.get('vat') and 'o_has_error' or ''} col-lg-6 div_vat">
-                    <label class="col-form-label font-weight-normal label-optional" for="vat">TIN / VAT </label>
+                    <label class="col-form-label font-weight-normal label-optional" for="vat">VAT</label>
                     <t t-set="vat_not_editable_message">Changing VAT number is not allowed once document(s) have been issued for your account. Please contact us directly for this operation.</t>
                     <input type="text" name="vat" t-attf-class="form-control #{error.get('vat') and 'is-invalid' or ''}" t-att-value="'vat' in checkout and checkout['vat']" t-att-readonly="'1' if 'vat' in checkout and checkout['vat'] and not can_edit_vat else None" t-att-title="vat_not_editable_message if 'vat' in checkout and checkout['vat'] and not can_edit_vat else None" />
                 </div>
@@ -1672,13 +1672,14 @@
                                     <tbody>
                                         <tr>
                                             <td colspan="2">
-                                                <t t-esc="order.get_portal_last_transaction().acquirer_id.name" />
+                                                <t t-set="last_transaction" t-value="order.get_portal_last_transaction()"/>
+                                                <t t-esc="last_transaction.acquirer_id.display_as or last_transaction.acquirer_id.name" />
                                             </td>
                                             <td class="text-right" width="100">
                                                 <strong>Total:</strong>
                                             </td>
                                             <td class="text-right" width="100">
-                                                <strong t-field="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.pricelist_id.currency_id}" />
+                                                <strong t-field="last_transaction.amount" t-options="{'widget': 'monetary', 'display_currency': last_transaction.currency_id}" />
                                             </td>
                                         </tr>
                                     </tbody>

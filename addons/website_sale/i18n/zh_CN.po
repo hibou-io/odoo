@@ -44,7 +44,10 @@
 # Mandy Choy <mnc@odoo.com>, 2021
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2022
 # Martin Trigaux, 2022
-# Jeffery CHEN Fan <jeffery9@gmail.com>, 2023
+# Jeffery CHEN <jeffery9@gmail.com>, 2023
+# Levi Siuzdak (sile), 2023
+# Chloe Wang, 2023
+# Wil Odoo, 2023
 # 
 msgid ""
 msgstr ""
@@ -52,8 +55,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-16 13:33+0000\n"
 "PO-Revision-Date: 2020-09-07 08:22+0000\n"
-"Last-Translator: Jeffery CHEN Fan <jeffery9@gmail.com>, 2023\n"
-"Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
+"Last-Translator: Wil Odoo, 2023\n"
+"Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -288,6 +291,16 @@ msgstr "<i class=\"fa fa-print\"/> 打印"
 #: model_terms:ir.ui.view,arch_db:website_sale.product
 msgid "<i class=\"fa fa-shopping-cart\"/> Add to Cart"
 msgstr "<i class=\"fa fa-shopping-cart\"/> 添加到购物车"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.address
+msgid "<option value=\"\">Country...</option>"
+msgstr "<option value=\"\">国家/地区...</option>"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.address
+msgid "<option value=\"\">State / Province...</option>"
+msgstr "<option value=\"\">州/省...</option>"
 
 #. module: website_sale
 #: code:addons/website_sale/models/crm_team.py:0
@@ -873,6 +886,14 @@ msgid ""
 msgstr "一旦您的科目开具了应收凭单，不可更改名称.如需运行此操作，请直接与我们联系."
 
 #. module: website_sale
+#: code:addons/website_sale/controllers/main.py:0
+#, python-format
+msgid ""
+"Changing your name is not allowed once documents have been issued for your "
+"account. Please contact us directly for this operation."
+msgstr "账户文件发出后，不可更改姓名。请直接与我们联系进行此操作。"
+
+#. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_public_category__child_id
 msgid "Children Categories"
 msgstr "儿童类"
@@ -1027,11 +1048,6 @@ msgstr "沙发"
 #: model_terms:ir.ui.view,arch_db:website_sale.address
 msgid "Country"
 msgstr "国家"
-
-#. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.address
-msgid "Country..."
-msgstr "国家..."
 
 #. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.product_template_action_website
@@ -1497,6 +1513,15 @@ msgstr "图片名称"
 #: model:ir.model.fields,help:website_sale.field_res_config_settings__module_website_sale_stock
 msgid "Installs the \"Website Delivery Information\" application"
 msgstr "安装“网站发货信息”应用"
+
+#. module: website_sale
+#: code:addons/website_sale/controllers/main.py:0
+#, python-format
+msgid ""
+"If you are ordering for an external person, please place your order via the "
+"backend. If you wish to change your name or email address, please do so in "
+"the account settings or contact your administrator."
+msgstr "如果为外部人员订购，请通过后台下订单。如果您想更改姓名或电子邮件地址，请在账户设置中进行更改，或联系您的管理员。"
 
 #. module: website_sale
 #: code:addons/website_sale/controllers/main.py:0
@@ -2770,11 +2795,6 @@ msgid "State / Province"
 msgstr "州/省"
 
 #. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.address
-msgid "State / Province..."
-msgstr "州/省..."
-
-#. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_res_company__website_sale_onboarding_payment_acquirer_state
 msgid "State of the website sale onboarding payment acquirer step"
 msgstr "网站销售状态入职付款收单机构步骤"
@@ -2829,8 +2849,8 @@ msgstr "建议"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address_b2b
-msgid "TIN / VAT"
-msgstr "税号/ 增值税"
+msgid "VAT"
+msgstr "增值税"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options

@@ -91,25 +91,48 @@ const FontFamilyPickerUserValueWidget = SelectUserValueWidget.extend({
     start: async function () {
         const style = window.getComputedStyle(document.documentElement);
         const nbFonts = parseInt(weUtils.getCSSVariableValue('number-of-fonts', style));
+        // User fonts served by google server.
         const googleFontsProperty = weUtils.getCSSVariableValue('google-fonts', style);
         this.googleFonts = googleFontsProperty ? googleFontsProperty.split(/\s*,\s*/g) : [];
         this.googleFonts = this.googleFonts.map(font => font.substring(1, font.length - 1)); // Unquote
+        // Local user fonts.
         const googleLocalFontsProperty = weUtils.getCSSVariableValue('google-local-fonts', style);
         this.googleLocalFonts = googleLocalFontsProperty ?
             googleLocalFontsProperty.slice(1, -1).split(/\s*,\s*/g) : [];
+        // If a same font exists both remotely and locally, we remove the remote
+        // font to prioritize the local font. The remote one will never be
+        // displayed or loaded as long as the local one exists.
+        this.googleFonts = this.googleFonts.filter(font => {
+            const localFonts = this.googleLocalFonts.map(localFont => localFont.split(":")[0]);
+            return localFonts.indexOf(`'${font}'`) === -1;
+        });
+        this.allFonts = [];
 
         await this._super(...arguments);
 
         const fontEls = [];
         const methodName = this.el.dataset.methodName || 'customizeWebsiteVariable';
         const variable = this.el.dataset.variable;
+        const themeFontsNb = nbFonts - (this.googleLocalFonts.length + this.googleFonts.length);
         _.times(nbFonts, fontNb => {
             const realFontNb = fontNb + 1;
             const fontEl = document.createElement('we-button');
             fontEl.classList.add(`o_we_option_font_${realFontNb}`);
             fontEl.dataset.variable = variable;
             fontEl.dataset[methodName] = weUtils.getCSSVariableValue(`font-number-${realFontNb}`, style);
+            const font = weUtils.getCSSVariableValue(`font-number-${realFontNb}`, style);
+            this.allFonts.push(font);
+            fontEl.dataset[methodName] = font;
             fontEl.dataset.font = realFontNb;
+            if (realFontNb <= themeFontsNb) {
+                // Add the "cloud" icon next to the theme's default fonts
+                // because they are served by Google.
+                fontEl.appendChild(Object.assign(document.createElement('i'), {
+                    role: 'button',
+                    className: 'text-info ml-2 fa fa-cloud',
+                    title: _t("This font is hosted and served to your visitors by Google servers"),
+                }));
+            }
             fontEls.push(fontEl);
             this.menuEl.appendChild(fontEl);
         });
@@ -191,7 +214,9 @@ const FontFamilyPickerUserValueWidget = SelectUserValueWidget.extend({
                         let isValidFamily = false;
 
                         try {
-                            const result = await fetch("https://fonts.googleapis.com/css?family=" + m[1]+':300,300i,400,400i,700,700i', {method: 'HEAD'});
+                            // Font family is an encoded query parameter:
+                            // "Open+Sans" needs to remain "Open+Sans".
+                            const result = await fetch("https://fonts.googleapis.com/css?family=" + m[1] + ':300,300i,400,400i,700,700i', {method: 'HEAD'});
                             // Google fonts server returns a 400 status code if family is not valid.
                             if (result.ok) {
                                 isValidFamily = true;
@@ -207,6 +232,20 @@ const FontFamilyPickerUserValueWidget = SelectUserValueWidget.extend({
 
                         const font = m[1].replace(/\+/g, ' ');
                         const googleFontServe = dialog.el.querySelector('#google_font_serve').checked;
+                        const fontName = `'${font}'`;
+                        // If the font already exists, it will only be added if
+                        // the user chooses to add it locally when it is already
+                        // imported from the Google Fonts server.
+                        const fontExistsLocally = this.googleLocalFonts.some(localFont => localFont.split(':')[0] === fontName);
+                        const fontExistsOnServer = this.allFonts.includes(fontName);
+                        const preventFontAddition = fontExistsLocally || (fontExistsOnServer && googleFontServe);
+                        if (preventFontAddition) {
+                            inputEl.classList.add('is-invalid');
+                            // Show custom validity error message.
+                            inputEl.setCustomValidity(_t("This font already exists, you can only add it as a local font to replace the server version."));
+                            inputEl.reportValidity();
+                            return;
+                        }
                         if (googleFontServe) {
                             this.googleFonts.push(font);
                         } else {
@@ -251,7 +290,8 @@ const FontFamilyPickerUserValueWidget = SelectUserValueWidget.extend({
         let googleFontName;
         if (isLocalFont) {
             const googleFont = this.googleLocalFonts[googleFontIndex].split(':');
-            googleFontName = googleFont[0];
+            // Remove double quotes
+            googleFontName = googleFont[0].substring(1, googleFont[0].length - 1);
             values['delete-font-attachment-id'] = googleFont[1];
             this.googleLocalFonts.splice(googleFontIndex, 1);
         } else {
@@ -656,21 +696,6 @@ options.Class.include({
         const allXmlIDs = this._getXMLIDsFromPossibleValues(params.possibleValues);
         const enableXmlIDs = xmlID.split(/\s*,\s*/);
         const disableXmlIDs = allXmlIDs.filter(xmlID => !enableXmlIDs.includes(xmlID));
-
-        if (params.name === 'header_sidebar_opt') {
-            // When the user selects sidebar as header, make sure that the
-            // header position is regular.
-            // TODO we should avoid having that `if` in the generic option
-            // class (maybe simply use data-trigger but the header template
-            // option as no associated data-js to hack). To adapt in master.
-            await new Promise(resolve => {
-                this.trigger_up('action_demand', {
-                    actionName: 'toggle_page_option',
-                    params: [{name: 'header_overlay', value: false}],
-                    onSuccess: () => resolve(),
-                });
-            });
-        }
 
         return this._rpc({
             route: '/website/theme_customize',
@@ -1224,6 +1249,17 @@ options.registry.ThemeColors = options.registry.OptionsTab.extend({
 
 options.registry.menu_data = options.Class.extend({
     /**
+     * @override
+     */
+    async start() {
+        await this._super(...arguments);
+        this.isWebsiteDesigner = await this._rpc({
+            'model': 'res.users',
+            'method': 'has_group',
+            'args': ['website.group_website_designer'],
+        });
+    },
+    /**
      * When the users selects a menu, a dialog is opened to ask him if he wants
      * to follow the link (and leave editor), edit the menu or do nothing.
      *
@@ -1231,19 +1267,21 @@ options.registry.menu_data = options.Class.extend({
      */
     onFocus: function () {
         var self = this;
-        (new Dialog(this, {
-            title: _t("Confirmation"),
-            $content: $(core.qweb.render('website.leaving_current_page_edition')),
-            buttons: [
-                {text: _t("Go to Link"), classes: 'btn-primary', click: function () {
+        const buttons = [
+            {
+                text: _t("Go to Link"), classes: 'btn-primary', click: function () {
                     self.trigger_up('request_save', {
                         reload: false,
                         onSuccess: function () {
                             window.location.href = self.$target.attr('href');
                         },
                     });
-                }},
-                {text: _t("Edit the menu"), classes: 'btn-primary', click: function () {
+                },
+            },
+        ];
+        if (this.isWebsiteDesigner) {
+            buttons.push({
+                text: _t("Edit the menu"), classes: 'btn-primary', click: function () {
                     this.trigger_up('action_demand', {
                         actionName: 'edit_menu',
                         params: [
@@ -1258,9 +1296,15 @@ options.registry.menu_data = options.Class.extend({
                             },
                         ],
                     });
-                }},
-                {text: _t("Stay on this page"), close: true}
-            ]
+                },
+            });
+        }
+        buttons.push({text: _t("Stay on this page"), close: true});
+
+        (new Dialog(this, {
+            title: _t("Confirmation"),
+            $content: $(core.qweb.render('website.leaving_current_page_edition')),
+            buttons: buttons,
         })).open();
     },
 });
@@ -1284,7 +1328,7 @@ options.registry.company_data = options.Class.extend({
                     args: [session.uid, ['company_id']],
                 });
             }).then(function (res) {
-                proto.__link = '/web#action=base.action_res_company_form&view_type=form&id=' + (res && res[0] && res[0].company_id[0] || 1);
+                proto.__link = '/web#action=base.action_res_company_form&view_type=form&id=' + encodeURIComponent(res && res[0] && res[0].company_id[0] || 1);
             });
         }
         return Promise.all([this._super.apply(this, arguments), prom]);
@@ -1934,6 +1978,34 @@ options.registry.HeaderNavbar = options.Class.extend({
     },
 
     //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    async start() {
+        await this._super(...arguments);
+        // TODO Remove in master.
+        const signInOptionEl = this.el.querySelector('[data-customize-website-views="portal.user_sign_in"]');
+        signInOptionEl.dataset.noPreview = 'true';
+    },
+    /**
+     * @private
+     */
+    async updateUI() {
+        await this._super(...arguments);
+        // For all header templates except those in the following array, change
+        // the label of the option to "Mobile Alignment" (instead of
+        // "Alignment") because it only impacts the mobile view.
+        if (!["'default'", "'hamburger'", "'sidebar'", "'magazine'", "'hamburger-full'"]
+            .includes(weUtils.getCSSVariableValue("header-template"))) {
+            const alignmentOptionTitleEl = this.el.querySelector('[data-name="header_alignment_opt"] we-title');
+            alignmentOptionTitleEl.textContent = _t("Mobile Alignment");
+        }
+    },
+
+    //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
@@ -1947,6 +2019,14 @@ options.registry.HeaderNavbar = options.Class.extend({
     async _computeWidgetVisibility(widgetName, params) {
         if (widgetName === 'option_logo_height_scrolled') {
             return !!this.$('.navbar-brand').length;
+        }
+        if (widgetName === 'header_alignment_opt') {
+            if (!this.$target[0].querySelector('.o_offcanvas_menu_toggler')) {
+                // If hamburger type is "Default", hides the alignment option
+                // for "hamburger full" and "magazine" header templates.
+                return !this.$target[0].querySelector('#oe_structure_header_hamburger_full_1, #oe_structure_header_magazine_1');
+            }
+            return true;
         }
         return this._super(...arguments);
     },
@@ -2193,7 +2273,12 @@ options.registry.MobileVisibility = options.Class.extend({
      * @see this.selectClass for parameters
      */
     showOnMobile(previewMode, widgetValue, params) {
-        const classes = `d-none d-md-${this.$target.css('display')}`;
+        // For compatibility with former implementation: remove the previously
+        // added `d-md-*` class if any, as it should now be `d-lg-*`.
+        if (widgetValue) {
+            this.$target[0].classList.remove(`d-md-${this.$target.css('display')}`);
+        }
+        const classes = `d-none d-lg-${this.$target.css('display')}`;
         this.$target.toggleClass(classes, !widgetValue);
     },
 
@@ -2208,7 +2293,7 @@ options.registry.MobileVisibility = options.Class.extend({
         if (methodName === 'showOnMobile') {
             const classList = [...this.$target[0].classList];
             return classList.includes('d-none') &&
-                classList.some(className => className.startsWith('d-md-')) ? '' : 'true';
+                classList.some(className => className.match(/^(d-md-|d-lg-)/g)) ? '' : 'true';
         }
         return await this._super(...arguments);
     },
@@ -2241,10 +2326,9 @@ options.registry.anchor = options.Class.extend({
         this.$button = this.$el.find('we-button');
         const clipboard = new ClipboardJS(this.$button[0], {text: () => this._getAnchorLink()});
         clipboard.on('success', () => {
-            const anchor = decodeURIComponent(this._getAnchorLink());
             this.displayNotification({
               type: 'success',
-              message: _.str.sprintf(_t("Anchor copied to clipboard<br>Link: %s"), anchor),
+              message: _.str.sprintf(_t("Anchor copied to clipboard<br>Link: %s"), this._getAnchorLink()),
               buttons: [{text: _t("Edit"), click: () => this.openAnchorDialog(), primary: true}],
             });
         });

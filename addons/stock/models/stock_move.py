@@ -72,7 +72,7 @@ class StockMove(models.Model):
     # TDE FIXME: make it stored, otherwise group will not work
     product_tmpl_id = fields.Many2one(
         'product.template', 'Product Template',
-        related='product_id.product_tmpl_id', readonly=False,
+        related='product_id.product_tmpl_id', readonly=True,
         help="Technical: used in views")
     location_id = fields.Many2one(
         'stock.location', 'Source Location',
@@ -127,7 +127,7 @@ class StockMove(models.Model):
              "this second option should be chosen.")
     scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
     scrap_ids = fields.One2many('stock.scrap', 'move_id')
-    group_id = fields.Many2one('procurement.group', 'Procurement Group', default=_default_group_id)
+    group_id = fields.Many2one('procurement.group', 'Procurement Group', default=_default_group_id, index=True)
     rule_id = fields.Many2one(
         'stock.rule', 'Stock Rule', ondelete='restrict', help='The stock rule that created this stock move',
         check_company=True)
@@ -1154,7 +1154,7 @@ class StockMove(models.Model):
         procurement_requests = []
         for move in move_create_proc:
             values = move._prepare_procurement_values()
-            origin = (move.group_id and move.group_id.name or (move.origin or move.picking_id.name or "/"))
+            origin = move._prepare_procurement_origin()
             procurement_requests.append(self.env['procurement.group'].Procurement(
                 move.product_id, move.product_uom_qty, move.product_uom,
                 move.location_id, move.rule_id and move.rule_id.name or "/",
@@ -1176,6 +1176,10 @@ class StockMove(models.Model):
         # call `_action_assign` on every confirmed move which location_id bypasses the reservation
         moves.filtered(lambda move: not move.picking_id.immediate_transfer and move._should_bypass_reservation() and move.state == 'confirmed')._action_assign()
         return moves
+
+    def _prepare_procurement_origin(self):
+        self.ensure_one()
+        return self.group_id and self.group_id.name or (self.origin or self.picking_id.name or "/")
 
     def _prepare_procurement_values(self):
         """ Prepare specific key for moves or other componenets that will be created from a stock rule
@@ -1267,6 +1271,7 @@ class StockMove(models.Model):
             if float_compare(taken_quantity, int(taken_quantity), precision_digits=rounding) != 0:
                 taken_quantity = 0
 
+        self.env['base'].flush()
         try:
             with self.env.cr.savepoint():
                 if not float_is_zero(taken_quantity, precision_rounding=self.product_id.uom_id.rounding):
@@ -1609,7 +1614,7 @@ class StockMove(models.Model):
         :returns: list of dict. stock move values """
         self.ensure_one()
         if self.state in ('done', 'cancel'):
-            raise UserError(_('You cannot split a stock move that has been set to \'Done\'.'))
+            raise UserError(_('You cannot split a stock move that has been set to \'Done\' or \'Cancel\'.'))
         elif self.state == 'draft':
             # we restrict the split of a draft move because if not confirmed yet, it may be replaced by several other moves in
             # case of phantom bom (with mrp module). And we don't want to deal with this complexity by copying the product that will explode.
@@ -1805,6 +1810,7 @@ class StockMove(models.Model):
             return
 
         orderpoints_by_company = defaultdict(lambda: self.env['stock.warehouse.orderpoint'])
+        orderpoints_context_by_company = defaultdict(dict)
         for move in self:
             orderpoint = self.env['stock.warehouse.orderpoint'].search([
                 ('product_id', '=', move.product_id.id),
@@ -1814,8 +1820,12 @@ class StockMove(models.Model):
             ], limit=1)
             if orderpoint:
                 orderpoints_by_company[orderpoint.company_id] |= orderpoint
+            if orderpoint and move.product_qty > orderpoint.product_min_qty and move.origin:
+                orderpoints_context_by_company[orderpoint.company_id].setdefault(orderpoint.id, [])
+                orderpoints_context_by_company[orderpoint.company_id][orderpoint.id].append(move.origin)
         for company, orderpoints in orderpoints_by_company.items():
-            orderpoints._procure_orderpoint_confirm(company_id=company, raise_user_error=False)
+            orderpoints.with_context(origins=orderpoints_context_by_company[company])._procure_orderpoint_confirm(
+                company_id=company, raise_user_error=False)
 
     def _trigger_assign(self):
         """ Check for and trigger action_assign for confirmed/partially_available moves related to done moves.

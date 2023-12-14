@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
+from odoo.addons.base.models.decimal_precision import DecimalPrecision
 from odoo.exceptions import RedirectWarning, UserError, ValidationError, AccessError
 from odoo.tools import float_compare, date_utils, email_split, email_re, float_is_zero
 from odoo.tools.misc import formatLang, format_date, get_lang
@@ -8,9 +9,11 @@ from odoo.osv import expression
 
 from datetime import date, timedelta
 from collections import defaultdict
+from contextlib import contextmanager
 from itertools import zip_longest
 from hashlib import sha256
 from json import dumps
+from unittest.mock import patch
 
 import ast
 import json
@@ -392,7 +395,7 @@ class AccountMove(models.Model):
 
         if self.is_sale_document(include_receipts=True):
             return invoice_date
-        elif self.is_purchase_document(include_receipts=True):
+        else:
             highest_name = self.highest_name or self._get_last_sequence(relaxed=True, lock=False)
             number_reset = self._deduce_sequence_number_reset(highest_name)
             if not highest_name or number_reset == 'month':
@@ -749,12 +752,16 @@ class AccountMove(models.Model):
                 self.company_id,
                 self.date or fields.Date.context_today(self),
             )
+            amount_currency = currency.round(taxes_map_entry['amount'])
+            sign = -1 if self.is_inbound() else 1
             to_write_on_line = {
-                'amount_currency': taxes_map_entry['amount'],
+                'amount_currency': amount_currency,
                 'currency_id': taxes_map_entry['grouping_dict']['currency_id'],
                 'debit': balance > 0.0 and balance or 0.0,
                 'credit': balance < 0.0 and -balance or 0.0,
                 'tax_base_amount': tax_base_amount,
+                'price_total': sign * amount_currency,
+                'price_subtotal': sign * amount_currency,
             }
 
             if taxes_map_entry['tax_line']:
@@ -988,6 +995,7 @@ class AccountMove(models.Model):
                 domain = [
                     ('company_id', '=', self.company_id.id),
                     ('internal_type', '=', 'receivable' if self.move_type in ('out_invoice', 'out_refund', 'out_receipt') else 'payable'),
+                    ('deprecated', '=', False),
                 ]
                 return self.env['account.account'].search(domain, limit=1)
 
@@ -1097,6 +1105,7 @@ class AccountMove(models.Model):
             expected_tax_rep_lines = set()
             current_tax_rep_lines = set()
             inv_recompute_all_taxes = recompute_all_taxes
+            has_taxes = False
             for line in invoice.line_ids:
                 if line.recompute_tax_line:
                     inv_recompute_all_taxes = True
@@ -1104,6 +1113,7 @@ class AccountMove(models.Model):
                 if line.tax_repartition_line_id:
                     current_tax_rep_lines.add(line.tax_repartition_line_id._origin)
                 elif line.tax_ids:
+                    has_taxes = True
                     if invoice.is_invoice(include_receipts=True):
                         is_refund = invoice.move_type in ('out_refund', 'in_refund')
                     else:
@@ -1124,12 +1134,13 @@ class AccountMove(models.Model):
             delta_tax_rep_lines = expected_tax_rep_lines - current_tax_rep_lines
 
             # Compute taxes.
-            if inv_recompute_all_taxes:
-                invoice._recompute_tax_lines()
-            elif recompute_tax_base_amount:
-                invoice._recompute_tax_lines(recompute_tax_base_amount=True)
-            elif delta_tax_rep_lines and not self._context.get('move_reverse_cancel'):
-                invoice._recompute_tax_lines(tax_rep_lines_to_recompute=delta_tax_rep_lines)
+            if has_taxes or current_tax_rep_lines:
+                if inv_recompute_all_taxes:
+                    invoice._recompute_tax_lines()
+                elif recompute_tax_base_amount:
+                    invoice._recompute_tax_lines(recompute_tax_base_amount=True)
+                elif delta_tax_rep_lines and not self._context.get('move_reverse_cancel'):
+                    invoice._recompute_tax_lines(tax_rep_lines_to_recompute=delta_tax_rep_lines)
 
             if invoice.is_invoice(include_receipts=True):
 
@@ -1189,23 +1200,33 @@ class AccountMove(models.Model):
             )
         )
         self = self.sorted(lambda m: (m.date, m.ref or '', m.id))
-        highest_name = self[0]._get_last_sequence(lock=False) if self else False
 
         # Group the moves by journal and month
         for move in self:
-            if not highest_name and move == self[0] and not move.posted_before and move.date:
-                # In the form view, we need to compute a default sequence so that the user can edit
-                # it. We only check the first move as an approximation (enough for new in form view)
-                pass
-            elif (move.name and move.name != '/') or move.state != 'posted':
+            move_has_name = move.name and move.name != '/'
+            if move_has_name or move.state != 'posted':
                 try:
                     if not move.posted_before:
+                        # The move was never posted, so the name can potentially be changed.
                         move._constrains_date_sequence()
-                    # Has already a name or is not posted, we don't add to a batch
-                    continue
+                    # Either the move was posted before, or the name already matches the date (or no name or date).
+                    # We can skip recalculating the name when either
+                    # - the move already has a name, or
+                    # - the move has no name, but is in a period with other moves (so name should be `/`), or
+                    # - the move has (temporarily) no date set
+                    if (
+                        move_has_name and move.posted_before
+                        or not move_has_name and move._get_last_sequence(lock=False)
+                        or not move.date
+                    ):
+                        continue
                 except ValidationError:
-                    # Has never been posted and the name doesn't match the date: recompute it
-                    pass
+                    # The move was never posted and the current name doesn't match the date. We should calculate the
+                    # name later on, unless ...
+                    if move._get_last_sequence(lock=False):
+                        # ... we are in a period already containing moves: reset the name to `/` (draft)
+                        move.name = '/'
+                        continue
             group = grouped[journal_key(move)][date_key(move)]
             if not group['records']:
                 # Compute all the values needed to sequence this whole group
@@ -3087,8 +3108,24 @@ class AccountMove(models.Model):
             ('date', '<=', fields.Date.context_today(self)),
             ('auto_post', '=', True),
         ])
-        for ids in self._cr.split_for_in_conditions(records.ids, size=1000):
-            self.browse(ids)._post()
+
+        for ids in self._cr.split_for_in_conditions(records.ids, size=100):
+            moves = self.browse(ids)
+            try:  # try posting in batch
+                with self.env.cr.savepoint():
+                    moves._post()
+            except UserError:  # if at least one move cannot be posted, handle moves one by one
+                for move in moves:
+                    try:
+                        with self.env.cr.savepoint():
+                            move._post()
+                    except UserError as e:
+                        move.to_check = True
+                        msg = _('The move could not be posted for the following reason: %(error_message)s', error_message=e)
+                        move.message_post(body=msg,
+                                          message_type='comment',
+                                          author_id=self.env.ref('base.partner_root').id)
+
             if not self.env.registry.in_test_mode():
                 self._cr.commit()
 
@@ -3158,6 +3195,21 @@ class AccountMove(models.Model):
 
         return rslt
 
+    @contextmanager
+    def _disable_discount_precision(self):
+        """Disable the user defined precision for discounts.
+        This is useful for importing documents coming from other softwares and providers.
+        The reasonning is that if the document that we are importing has a discount, it
+        shouldn't be rounded to the local settings.
+        """
+        original_precision_get = DecimalPrecision.precision_get
+        def precision_get(self, application):
+            if application == 'Discount':
+                return 100
+            return original_precision_get(self, application)
+        with patch('odoo.addons.base.models.decimal_precision.DecimalPrecision.precision_get', new=precision_get):
+            yield
+
     def _message_post_after_hook(self, new_message, message_values):
         # OVERRIDE
         # When posting a message, check the attachment to see if it's an invoice and update with the imported data.
@@ -3186,9 +3238,10 @@ class AccountMove(models.Model):
             # start with message_main_attachment_id, that way if OCR is installed, only that one will be parsed.
             # this is based on the fact that the ocr will be the last decoder.
             for attachment in attachments.sorted(lambda x: x != self.message_main_attachment_id):
-                invoice = decoder[1](attachment, self)
-                if invoice:
-                    return res
+                with self._disable_discount_precision():
+                    invoice = decoder[1](attachment, self)
+                    if invoice:
+                        return res
 
         return res
 
@@ -3216,8 +3269,11 @@ class AccountMove(models.Model):
         self.ensure_one()
         if self.move_type != 'entry':
             for group_name, _group_method, group_data in groups:
-                if group_name == 'portal_customer':
+                if group_name in ('portal_customer', 'customer'):
                     group_data['has_button_access'] = True
+
+                    # 'notification_is_customer' is used to determine whether the group should be sent the access_token
+                    group_data['notification_is_customer'] = True
 
         return groups
 
@@ -3515,20 +3571,16 @@ class AccountMoveLine(models.Model):
             # Out invoice.
             if self.product_id.taxes_id:
                 tax_ids = self.product_id.taxes_id.filtered(lambda tax: tax.company_id == self.move_id.company_id)
-            elif self.account_id.tax_ids:
-                tax_ids = self.account_id.tax_ids
             else:
-                tax_ids = self.env['account.tax']
+                tax_ids = self.account_id.tax_ids.filtered(lambda tax: tax.type_tax_use == 'sale')
             if not tax_ids and not self.exclude_from_invoice_tab:
                 tax_ids = self.move_id.company_id.account_sale_tax_id
         elif self.move_id.is_purchase_document(include_receipts=True):
             # In invoice.
             if self.product_id.supplier_taxes_id:
                 tax_ids = self.product_id.supplier_taxes_id.filtered(lambda tax: tax.company_id == self.move_id.company_id)
-            elif self.account_id.tax_ids:
-                tax_ids = self.account_id.tax_ids
             else:
-                tax_ids = self.env['account.tax']
+                tax_ids = self.account_id.tax_ids.filtered(lambda tax: tax.type_tax_use == 'purchase')
             if not tax_ids and not self.exclude_from_invoice_tab:
                 tax_ids = self.move_id.company_id.account_purchase_tax_id
         else:
@@ -3966,7 +4018,7 @@ class AccountMoveLine(models.Model):
         for record in self:
             record.cumulated_balance = result[record.id]
 
-    @api.depends('debit', 'credit', 'amount_currency', 'account_id', 'currency_id', 'move_id.state', 'company_id',
+    @api.depends('debit', 'credit', 'amount_currency', 'account_id', 'currency_id', 'parent_state', 'company_id',
                  'matched_debit_ids', 'matched_credit_ids')
     def _compute_amount_residual(self):
         """ Computes the residual amount of a move line from a reconcilable account in the company currency and the line's currency.

@@ -1071,6 +1071,10 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     # Failed to write, log to messages, rollback savepoint (to
                     # avoid broken transaction) and keep going
                     errors += 1
+                except UserError as e:
+                    info = rec_data['info']
+                    messages.append(dict(info, type='error', message=str(e)))
+                    errors += 1
                 except Exception as e:
                     _logger.debug("Error while loading record", exc_info=True)
                     info = rec_data['info']
@@ -2651,6 +2655,8 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         for (key, definition, message) in self._sql_constraints:
             conname = '%s_%s' % (self._table, key)
             current_definition = tools.constraint_definition(cr, self._table, conname)
+            if len(conname) > 63 and not current_definition:
+                _logger.info("Constraint name %r has more than 63 characters", conname)
             if current_definition == definition:
                 continue
 
@@ -2692,7 +2698,8 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # following specific properties:
                 #  - reading inherited fields should not bypass access rights
                 #  - copy inherited fields iff their original field is copied
-                self._add_field(name, field.new(
+                Field = type(field)
+                self._add_field(name, Field(
                     inherited=True,
                     inherited_field=field,
                     related=(parent_fname, name),
@@ -2778,7 +2785,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     if not field.related:
                         self._add_field(name, field)
                     else:
-                        self._add_field(name, field.new(**field.args))
+                        self._add_field(name, type(field)(**field.args))
                 cls._model_fields = list(cls._fields)
 
         else:
@@ -2790,7 +2797,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             for name, field in sorted(getmembers(cls, Field.__instancecheck__), key=lambda f: f[1]._sequence):
                 # do not retrieve magic, custom and inherited fields
                 if not any(field.args.get(k) for k in ('automatic', 'manual', 'inherited')):
-                    self._add_field(name, field.new())
+                    self._add_field(name, type(field)())
             self._add_magic_fields()
             cls._model_fields = list(cls._fields)
 
@@ -4072,12 +4079,7 @@ Fields:
         return records
 
     def _compute_field_value(self, field):
-        # This is for base automation, to have something to override to catch
-        # the changes of values for stored compute fields.
-        if isinstance(field.compute, str):
-            getattr(self, field.compute)()
-        else:
-            field.compute(self)
+        odoo.fields.determine(field.compute, self)
 
         if field.store and any(self._ids):
             # check constraints of the fields that have been computed
@@ -4240,6 +4242,17 @@ Fields:
             for data in to_create:
                 if data.get('xml_id') and not data['xml_id'].startswith(prefix):
                     _logger.warning("Creating record %s in module %s.", data['xml_id'], module)
+
+        if self.env.context.get('import_file'):
+            existing_modules = self.env['ir.module.module'].sudo().search([]).mapped('name')
+            for data in to_create:
+                xml_id = data.get('xml_id')
+                if xml_id:
+                    module_name, sep, record_id = xml_id.partition('.')
+                    if sep and module_name in existing_modules:
+                        raise UserError(
+                            _("The record %(xml_id)s has the module prefix %(module_name)s. This is the part before the '.' in the external id. Because the prefix refers to an existing module, the record would be deleted when the module is upgraded. Use either no prefix and no dot or a prefix that isn't an existing module. For example, __import__, resulting in the external id __import__.%(record_id)s.",
+                              xml_id=xml_id, module_name=module_name, record_id=record_id))
 
         # create records
         records = self._load_records_create([data['values'] for data in to_create])
@@ -5678,7 +5691,7 @@ Fields:
         return self.id or 0
 
     def __repr__(self):
-        return "%s%s" % (self._name, getattr(self, '_ids', ""))
+        return "%s%r" % (self._name, getattr(self, '_ids', ""))
 
     def __hash__(self):
         if hasattr(self, '_ids'):

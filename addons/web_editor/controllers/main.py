@@ -98,7 +98,7 @@ class Web_Editor(http.Controller):
     @http.route('/web_editor/checklist', type='json', auth='user')
     def update_checklist(self, res_model, res_id, filename, checklistId, checked, **kwargs):
         record = request.env[res_model].browse(res_id)
-        value = getattr(record, filename, False)
+        value = filename in record._fields and record[filename]
         htmlelem = etree.fromstring("<div>%s</div>" % value, etree.HTMLParser())
         checked = bool(checked)
 
@@ -551,11 +551,11 @@ class Web_Editor(http.Controller):
                 user_colors.append([tools.html_escape(value), colorMatch.group(1)])
             elif key == 'flip':
                 if value == 'x':
-                    svg = svg.replace('<svg ', '<svg style="transform: scaleX(-1);" ')
+                    svg = svg.replace('<svg ', '<svg style="transform: scaleX(-1);" ', 1)
                 elif value == 'y':
-                    svg = svg.replace('<svg ', '<svg style="transform: scaleY(-1)" ')
+                    svg = svg.replace('<svg ', '<svg style="transform: scaleY(-1)" ', 1)
                 elif value == 'xy':
-                    svg = svg.replace('<svg ', '<svg style="transform: scale(-1)" ')
+                    svg = svg.replace('<svg ', '<svg style="transform: scale(-1)" ', 1)
 
         default_palette = {
             '1': '#3AADAA',

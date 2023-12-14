@@ -967,3 +967,38 @@ class TestBoM(TestMrpCommon):
             line.product_uom_id = uom_unit
             line.product_qty = 5
         bom_finished = bom_finished.save()
+
+    def test_bom_kit_with_sub_kit(self):
+        p1, p2, p3, p4 = self.make_prods(4)
+        self.make_bom(p1, p2, p3)
+        self.make_bom(p2, p3, p4)
+
+        loc = self.env.ref("stock.stock_location_stock")
+        self.env["stock.quant"]._update_available_quantity(p3, loc, 10)
+        self.env["stock.quant"]._update_available_quantity(p4, loc, 10)
+        self.assertEqual(p1.qty_available, 5.0)
+        self.assertEqual(p2.qty_available, 10.0)
+        self.assertEqual(p3.qty_available, 10.0)
+
+    def test_update_bom_in_routing_workcenter(self):
+        """
+        This test checks the behaviour of updating the BoM associated with a routing workcenter,
+        It verifies that the link between the BOM lines and the operation is correctly deleted.
+        """
+        p1, c1, c2 = self.make_prods(3)
+        bom = self.env['mrp.bom'].create({
+            'product_tmpl_id': p1.product_tmpl_id.id,
+            'product_qty': 1.0,
+            'bom_line_ids': [(0, 0, {'product_id': c1.id, 'product_qty': 1.0}),
+                             (0, 0, {'product_id': c2.id, 'product_qty': 1.0})],
+        })
+        operation = self.env['mrp.routing.workcenter'].create({
+            'name': 'Operation',
+            'workcenter_id': self.env.ref('mrp.mrp_workcenter_1').id,
+            'bom_id': bom.id,
+        })
+        bom.bom_line_ids.operation_id = operation
+        self.assertEqual(operation.bom_id, bom)
+        operation.bom_id = self.bom_1
+        self.assertEqual(operation.bom_id, self.bom_1)
+        self.assertFalse(bom.bom_line_ids.operation_id)

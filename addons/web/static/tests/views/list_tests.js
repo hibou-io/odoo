@@ -3321,6 +3321,54 @@ QUnit.module('Views', {
         list.destroy();
     });
 
+    QUnit.test('fields are translatable in multi-editable list view', async function (assert) {
+        assert.expect(1);
+        var multiLang = _t.database.multi_lang;
+        _t.database.multi_lang = true;
+        this.data.foo.fields.foo.translate = true;
+
+        var list = await createView({
+            View: ListView,
+            model: 'foo',
+            data: this.data,
+            session: {
+                user_context: {lang: 'en_US'},
+            },
+            mockRPC: function (route, args) {
+                if (route === "/web/dataset/call_button" && args.method === 'translate_fields') {
+                    return Promise.resolve({
+                        domain: [],
+                        context: {search_default_name: 'foo,foo'},
+                    });
+                }
+                if (route === "/web/dataset/call_kw/res.lang/get_installed") {
+                    return Promise.resolve([["en_US","English"], ["fr_BE", "Frenglish"]]);
+                }
+                return this._super.apply(this, arguments);
+            },
+            arch: '<tree multi_edit="1">' +
+                        '<field name="foo" required="1"/>' +
+                    '</tree>',
+        });
+
+        await testUtils.dom.click(list.$('.o_data_row:first .o_list_record_selector input').first());
+        await testUtils.nextTick();
+        await testUtils.dom.click(list.$('.o_data_row:first .o_list_char'));
+        await testUtils.nextTick();
+        await testUtils.dom.click(list.$('input.o_field_translate+span.o_field_translate'));
+        await testUtils.nextTick();
+
+        await testUtils.fields.editInput($('.o_translation_dialog input:first'), 'bla_');
+        await testUtils.nextTick();
+
+        await testUtils.modal.clickButton('Save');
+        assert.strictEqual($('.o_data_row:first .o_list_char').text(), 'bla_');
+
+        _t.database.multi_lang = multiLang;
+        list.destroy();
+    });
+
+
     QUnit.test('long words in text cells should break into smaller lines', async function (assert) {
         assert.expect(2);
 
@@ -7262,7 +7310,7 @@ QUnit.module('Views', {
     });
 
     QUnit.test('multiple clicks on Add do not create invalid rows', async function (assert) {
-        assert.expect(2);
+        assert.expect(3);
 
         this.data.foo.onchanges = {
             m2o: function () {},
@@ -7288,9 +7336,9 @@ QUnit.module('Views', {
         assert.containsN(list, '.o_data_row', 4,
             "should contain 4 records");
 
-        // click on Add twice, and delay the onchange
+        // click on Add and delay the onchange (check that the button is correctly disabled)
         testUtils.dom.click(list.$buttons.find('.o_list_button_add'));
-        testUtils.dom.click(list.$buttons.find('.o_list_button_add'));
+        assert.ok(list.$buttons.find('.o_list_button_add').get(0).disabled);
 
         prom.resolve();
         await testUtils.nextTick();
@@ -8363,13 +8411,13 @@ QUnit.module('Views', {
             arch:
                 `<tree multi_edit="1">
                     <field name="foo"/>
-                    <field name="int_field"/>
+                    <field name="int_field" required="1"/>
                 </tree>`,
             data: this.data,
             mockRPC: function (route, args) {
                 assert.step(args.method || route);
                 if (args.method === 'write') {
-                    assert.deepEqual(args.args, [[1, 2], { int_field: 666 }],
+                    assert.deepEqual(args.args, [[1, 2], { int_field: 0 }],
                         "should write on multi records");
                 } else if (args.method === 'read') {
                     if (args.args[0].length !== 1) {
@@ -8403,7 +8451,7 @@ QUnit.module('Views', {
             "changes have been discarded and row is back to readonly");
 
         await testUtils.dom.click(list.$('.o_data_row:eq(0) .o_data_cell:eq(1)'));
-        await testUtils.fields.editInput(list.$('.o_field_widget[name=int_field]'), 666);
+        await testUtils.fields.editInput(list.$('.o_field_widget[name=int_field]'), 0);
         await testUtils.dom.click(list.$('.o_data_row:eq(1) .o_data_cell:eq(0)'));
 
         assert.containsOnce(document.body, '.modal',
@@ -8414,9 +8462,9 @@ QUnit.module('Views', {
         await testUtils.dom.click($('.modal .btn-primary'));
 
         assert.verifySteps(['write', 'read']);
-        assert.strictEqual(list.$('.o_data_row:eq(0) .o_data_cell').text(), "yop666",
+        assert.strictEqual(list.$('.o_data_row:eq(0) .o_data_cell').text(), "yop0",
             "the first row should be updated");
-        assert.strictEqual(list.$('.o_data_row:eq(1) .o_data_cell').text(), "blip666",
+        assert.strictEqual(list.$('.o_data_row:eq(1) .o_data_cell').text(), "blip0",
             "the second row should be updated");
         assert.containsNone(list, '.o_data_cell input.o_field_widget',
             "no field should be editable anymore");

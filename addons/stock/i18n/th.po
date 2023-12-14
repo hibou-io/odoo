@@ -17,6 +17,7 @@
 # Amin Cheloh <amincheloh@gmail.com>, 2021
 # Krisa C, 2022
 # Wichanon Jamwutthipreecha, 2022
+# Rasareeyar Lappiam, 2023
 # 
 msgid ""
 msgstr ""
@@ -24,8 +25,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-08-16 09:00+0000\n"
 "PO-Revision-Date: 2020-09-07 08:19+0000\n"
-"Last-Translator: Wichanon Jamwutthipreecha, 2022\n"
-"Language-Team: Thai (https://www.transifex.com/odoo/teams/41243/th/)\n"
+"Last-Translator: Rasareeyar Lappiam, 2023\n"
+"Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -64,6 +65,9 @@ msgid ""
 "\n"
 "Transfers %s: You cannot validate these transfers if no quantities are reserved nor done. To force these transfers, switch in edit more and encode the done quantities."
 msgstr ""
+"\n"
+"\n"
+"การโอน %s: คุณไม่สามารถตรวจสอบความถูกต้องของการโอนเหล่านี้ได้ หากไม่มีการจองหรือดำเนินการตามปริมาณ หากต้องการบังคับการถ่ายโอน ให้สลับเข้าไปแก้ไขเพิ่มเติมและเข้ารหัสปริมาณที่ทำเสร็จแล้ว"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -73,6 +77,9 @@ msgid ""
 "\n"
 "Transfers %s: You need to supply a Lot/Serial number for products %s."
 msgstr ""
+"\n"
+"\n"
+"การโอนย้าย %s: คุณต้องระบุหมายเลขล็อต/หมายเลขซีเรียลสำหรับสินค้า %s"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__state
@@ -103,7 +110,7 @@ msgstr ""
 #: code:addons/stock/models/stock_production_lot.py:0
 #, python-format
 msgid " - Product: %s, Serial Number: %s"
-msgstr ""
+msgstr " - สินค้า: %s, หมายเลขซีเรียล: %s"
 
 #. module: stock
 #: model:mail.template,report_name:stock.mail_template_data_delivery_confirmation
@@ -121,7 +128,7 @@ msgstr ""
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "%(warehouse)s: Supply Product from %(supplier)s"
-msgstr ""
+msgstr "%(warehouse)s: จัดหาสินค้าจาก %(supplier)s"
 
 #. module: stock
 #: code:addons/stock/models/stock_inventory.py:0
@@ -136,6 +143,7 @@ msgid ""
 "%s use default source or destination locations from warehouse %s that will "
 "be archived."
 msgstr ""
+"%s ใช้ตำแหน่งต้นทางหรือปลายทางเริ่มต้นจากคลังสินค้า %s ที่จะถูกจำเก็บถาวร"
 
 #. module: stock
 #: model:ir.actions.report,print_report_name:stock.action_report_delivery
@@ -239,7 +247,7 @@ msgstr "1 สัปดาห์"
 #: code:addons/stock/models/stock_scrap.py:0
 #, python-format
 msgid ": Insufficient Quantity To Scrap"
-msgstr ""
+msgstr ": ปริมาณเศษไม่เพียงพอ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_warn_insufficient_qty_form_view
@@ -247,6 +255,8 @@ msgid ""
 "<br/>\n"
 "                    <strong>Current Inventory: </strong>"
 msgstr ""
+"<br/>\n"
+"                    <strong>สินค้าคงคลังปัจจุบัน: </strong>"
 
 #. module: stock
 #: code:addons/stock/models/stock_rule.py:0
@@ -437,12 +447,12 @@ msgstr "<span>ใหม่</span>"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_package_barcode_small
 msgid "<span>Package Type: </span>"
-msgstr ""
+msgstr "<span>ประเภทแพ็คเกจ: </span>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_report_delivery_no_package_section_line
 msgid "<span>Products with no package assigned</span>"
-msgstr ""
+msgstr "<span>สินค้าที่ไม่มีการกำหนดแพ็คเกจ</span>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.message_head
@@ -760,7 +770,7 @@ msgstr "Allowed Location"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__allowed_route_ids
 msgid "Allowed Route"
-msgstr ""
+msgstr "เส้นทางที่อนุญาต"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_inventory__prefill_counted_quantity
@@ -906,7 +916,7 @@ msgstr "สินค้าที่มีอยู่"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_quant__available_quantity
 msgid "Available Quantity"
-msgstr ""
+msgstr "ปริมาณที่มีอยู่"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -1423,7 +1433,7 @@ msgstr "Count Picking Waiting"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_inventory
 msgid "Count Sheet"
-msgstr ""
+msgstr "จำนวนแผ่นงาน"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_inventory_line_tree
@@ -1489,6 +1499,7 @@ msgid ""
 "Create new putaway rules to dispatch automatically specific products to "
 "their appropriate destination location upon receptions."
 msgstr ""
+"สร้างกฎการจัดเก็บใหม่เพื่อจัดส่งสินค้าเฉพาะโดยอัตโนมัติไปยังตำแหน่งปลายทางที่เหมาะสมเมื่อมีการรับสินค้าเกิดขึ้น"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__move_ids
@@ -1583,6 +1594,7 @@ msgid ""
 "Creating a new warehouse will automatically activate the Storage Locations "
 "setting"
 msgstr ""
+"การสร้างคลังสินค้าใหม่จะเปิดใช้งานการตั้งค่าสถานที่จัดเก็บโดยอัตโนมัติ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__create_date
@@ -1676,13 +1688,13 @@ msgstr "วันที่"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_move_form
 msgid "Date Processing"
-msgstr ""
+msgstr "วันที่ดำเนินการ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__date_deadline
 #: model:ir.model.fields,help:stock.field_stock_picking__date_deadline
 msgid "Date Promise to the customer on the top level document (SO/PO)"
-msgstr ""
+msgstr "วันที่สัญญากับลูกค้าในเอกสารระดับบนสุด (SO/PO)"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__date
@@ -1714,13 +1726,13 @@ msgstr "เส้นตาย"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
 msgid "Deadline exceed or/and by the scheduled"
-msgstr ""
+msgstr "เกินกำหนดเวลาหรือ/และตามกำหนดเวลา"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
 msgid "Deadline updated due to delay on %s"
-msgstr ""
+msgstr "กำหนดเวลาถูกอัปเดตเนื่องจากเกิดความล่าช้า %s"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__default_location_dest_id
@@ -2134,7 +2146,7 @@ msgstr "Display package content"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_warn_insufficient_qty_scrap_form_view
 msgid "Do you confirm you want to scrap"
-msgstr ""
+msgstr "คุณยืนยันว่าต้องการจะทิ้ง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -2201,7 +2213,7 @@ msgstr "ยืนยันทางอีเมล"
 #: model:ir.model.fields,field_description:stock.field_res_company__stock_move_email_validation
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__stock_move_email_validation
 msgid "Email Confirmation picking"
-msgstr ""
+msgstr "ยืนยันการเบิกสินค้าทางอีเมล"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -2212,13 +2224,13 @@ msgstr "แม่แบบอีเมล"
 #: model:ir.model.fields,field_description:stock.field_res_company__stock_mail_confirmation_template_id
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__stock_mail_confirmation_template_id
 msgid "Email Template confirmation picking"
-msgstr ""
+msgstr "เทมเพลตยืนยันการเบิกสินค้าทางอีเมล"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_company__stock_mail_confirmation_template_id
 #: model:ir.model.fields,help:stock.field_res_config_settings__stock_mail_confirmation_template_id
 msgid "Email sent to the customer once the order is done."
-msgstr ""
+msgstr "อีเมลจะถูกส่งไปยังลูกค้าเมื่อคำสั่งซื้อเสร็จสิ้น"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__start_empty
@@ -2233,6 +2245,11 @@ msgid ""
 " inventory adjustments, batch picking, moving lots or pallets, low inventory"
 " checks, etc. Go to the \"Apps\" menu to activate the barcode interface."
 msgstr ""
+"เพลิดเพลินไปกับประสบการณ์ที่รวดเร็วด้วยแอปบาร์โค้ดของ Odoo "
+"ที่รวดเร็วทันใจและทำงานได้แม้ไม่มีการเชื่อมต่ออินเทอร์เน็ตที่เสถียร "
+"รองรับทุกขั้นตอน: การปรับสินค้าคงคลัง การเบิกสินค้าเป็นชุด "
+"การเคลื่อนย้ายล็อตหรือพาเลท การตรวจสอบสินค้าคงคลังที่เหลือน้อย ฯลฯ ไปที่เมนู"
+" \"แอป\" เพื่อเปิดใช้งานอินเทอร์เฟซบาร์โค้ด"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__tracking
@@ -2261,11 +2278,16 @@ msgid ""
 "            location to the Stock location. Each report can be performed on\n"
 "            physical, partner or virtual locations."
 msgstr ""
+"การดำเนินการสต็อกทุกครั้งใน Odoo จะย้ายสินค้าจากที่หนึ่ง\n"
+"          ไปยังอีกที่หนึ่ง เช่น หากได้รับสินค้า\n"
+"          จากผู้ขาย Odoo จะย้ายสินค้าจากผู้ขาย\n"
+"          ตำแหน่งไปยังตำแหน่งสต็อก แต่ละรายงานสามารถทำได้บน\n"
+"          สถานที่จริง พาร์ทเนอร์ หรือสถานที่เสมือน"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.exception_on_picking
 msgid "Exception(s) occurred on the picking"
-msgstr ""
+msgstr "มีข้อยกเว้นเกิดขึ้นในการเบิกสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.exception_on_picking
@@ -2297,7 +2319,7 @@ msgstr ""
 #: code:addons/stock/static/src/xml/forecast_widget.xml:0
 #, python-format
 msgid "Exp"
-msgstr ""
+msgstr "ประสบการณ์"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -2323,7 +2345,7 @@ msgstr "คาดว่าจะได้รับ"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_product_expiry
 msgid "Expiration Dates"
-msgstr ""
+msgstr "วันหมดอายุ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_form
@@ -2333,7 +2355,7 @@ msgstr "โน้ตภายนอก..."
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_removal__method
 msgid "FIFO, LIFO..."
-msgstr ""
+msgstr "FIFO, LIFO..."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_fedex
@@ -2343,7 +2365,7 @@ msgstr "ตัวเชื่อม FedEx "
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_destination__filtered_location
 msgid "Filtered Location"
-msgstr ""
+msgstr "ตำแหน่งที่ถูกกรอง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.quant_search_view
@@ -2355,7 +2377,7 @@ msgstr "ตัวกรอง"
 #: model:ir.model.fields,field_description:stock.field_stock_assign_serial__next_serial_number
 #: model:ir.model.fields,field_description:stock.field_stock_move__next_serial
 msgid "First SN"
-msgstr ""
+msgstr "SN แรก"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__group_propagation_option__fixed
@@ -2365,7 +2387,7 @@ msgstr "คงที่"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_rule__group_id
 msgid "Fixed Procurement Group"
-msgstr ""
+msgstr "กลุ่มจัดซื้อคงที่"
 
 #. module: stock
 #. openerp-web
@@ -2419,13 +2441,13 @@ msgstr "พยากรณ์"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__forecast_availability
 msgid "Forecast Availability"
-msgstr ""
+msgstr "ความพร้อมใช้งานของการคาดการณ์"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse_orderpoint_tree_editable
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse_orderpoint_tree_editable_config
 msgid "Forecast Description"
-msgstr ""
+msgstr "คำอธิบายการคาดการณ์"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_product__virtual_available
@@ -2453,6 +2475,10 @@ msgid ""
 "In a context with a single Warehouse, this includes goods stored in the Stock Location of this Warehouse, or any of its children.\n"
 "Otherwise, this includes goods stored in any Stock Location with 'internal' type."
 msgstr ""
+"ปริมาณการคาดการณ์ (คำนวณเป็นปริมาณคงเหลือ - ปริมาณที่จองไว้)\n"
+"ในบริบทที่มีสต็อกสินค้าแห่งเดียว ซึ่งรวมถึงสินค้าที่จัดเก็บไว้ในสถานที่นี้หรือรายการย่อยของสถานที่นั้นด้วย\n"
+"ในบริบทที่มีคลังสินค้าแห่งเดียว ซึ่งรวมถึงสินค้าที่จัดเก็บไว้ในตำแหน่งสต็อกของคลังสินค้านี้หรือรายการย่อยของคลังสินค้า\n"
+"ไม่เช่นนั้น จะรวมถึงสินค้าที่จัดเก็บในสถานที่ตั้งสต็อกที่เป็นประเภท 'ภายใน'"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_replenishment_header
@@ -2475,7 +2501,7 @@ msgstr "จำนวนจัดส่งที่คาดการณ์ไว
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__forecast_expected_date
 msgid "Forecasted Expected date"
-msgstr ""
+msgstr "วันที่คาดว่าจะคาดการณ์"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.report_stock_quantity_action
@@ -2519,7 +2545,7 @@ msgstr "สินค้าคงคลังที่คาดการณ์"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 msgid "Forecasted with Pending"
-msgstr ""
+msgstr "คาดการณ์โดยรอดำเนินการ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_replenishment_header
@@ -2529,7 +2555,7 @@ msgstr "คาดการณ์<br/>+ รอยืนยัน"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 msgid "Free Stock"
-msgstr ""
+msgstr "สต็กฟรี"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_product__free_qty
@@ -2594,12 +2620,12 @@ msgstr "การรับในอนาคต"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Get a full traceability from vendors to customers"
-msgstr ""
+msgstr "รับการตรวจสอบย้อนกลับอย่างเต็มรูปแบบจากผู้ขายไปยังลูกค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Get informative or blocking warnings on partners"
-msgstr ""
+msgstr "รับข้อมูลหรือคำเตือนการบล็อกพาร์ทเนอร์"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_putaway_rule__sequence
@@ -2607,6 +2633,9 @@ msgid ""
 "Give to the more specialized category, a higher priority to have them in top"
 " of the list."
 msgstr ""
+"มอบให้กับหมวดหมู่ที่เชี่ยวชาญเป็นพิเศษ "
+"โดยมีลำดับความสำคัญสูงกว่าเพื่อให้หมวดหมู่เหล่านั้นอยู่ในอันดับต้นๆ "
+"ของรายการ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_warehouse__sequence
@@ -2644,28 +2673,28 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__move_line_exist
 msgid "Has Pack Operations"
-msgstr ""
+msgstr "มีการดำเนินการแพ็ค"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__has_packages
 msgid "Has Packages"
-msgstr ""
+msgstr "มีแพ็คเกจ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__has_scrap_move
 msgid "Has Scrap Moves"
-msgstr ""
+msgstr "มีการเคลื่อนย้ายของเศษซากสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__has_tracking
 msgid "Has Tracking"
-msgstr ""
+msgstr "มีการติดตาม"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_replenish__product_has_variants
 #: model:ir.model.fields,field_description:stock.field_stock_rules_report__product_has_variants
 msgid "Has variants"
-msgstr ""
+msgstr "มีหลากหลายรูปแบบ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location__posz
@@ -2675,12 +2704,12 @@ msgstr "ความสูง (Z)"
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_warehouse_orderpoint__snoozed_until
 msgid "Hidden until next scheduler."
-msgstr ""
+msgstr "ซ่อนไว้จนกว่าจะถึงกำหนดการถัดไป"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__hide_picking_type
 msgid "Hide Picking Type"
-msgstr ""
+msgstr "ซ่อนประเภทการหยิบสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_barcode_rule__id
@@ -2784,11 +2813,13 @@ msgstr "ถ้าเลือก ข้อความบางข้อคว�
 #: model:ir.model.fields,help:stock.field_stock_move__propagate_cancel
 msgid "If checked, when this move is cancelled, cancel the linked move too"
 msgstr ""
+"หากทำเครื่องหมาย "
+"เมื่อการย้ายนี้ถูกยกเลิกแล้วให้ยกเลิกการย้ายที่เชื่อมโยงด้วย"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move_line__result_package_id
 msgid "If set, the operations are packed into this package"
-msgstr ""
+msgstr "หากตั้งค่าไว้ การดำเนินการจะถูกบรรจุลงในแพ็คเกจนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_warehouse_orderpoint__active
@@ -2796,6 +2827,8 @@ msgid ""
 "If the active field is set to False, it will allow you to hide the "
 "orderpoint without removing it."
 msgstr ""
+"หากฟิลด์ที่ใช้งานอยู่ถูกตั้งค่าเป็น False "
+"จะช่วยให้คุณสามารถซ่อนจุดสั่งซื้อโดยไม่ต้องลบออก"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location_route__active
@@ -2803,6 +2836,8 @@ msgid ""
 "If the active field is set to False, it will allow you to hide the route "
 "without removing it."
 msgstr ""
+"หากฟิลด์ที่ใช้งานอยู่ถูกตั้งค่าเป็น False "
+"จะช่วยให้คุณสามารถซ่อนเส้นทางโดยไม่ต้องลบออก"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_inventory__date
@@ -2835,6 +2870,8 @@ msgid ""
 " operations. If not, the picking lines will represent an aggregate of "
 "detailed stock operations."
 msgstr ""
+"ถ้าทำเครื่องหมายนี้ รายการเบิกสินค้าจะแสดงการดำเนินงานสต็อคโดยละเอียด "
+"ถ้าไม่เช่นนั้น รายการเบิกสินค้าจะแสดงยอดรวมของการดำเนินงานสต็อคโดยละเอียด"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move_line__picking_type_use_create_lots
@@ -2844,6 +2881,8 @@ msgid ""
 "If this is checked only, it will suppose you want to create new Lots/Serial "
 "Numbers, so you can provide them in a text field. "
 msgstr ""
+"หากเลือกไว้เท่านั้น ระบบจะถือว่าคุณต้องการสร้างล็อต/หมายเลขซีเรียลใหม่ "
+"เพื่อให้คุณสามารถระบุในช่องข้อความได้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move_line__picking_type_use_existing_lots
@@ -2853,6 +2892,9 @@ msgid ""
 "can also decide to not put lots in this operation type.  This means it will "
 "create stock with no lot or not put a restriction on the lot taken. "
 msgstr ""
+"หากเลือกตัวเลือกนี้ คุณจะสามารถเลือกล็อต/หมายเลขซีเรียลได้ "
+"คุณยังสามารถตัดสินใจที่จะไม่ใส่ล็อตในการดำเนินการประเภทนี้ได้ "
+"หมายความว่าจะสร้างสต็อกไม่มีล็อตหรือไม่จำกัดล็อตที่เบิกไป"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__backorder_id
@@ -2861,6 +2903,8 @@ msgid ""
 "If this shipment was split, then this field links to the shipment which "
 "contains the already processed part."
 msgstr ""
+"หากการจัดส่งนี้ถูกแยกออก "
+"ช่องนี้จะเชื่อมโยงกับการจัดส่งซึ่งมีชิ้นส่วนที่ดำเนินการแล้ว"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__picking_type_entire_packs
@@ -2868,12 +2912,12 @@ msgstr ""
 #: model:ir.model.fields,help:stock.field_stock_picking__picking_type_entire_packs
 #: model:ir.model.fields,help:stock.field_stock_picking_type__show_entire_packs
 msgid "If ticked, you will be able to select entire packages to move"
-msgstr ""
+msgstr "หากทำเครื่องหมาย คุณจะสามารถเลือกแพ็คเกจทั้งหมดที่จะย้ายได้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_rule__active
 msgid "If unchecked, it will allow you to hide the rule without removing it."
-msgstr ""
+msgstr "หากไม่ได้ทำเครื่องหมาย จะทำให้คุณสามารถซ่อนกฎโดยไม่ต้องลบกฎออก"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_inventory_form
@@ -2894,12 +2938,12 @@ msgstr "โอนย้ายทันที"
 #. module: stock
 #: model:ir.model,name:stock.model_stock_immediate_transfer_line
 msgid "Immediate Transfer Line"
-msgstr ""
+msgstr "รายการโอนทันที"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_immediate_transfer__immediate_transfer_line_ids
 msgid "Immediate Transfer Lines"
-msgstr ""
+msgstr "รายการโอนทันที"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -2954,7 +2998,7 @@ msgstr "วันที่เข้า"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 msgid "Incoming Draft Transfer"
-msgstr ""
+msgstr "การโอนย้ายแบบร่างขาเข้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__reception_steps
@@ -2988,7 +3032,7 @@ msgstr "ตำแหน่งสินค้าขาเข้า"
 #: code:addons/stock/models/res_company.py:0
 #, python-format
 msgid "Inter-warehouse transit"
-msgstr ""
+msgstr "การขนส่งระหว่างคลังสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_move_line_view_search
@@ -3039,7 +3083,7 @@ msgstr "ประเภทภายใน"
 msgid ""
 "Internal reference number in case it differs from the manufacturer's "
 "lot/serial number"
-msgstr ""
+msgstr "หมายเลขอ้างอิงภายใน ในกรณีที่แตกต่างจากล็อต/หมายเลขซีเรียลของผู้ผลิต"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -3048,28 +3092,28 @@ msgid "Invalid domain left operand %s"
 msgstr "ตัวถูกดําเนินการด้านซ้ายของโดเมนไม่ถูกต้อง %s"
 
 #. module: stock
-#: code:addons/stock/models/product.py:0
+#: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
 #, python-format
 msgid "Invalid domain operator %s"
 msgstr "ของผู้ให้บริการโดเมนไม่ถูกต้อง %s"
 
 #. module: stock
-#: code:addons/stock/models/product.py:0
+#: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
 #, python-format
-msgid "Invalid domain right operand %s"
-msgstr "ตัวถูกดําเนินการที่ถูกต้องของโดเมนไม่ถูกต้อง %s"
+msgid "Invalid domain right operand '%s'. It must be of type Integer/Float"
+msgstr "ตัวดำเนินการสิทธิ์โดเมน '%s' ไม่ถูกต้อง ต้องเป็นประเภท Integer/Float"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
 #, python-format
 msgid ""
 "Invalid rule's configuration, the following rule causes an endless loop: %s"
-msgstr ""
+msgstr "การกำหนดค่ากฎไม่ถูกต้อง กฎต่อไปนี้ทำให้เกิดการวนซ้ำไม่สิ้นสุด: %s"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_quant__inventory_quantity
 msgid "Inventoried Quantity"
-msgstr ""
+msgstr "ปริมาณสินค้าคงคลัง"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__line_ids
@@ -3142,7 +3186,7 @@ msgstr "สินค้าคงคลังที่สูญหาย"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 msgid "Inventory On Hand"
-msgstr ""
+msgstr "สินค้าคงคลังที่มีอยู่"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.stock_picking_type_action
@@ -3169,7 +3213,7 @@ msgstr "เส้นทางสินค้าคงคลัง"
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_quant_form_editable
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_quant_tree
 msgid "Inventory Valuation"
-msgstr ""
+msgstr "การประเมินมูลค่าสินค้าคงคลัง"
 
 #. module: stock
 #. openerp-web
@@ -3182,7 +3226,7 @@ msgstr "สินค้าคงคลัง ณ วันที่"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory_line__is_editable
 msgid "Is Editable"
-msgstr ""
+msgstr "สามารถแก้ไขได้"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__message_is_follower
@@ -3195,7 +3239,7 @@ msgstr "เป็นผู้ติดตาม"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_level__is_fresh_package
 msgid "Is Fresh Package"
-msgstr ""
+msgstr "เป็นแพ็คเกจใหม่"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__is_locked
@@ -3218,21 +3262,29 @@ msgstr "เป็นตำแหน่งสินค้าแตกหัก?"
 #: model:ir.model.fields,field_description:stock.field_stock_move__is_initial_demand_editable
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__is_initial_demand_editable
 msgid "Is initial demand editable"
-msgstr ""
+msgstr "ความต้องการเริ่มต้นสามารถแก้ไขได้"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__has_deadline_issue
 msgid "Is late"
-msgstr ""
+msgstr "มาถึงช้า"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__has_deadline_issue
 msgid "Is late or will be late depending on the deadline and scheduled date"
-msgstr ""
+msgstr "มาถึงช้าหรือจะมาถึงช้าขึ้นอยู่กับกำหนดเวลาและวันที่กำหนด"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__is_quantity_done_editable
 msgid "Is quantity done editable"
+msgstr "ปริมาณที่ทำเสร็จแล้วสามารถแก้ไขได้"
+
+#. module: stock
+#: code:addons/stock/models/stock_move_line.py:0
+#, python-format
+msgid ""
+"It is not allowed to import reserved quantity, you have to use the quantity "
+"directly."
 msgstr ""
 
 #. module: stock
@@ -3261,7 +3313,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__move_type
 msgid "It specifies goods to be deliver partially or all at once"
-msgstr ""
+msgstr "ระบุสินค้าที่จะส่งมอบบางส่วนหรือทั้งหมดในครั้งเดียว"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__json_popover
@@ -3434,7 +3486,7 @@ msgstr "การโอนย้ายล่าช้า"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__lead_days_date
 msgid "Lead Days Date"
-msgstr ""
+msgstr "วันที่นำร่อง"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_rule__delay
@@ -3444,13 +3496,13 @@ msgstr "ช่วงเวลานำการผลิต"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__group_propagation_option__none
 msgid "Leave Empty"
-msgstr ""
+msgstr "ปล่อยว่างไว้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location_route__company_id
 #: model:ir.model.fields,help:stock.field_stock_rule__route_company_id
 msgid "Leave this field empty if this route is shared between all companies"
-msgstr ""
+msgstr "ปล่อยช่องนี้ว่างไว้หากมีการแชร์เส้นทางนี้กับทุกบริษัท"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule
@@ -3471,7 +3523,7 @@ msgstr "การเคลื่อนย้ายที่ถูกเชื่
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 msgid "List view of operations"
-msgstr ""
+msgstr "รายการมุมมองการดำเนินงาน"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_product__location_id
@@ -3498,7 +3550,7 @@ msgstr "ตำแหน่ง"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_location_barcode
 msgid "Location Barcode"
-msgstr ""
+msgstr "บาร์โค้ดสถานที่"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location__name
@@ -3568,7 +3620,7 @@ msgstr "ล็อต/ซีเรียล"
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_body_print
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_inventory
 msgid "Lot/Serial #"
-msgstr ""
+msgstr "ล็อต/ซีเรียล #"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.message_body
@@ -3590,12 +3642,12 @@ msgstr "ล็อต/เลขซีเรียล"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_lot_label
 msgid "Lot/Serial Number (PDF)"
-msgstr ""
+msgstr "ล็อต/หมายเลขซีเรียล (PDF)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.label_lot_template
 msgid "Lot/Serial Number (ZPL)"
-msgstr ""
+msgstr "ล็อต/หมายเลขซีเรียล (ZPL)"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_inventory_tree
@@ -3605,18 +3657,18 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__lot_name
 msgid "Lot/Serial Number Name"
-msgstr ""
+msgstr "ชื่อล็อต/หมายเลขซีเรียล"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.product_form_view_procurement_button
 #: model_terms:ir.ui.view,arch_db:stock.product_template_form_view_procurement_button
 msgid "Lot/Serial Numbers"
-msgstr ""
+msgstr "ล็อต/หมายเลขซีเรียล"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__group_stock_production_lot
 msgid "Lots & Serial Numbers"
-msgstr ""
+msgstr "ล็อตและหมายเลขซีเรียล"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -3626,7 +3678,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__lots_visible
 msgid "Lots Visible"
-msgstr ""
+msgstr "ล็อตที่มองเห็นได้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_track_confirmation
@@ -3647,6 +3699,8 @@ msgid ""
 "Lots/Serial numbers help you tracking the path followed by your products.\n"
 "            From their traceability report you will see the full history of their use, as well as their composition."
 msgstr ""
+"ล็อต/หมายเลขซีเรียลช่วยให้คุณติดตามเส้นทางที่ตามด้วยสินค้าของคุณ\n"
+"            จากรายงานการตรวจสอบย้อนกลับ คุณจะเห็นประวัติการใช้งานทั้งหมด รวมถึงองค์ประกอบต่างๆ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__mto_pull_id
@@ -3681,12 +3735,12 @@ msgstr "จัดการล็อต / เลขซีเรียล"
 #. module: stock
 #: model:res.groups,name:stock.group_stock_multi_locations
 msgid "Manage Multiple Stock Locations"
-msgstr ""
+msgstr "จัดการสต็อกสินค้าหลายแห่ง"
 
 #. module: stock
 #: model:res.groups,name:stock.group_stock_multi_warehouses
 msgid "Manage Multiple Warehouses"
-msgstr ""
+msgstr "จัดการคลังสินค้าหลายแห่ง"
 
 #. module: stock
 #: model:res.groups,name:stock.group_tracking_lot
@@ -3701,7 +3755,7 @@ msgstr "จัดการการไหลของสินค้าแบบ
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Manage product packagings (e.g. pack of 6 bottles, box of 10 pieces)"
-msgstr ""
+msgstr "จัดการแพ็คเกจของสินค้า (เช่น แพ็ค 6 ขวด, กล่องสำหรับ 10 ชิ้น)"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_warehouse_orderpoint__trigger__manual
@@ -3752,7 +3806,7 @@ msgstr "เกิดการผิดพลาดในการส่งข้
 #: model:ir.model.fields,field_description:stock.field_res_partner__picking_warn_msg
 #: model:ir.model.fields,field_description:stock.field_res_users__picking_warn_msg
 msgid "Message for Stock Picking"
-msgstr ""
+msgstr "ข้อความสำหรับการเลือกสต็อก"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__message_ids
@@ -3793,7 +3847,7 @@ msgstr "ย้าย"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_move_operations
 msgid "Move Detail"
-msgstr ""
+msgstr "ย้ายรายละเอียด"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__picking_type_entire_packs
@@ -3801,7 +3855,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:stock.field_stock_picking__picking_type_entire_packs
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__show_entire_packs
 msgid "Move Entire Packages"
-msgstr ""
+msgstr "ย้ายแพ็คเกจทั้งหมด"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__move_line_ids
@@ -3814,18 +3868,18 @@ msgstr "รายการเคลื่อนย้าย"
 #: model:ir.model.fields,field_description:stock.field_stock_move__move_line_nosuggest_ids
 #: model:ir.model.fields,field_description:stock.field_stock_picking__move_line_nosuggest_ids
 msgid "Move Line Nosuggest"
-msgstr ""
+msgstr "ไม่แนะนำการย้ายรายการ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_move_line_form
 #: model_terms:ir.ui.view,arch_db:stock.view_move_line_tree
 msgid "Move Lines"
-msgstr ""
+msgstr "ย้ายรายการ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__origin_returned_move_id
 msgid "Move that created the return move"
-msgstr ""
+msgstr "การเคลื่อนไหวที่สร้างการเคลื่อนย้ายกลับ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_return_picking__product_return_moves
@@ -3841,6 +3895,9 @@ msgid ""
 " If none is given, the moves generated by stock rules will be grouped into "
 "one big picking."
 msgstr ""
+"การย้ายที่สร้างขึ้นผ่านจุดสั่งซื้อนี้จะถูกใส่ในกลุ่มการจัดซื้อนี้ "
+"หากไม่ได้รับเลย "
+"การย้ายที่สร้างตามกฎสต็อกจะถูกจัดกลุ่มเป็นการเบิกสินค้าครั้งใหญ่ครั้งเดียว"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__group_stock_adv_location
@@ -3850,7 +3907,7 @@ msgstr "เส้นทางสินค้าแบบหลายสเตป
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__qty_multiple
 msgid "Multiple Quantity"
-msgstr ""
+msgstr "หลายปริมาณ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__my_activity_date_deadline
@@ -3862,7 +3919,7 @@ msgstr "หมดเขตกิจกรรมของฉัน"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
 msgid "My Transfers"
-msgstr ""
+msgstr "การโอนย้ายของฉัน"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_removal__name
@@ -3875,7 +3932,7 @@ msgstr "ชื่อ"
 #: model_terms:ir.ui.view,arch_db:stock.product_template_search_form_view_stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_product_search_form_view
 msgid "Negative Forecasted Quantity"
-msgstr ""
+msgstr "ปริมาณที่คาดการณ์เชิงลบ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.quant_search_view
@@ -3895,7 +3952,7 @@ msgstr "ใหม่"
 #: code:addons/stock/models/stock_move_line.py:0
 #, python-format
 msgid "New Move:"
-msgstr ""
+msgstr "การย้ายใหม่:"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_change_product_qty__new_quantity
@@ -3905,7 +3962,7 @@ msgstr "ปริมาณใหม่ในมือ"
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_picking_form
 msgid "New Transfer"
-msgstr ""
+msgstr "การโอนย้ายใหม่"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__activity_date_deadline
@@ -3931,7 +3988,7 @@ msgstr "ประเภทกิจกรรมถัดไป"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.exception_on_picking
 msgid "Next transfer(s) impacted:"
-msgstr ""
+msgstr "การโอนย้ายครั้งต่อไปได้รับผลกระทบ:"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_backorder_confirmation
@@ -3946,18 +4003,18 @@ msgstr "ไม่มีข้อความ"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__product_template__tracking__none
 msgid "No Tracking"
-msgstr ""
+msgstr "ไม่มีการติดตาม"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
 #, python-format
 msgid "No negative quantities allowed"
-msgstr ""
+msgstr "ไม่อนุญาตให้มีปริมาณเป็นค่าลบ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_inventory
 msgid "No operation made on this lot."
-msgstr ""
+msgstr "ไม่มีการดำเนินการใดในล็อตนี้"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.product_template_action_product
@@ -3971,16 +4028,18 @@ msgid ""
 "No products to return (only lines in Done state and not fully returned yet "
 "can be returned)."
 msgstr ""
+"ไม่มีสินค้าที่จะส่งคืน "
+"(เฉพาะรายการในสถานะเสร็จสิ้นและส่งคืนไม่ครบถ้วนเท่านั้นที่สามารถส่งคืนได้)"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_putaway_tree
 msgid "No putaway rule found. Let's create one!"
-msgstr ""
+msgstr "ไม่พบกฎการจัดเก็บ มาสร้างกันเถอะ!"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_orderpoint
 msgid "No reordering rule found"
-msgstr ""
+msgstr "ไม่พบกฎจุดสั่งซื้อซ้ำ"
 
 #. module: stock
 #: code:addons/stock/models/stock_rule.py:0
@@ -3989,17 +4048,19 @@ msgid ""
 "No rule has been found to replenish \"%s\" in \"%s\".\n"
 "Verify the routes configuration on the product."
 msgstr ""
+"ไม่พบกฎการเติมสินค้า \"%s\" ใน \"%s\".\n"
+"ตรวจสอบการกำหนดค่าเส้นทางบนสินค้า"
 
 #. module: stock
 #: code:addons/stock/models/stock_rule.py:0
 #, python-format
 msgid "No source location defined on stock rule: %s!"
-msgstr ""
+msgstr "ไม่มีตำแหน่งที่ตั้งต้นทางที่กำหนดไว้ในกฎของสต็อค: %s!"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.stock_move_action
 msgid "No stock move found"
-msgstr ""
+msgstr "ไม่พบการเคลื่อนย้ายสต็อก"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_picking_form
@@ -4011,7 +4072,7 @@ msgstr ""
 #: model_terms:ir.actions.act_window,help:stock.action_picking_type_list
 #: model_terms:ir.actions.act_window,help:stock.stock_picking_action_picking_type
 msgid "No transfer found. Let's create one!"
-msgstr ""
+msgstr "ไม่พบการโอนย้าย มาสร้างกันเถอะ!"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_move__priority__0
@@ -4031,7 +4092,7 @@ msgstr "ไม่พร้อมใช้"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_reorder_report_search
 msgid "Not Snoozed"
-msgstr ""
+msgstr "ไม่เลื่อนการแจ้งเตือน"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
@@ -4062,7 +4123,7 @@ msgstr "จํานวนการดําเนินการ"
 #: model:ir.model.fields,field_description:stock.field_stock_assign_serial__next_serial_count
 #: model:ir.model.fields,field_description:stock.field_stock_move__next_serial_count
 msgid "Number of SN"
-msgstr ""
+msgstr "จำนวนของ SN"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__message_has_error_counter
@@ -4115,7 +4176,7 @@ msgstr "ปริมาณที่มีอยู่"
 msgid ""
 "On hand quantity which hasn't been reserved on a transfer, in the default "
 "unit of measure of the product"
-msgstr ""
+msgstr "ปริมาณคงเหลือที่ไม่ได้จองไว้ในการโอนย้ายบนหน่วยวัดเริ่มต้นของสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.product_template_kanban_stock_view
@@ -4126,7 +4187,7 @@ msgstr "ในมือ:"
 #: code:addons/stock/models/stock_inventory.py:0
 #, python-format
 msgid "Only a stock manager can validate an inventory adjustment."
-msgstr ""
+msgstr "มีเพียงผู้จัดการสต็อกเท่านั้นที่สามารถตรวจสอบการปรับสินค้าคงคลังได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_rule.py:0
@@ -4143,7 +4204,7 @@ msgstr "ประเภทการดำเนินงาน"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__return_picking_type_id
 msgid "Operation Type for Returns"
-msgstr ""
+msgstr "ประเภทการดำเนินงานสำหรับการคืนสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_picking_type_label
@@ -4163,12 +4224,12 @@ msgstr "ยังไม่รองรับการดำเนินการ
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_picking_type_label
 msgid "Operation type (PDF)"
-msgstr ""
+msgstr "ประเภทการดำเนินงาน (PDF)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.label_picking_type
 msgid "Operation type (ZPL)"
-msgstr ""
+msgstr "ประเภทการดำเนินงาน (ZPL)"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__move_line_ids
@@ -4195,7 +4256,7 @@ msgstr "การดำเนินการที่ไม่มีหีบห
 msgid ""
 "Optional address where goods are to be delivered, specifically used for "
 "allotment"
-msgstr ""
+msgstr "ที่อยู่ทางเลือกที่จะจัดส่งสินค้า ซึ่งใช้สำหรับการจัดสรรโดยเฉพาะ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location__posx
@@ -4203,21 +4264,22 @@ msgstr ""
 #: model:ir.model.fields,help:stock.field_stock_location__posz
 msgid "Optional localization details, for information purpose only"
 msgstr ""
+"รายละเอียดการประยุกต์ใช้เพิ่มเติม เพื่อวัตถุประสงค์ในการให้ข้อมูลเท่านั้น"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__returned_move_ids
 msgid "Optional: all returned moves created from this move"
-msgstr ""
+msgstr "ทางเลือก: การย้ายที่ส่งคืนทั้งหมดที่สร้างจากการย้ายนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__move_dest_ids
 msgid "Optional: next stock move when chaining them"
-msgstr ""
+msgstr "ทางเลือก: สต็อกถัดไปจะถูกย้ายเมื่อมีการผูกมัดเอาไว้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__move_orig_ids
 msgid "Optional: previous stock move when chaining them"
-msgstr ""
+msgstr "ทางเลือก: ย้ายสต็อกก่อนหน้าเมื่อมีการผูกมัดเอาไว้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_rule_form
@@ -4234,13 +4296,13 @@ msgstr "Order"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse_orderpoint_tree_editable
 msgid "Order Once"
-msgstr ""
+msgstr "สั่งซื้อครั้งเดียว"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "Order signed"
-msgstr ""
+msgstr "ลงนามคำสั่งซื้อแล้ว"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -4281,7 +4343,7 @@ msgstr "จุดเริ่มการเคลื่อนย้าย"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__orderpoint_id
 msgid "Original Reordering Rule"
-msgstr ""
+msgstr "กฎการสั่งซื้อซ้ำดั้งเดิม"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
@@ -4309,7 +4371,7 @@ msgstr "กล่องขาออก"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 msgid "Outgoing Draft Transfer"
-msgstr ""
+msgstr "การโอนย้ายฉบับร่างขาออก"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__delivery_steps
@@ -4357,7 +4419,7 @@ msgstr "เจ้าของ :"
 #: code:addons/stock/models/product.py:0
 #, python-format
 msgid "P&L Qty"
-msgstr ""
+msgstr "ปริมาณ P&L"
 
 #. module: stock
 #. openerp-web
@@ -4381,7 +4443,7 @@ msgstr "ประเภทหีบห่อ"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_warehouse__delivery_steps__pick_pack_ship
 msgid "Pack goods, send goods in output and then deliver (3 steps)"
-msgstr ""
+msgstr "แพ็คสินค้า ส่งสินค้าเข้าผลผลิต แล้วส่งมอบ (3 ขั้นตอน)"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_level__package_id
@@ -4400,35 +4462,35 @@ msgstr "หีบห่อ"
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_quant_package_barcode_small
 msgid "Package Barcode (PDF)"
-msgstr ""
+msgstr "บาร์โค้ดแพ็คเกจ (PDF)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.label_package_template
 msgid "Package Barcode (ZPL)"
-msgstr ""
+msgstr "บาร์โค้ดแพ็คเกจ (ZPL)"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_quant_package_barcode
 msgid "Package Barcode with Content"
-msgstr ""
+msgstr "บาร์โค้ดแพ็คเกจพร้อมเนื้อหา"
 
 #. module: stock
 #: code:addons/stock/models/stock_package_level.py:0
 #, python-format
 msgid "Package Content"
-msgstr ""
+msgstr "เนื้อหาแพ็คเกจ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__package_level_id
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__package_level_id
 #: model:ir.model.fields,field_description:stock.field_stock_picking__package_level_ids
 msgid "Package Level"
-msgstr ""
+msgstr "ระดับของแพ็คเกจ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__package_level_ids_details
 msgid "Package Level Ids Details"
-msgstr ""
+msgstr "รายละเอียดรหัสระดับของแพ็กเกจ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.quant_package_search_view
@@ -4444,7 +4506,7 @@ msgstr "อ้างอิงหีบห่อ"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_quant_package_form
 msgid "Package Transfers"
-msgstr ""
+msgstr "การโอนย้ายแพ็คเกจ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_quant_package__packaging_id
@@ -4467,6 +4529,8 @@ msgid ""
 "Packages are usually created via transfers (during pack operation) and can contain different products.\n"
 "                Once created, the whole package can be moved at once, or products can be unpacked and moved as single units again."
 msgstr ""
+"โดยทั่วไปแพ็คเกจจะถูกสร้างขึ้นโดยการโอนย้าย (ระหว่างการดำเนินการบรรจุ) และอาจมีสินค้าที่แตกต่างกัน\n"
+"               เมื่อสร้างแล้ว สามารถย้ายสินค้าทั้งหมดได้ในคราวเดียว หรือสามารถแกะสินค้าและย้ายเป็นหน่วยเดียวอีกครั้งได้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.quant_package_search_view
@@ -4568,7 +4632,7 @@ msgstr "ประเภทการรับสินค้า"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_rule__picking_type_code_domain
 msgid "Picking Type Code Domain"
-msgstr ""
+msgstr "รหัสโดเมนประเภทการเบิกสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.vpicktree
@@ -4590,7 +4654,7 @@ msgstr "การเคลื่อนย้ายที่วางแผนไ
 #: code:addons/stock/static/src/js/stock_rescheduling_popover.js:0
 #, python-format
 msgid "Planning Issue"
-msgstr ""
+msgstr "ปัญหาการวางแผน"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
@@ -4601,7 +4665,7 @@ msgstr "ปัญหาการวางแผน"
 #: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "Please add 'Done' quantities to the picking to create a new pack."
-msgstr ""
+msgstr "โปรดเพิ่มปริมาณ 'เสร็จสิ้น' ลงในการเบิกสินค้าเพื่อสร้างแพ็คใหม่"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -4631,7 +4695,7 @@ msgstr "กรอกรายละเอียดการดำเนินก
 #: code:addons/stock/static/src/xml/popover_widget.xml:0
 #, python-format
 msgid "Preceding operations"
-msgstr ""
+msgstr "การดำเนินการก่อนหน้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__route_id
@@ -4673,7 +4737,7 @@ msgstr "ระดับความสำคัญ"
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__delay_alert_date
 msgid "Process at this date to be on time"
-msgstr ""
+msgstr "การดำเนินการ ณ วันที่นี้ ให้ตรงเวลา"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -4683,7 +4747,7 @@ msgstr "ประมวลผลการทำงานได้เร็วข
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Process transfers in batch per worker"
-msgstr ""
+msgstr "ดำเนินการโอนย้ายเป็นชุดต่อผู้ปฏิบัติงาน"
 
 #. module: stock
 #: model:ir.model,name:stock.model_procurement_group
@@ -4696,19 +4760,19 @@ msgstr "กลุ่มจัดซื้อ"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.procurement_group_form_view
 msgid "Procurement group"
-msgstr ""
+msgstr "กลุ่มการจัดซื้อ"
 
 #. module: stock
 #: model:ir.actions.server,name:stock.ir_cron_scheduler_action_ir_actions_server
 #: model:ir.cron,cron_name:stock.ir_cron_scheduler_action
 #: model:ir.cron,name:stock.ir_cron_scheduler_action
 msgid "Procurement: run scheduler"
-msgstr ""
+msgstr "การจัดซื้อ: เรียกใช้ตัวกำหนดตารางเวลา"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__produce_line_ids
 msgid "Produce Line"
-msgstr ""
+msgstr "รายการผลิต"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -4853,7 +4917,7 @@ msgstr "รูปแบบสินค้า"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_scrap__tracking
 msgid "Product Tracking"
-msgstr ""
+msgstr "การติดตามสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_product__type
@@ -4880,16 +4944,18 @@ msgid ""
 "Product this lot/serial number contains. You cannot change it anymore if it "
 "has already been moved."
 msgstr ""
+"สินค้าล็อต/หมายเลขซีเรียลนี้ประกอบด้วย "
+"คุณไม่สามารถเปลี่ยนแปลงได้อีกต่อไปหากมันถูกย้ายไปแล้ว"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__product_uom_name
 msgid "Product unit of measure label"
-msgstr ""
+msgstr "ฉลากหน่วยวัดสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__has_tracking
 msgid "Product with Tracking"
-msgstr ""
+msgstr "สินค้าที่มีการติดตาม"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_location__usage__production
@@ -4906,7 +4972,7 @@ msgstr "ตำแหน่งการผลิต"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_search
 msgid "Production Locations"
-msgstr ""
+msgstr "สถานที่การผลิต"
 
 #. module: stock
 #: code:addons/stock/wizard/stock_quantity_history.py:0
@@ -4926,25 +4992,25 @@ msgstr "สินค้า"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__products_availability_state
 msgid "Products Availability State"
-msgstr ""
+msgstr "สถานะความพร้อมจำหน่ายของสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__priority
 msgid ""
 "Products will be reserved first for the transfers with the highest "
 "priorities."
-msgstr ""
+msgstr "สินค้าจะถูกสำรองก่อนสำหรับการโอนย้ายที่มีลำดับความสำคัญสูงสุด"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
 #, python-format
 msgid "Products: %(location)s"
-msgstr ""
+msgstr "สินค้า: %(location)s"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__group_propagation_option__propagate
 msgid "Propagate"
-msgstr ""
+msgstr "เผยแพร่"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__propagate_cancel
@@ -4954,12 +5020,12 @@ msgstr "การส่งผ่านยกเลิกและแยกออ
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_rule_form
 msgid "Propagation"
-msgstr ""
+msgstr "การแพร่กระจาย"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_rule__group_propagation_option
 msgid "Propagation of Procurement Group"
-msgstr ""
+msgstr "การเผยแพร่ของกลุ่มจัดซื้อ"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__action__pull_push
@@ -4994,7 +5060,7 @@ msgstr "ใส่ในแพ็ค"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Put your products in packs (e.g. parcels, boxes) and track them"
-msgstr ""
+msgstr "ใส่สินค้าของคุณเป็นแพ็ค (เช่น พัสดุ กล่อง) แล้วติดตาม"
 
 #. module: stock
 #: model:ir.model,name:stock.model_stock_putaway_rule
@@ -5057,14 +5123,24 @@ msgstr "วิเคราะห์เชิงปริมาณ"
 #. module: stock
 #: code:addons/stock/models/stock_quant.py:0
 #, python-format
-msgid "Quant's creation is restricted, you can't do this operation."
+msgid ""
+"Quants are auto-deleted when appropriate. If you must manually delete them, "
+"please ask a stock manager to do it."
 msgstr ""
+"Quants จะถูกลบอัตโนมัติตามความเหมาะสม หากคุณต้องลบออกด้วยตนเอง "
+"โปรดขอให้ผู้จัดการสต็อกดำเนินการ"
+
+#. module: stock
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid "Quant's creation is restricted, you can't do this operation."
+msgstr "การสร้าง Quant ถูกจำกัด คุณไม่สามารถดำเนินการนี้ได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_quant.py:0
 #, python-format
 msgid "Quant's editing is restricted, you can't do this operation."
-msgstr ""
+msgstr "การแก้ไข Quant ถูกจำกัด คุณไม่สามารถดำเนินการนี้ได้"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_replenish__quantity
@@ -5126,12 +5202,12 @@ msgstr "ปริมาณเป็นค่าลบไม่ได้"
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__availability
 msgid "Quantity in stock that can still be reserved for this move"
-msgstr ""
+msgstr "ปริมาณในสต็อกที่ยังสามารถสำรองได้สำหรับการย้ายครั้งนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__product_qty
 msgid "Quantity in the default UoM of the product"
-msgstr ""
+msgstr "ปริมาณใน UoM เริ่มต้นของสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__incoming_qty
@@ -5141,6 +5217,10 @@ msgid ""
 "In a context with a single Warehouse, this includes goods arriving to the Stock Location of this Warehouse, or any of its children.\n"
 "Otherwise, this includes goods arriving to any Stock Location with 'internal' type."
 msgstr ""
+"ปริมาณของสินค้าขาเข้าที่วางแผนไว้\n"
+"ในบริบทที่มีสถานที่ตั้งคลังสินค้าแห่งเดียว ซึ่งรวมถึงสินค้าที่มาถึงสถานที่นี้หรือรายการย่อยของสถานที่นั้นด้วย\n"
+"ในบริบทของคลังสินค้าแห่งเดียว ซึ่งรวมถึงสินค้าที่มาถึงที่ตั้งสต็อกของคลังสินค้านี้หรือรายการย่อยของคลังสินค้า\n"
+"ไม่เช่นนั้น จะรวมถึงสินค้าที่มาถึงที่ตั้งสต็อกด้วยประเภท 'ภายใน'"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__outgoing_qty
@@ -5150,6 +5230,10 @@ msgid ""
 "In a context with a single Warehouse, this includes goods leaving the Stock Location of this Warehouse, or any of its children.\n"
 "Otherwise, this includes goods leaving any Stock Location with 'internal' type."
 msgstr ""
+"ปริมาณของสินค้าขาออกที่วางแผนไว้\n"
+"ในบริบทที่มีที่ตั้งสต็อกแห่งเดียว ซึ่งรวมถึงสินค้าที่ออกจากสถานที่นี้หรือรายการย่อยของสถานที่นั้นด้วย\n"
+"ในบริบทที่มีคลังสินค้าแห่งเดียว ซึ่งรวมถึงสินค้าที่ออกจากที่ตั้งสต็อกของคลังสินค้านี้หรือรายการย่อยของคลังสินค้า\n"
+"ไม่เช่นนั้น จะรวมถึงสินค้าที่ออกจากตำแหน่งสต็อกด้วยประเภท 'ภายใน'"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_quant__quantity
@@ -5163,7 +5247,7 @@ msgstr "ปริมาณของสินค้าในการวิเค
 msgid ""
 "Quantity of reserved products in this quant, in the default unit of measure "
 "of the product"
-msgstr ""
+msgstr "ปริมาณของสินค้าที่สำรองไว้ในปริมาณนี้บนหน่วยวัดเริ่มต้นของสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory_line__outdated
@@ -5186,7 +5270,7 @@ msgstr "วิเคราะห์ปริมาณ"
 #: code:addons/stock/models/stock_quant.py:0
 #, python-format
 msgid "Quants cannot be created for consumables or services."
-msgstr ""
+msgstr "ไม่สามารถสร้าง Quants สำหรับอุปโภคบริโภคหรือบริการได้"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__rate_picking_backorders
@@ -5247,30 +5331,30 @@ msgstr "รับสินค้าโดยตรง (1 สเตป)"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_warehouse__reception_steps__two_steps
 msgid "Receive goods in input and then stock (2 steps)"
-msgstr ""
+msgstr "รับสินค้าเข้าและสต๊อกสินค้า (2 ขั้นตอน)"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_warehouse__reception_steps__three_steps
 msgid "Receive goods in input, then quality and then stock (3 steps)"
-msgstr ""
+msgstr "รับสินค้าเข้า ตามด้วยการตรวจสอบคุณภาพ และสต็อกสินค้า (3 ขั้นตอน)"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "Receive in 1 step (stock)"
-msgstr ""
+msgstr "รับได้ใน 1 ขั้นตอน (สต็อก)"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "Receive in 2 steps (input + stock)"
-msgstr ""
+msgstr "รับใน 2 ขั้นตอน (อินพุต + สต็อก)"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "Receive in 3 steps (input + quality + stock)"
-msgstr ""
+msgstr "รับใน 3 ขั้นตอน (นำเข้า + คุณภาพ + สต็อก)"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -5324,12 +5408,12 @@ msgstr "รีเฟรชปริมาณ"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_move_kandan
 msgid "Register lots, packs, location"
-msgstr ""
+msgstr "ลงทะเบียนล็อต แพ็ค สถานที่"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_procurement_group__stock_move_ids
 msgid "Related Stock Moves"
-msgstr ""
+msgstr "การย้ายของสต็อกที่เกี่ยวข้อง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
@@ -5357,7 +5441,7 @@ msgstr "กลยุทธ์การนำออก %s ยังไม่ไ�
 #: model:ir.model.fields,field_description:stock.field_product_product__reordering_max_qty
 #: model:ir.model.fields,field_description:stock.field_product_template__reordering_max_qty
 msgid "Reordering Max Qty"
-msgstr ""
+msgstr "จำนวนสูงสุดของการสั่งซื้อซ้ำ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_product__reordering_min_qty
@@ -5369,7 +5453,7 @@ msgstr "ปริมาณต่ำสุดของการสั่งซื
 #: model_terms:ir.ui.view,arch_db:stock.stock_reorder_report_search
 #: model_terms:ir.ui.view,arch_db:stock.warehouse_orderpoint_search
 msgid "Reordering Rule"
-msgstr ""
+msgstr "กฎการสั่งซื้อซ้ำ"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_orderpoint
@@ -5417,18 +5501,18 @@ msgstr "ตัวช่วยการเติมสินค้า"
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 #, python-format
 msgid "Replenishment"
-msgstr ""
+msgstr "การเติมสินค้า"
 
 #. module: stock
 #: code:addons/stock/models/stock_orderpoint.py:0
 #, python-format
 msgid "Replenishment Report"
-msgstr ""
+msgstr "รายงานการเติมสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_reorder_report_search
 msgid "Replenishment Report Search"
-msgstr ""
+msgstr "ค้นหารายงานการเติมสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_report_view_search
@@ -5444,7 +5528,7 @@ msgstr "การรายงาน"
 #: model:res.groups,name:stock.group_stock_sign_delivery
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Require a signature on your delivery orders"
-msgstr ""
+msgstr "ต้องมีลายเซ็นในคำสั่งซื้อจัดส่งของคุณ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_procurement_jit
@@ -5478,7 +5562,7 @@ msgstr ""
 #: code:addons/stock/models/stock_move_line.py:0
 #, python-format
 msgid "Reserving a negative quantity is not allowed."
-msgstr ""
+msgstr "ไม่อนุญาตให้จองปริมาณที่มีค่าเป็นลบ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_config_settings__module_procurement_jit
@@ -5538,7 +5622,7 @@ msgstr "ส่งคืนการหยิบ"
 #. module: stock
 #: model:ir.model,name:stock.model_stock_return_picking_line
 msgid "Return Picking Line"
-msgstr ""
+msgstr "รายการการส่งคืนสินค้า"
 
 #. module: stock
 #: code:addons/stock/wizard/stock_picking_return.py:0
@@ -5569,7 +5653,7 @@ msgstr "เส้นทาง"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_rule__route_company_id
 msgid "Route Company"
-msgstr ""
+msgstr "เส้นทางของบริษัท"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_rule__route_sequence
@@ -5593,7 +5677,7 @@ msgstr "เส้นทาง"
 #: model:ir.model.fields,field_description:stock.field_product_product__has_available_route_ids
 #: model:ir.model.fields,field_description:stock.field_product_template__has_available_route_ids
 msgid "Routes can be selected on this product"
-msgstr ""
+msgstr "สามารถเลือกเส้นทางได้ในสินค้านี้ได้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_warehouse__resupply_wh_ids
@@ -5630,17 +5714,17 @@ msgstr "กฏ"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_putaway_search
 msgid "Rules on Categories"
-msgstr ""
+msgstr "กฎเกณฑ์เกี่ยวกับหมวดหมู่"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_putaway_search
 msgid "Rules on Products"
-msgstr ""
+msgstr "กฎเกณฑ์เกี่ยวกับสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__rule_ids
 msgid "Rules used"
-msgstr ""
+msgstr "กฎเกณฑ์ที่ใช้"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_procurement_compute
@@ -5657,12 +5741,12 @@ msgstr "เรียกใช้เครื่องมือจัดกำห
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse_orderpoint_form
 msgid "Run the scheduler"
-msgstr ""
+msgstr "เรียกใช้ตัวกำหนดเวลา"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_stock_sms
 msgid "SMS Confirmation"
-msgstr ""
+msgstr "การยืนยัน SMS"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory__message_has_sms_error
@@ -5683,12 +5767,12 @@ msgstr "วันที่ตามกำหนดการ"
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__date
 msgid "Scheduled date until move is done, then date of actual move processing"
-msgstr ""
+msgstr "วันที่กำหนดจนกว่าการย้ายจะเสร็จสิ้น จากนั้นวันที่ดำเนินการย้ายจริง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_move_search
 msgid "Scheduled or processing date"
-msgstr ""
+msgstr "วันที่กำหนดหรือวันที่ดำเนินการ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__scheduled_date
@@ -5726,12 +5810,12 @@ msgstr "เคลื่อนย้ายสินค้าแตกหัก"
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_stock_scrap
 msgid "Scrap Orders"
-msgstr ""
+msgstr "คำสั่งซื้อเศษซากสินค้า"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_stock_scrap
 msgid "Scrap products"
-msgstr ""
+msgstr "สินค้าแตกหัก"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__scrapped
@@ -5744,6 +5828,8 @@ msgid ""
 "Scrapping a product will remove it from your stock. The product will\n"
 "                end up in a scrap location that can be used for reporting purpose."
 msgstr ""
+"การทิ้งสินค้าจะเป็นการนำสินค้าออกจากสต็อกของคุณ สินค้าจะ\n"
+"จบลงที่ตำแหน่งเศษสินค้าที่สามารถใช้เพื่อการรายงานได้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
@@ -5763,12 +5849,12 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_rule_filter
 msgid "Search Procurement"
-msgstr ""
+msgstr "ค้นหาการจัดซื้อ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_scrap_search_view
 msgid "Search Scrap"
-msgstr ""
+msgstr "ค้าหาเศษสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_inventory_line__categ_id
@@ -5803,17 +5889,17 @@ msgstr "ขายและซื้อสินค้าในหน่วยว
 msgid ""
 "Send an automatic confirmation SMS Text Message when Delivery Orders are "
 "done"
-msgstr ""
+msgstr "ส่งข้อความ SMS ยืนยันอัตโนมัติ เมื่อคำสั่งซื้อจัดส่งเสร็จสิ้น"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Send an automatic confirmation email when Delivery Orders are done"
-msgstr ""
+msgstr "ส่งอีเมลยืนยันอัตโนมัติเมื่อคำสั่งซื้อจัดส่งเสร็จสิ้น"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_warehouse__delivery_steps__pick_ship
 msgid "Send goods in output and then deliver (2 steps)"
-msgstr ""
+msgstr "ส่งสินค้าไปยังขาออก แล้วจึงส่งมอบ (2 ขั้นตอน)"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -5864,7 +5950,7 @@ msgstr "ลำดับการหยิบสินค้า"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__lot_ids
 msgid "Serial Numbers"
-msgstr ""
+msgstr "หมายเลขซีเรียล"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -5892,12 +5978,12 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Set owner on stored products"
-msgstr ""
+msgstr "กำหนดเจ้าของสินค้าที่จัดเก็บ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Set product attributes (e.g. color, size) to manage variants"
-msgstr ""
+msgstr "ตั้งค่าคุณสมบัติของสินค้า (เช่น สี ขนาด) เพื่อจัดการตัวเลือกสินค้า"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_inventory_form
@@ -5910,6 +5996,8 @@ msgid ""
 "Sets a location if you produce at a fixed location. This can be a partner "
 "location if you subcontract the manufacturing operations."
 msgstr ""
+"กำหนดสถานที่หากคุณผลิตในสถานที่คงที่ นี่อาจเป็นสถานที่ตั้งของพาร์ทเนอร์ได้ "
+"หากคุณรับเหมาช่วงการดำเนินงานการผลิต"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_stock_config_settings
@@ -5935,7 +6023,7 @@ msgstr "ส่งสินค้า"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Shipping Connectors"
-msgstr ""
+msgstr "ตัวเชื่อมต่อการจัดส่งสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__move_type
@@ -5949,6 +6037,9 @@ msgid ""
 " labels and request carrier picking at your warehouse to ship to the "
 "customer. Apply shipping connector from delivery methods."
 msgstr ""
+"ตัวเชื่อมต่อการจัดส่งช่วยให้คำนวณต้นทุนการจัดส่งที่แม่นยำ พิมพ์ฉลากการจัดส่ง"
+" และขอให้ผู้ขนส่งมารับสินค้าที่คลังสินค้าของคุณเพื่อจัดส่งให้กับลูกค้า "
+"ใช้ตัวเชื่อมต่อการจัดส่งจากวิธีการจัดส่ง"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__code
@@ -5963,24 +6054,24 @@ msgstr "ชื่อสั้นใช้สำหรับระบุคลั
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__show_check_availability
 msgid "Show Check Availability"
-msgstr ""
+msgstr "แสดงรายการตรวจสอบความพร้อมจำหน่ายสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__show_operations
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__show_operations
 msgid "Show Detailed Operations"
-msgstr ""
+msgstr "แสดงการดำเนินการโดยละเอียด"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_level__show_lots_m2o
 msgid "Show Lots M2O"
-msgstr ""
+msgstr "แสดงล็อต M2O"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_package_level__show_lots_text
 #: model:ir.model.fields,field_description:stock.field_stock_picking__show_lots_text
 msgid "Show Lots Text"
-msgstr ""
+msgstr "แสดงข้อความของล็อต"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__show_mark_as_todo
@@ -5990,7 +6081,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__show_operations
 msgid "Show Operations"
-msgstr ""
+msgstr "แสดงการดำเนินการ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__show_resupply
@@ -6001,12 +6092,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:stock.field_stock_backorder_confirmation__show_transfers
 #: model:ir.model.fields,field_description:stock.field_stock_immediate_transfer__show_transfers
 msgid "Show Transfers"
-msgstr ""
+msgstr "แสดงการโอนย้าย"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__show_validate
 msgid "Show Validate"
-msgstr ""
+msgstr "แสดงการตรวจสอบ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
@@ -6016,7 +6107,7 @@ msgstr "Show all records which has next action date is before today"
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_rules_report__warehouse_ids
 msgid "Show the routes that apply on selected warehouses."
-msgstr ""
+msgstr "แสดงเส้นทางที่ใช้กับคลังสินค้าที่เลือก"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
@@ -6048,22 +6139,22 @@ msgstr "ปิดการเตือนชั่วคราว"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_orderpoint_snooze__snoozed_until
 msgid "Snooze Date"
-msgstr ""
+msgstr "การเลื่อนวันที่"
 
 #. module: stock
 #: model:ir.model,name:stock.model_stock_orderpoint_snooze
 msgid "Snooze Orderpoint"
-msgstr ""
+msgstr "การเลื่อนจุดสั่งซื้อ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_orderpoint_snooze__predefined_date
 msgid "Snooze for"
-msgstr ""
+msgstr "เลื่อนสำหรับ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__snoozed_until
 msgid "Snoozed"
-msgstr ""
+msgstr "เลื่อนแล้ว"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_track_confirmation
@@ -6285,7 +6376,7 @@ msgstr "การยืนยันการติดตามสต็อค"
 #. module: stock
 #: model:ir.model,name:stock.model_stock_track_line
 msgid "Stock Track Line"
-msgstr ""
+msgstr "ติดตามรายการสต็อก"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__move_ids_without_package
@@ -6329,6 +6420,8 @@ msgid ""
 "Store products in specific locations of your warehouse (e.g. bins, racks) "
 "and to track inventory accordingly."
 msgstr ""
+"จัดเก็บสินค้าในตำแหน่งเฉพาะของคลังสินค้าของคุณ (เช่น ถังขยะ ชั้นวาง) "
+"และติดตามสินค้าคงคลังตามลำดับ"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_putaway_rule__location_out_id
@@ -6349,7 +6442,7 @@ msgstr "วิธีการอุปทาน"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location_route__supplier_wh_id
 msgid "Supplying Warehouse"
-msgstr ""
+msgstr "จัดหาคลังสินค้า"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__procure_method__make_to_stock
@@ -6359,7 +6452,7 @@ msgstr "เอาจากสต็อก"
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__procure_method__mts_else_mto
 msgid "Take From Stock, if unavailable, Trigger Another Rule"
-msgstr ""
+msgstr "สำรวจสินค้าที่มี หากไม่มีให้เรียกใช้กฎอื่น"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_rule__procure_method
@@ -6368,6 +6461,9 @@ msgid ""
 "Trigger Another Rule: the system will try to find a stock rule to bring the products in the source location. The available stock will be ignored.\n"
 "Take From Stock, if Unavailable, Trigger Another Rule: the products will be taken from the available stock of the source location.If there is no stock available, the system will try to find a  rule to bring the products in the source location."
 msgstr ""
+"ใช้จากสต็อก: สินค้าจะถูกนำมาจากสต็อกที่มีอยู่ของแหล่งที่มา\n"
+"เรียกใช้กฎอื่น: ระบบจะพยายามค้นหากฎสต็อกเพื่อนำสินค้าไปยังตำแหน่งต้นทาง สต็อกที่มีอยู่จะถูกละเว้น\n"
+"ใช้จากสต็อก หากไม่มีในสต็อกให้เรียกใช้กฎอื่น: สินค้าจะถูกนำมาจากสต็อกที่มีอยู่ของที่ตั้งต้นทาง หากไม่มีสต็อกที่มีอยู่ ระบบจะพยายามค้นหากฎเพื่อนำสินค้าไปยังที่ตั้งต้นทาง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse
@@ -6399,6 +6495,8 @@ msgid ""
 "Technical field used to compute whether the button \"Check Availability\" "
 "should be displayed."
 msgstr ""
+"ข้อมูลทางเทคนิคที่ใช้ในการคำนวณว่าควรแสดงปุ่ม "
+"\"ตรวจสอบความพร้อมจำหน่ายสินค้า\" หรือไม่"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__show_mark_as_todo
@@ -6412,7 +6510,7 @@ msgstr ""
 msgid ""
 "Technical field used to decide whether the button \"Validate\" should be "
 "displayed."
-msgstr ""
+msgstr "ข้อมูลทางเทคนิคที่ใช้ในการตัดสินใจว่าควรแสดงปุ่ม \"ตรวจสอบ\" หรือไม่"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__restrict_partner_id
@@ -6462,6 +6560,8 @@ msgid ""
 " With 'Automatic No Step Added', the location is replaced in the original "
 "move."
 msgstr ""
+"ค่า 'การดำเนินการด้วยตนเอง' จะสร้างการย้ายสต็อกหลังจากการย้ายปัจจุบัน ด้วย "
+"'เพิ่มขั้นตอนอัตโนมัติ' ตำแหน่งจะถูกแทนที่ด้วยการย้ายเดิม"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -6488,11 +6588,13 @@ msgid ""
 "The combination of serial number and product must be unique across a company.\n"
 "Following combination contains duplicates:\n"
 msgstr ""
+"การผสมระหว่างหมายเลขซีเรียลและสินค้าต้องไม่ซ้ำกันทั่วทั้งบริษัท\n"
+"ชุดผสมต่อไปนี้ประกอบด้วยรายการที่ซ้ำกัน:\n"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_warehouse__company_id
 msgid "The company is automatically set from your user preferences."
-msgstr ""
+msgstr "บริษัทจะถูกตั้งค่าโดยอัตโนมัติจากการตั้งค่าผู้ใช้ของคุณ"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -6507,14 +6609,14 @@ msgstr ""
 msgid ""
 "The expected date of the created transfer will be computed based on this "
 "lead time."
-msgstr ""
+msgstr "วันที่คาดหวังของการโอนย้ายที่สร้างขึ้นจะถูกคำนวณตามเวลารอคอยสินค้านี้"
 
 #. module: stock
 #. openerp-web
 #: code:addons/stock/static/src/xml/stock_orderpoint.xml:0
 #, python-format
 msgid "The forecasted stock on the"
-msgstr ""
+msgstr "สต็อกคาดการณ์บน"
 
 #. module: stock
 #. openerp-web
@@ -6546,7 +6648,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_quant__package_id
 msgid "The package containing this quant"
-msgstr ""
+msgstr "แพ็คเกจที่มีปริมาณนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location__location_id
@@ -6554,6 +6656,8 @@ msgid ""
 "The parent location that includes this location. Example : The 'Dispatch "
 "Zone' is the 'Gate 1' parent location."
 msgstr ""
+"ตำแหน่งหลักที่มีตำแหน่งนี้ ตัวอย่าง : 'Dispatch Zone' คือตำแหน่งหลักของ "
+"'ประตู 1'"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_warehouse_orderpoint__qty_multiple
@@ -6567,7 +6671,7 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_warn_insufficient_qty_form_view
 msgid "The product is not available in sufficient quantity"
-msgstr ""
+msgstr "สินค้ามีปริมาณไม่เพียงพอ"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
@@ -6577,6 +6681,9 @@ msgid ""
 "precision defined on the unit of measure \"%s\". Please change the quantity "
 "done or the rounding precision of your unit of measure."
 msgstr ""
+"ปริมาณที่สร้างสำหรับสินค้า \"%s\" "
+"ไม่คำนึงถึงความแม่นยำในการปัดเศษที่กำหนดไว้ในหน่วยวัด \"%s\" "
+"โปรดเปลี่ยนปริมาณที่สร้างหรือความแม่นยำในการปัดเศษของหน่วยวัดของคุณ"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -6586,6 +6693,8 @@ msgid ""
 "The requested operation cannot be processed because of a programming error "
 "setting the `product_qty` field instead of the `product_uom_qty`."
 msgstr ""
+"ไม่สามารถประมวลผลการดำเนินการที่ร้องขอได้เนื่องจากข้อผิดพลาดในการเขียนโปรแกรมในการตั้งค่าฟิลด์"
+" `product_qty` แทนที่จะเป็น `product_uom_qty`"
 
 #. module: stock
 #: code:addons/stock/models/stock_quant.py:0
@@ -6594,6 +6703,8 @@ msgid ""
 "The serial number has already been assigned: \n"
 " Product: %s, Serial Number: %s"
 msgstr ""
+"หมายเลขซีเรียลถูกกำหนดไว้แล้ว: \n"
+" สินค้า: %s หมายเลขซีเรียล: %s"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -6606,24 +6717,24 @@ msgstr ""
 #: model:ir.model.fields,help:stock.field_res_users__property_stock_customer
 msgid ""
 "The stock location used as destination when sending goods to this contact."
-msgstr ""
+msgstr "ที่ตั้งสต็อกที่ใช้เป็นปลายทางเมื่อส่งสินค้าไปยังผู้ติดต่อรายนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_partner__property_stock_supplier
 #: model:ir.model.fields,help:stock.field_res_users__property_stock_supplier
 msgid ""
 "The stock location used as source when receiving goods from this contact."
-msgstr ""
+msgstr "ที่ตั้งสต็อกที่ใช้เป็นแหล่งที่มาเมื่อรับสินค้าจากผู้ติดต่อรายนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move_line__picking_id
 msgid "The stock operation where the packing has been made"
-msgstr ""
+msgstr "การดำเนินงานสต็อกเมื่อมีการบรรจุ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__rule_id
 msgid "The stock rule that created this stock move"
-msgstr ""
+msgstr "กฎสต็อกที่สร้างการเคลื่อนย้ายสต็อกนี้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_procurement_compute_wizard
@@ -6640,6 +6751,9 @@ msgid ""
 "different of the warehouse this rule is for (e.g for resupplying rules from "
 "another warehouse)"
 msgstr ""
+"คลังสินค้าที่จะเผยแพร่ใน การย้าย/การจัดซื้อ ที่สร้างขึ้น "
+"ซึ่งอาจแตกต่างจากคลังสินค้าที่กฎนี้มีไว้ (เช่น "
+"สำหรับกฎการเติมสินค้าจากคลังสินค้าอื่น)"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_inventory_line__theoretical_qty
@@ -6662,7 +6776,7 @@ msgstr "ยังไม่มีการเคลื่อนย้ายสิ
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_rule__name
 msgid "This field will fill the packing origin and the name of its moves"
-msgstr ""
+msgstr "ฟิลด์นี้จะเติมจุดเริ่มต้นการบรรจุและชื่อของการเคลื่อนย้าย"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking_type__default_location_dest_id
@@ -6672,6 +6786,10 @@ msgid ""
 "routes put another location. If it is empty, it will check for the customer "
 "location on the partner. "
 msgstr ""
+"นี่คือสถานที่ปลายทางเริ่มต้น "
+"เมื่อคุณสร้างการเบิกสินค้าด้วยตนเองด้วยชนิดการดำเนินงานนี้ อย่างไรก็ตาม "
+"สามารถเปลี่ยนแปลงได้หรือเปลี่ยนเส้นทางเป็นตำแหน่งอื่น "
+"หากว่างเปล่าก็จะตรวจสอบที่ตั้งของลูกค้าบนพาร์ทเนอร์"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking_type__default_location_src_id
@@ -6681,11 +6799,14 @@ msgid ""
 "put another location. If it is empty, it will check for the supplier "
 "location on the partner. "
 msgstr ""
+"นี่คือตำแหน่งที่ตั้งต้นทางเริ่มต้นเมื่อคุณสร้างการเบิกสินค้าด้วยตนเองด้วยชนิดการดำเนินงานนี้"
+" อย่างไรก็ตาม สามารถเปลี่ยนแปลงได้หรือเปลี่ยนเส้นทางเป็นตำแหน่งอื่น "
+"หากว่างเปล่า ระบบจะตรวจสอบที่ตั้งของซัพพลายเออร์ในพาร์ทเนอร์"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_quant__owner_id
 msgid "This is the owner of the quant"
-msgstr ""
+msgstr "นี่คือเจ้าของปริมาณ"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__product_uom_qty
@@ -6697,20 +6818,26 @@ msgid ""
 "this quantity on assigned moves affects the product reservation, and should "
 "be done with care."
 msgstr ""
+"นี่คือปริมาณของสินค้าจากมุมมองของสินค้าคงคลัง สำหรับการย้ายในสถานะ "
+"'เสร็จสิ้น' คือปริมาณของสินค้าที่ถูกย้ายจริง สำหรับการย้ายอื่นๆ "
+"คือปริมาณของสินค้าที่วางแผนจะย้าย "
+"การลดปริมาณนี้จะไม่สร้างการสั่งซื้อล่วงหน้า "
+"แต่การเปลี่ยนแปลงปริมาณในการเคลื่อนย้ายที่กำหนดจะส่งผลต่อการจองสินค้า "
+"ซึ่งควรดำเนินการด้วยความระมัดระวัง"
 
 #. module: stock
 #: code:addons/stock/models/stock_location.py:0
 #, python-format
 msgid ""
 "This location's usage cannot be changed to view as it contains products."
-msgstr ""
+msgstr "ไม่สามารถเปลี่ยนการใช้งานของสถานที่นี้เพื่อดูได้เนื่องจากมีสินค้าอยู่"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
 #, python-format
 msgid ""
 "This lot %(lot_name)s is incompatible with this product %(product_name)s"
-msgstr ""
+msgstr "ล็อตนี้ %(lot_name)sเข้ากันไม่ได้กับสินค้านี้ %(product_name)s"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.stock_move_action
@@ -6719,6 +6846,9 @@ msgid ""
 "                operations on a specific product. You can filter on the product\n"
 "                to see all the past or future movements for the product."
 msgstr ""
+"เมนูนี้ช่วยให้คุณตรวจสอบย้อนกลับสินค้าคงคลังได้อย่างครบถ้วน\n"
+"                การดำเนินการกับสินค้าเฉพาะ คุณสามารถกรองสินค้าได้\n"
+"                เพื่อดูความเคลื่อนไหวของสินค้าในอดีตหรืออนาคตทั้งหมด"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.stock_move_line_action
@@ -6726,11 +6856,13 @@ msgid ""
 "This menu gives you the full traceability of inventory operations on a specific product.\n"
 "                    You can filter on the product to see all the past movements for the product."
 msgstr ""
+"เมนูนี้ช่วยให้คุณตรวจสอบย้อนกลับการดำเนินงานสินค้าคงคลังของสินค้าเฉพาะได้อย่างสมบูรณ์\n"
+"                   คุณสามารถกรองสินค้าเพื่อดูความเคลื่อนไหวที่ผ่านมาทั้งหมดของสินค้าได้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form
 msgid "This note is added to delivery orders."
-msgstr ""
+msgstr "โน้ตนี้ถูกเพิ่มไปยังใบสั่งจัดส่ง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form
@@ -6738,6 +6870,7 @@ msgid ""
 "This note is added to internal transfer orders (e.g. where to pick the "
 "product in the warehouse)."
 msgstr ""
+"โน้ตนี้จะถูกเพิ่มลงในใบสั่งโอนภายใน (เช่น สถานที่รับสินค้าในคลังสินค้า)"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form
@@ -6745,6 +6878,8 @@ msgid ""
 "This note is added to receipt orders (e.g. where to store the product in the"
 " warehouse)."
 msgstr ""
+"หมายเหตุนี้จะถูกเพิ่มลงในใบสั่งรับสินค้า (เช่น "
+"สถานที่จัดเก็บสินค้าในคลังสินค้า)"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_return_picking_form
@@ -6754,6 +6889,11 @@ msgid ""
 "returned picking in order to avoid logistic rules to be applied again (which"
 " would create duplicated operations)"
 msgstr ""
+"การเบิกสินค้านี้ดูเหมือนจะเชื่อมโยงกับการดำเนินการอื่น หลังจากนั้น "
+"หากคุณได้รับสินค้าที่คุณกำลังส่งคืนในตอนนี้ ตรวจสอบให้แน่ใจว่าได้ "
+"<b>กลับรายการการเบิกสินค้า</b> "
+"ที่ส่งคืนเพื่อหลีกเลี่ยงการนำกฎโลจิสติกไปใช้อีกครั้ง "
+"(ซึ่งจะสร้างการดำเนินการที่ซ้ำกัน)"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -6764,6 +6904,9 @@ msgid ""
 "better solution could be to archive the product and create a new one "
 "instead."
 msgstr ""
+"สินค้านี้ถูกใช้ในการเคลื่อนย้ายสินค้าคงคลังอย่างน้อยหนึ่งครั้ง "
+"ไม่แนะนำให้เปลี่ยนประเภทสินค้า เนื่องจากอาจทำให้เกิดความไม่สอดคล้องกันได้ "
+"วิธีแก้ปัญหาที่ดีกว่าอาจเป็นการเก็บถาวรสินค้าและสร้างสินค้าใหม่แทน"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -6772,19 +6915,31 @@ msgid ""
 "This product's company cannot be changed as long as there are quantities of "
 "it belonging to another company."
 msgstr ""
+"บริษัทของสินค้านี้ "
+"ไม่สามารถเปลี่ยนแปลงได้ตราบใดที่ยังมีปริมาณที่เป็นของบริษัทอื่น"
+
+#. module: stock
+#: code:addons/stock/models/product.py:0
+#, python-format
+msgid ""
+"This product's company cannot be changed as long as there are stock moves of"
+" it belonging to another company."
+msgstr ""
+"บริษัทของสินค้านี้ "
+"ไม่สามารถเปลี่ยนแปลงได้ตราบใดที่มีการย้ายสต็อกของบริษัทอื่น"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_change_product_qty__new_quantity
 msgid ""
 "This quantity is expressed in the Default Unit of Measure of the product."
-msgstr ""
+msgstr "ปริมาณนี้แสดงอยู่ในหน่วยวัดเริ่มต้นของสินค้า"
 
 #. module: stock
 #. openerp-web
 #: code:addons/stock/static/src/js/inventory_singleton_list_controller.js:0
 #, python-format
 msgid "This record already exists."
-msgstr ""
+msgstr "บันทึกนี้มีอยู่แล้ว"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__property_stock_production
@@ -6793,6 +6948,8 @@ msgid ""
 "This stock location will be used, instead of the default one, as the source "
 "location for stock moves generated by manufacturing orders."
 msgstr ""
+"ตำแหน่งที่ตั้งสต็อกนี้จะถูกนำมาใช้ แทนที่จะเป็นตำแหน่งที่ตั้งเริ่มต้น "
+"เป็นตำแหน่งที่ตั้งต้นทางสำหรับการย้ายสต็อกที่สร้างโดยใบสั่งผลิต"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__property_stock_inventory
@@ -6801,6 +6958,8 @@ msgid ""
 "This stock location will be used, instead of the default one, as the source "
 "location for stock moves generated when you do an inventory."
 msgstr ""
+"ตำแหน่งที่ตั้งสต็อกนี้จะถูกนำมาใช้ แทนที่จะเป็นตำแหน่งที่ตั้งเริ่มต้น "
+"เป็นตำแหน่งที่ตั้งต้นทางสำหรับการย้ายสต็อกที่สร้างขึ้นเมื่อคุณกำลังทำสินค้าคงคลัง"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__responsible_id
@@ -6809,12 +6968,13 @@ msgid ""
 "This user will be responsible of the next activities related to logistic "
 "operations for this product."
 msgstr ""
+"ผู้ใช้รายนี้จะรับผิดชอบกิจกรรมถัดไปที่เกี่ยวข้องกับการดำเนินการด้านโลจิสติกสำหรับสินค้านี้"
 
 #. module: stock
 #: model:digest.tip,name:stock.digest_tip_stock_0
 #: model_terms:digest.tip,tip_description:stock.digest_tip_stock_0
 msgid "Tip: Speed up inventory operations with barcodes"
-msgstr ""
+msgstr "เคล็ดลับ: เพิ่มความเร็วในการดำเนินการสินค้าคงคลังด้วยบาร์โค้ด"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__location_dest_id
@@ -6853,7 +7013,7 @@ msgstr "รอดำเนินการ"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_reorder_report_search
 msgid "To Reorder"
-msgstr ""
+msgstr "เพื่อสั่งซื้อซ้ำ"
 
 #. module: stock
 #. openerp-web
@@ -6898,6 +7058,8 @@ msgid ""
 "Track following dates on lots & serial numbers: best before, removal, end of life, alert. \n"
 " Such dates are set automatically at lot/serial number creation based on values set on the product (in days)."
 msgstr ""
+"ติดตามวันที่ต่อไปนี้ในล็อตและหมายเลขซีเรียล: ควรบริโภคก่อน การย้ายออก หมดอายุ การแจ้งเตือน\n"
+"วันที่ดังกล่าวจะถูกตั้งค่าโดยอัตโนมัติเมื่อมีการสร้างล็อต/หมายเลขซีเรียลตามค่าที่ตั้งไว้ในสินค้า (เป็นวัน)"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -6906,22 +7068,26 @@ msgid ""
 " life, alert. Such dates are set automatically at lot/serial number creation"
 " based on values set on the product (in days)."
 msgstr ""
+"ติดตามวันที่ต่อไปนี้ในล็อตและหมายเลขซีเรียล: ควรบริโภคก่อน การย้ายออก "
+"หมดอายุ การแจ้งเตือน "
+"วันที่ดังกล่าวจะถูกตั้งค่าโดยอัตโนมัติเมื่อมีการสร้างล็อต/หมายเลขซีเรียลตามค่าที่ตั้งไว้ในสินค้า"
+" (เป็นวัน)"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Track product location in your warehouse"
-msgstr ""
+msgstr "ติดตามตำแหน่งสินค้าในคลังสินค้าของคุณ"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.product_template_action_product
 msgid "Track your stock quantities by creating storable products."
-msgstr ""
+msgstr "ติดตามปริมาณสต็อกของคุณโดยการสร้างสินค้าที่สามารถจัดเก็บได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_inventory.py:0
 #, python-format
 msgid "Tracked Products in Inventory Adjustment"
-msgstr ""
+msgstr "ติดตามสินค้าในการปรับสินค้าคงคลัง"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_track_line__tracking__lot
@@ -6946,7 +7112,7 @@ msgstr "การติดตาม"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_track_confirmation__tracking_line_ids
 msgid "Tracking Line"
-msgstr ""
+msgstr "รายการการติดตาม"
 
 #. module: stock
 #: model:ir.model,name:stock.model_stock_picking
@@ -6977,7 +7143,7 @@ msgstr "โอนย้าย"
 #: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "Transfers %s: Please add some items to move."
-msgstr ""
+msgstr "การโอนย้าย %s: กรุณาเพิ่มบางรายการที่จะย้าย"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_picking_form
@@ -6989,18 +7155,18 @@ msgstr ""
 #: model_terms:ir.actions.act_window,help:stock.action_picking_type_list
 #: model_terms:ir.actions.act_window,help:stock.stock_picking_action_picking_type
 msgid "Transfers allow you to move products from one location to another."
-msgstr ""
+msgstr "การโอนย้ายทำให้คุณสามารถย้ายสินค้าจากที่หนึ่งไปยังอีกที่หนึ่งได้"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.do_view_pickings
 msgid "Transfers for Groups"
-msgstr ""
+msgstr "การโอนย้ายสำหรับกลุ่ม"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_internal_search
 msgid ""
 "Transfers that are late on scheduled time or one of pickings will be late"
-msgstr ""
+msgstr "การโอนที่ล่าช้าตามเวลาที่กำหนดหรือการเลือกอย่างใดอย่างหนึ่งจะล่าช้า"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_location__usage__transit
@@ -7021,19 +7187,19 @@ msgstr "ตัวกระตุ้น"
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__procure_method__make_to_order
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule
 msgid "Trigger Another Rule"
-msgstr ""
+msgstr "เรียกใช้กฎอื่น"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule
 msgid "Trigger Another Rule If No Stock"
-msgstr ""
+msgstr "เรียกใช้กฎอื่นหากไม่มีสต็อก"
 
 #. module: stock
 #. openerp-web
 #: code:addons/stock/static/src/js/report_stock_forecasted.js:0
 #, python-format
 msgid "Try to add some incoming or outgoing transfers."
-msgstr ""
+msgstr "ลองเพิ่มการถ่ายโอนขาเข้าหรือขาออก"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_barcode_rule__type
@@ -7080,7 +7246,7 @@ msgstr "ขยายทั้งหมด"
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_production_lot__name
 msgid "Unique Lot/Serial Number"
-msgstr ""
+msgstr "ล็อต/หมายเลขซีเรียล ที่ไม่ซ้ำกัน"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__price_unit
@@ -7132,7 +7298,7 @@ msgstr "หน่วยวัด"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_product_replenish__product_uom_id
-msgid "Unity of measure"
+msgid "Unit of measure"
 msgstr ""
 
 #. module: stock
@@ -7225,7 +7391,7 @@ msgstr "เร่งด่วน"
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__picking_type_use_existing_lots
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__use_existing_lots
 msgid "Use Existing Lots/Serial Numbers"
-msgstr ""
+msgstr "ใช้ล็อต/หมายเลขซีเรียลที่มีอยู่"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_product_replenish
@@ -7234,16 +7400,19 @@ msgid ""
 "                Depending on your product configuration, launching a replenishment may trigger a request for quotation,\n"
 "                a manufacturing order or a transfer."
 msgstr ""
+"ใช้ผู้ช่วยนี้เพื่อเติมสต็อกสินค้าของคุณ\n"
+"                ขึ้นอยู่กับการกำหนดค่าสินค้าของคุณ การเริ่มเติมสินค้าอาจทำให้เกิดการขอใบเสนอราคา\n"
+"               ใบสั่งผลิตหรือการโอนย้าย"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "Use your own routes"
-msgstr ""
+msgstr "ใช้เส้นทางของคุณเอง"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_product_product_replenishment
 msgid "Used by"
-msgstr ""
+msgstr "ใช้โดย"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking_type__sequence
@@ -7279,7 +7448,7 @@ msgstr "ตรวจสอบแล้ว"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_change_product_qty__product_variant_count
 msgid "Variant Count"
-msgstr ""
+msgstr "จำนวนตัวแปร"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_search
@@ -7307,7 +7476,7 @@ msgstr "มุมมอง"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_template_property_form
 msgid "View Diagram"
-msgstr ""
+msgstr "ดูแผนภาพ"
 
 #. module: stock
 #. openerp-web
@@ -7351,7 +7520,7 @@ msgstr "กำลังรอเคลือนย้าย"
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_picking_tree_waiting
 msgid "Waiting Transfers"
-msgstr ""
+msgstr "รอการโอนย้าย"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_inventory_form
@@ -7393,7 +7562,7 @@ msgstr ""
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_location_route__warehouse_domain_ids
 msgid "Warehouse Domain"
-msgstr ""
+msgstr "โดเมนคลังสินค้า"
 
 #. module: stock
 #: model:ir.ui.menu,name:stock.menu_warehouse_config
@@ -7408,7 +7577,7 @@ msgstr "คลังสินค้าที่จะแพร่ออกไป
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse
 msgid "Warehouse view location"
-msgstr ""
+msgstr "ตำแหน่งมุมมองคลังสินค้า"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
@@ -7421,7 +7590,7 @@ msgstr "เส้นทางของคลังสินค้า"
 #: code:addons/stock/static/src/xml/report_stock_forecasted.xml:0
 #, python-format
 msgid "Warehouse:"
-msgstr ""
+msgstr "คลังสินค้า:"
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_warehouse_form
@@ -7515,11 +7684,13 @@ msgid ""
 "When checked, the route will be selectable in the Inventory tab of the "
 "Product form."
 msgstr ""
+"เมื่อทำเครื่องหมายแล้ว "
+"เส้นทางจะสามารถเลือกได้ในแท็บสินค้าคงคลังของแบบฟอร์มสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_location_route__product_categ_selectable
 msgid "When checked, the route will be selectable on the Product Category."
-msgstr ""
+msgstr "เมื่อทำเครื่องหมายแล้ว จะสามารถเลือกเส้นทางได้ที่หมวดสินค้า"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_putaway_rule__location_in_id
@@ -7533,6 +7704,8 @@ msgid ""
 "When products are needed in <b>%s</b>, <br/> <b>%s</b> are created from "
 "<b>%s</b> to fulfill the need."
 msgstr ""
+"เมื่อสินค้ามีความต้องการใน <b>%s</b> <br/> <b>%s</b> จะถูกสร้างขึ้นจาก "
+"<b>%s</b> เพื่อตอบสนองความต้องการ"
 
 #. module: stock
 #: code:addons/stock/models/stock_rule.py:0
@@ -7541,6 +7714,8 @@ msgid ""
 "When products arrive in <b>%s</b>, <br/> <b>%s</b> are created to send them "
 "in <b>%s</b>."
 msgstr ""
+"เมื่อสินค้ามาถึงที่ <b>%s</b> <br/> <b>%s</b> "
+"จะถูกสร้างขึ้นเพื่อส่งเข้ามาที่ <b>%s</b>"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__is_locked
@@ -7575,23 +7750,26 @@ msgid ""
 "When ticked, if the move created by this rule is cancelled, the next move "
 "will be cancelled too."
 msgstr ""
+"เมื่อทำเครื่องหมายแล้ว หากมีการย้ายที่สร้างตามกฎนี้ถูกยกเลิก "
+"การย้ายถัดไปก็จะถูกยกเลิกด้วย"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__owner_id
 msgid ""
 "When validating the transfer, the products will be assigned to this owner."
 msgstr ""
+"เมื่อตรวจสอบความถูกต้องของการโอนย้าย สินค้าจะถูกมอบหมายให้กับเจ้าของรายนี้"
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move_line__owner_id
 msgid ""
 "When validating the transfer, the products will be taken from this owner."
-msgstr ""
+msgstr "เมื่อยืนยันการโอนย้าย สินค้าจะถูกยึดจากเจ้าของรายนี้"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__additional
 msgid "Whether the move was added after the picking's confirmation"
-msgstr ""
+msgstr "มีการเพิ่มการย้ายหลังจากการยืนยันการเบิกสินค้าหรือไม่"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_return_picking_line__wizard_id
@@ -7602,12 +7780,12 @@ msgstr "วิซาร์ด"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_move_line_operation_tree
 msgid "Write your SN/LN one by one or copy paste a list."
-msgstr ""
+msgstr "เขียน SN/LN ของคุณทีละรายการ หรือคัดลอกและวางรายการ"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_orderpoint_replenish
 msgid "You are good, no replenishment to perform!"
-msgstr ""
+msgstr "คุณเก่งมาก ไม่มีการเติมสินค้าให้แสดง!"
 
 #. module: stock
 #: code:addons/stock/models/stock_production_lot.py:0
@@ -7617,6 +7795,9 @@ msgid ""
 "if some stock moves have already been created with that number. This would "
 "lead to inconsistencies in your stock."
 msgstr ""
+"คุณไม่ได้รับอนุญาตให้เปลี่ยนสินค้าที่เชื่อมโยงกับหมายเลขซีเรียลหรือหมายเลขล็อต"
+" หากมีการสร้างการย้ายสต็อกบางส่วนด้วยหมายเลขนั้นแล้ว "
+"สิ่งนี้จะนำไปสู่ความไม่สอดคล้องกันในสต็อกของคุณ"
 
 #. module: stock
 #: code:addons/stock/models/stock_production_lot.py:0
@@ -7626,13 +7807,16 @@ msgid ""
 "type. To change this, go on the operation type and tick the box \"Create New"
 " Lots/Serial Numbers\"."
 msgstr ""
+"คุณไม่ได้รับอนุญาตให้สร้างล็อตหรือหมายเลขซีเรียลด้วยการดำเนินการประเภทนี้ "
+"หากต้องการเปลี่ยนแปลง ให้ไปที่ประเภทการดำเนินการแล้วทำเครื่องหมายที่ช่อง "
+"\"สร้างล็อตใหม่/หมายเลขซีเรียล\""
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_package_destination_form_view
 msgid ""
 "You are trying to put products going to different locations into the same "
 "package"
-msgstr ""
+msgstr "คุณกำลังพยายามนำสินค้าไปยังสถานที่ที่ต่างกันไว้ในบรรจุภัณฑ์เดียวกัน"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -7644,6 +7828,10 @@ msgid ""
 "valuate your stock or change its rounding precision to a smaller value "
 "(example: 0.00001)."
 msgstr ""
+"คุณกำลังใช้หน่วยวัดที่น้อยกว่าที่คุณใช้เพื่อสต็อกสินค้าของคุณ "
+"ซึ่งอาจนำไปสู่ปัญหาการปัดเศษของปริมาณที่สำรองไว้ "
+"คุณควรใช้หน่วยวัดที่น้อยกว่าที่เป็นไปได้เพื่อประเมินมูลค่าสต็อกของคุณหรือเปลี่ยนความแม่นยำในการปัดเศษให้เป็นค่าที่น้อยลง"
+" (ตัวอย่าง: 0.00001)"
 
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.action_routes_form
@@ -7653,6 +7841,10 @@ msgid ""
 "                routes can be assigned to a product, a product category or be fixed\n"
 "                on procurement or sales order."
 msgstr ""
+"คุณสามารถกำหนดเส้นทางหลักที่วิ่งผ่านคลังสินค้าของคุณ\n"
+"                และกำหนดขั้นตอนการเดินทางของสินค้าได้ที่นี่\n"
+"                เส้นทางเหล่านี้สามารถกำหนดให้กับสินค้า ประเภทสินค้า\n"
+"                หรือกำหนดไว้ในการจัดซื้อ หรือใบสั่งขายได้"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -7662,12 +7854,14 @@ msgid ""
 "stock move. If you need to change the type, you should first unreserve the "
 "stock move."
 msgstr ""
+"คุณไม่สามารถเปลี่ยนประเภทของสินค้าที่ถูกจองไว้ในปัจจุบันในการย้ายสต็อก "
+"หากคุณต้องการเปลี่ยนประเภท คุณควรยกเลิกการสำรองการย้ายสต็อกก่อน"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
 #, python-format
 msgid "You can not change the type of a product that was already used."
-msgstr ""
+msgstr "คุณไม่สามารถเปลี่ยนประเภทของสินค้าที่ใช้แล้วได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
@@ -7676,12 +7870,14 @@ msgid ""
 "You can not delete product moves if the picking is done. You can only "
 "correct the done quantities."
 msgstr ""
+"คุณไม่สามารถลบการย้ายสินค้าได้หากการเบิกสินค้าเสร็จสิ้น "
+"คุณสามารถแก้ไขปริมาณที่ทำเสร็จแล้วเท่านั้น"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
 #, python-format
 msgid "You can not enter negative quantities."
-msgstr ""
+msgstr "คุณไม่สามารถป้อนปริมาณที่มีค่าเป็นลบได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_inventory.py:0
@@ -7708,6 +7904,7 @@ msgstr "คุณสามารถลบแบบร่างการย้า
 #, python-format
 msgid "You can only process 1.0 %s of products with unique serial number."
 msgstr ""
+"คุณสามารถประมวลผลได้เพียง 1.0 %s ของสินค้าที่มีหมายเลขซีเรียลที่ไม่ซ้ำกัน"
 
 #. module: stock
 #: code:addons/stock/models/res_config_settings.py:0
@@ -7729,7 +7926,7 @@ msgstr ""
 #: code:addons/stock/models/stock_location.py:0
 #, python-format
 msgid "You cannot archive the location %s as it is used by your warehouse %s"
-msgstr ""
+msgstr "คุณไม่สามารถเก็บถาวรตำแหน่ง %s เนื่องจากถูกใช้โดยคลังสินค้า %s ของคุณ"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -7738,12 +7935,15 @@ msgid ""
 "You cannot cancel a stock move that has been set to 'Done'. Create a return "
 "in order to reverse the moves which took place."
 msgstr ""
+"คุณไม่สามารถยกเลิกการย้ายสต็อกที่ตั้งค่าเป็น 'เสร็จสิ้น' ได้ "
+"สร้างการส่งคืนเพื่อย้อนกลับการย้ายที่เกิดขึ้น"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "You cannot change the Scheduled Date on a done or cancelled transfer."
 msgstr ""
+"คุณไม่สามารถเปลี่ยนวันที่กำหนดในการโอนย้ายที่เสร็จสิ้นหรือถูกยกเลิกได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_location.py:0
@@ -7752,6 +7952,8 @@ msgid ""
 "You cannot change the location type or its use as a scrap location as there "
 "are products reserved in this location. Please unreserve the products first."
 msgstr ""
+"คุณไม่สามารถเปลี่ยนประเภทสถานที่หรือการใช้เป็นสถานที่ทิ้งเศษซากสินค้าได้ "
+"เนื่องจากมีสินค้าที่สำรองไว้ในสถานที่นี้ กรุณายกเลิกการสำรองสินค้าก่อน"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -7760,6 +7962,8 @@ msgid ""
 "You cannot change the ratio of this unit of measure as some products with "
 "this UoM have already been moved or are currently reserved."
 msgstr ""
+"คุณไม่สามารถเปลี่ยนอัตราส่วนของหน่วยวัดนี้ได้ เนื่องจากสินค้าบางรายการที่มี "
+"UoM นี้ได้ถูกย้ายหรือถูกสำรองไว้แล้วในปัจจุบัน"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -7769,18 +7973,20 @@ msgid ""
 "this product. If you want to change the unit of measure, you should rather "
 "archive this product and create a new one."
 msgstr ""
+"คุณไม่สามารถเปลี่ยนหน่วยวัดได้ เนื่องจากมีสินค้าที่ถูกย้ายในสต็อกอยู่แล้ว "
+"หากคุณต้องการเปลี่ยนหน่วยวัด คุณควรเก็บถาวรสินค้านี้และสร้างสินค้าใหม่"
 
 #. module: stock
 #: code:addons/stock/models/stock_scrap.py:0
 #, python-format
 msgid "You cannot delete a scrap which is done."
-msgstr ""
+msgstr "คุณไม่สามารถลบเศษสินค้าที่ทำเสร็จแล้วได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_quant.py:0
 #, python-format
 msgid "You cannot modify inventory loss quantity"
-msgstr ""
+msgstr "คุณไม่สามารถแก้ไขปริมาณการสูญเสียสินค้าคงคลังได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -7789,6 +7995,8 @@ msgid ""
 "You cannot move the same package content more than once in the same transfer"
 " or split the same package into two location."
 msgstr ""
+"คุณไม่สามารถย้ายของในแพ็คเกจเดียวกันมากกว่าหนึ่งครั้งในการโอนย้ายเดียวกันได้"
+" หรือแยกแพ็คเกจเดียวกันออกเป็นสองตำแหน่ง"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
@@ -7797,6 +8005,8 @@ msgid ""
 "You cannot perform the move because the unit of measure has a different "
 "category as the product unit of measure."
 msgstr ""
+"คุณไม่สามารถดำเนินการย้ายได้ "
+"เนื่องจากหน่วยวัดมีประเภทที่แตกต่างกันเป็นหน่วยวัดสินค้า"
 
 #. module: stock
 #: code:addons/stock/models/stock_inventory.py:0
@@ -7817,8 +8027,9 @@ msgstr "คุณไม่สามารถแบ่งแบบร่างก
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
-msgid "You cannot split a stock move that has been set to 'Done'."
+msgid "You cannot split a stock move that has been set to 'Done' or 'Cancel'."
 msgstr ""
+"คุณไม่สามารถแยกการย้ายสต็อกที่ตั้งค่าเป็น 'เสร็จสิ้น' หรือ 'ยกเลิก' ได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_quant.py:0
@@ -7827,18 +8038,21 @@ msgid ""
 "You cannot take products from or deliver products to a location of type "
 "\"view\" (%s)."
 msgstr ""
+"คุณไม่สามารถนำสินค้าออกจากหรือส่งสินค้าไปยังตำแหน่งประเภท \"มุมมอง\" ได้ "
+"(%s) "
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
 msgid "You cannot unreserve a stock move that has been set to 'Done'."
-msgstr ""
+msgstr "คุณไม่สามารถยกเลิกการสำรองการย้ายสต็อกที่ตั้งค่าเป็น 'เสร็จสิ้น' ได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
 msgid "You cannot change a cancelled stock move, create a new line instead."
 msgstr ""
+"คุณไม่สามารถเปลี่ยนแปลงการย้ายสต็อกที่ถูกยกเลิกได้ ให้สร้างรายการใหม่แทน"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
@@ -7848,6 +8062,8 @@ msgid ""
 "You cannot use the same serial number twice. Please correct the serial "
 "numbers encoded."
 msgstr ""
+"คุณไม่สามารถใช้หมายเลขซีเรียลเดียวกันสองครั้งได้ "
+"โปรดแก้ไขหมายเลขซีเรียลที่เข้ารหัส"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -7856,13 +8072,15 @@ msgid ""
 "You cannot validate a transfer if no quantities are reserved nor done. To "
 "force the transfer, switch in edit mode and encode the done quantities."
 msgstr ""
+"คุณไม่สามารถตรวจสอบการโอนย้ายได้ หากไม่มีการสำรองหรือดำเนินการตามปริมาณ "
+"หากต้องการบังคับโอนย้าย ให้สลับในโหมดแก้ไขและเข้ารหัสปริมาณที่ทำเสร็จแล้ว"
 
 #. module: stock
 #: code:addons/stock/wizard/stock_picking_return.py:0
 #, python-format
 msgid ""
 "You have manually created product lines, please delete them to proceed."
-msgstr ""
+msgstr "คุณได้สร้างกลุ่มสินค้าด้วยตนเอง โปรดลบออกเพื่อดำเนินการต่อ"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_immediate_transfer
@@ -7885,6 +8103,8 @@ msgid ""
 "You have product(s) in stock that have no lot/serial number. You can assign "
 "lot/serial numbers by doing an inventory adjustment."
 msgstr ""
+"คุณมีสินค้าในสต็อกที่ไม่มีหมายเลขล็อต/หมายเลขซีเรียล "
+"คุณสามารถกำหนดหมายเลขล็อต/หมายเลขซีเรียลได้โดยการปรับสินค้าคงคลัง"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -7900,18 +8120,19 @@ msgid ""
 "You have to select a product unit of measure that is in the same category as"
 " the default unit of measure of the product"
 msgstr ""
+"คุณต้องเลือกหน่วยวัดสินค้าที่อยู่ในหมวดหมู่เดียวกันกับหน่วยวัดเริ่มต้นของสินค้า"
 
 #. module: stock
 #: code:addons/stock/wizard/stock_picking_return.py:0
 #, python-format
 msgid "You may only return Done pickings."
-msgstr ""
+msgstr "คุณสามารถส่งคืนได้เฉพาะการเลือกที่เสร็จสิ้นแล้วเท่านั้น"
 
 #. module: stock
 #: code:addons/stock/wizard/stock_picking_return.py:0
 #, python-format
 msgid "You may only return one picking at a time."
-msgstr ""
+msgstr "คุณสามารถคืนสินค้าได้ครั้งละหนึ่งรายการเท่านั้น"
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -7919,13 +8140,13 @@ msgstr ""
 msgid ""
 "You need to activate storage locations to be able to do internal operation "
 "types."
-msgstr ""
+msgstr "คุณต้องเปิดใช้งานสถานที่จัดเก็บ เพื่อให้สามารถดำเนินการประเภทภายในได้"
 
 #. module: stock
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
 msgid "You need to set a Serial Number before generating more."
-msgstr ""
+msgstr "คุณต้องตั้งค่าหมายเลขซีเรียลก่อนที่จะสร้างเพิ่ม"
 
 #. module: stock
 #: code:addons/stock/models/stock_move_line.py:0
@@ -7934,18 +8155,21 @@ msgid ""
 "You need to supply a Lot/Serial Number for product: \n"
 " - "
 msgstr ""
+"คุณต้องระบุล็อต/หมายเลขซีเรียลสำหรับสินค้า: \n"
+" - "
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "You need to supply a Lot/Serial number for products %s."
-msgstr ""
+msgstr "คุณต้องระบุหมายเลขล็อต/หมายเลขซีเรียลสำหรับสินค้า %s"
 
 #. module: stock
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "You still have ongoing operations for picking types %s in warehouse %s"
 msgstr ""
+"คุณยังคงมีการดำเนินการอย่างต่อเนื่องสำหรับการเลือกประเภท %s ในคลังสินค้า %s"
 
 #. module: stock
 #: code:addons/stock/models/product.py:0
@@ -7954,12 +8178,14 @@ msgid ""
 "You still have some active reordering rules on this product. Please archive "
 "or delete them first."
 msgstr ""
+"คุณยังคงมีกฎการสั่งซื้อซ้ำบางข้อที่ใช้งานอยู่สำหรับสินค้านี้ "
+"โปรดเก็บถาวรหรือลบออกก่อน"
 
 #. module: stock
 #: code:addons/stock/models/stock_location.py:0
 #, python-format
 msgid "You still have some product in locations %s"
-msgstr ""
+msgstr "คุณยังมีสินค้าอยู่บ้างในสถานที่ต่างๆ %s"
 
 #. module: stock
 #. openerp-web
@@ -7977,6 +8203,9 @@ msgid ""
 "            Choose the quantity to buy or manufacture and launch orders in a click.\n"
 "            To save time in the future, set the rules as \"automated\"."
 msgstr ""
+"คุณจะพบข้อเสนอการเติมสินค้าอัจฉริยะที่นี่ตามการคาดการณ์สินค้าคงคลัง\n"
+"            เลือกปริมาณที่จะซื้อหรือผลิตและเปิดคำสั่งซื้อได้ในคลิกเดียว\n"
+"            เพื่อประหยัดเวลาในอนาคต ให้ตั้งกฎเป็น \"อัตโนมัติ\""
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule
@@ -8059,7 +8288,7 @@ msgstr "ของ"
 #: code:addons/stock/static/src/xml/popover_widget.xml:0
 #, python-format
 msgid "planned on"
-msgstr ""
+msgstr "วางแผนไว้"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.exception_on_picking

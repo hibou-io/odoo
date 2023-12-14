@@ -19,7 +19,7 @@ msgstr ""
 "POT-Creation-Date: 2021-02-25 10:15+0000\n"
 "PO-Revision-Date: 2020-09-07 08:09+0000\n"
 "Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023\n"
-"Language-Team: Ukrainian (https://www.transifex.com/odoo/teams/41243/uk/)\n"
+"Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -666,9 +666,7 @@ msgstr "<span title=\"Latest Statement\">Остання виписка</span>"
 msgid ""
 "<span title=\"Outstanding Payments/Receipts\">Outstanding "
 "Payments/Receipts</span>"
-msgstr ""
-"<span title=\"Outstanding Payments/Receipts\">Несплачені "
-"платежі/квитанції</span>"
+msgstr "<span title=\"Outstanding Payments/Receipts\">Кошти до виплати</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_form
@@ -2686,7 +2684,7 @@ msgstr "Банківські виписки"
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Bank Suspense Account"
-msgstr "Тимчасовий банківський рахунок"
+msgstr "Кошти до з'ясування"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_setup_bank_manual_config__acc_type
@@ -3131,7 +3129,7 @@ msgstr "Рахунок витрат готівкових різниць"
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Cash Difference Gain"
-msgstr "Прибуток грошових різниць"
+msgstr "Доходи від різниці по касі"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_chart_template__default_cash_difference_income_account_id
@@ -3143,7 +3141,7 @@ msgstr "Рахунок доходу грошових різниць"
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Cash Difference Loss"
-msgstr "Витрати грошових різниць"
+msgstr "Втрати від різниці по касі"
 
 #. module: account
 #: model:ir.actions.act_window,name:account.action_view_bank_statement_tree
@@ -7587,7 +7585,7 @@ msgstr "Ліквідність"
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Liquidity Transfer"
-msgstr "Передача ліквідності"
+msgstr "Транзитний рахунок"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_chart_template__tax_template_ids
@@ -12741,6 +12739,14 @@ msgstr ""
 "наприклад: .*N°48748 abc123.*"
 
 #. module: account
+#: code:addons/account/models/account_move.py:0
+#, python-format
+msgid ""
+"The move could not be posted for the following reason: %(error_message)s"
+msgstr ""
+"Переміщення не вдалося опублікувати з наступної причини: %(error_message)s"
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__move_id
 msgid "The move of this entry line."
 msgstr "Переміщення цього запису"
@@ -13822,7 +13828,7 @@ msgstr "Залишок"
 #: code:addons/account/models/company.py:0
 #, python-format
 msgid "Unposted Entries"
-msgstr ""
+msgstr "Неопубліковані записи"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_filter
@@ -14654,6 +14660,8 @@ msgstr ""
 #, python-format
 msgid "Please contact your accountant to print the Hash integrity result."
 msgstr ""
+"Будь ласка, зверніться до свого бухгалтера, щоб надрукувати результат "
+"цілісності хешу."
 
 #. module: account
 #: code:addons/account/models/account_account.py:0
@@ -14717,6 +14725,9 @@ msgid ""
 "The following entries are already hashed:\n"
 "%s"
 msgstr ""
+"Ви не можете редагувати наступні поля: %s.\n"
+"Наступні записи вже хешовані:\n"
+"%s"
 
 #. module: account
 #: code:addons/account/models/account_move.py:0

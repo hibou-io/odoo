@@ -9,7 +9,7 @@ from uuid import uuid4
 from odoo import _, api, fields, models, modules, tools
 from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
-from odoo.tools import ormcache, formataddr
+from odoo.tools import ormcache
 from odoo.exceptions import AccessError
 from odoo.addons.base.models.ir_model import MODULE_UNINSTALL_FLAG
 from odoo.tools import html_escape
@@ -26,7 +26,7 @@ class ChannelPartner(models.Model):
 
     custom_channel_name = fields.Char('Custom channel name')
     partner_id = fields.Many2one('res.partner', string='Recipient', ondelete='cascade')
-    partner_email = fields.Char('Email', related='partner_id.email', depends=['partner_id'], readonly=False)
+    partner_email = fields.Char('Email', related='partner_id.email', depends=['partner_id'], related_sudo=False)
     channel_id = fields.Many2one('mail.channel', string='Channel', ondelete='cascade')
     fetched_message_id = fields.Many2one('mail.message', string='Last Fetched')
     seen_message_id = fields.Many2one('mail.message', string='Last Seen')
@@ -271,6 +271,7 @@ class Channel(models.Model):
             all_emp_group = None
         if all_emp_group and all_emp_group in self and not self._context.get(MODULE_UNINSTALL_FLAG):
             raise UserError(_('You cannot delete those groups, as the Whole Company group is required by other modules.'))
+        self.env['bus.bus'].sendmany([[(self._cr.dbname, 'mail.channel', channel.id), {'info': 'delete'}] for channel in self])
         return super(Channel, self).unlink()
 
     def write(self, vals):
@@ -377,7 +378,7 @@ class Channel(models.Model):
         # real mailing list: multiple recipients (hidden by X-Forge-To)
         if self.alias_domain and self.alias_name:
             return {
-                'email_to': ','.join(formataddr((partner.name, partner.email_normalized)) for partner in whitelist if partner.email_normalized),
+                'email_to': ','.join(partner.email_formatted for partner in whitelist if partner.email_normalized),
                 'recipient_ids': [],
             }
         return super(Channel, self)._notify_email_recipient_values(whitelist.ids)
@@ -851,9 +852,16 @@ class Channel(models.Model):
             if channel_partner.fetched_message_id.id == last_message_id:
                 # last message fetched by user is already up-to-date
                 return
-            channel_partner.write({
-                'fetched_message_id': last_message_id,
-            })
+            # Avoid serialization error when multiple tabs are opened.
+            query = """
+                UPDATE mail_channel_partner
+                SET fetched_message_id = %s
+                WHERE id IN (
+                    SELECT id FROM mail_channel_partner WHERE id = %s
+                    FOR NO KEY UPDATE SKIP LOCKED
+                )
+            """
+            self.env.cr.execute(query, (last_message_id, channel_partner.id))
             data = {
                 'id': channel_partner.id,
                 'info': 'channel_fetched',

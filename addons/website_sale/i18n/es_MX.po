@@ -5,9 +5,10 @@
 # Translators:
 # Cécile Collart <cco@odoo.com>, 2021
 # Braulio D. López Vázquez <bdl@odoo.com>, 2021
-# Jose Carmona <jrcarmona@gmail.com>, 2021
 # Martin Trigaux, 2023
-# Lucia Pacheco <lpo@odoo.com>, 2023
+# Lucia Pacheco, 2023
+# Wil Odoo, 2023
+# Fernanda Alvarez, 2023
 # 
 msgid ""
 msgstr ""
@@ -15,8 +16,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-16 13:33+0000\n"
 "PO-Revision-Date: 2020-09-07 08:22+0000\n"
-"Last-Translator: Lucia Pacheco <lpo@odoo.com>, 2023\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Fernanda Alvarez, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -345,6 +346,16 @@ msgstr "<i class=\"fa fa-print\"/> Imprimir"
 #: model_terms:ir.ui.view,arch_db:website_sale.product
 msgid "<i class=\"fa fa-shopping-cart\"/> Add to Cart"
 msgstr "<i class=\"fa fa-shopping-cart\"/> Agregar al carrito"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.address
+msgid "<option value=\"\">Country...</option>"
+msgstr "<option value=\"\">País...</option>"
+
+#. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.address
+msgid "<option value=\"\">State / Province...</option>"
+msgstr "<option value=\"\">Estado / Provincia...</option>"
 
 #. module: website_sale
 #: code:addons/website_sale/models/crm_team.py:0
@@ -963,6 +974,16 @@ msgstr ""
 "para su cuenta. Contáctenos directamente para esta operación."
 
 #. module: website_sale
+#: code:addons/website_sale/controllers/main.py:0
+#, python-format
+msgid ""
+"Changing your name is not allowed once documents have been issued for your "
+"account. Please contact us directly for this operation."
+msgstr ""
+"No está permitido cambiar su nombre una vez que se hayan emitido documentos "
+"para su cuenta, contáctenos para realizar esta operación."
+
+#. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_public_category__child_id
 msgid "Children Categories"
 msgstr "Categorías hijas"
@@ -1121,11 +1142,6 @@ msgid "Country"
 msgstr "País"
 
 #. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.address
-msgid "Country..."
-msgstr "País..."
-
-#. module: website_sale
 #: model_terms:ir.actions.act_window,help:website_sale.product_template_action_website
 msgid "Create a new product"
 msgstr "Crear nuevo producto"
@@ -1176,7 +1192,7 @@ msgstr "Clientes"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
 msgid "DHL Express Connector"
-msgstr "Conector DHL Express"
+msgstr "Conector de DHL Express"
 
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_website__currency_id
@@ -1470,7 +1486,8 @@ msgstr "Generar una factura a partir de las órdenes listas para facturar."
 msgid ""
 "Generate the invoice automatically when the online payment is confirmed"
 msgstr ""
-"Genera la factura automáticamente una vez que se confirma el pago en línea"
+"Genera la factura de forma automática una vez que se confirma el pago en "
+"línea"
 
 #. module: website_sale
 #: model:ir.model.fields,help:website_sale.field_product_public_category__sequence
@@ -1614,6 +1631,19 @@ msgstr "Nombre de la imagen"
 #: model:ir.model.fields,help:website_sale.field_res_config_settings__module_website_sale_stock
 msgid "Installs the \"Website Delivery Information\" application"
 msgstr "Instalar la aplicación \"Información de envío en el sitio web\""
+
+#. module: website_sale
+#: code:addons/website_sale/controllers/main.py:0
+#, python-format
+msgid ""
+"If you are ordering for an external person, please place your order via the "
+"backend. If you wish to change your name or email address, please do so in "
+"the account settings or contact your administrator."
+msgstr ""
+"Si está ordenando para una persona externa, haga su pedido a través del "
+"backend. Si desea cambiar su nombre o dirección de correo electrónico, "
+"hágalo en los ajustes de la cuenta o póngase en contacto con su "
+"administrador."
 
 #. module: website_sale
 #: code:addons/website_sale/controllers/main.py:0
@@ -2504,7 +2534,7 @@ msgstr "Último valor de valoración"
 #. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_product_template__rating_count
 msgid "Rating count"
-msgstr "Número de valoración "
+msgstr "Número de calificaciones"
 
 #. module: website_sale
 #: model:ir.model.fields,help:website_sale.field_product_template__rating_last_feedback
@@ -2909,11 +2939,6 @@ msgid "State / Province"
 msgstr "Estado/Provincia"
 
 #. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.address
-msgid "State / Province..."
-msgstr "Estado/Provincia..."
-
-#. module: website_sale
 #: model:ir.model.fields,field_description:website_sale.field_res_company__website_sale_onboarding_payment_acquirer_state
 msgid "State of the website sale onboarding payment acquirer step"
 msgstr ""
@@ -2971,8 +2996,8 @@ msgstr "Sugerencias"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.address_b2b
-msgid "TIN / VAT"
-msgstr "RFC"
+msgid "VAT"
+msgstr "NIF"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options

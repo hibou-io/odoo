@@ -160,7 +160,7 @@ def ensure_db(redirect='/web/database/selector'):
             query_string = iri_to_uri(r.query_string)
             url_redirect = url_redirect.replace(query=query_string)
         request.session.db = db
-        abort_and_redirect(url_redirect)
+        abort_and_redirect(url_redirect.to_url())
 
     # if db not provided, use the session one
     if not db and request.session.db and http.db_filter([request.session.db]):
@@ -1053,7 +1053,6 @@ class WebClient(http.Controller):
         :param lang: the language of the user
         :return:
         """
-        request.disable_db = False
 
         if mods:
             mods = mods.split(',')
@@ -1229,7 +1228,6 @@ class Session(http.Controller):
     def get_session_info(self):
         request.session.check_security()
         request.uid = request.session.uid
-        request.disable_db = False
         return request.env['ir.http'].session_info()
 
     @http.route('/web/session/authenticate', type='json', auth="none")
