@@ -2,12 +2,23 @@
 # -*- coding: utf-8 -*-
 
 import odoo.tests
+from odoo.addons.base.tests.common import HttpCaseWithUserPortal
 
 
 @odoo.tests.tagged('post_install', '-at_install')
-class TestWebsiteFormEditor(odoo.tests.HttpCase):
-    def test_tour(self):
-        self.start_tour("/", 'website_form_editor_tour', login="admin")
+class TestWebsiteFormEditor(HttpCaseWithUserPortal):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env.company.email = "info@yourcompany.example.com"
+        cls.env.ref("base.user_admin").write({
+            'name': "Mitchell Admin",
+            'phone': "+1 555-555-5555",
+        })
+
+    def test_00_tour(self):
+        self.start_tour("/", 'website_form_editor_tour', login="admin", timeout=150)
         self.start_tour("/", 'website_form_editor_tour_submit')
         self.start_tour("/", 'website_form_editor_tour_results', login="admin")
 

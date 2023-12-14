@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import logging
+from pytz import timezone, UTC
 from collections import defaultdict
 from datetime import datetime, time
 from dateutil import relativedelta
@@ -361,7 +362,7 @@ class StockWarehouseOrderpoint(models.Model):
                 warehouse=warehouse.id,
                 to_date=fields.datetime.now() + relativedelta.relativedelta(days=days)
             ).read(['virtual_available'])
-            for qty in qties:
+            for (product, qty) in zip(products, qties):
                 if float_compare(qty['virtual_available'], 0, precision_rounding=product.uom_id.rounding) >= 0:
                     key_to_remove.append((qty['id'], warehouse.id))
                 else:
@@ -560,7 +561,7 @@ class StockWarehouseOrderpoint(models.Model):
                         ('res_model_id', '=', self.env.ref('product.model_product_template').id),
                         ('note', '=', error_msg)])
                     if not existing_activity:
-                        orderpoint.product_id.product_tmpl_id.activity_schedule(
+                        orderpoint.product_id.product_tmpl_id.sudo().activity_schedule(
                             'mail.mail_activity_data_warning',
                             note=error_msg,
                             user_id=orderpoint.product_id.responsible_id.id or SUPERUSER_ID,
@@ -580,4 +581,4 @@ class StockWarehouseOrderpoint(models.Model):
         return True
 
     def _get_orderpoint_procurement_date(self):
-        return datetime.combine(self.lead_days_date, time.min)
+        return timezone(self.company_id.partner_id.tz or 'UTC').localize(datetime.combine(self.lead_days_date, time(12))).astimezone(UTC).replace(tzinfo=None)
