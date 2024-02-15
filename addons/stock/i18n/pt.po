@@ -17,6 +17,10 @@
 # Reinaldo Ramos <reinaldo.ramos@arxi.pt>, 2022
 # Nuno Silva <nuno.silva@arxi.pt>, 2022
 # Manuela Silva <mmsrs@sky.com>, 2023
+# Arxi, 2024
+# Rita Bastos, 2024
+# Maitê Dietze, 2024
+# NumerSpiral HBG, 2024
 # 
 msgid ""
 msgstr ""
@@ -24,7 +28,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-11-16 13:18+0000\n"
 "PO-Revision-Date: 2021-09-14 12:26+0000\n"
-"Last-Translator: Manuela Silva <mmsrs@sky.com>, 2023\n"
+"Last-Translator: NumerSpiral HBG, 2024\n"
 "Language-Team: Portuguese (https://app.transifex.com/odoo/teams/41243/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -217,7 +221,7 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.message_body
 msgid "-&gt;"
-msgstr ""
+msgstr "-&gt;"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.exception_on_picking
@@ -687,6 +691,9 @@ msgid ""
 "A consumable product is a product for which stock is not managed.\n"
 "A service is a non-material product you provide."
 msgstr ""
+"Um produto armazenável é um produto no qual você pode gerenciar o estoque. O aplicativo Inventário deve ser instalado.\n"
+"Um produto consumível é um produto para o qual o estoque não é gerenciado.\n"
+"Um serviço é um produto não material que você fornece."
 
 #. module: stock
 #: model:res.groups,name:stock.group_warning_stock
@@ -1168,6 +1175,7 @@ msgid ""
 "Below text serves as a suggestion and doesn’t engage Odoo S.A. "
 "responsibility."
 msgstr ""
+"O texto abaixo serve como sugestão e não é de responsabilidade da Odoo S.A."
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__res_partner__picking_warn__block
@@ -2565,7 +2573,7 @@ msgstr ""
 #: model:ir.model.fields,help:stock.field_stock_scrap__tracking
 #: model:ir.model.fields,help:stock.field_stock_track_line__tracking
 msgid "Ensure the traceability of a storable product in your warehouse."
-msgstr ""
+msgstr "Garante o rastreamento de um artigo armazenável no teu armazém."
 
 #. module: stock
 #. openerp-web
@@ -4556,7 +4564,7 @@ msgstr ""
 #. module: stock
 #: model_terms:ir.actions.act_window,help:stock.product_template_action_product
 msgid "No product found. Let's create one!"
-msgstr ""
+msgstr "Nenhum produto encontrado. Vamos criar o primeiro!"
 
 #. module: stock
 #: code:addons/stock/wizard/stock_picking_return.py:0
@@ -6378,7 +6386,7 @@ msgstr "Devoluções de Stock"
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "Returns"
-msgstr ""
+msgstr "Devoluções"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_quant_package__package_use__reusable
@@ -7491,6 +7499,9 @@ msgid ""
 "\n"
 "Is this expected? For example this can occur if a delivery operation is validated before its corresponding receipt operation is validated. In this case the issue will be solved automatically once all steps are completed. Otherwise, the serial number should be corrected to prevent inconsistent data."
 msgstr ""
+"O número de série (%s) já está a ser usado nestas localizações: %s.\n"
+"\n"
+"Isso é esperado? Por exemplo, isso pode ocorrer se uma operação de entrega for validada antes da validação da operação de recebimento correspondente. Nesse caso, o problema será resolvido automaticamente quando todas as etapas forem concluídas. Caso contrário, o número de série deve ser corrigido para evitar dados inconsistentes."
 
 #. module: stock
 #: code:addons/stock/models/stock_picking.py:0
@@ -9058,6 +9069,14 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:stock.view_backorder_confirmation
 msgid "You have processed less products than the initial demand."
 msgstr "Processou menos artigos do que o pedido inicial."
+
+#. module: stock
+#: code:addons/stock/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"You have product(s) in stock that have lot/serial number tracking enabled. \n"
+"Switch off tracking on all the products before switching off this setting."
+msgstr ""
 
 #. module: stock
 #: code:addons/stock/models/product.py:0

@@ -471,11 +471,11 @@ class StockQuant(models.Model):
     @api.model
     def _get_removal_strategy(self, product_id, location_id):
         if product_id.categ_id.removal_strategy_id:
-            return product_id.categ_id.removal_strategy_id.method
+            return product_id.categ_id.removal_strategy_id.with_context(lang=None).method
         loc = location_id
         while loc:
             if loc.removal_strategy_id:
-                return loc.removal_strategy_id.method
+                return loc.removal_strategy_id.with_context(lang=None).method
             loc = loc.location_id
         return 'fifo'
 
@@ -856,6 +856,7 @@ class StockQuant(models.Model):
             'state': 'confirmed',
             'location_id': location_id.id,
             'location_dest_id': location_dest_id.id,
+            'restrict_partner_id':  self.owner_id.id,
             'is_inventory': True,
             'move_line_ids': [(0, 0, {
                 'product_id': self.product_id.id,

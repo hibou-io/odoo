@@ -1824,19 +1824,28 @@ export function setTagName(el, newTagName) {
     if (el.tagName === newTagName) {
         return el;
     }
-    var n = document.createElement(newTagName);
-    var attr = el.attributes;
-    for (var i = 0, len = attr.length; i < len; ++i) {
-        n.setAttribute(attr[i].name, attr[i].value);
+    const n = document.createElement(newTagName);
+    if (paragraphRelatedElements.includes(el.nodeName)) {
+        const attributes = el.attributes;
+        for (const attr of attributes) {
+            n.setAttribute(attr.name, attr.value);
+        }
     }
     while (el.firstChild) {
         n.append(el.firstChild);
     }
-    const closestLi = el.closest('li');
-    if (el.tagName === 'LI' && newTagName !== 'p') {
+    // If the element or its parent is a <li>, do not wrap said <li> in a <p>
+    // when converting it to normal text.
+    const containerEl = el.tagName === 'LI' ? el : el.parentElement;
+    if (el.tagName === 'LI' && (newTagName !== 'p' || el.classList.contains('nav-item'))) {
         el.append(n);
-    } else if (closestLi && newTagName === 'p') {
-        closestLi.replaceChildren(...n.childNodes);
+    } else if (
+        containerEl &&
+        containerEl.tagName === 'LI' &&
+        newTagName === 'p' &&
+        !containerEl.classList.contains('nav-item')
+    ) {
+        containerEl.replaceChildren(...n.childNodes);
     } else {
         el.parentNode.replaceChild(n, el);
     }
@@ -2391,7 +2400,8 @@ export function enforceWhitespace(el, offset, direction, rule) {
         if (
             spaceVisibility &&
             !foundVisibleSpaceTextNode &&
-            getState(...rightPos(spaceNode), DIRECTIONS.RIGHT).cType & CTGROUPS.BLOCK
+            getState(...rightPos(spaceNode), DIRECTIONS.RIGHT).cType & CTGROUPS.BLOCK &&
+            getState(...leftPos(spaceNode), DIRECTIONS.LEFT).cType !== CTYPES.CONTENT
         ) {
             spaceVisibility = false;
         }

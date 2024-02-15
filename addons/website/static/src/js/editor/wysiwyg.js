@@ -3,6 +3,7 @@ odoo.define('website.wysiwyg', function (require) {
 
 var Wysiwyg = require('web_editor.wysiwyg');
 var snippetsEditor = require('web_editor.snippet.editor');
+const { cloneContentEls } = require("website.utils");
 const weWidgets = require('wysiwyg.widgets');
 
 /**
@@ -52,7 +53,7 @@ Wysiwyg.include({
         this.options.toolbarHandler = $('#web_editor-top-edit');
 
         // Dropdown menu initialization: handle dropdown openings by hand
-        var $dropdownMenuToggles = this.$('.o_mega_menu_toggle, #top_menu_container .dropdown-toggle');
+        var $dropdownMenuToggles = this.$('.o_mega_menu_toggle, #top_menu_container .dropdown-toggle:not(.o_extra_menu_items_toggle)');
         $dropdownMenuToggles.removeAttr('data-toggle').dropdown('dispose');
         $dropdownMenuToggles.on('click.wysiwyg_megamenu', ev => {
             this.odooEditor.observerUnactive();
@@ -161,11 +162,27 @@ Wysiwyg.include({
     /**
      * @override
      */
-    _saveElement: async function ($el, context, withLang) {
+    async _saveElement($el, context, withLang, ...rest) {
         var promises = [];
 
-        // Saving a view content
-        await this._super.apply(this, arguments);
+        // Saving Embed Code snippets with <script> in the database, as these
+        // elements are removed in edit mode.
+        if ($el[0].querySelector(".s_embed_code")) {
+            // Copied so as not to impact the actual DOM and prevent scripts
+            // from loading.
+            const $clonedEl = $el.clone(true, true);
+            for (const embedCodeEl of $clonedEl[0].querySelectorAll(".s_embed_code")) {
+                const embedTemplateEl = embedCodeEl.querySelector(".s_embed_code_saved");
+                if (embedTemplateEl) {
+                    embedCodeEl.querySelector(".s_embed_code_embedded")
+                        .replaceChildren(cloneContentEls(embedTemplateEl.content, true));
+                }
+            }
+            await this._super($clonedEl, context, withLang, ...rest);
+        } else {
+            // Saving a view content
+            await this._super.apply(this, arguments);
+        }
 
         // Saving mega menu options
         if ($el.data('oe-field') === 'mega_menu_content') {

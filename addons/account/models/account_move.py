@@ -419,7 +419,7 @@ class AccountMove(models.Model):
         :return (datetime.date):
         """
         lock_dates = self._get_violated_lock_dates(invoice_date, has_tax)
-        today = fields.Date.today()
+        today = fields.Date.context_today(self)
         highest_name = self.highest_name or self._get_last_sequence(relaxed=True, lock=False)
         number_reset = self._deduce_sequence_number_reset(highest_name)
         if lock_dates:
@@ -3705,12 +3705,25 @@ class AccountMove(models.Model):
 
         self.ensure_one()
         if self.move_type != 'entry':
+            access_link = None
             for group_name, _group_method, group_data in groups:
-                if group_name in ('portal_customer', 'customer'):
+                if group_name == 'portal_customer':
                     group_data['has_button_access'] = True
+                    access_link = group_data['button_access']['url']
 
-                    # 'notification_is_customer' is used to determine whether the group should be sent the access_token
-                    group_data['notification_is_customer'] = True
+            # create a new group for partners that have been manually added as recipients
+            # those partners should have access to the invoice
+            button_access = {'url': access_link} if access_link else {}
+            recipient_group = (
+                'additional_intended_recipient',
+                lambda pdata: pdata['id'] in msg_vals.get('partner_ids', []) and pdata['id'] != self.partner_id.id,
+                {
+                    'has_button_access': True,
+                    'button_access': button_access,
+                    'notification_is_customer': True,
+                }
+            )
+            groups.insert(0, recipient_group)
 
         return groups
 
@@ -4603,10 +4616,15 @@ class AccountMoveLine(models.Model):
             if account in (journal.default_account_id, journal.suspense_account_id):
                 continue
 
-            is_account_control_ok = not journal.account_control_ids or account in journal.account_control_ids
-            is_type_control_ok = not journal.type_control_ids or account.user_type_id in journal.type_control_ids
+            failed_check = False
+            if journal.type_control_ids or journal.account_control_ids:
+                failed_check = True
+                if journal.type_control_ids:
+                    failed_check = account.user_type_id not in journal.type_control_ids
+                if failed_check and journal.account_control_ids:
+                    failed_check = account not in journal.account_control_ids
 
-            if not is_account_control_ok or not is_type_control_ok:
+            if failed_check:
                 raise UserError(_("You cannot use this account (%s) in this journal, check the section 'Control-Access' under "
                                   "tab 'Advanced Settings' on the related journal.", account.display_name))
 
@@ -4729,6 +4747,10 @@ class AccountMoveLine(models.Model):
                 })
             else:
                 vals['amount_currency'] = vals.get('amount_currency', 0.0)
+                if not move.is_invoice(include_receipts=True) and vals.get('debit') is False and vals.get('credit') is False:
+                    vals['balance'] = move.currency_id._convert(vals['amount_currency'], move.company_id.currency_id, move.company_id, move.date)
+                    vals['debit'] = vals['balance'] if vals['balance'] > 0.0 else 0.0
+                    vals['credit'] = -vals['balance'] if vals['balance'] < 0.0 else 0.0
 
             if move.is_invoice(include_receipts=True):
                 currency = move.currency_id

@@ -35,6 +35,8 @@ const preserveCursor = OdooEditorLib.preserveCursor;
 const closestElement = OdooEditorLib.closestElement;
 const setSelection = OdooEditorLib.setSelection;
 const endPos = OdooEditorLib.endPos;
+const getCursorDirection = OdooEditorLib.getCursorDirection;
+const DIRECTIONS = OdooEditorLib.DIRECTIONS;
 
 var id = 0;
 const faZoomClassRegex = RegExp('fa-[0-9]x');
@@ -158,7 +160,7 @@ const Wysiwyg = Widget.extend({
             getContextFromParentRect: options.getContextFromParentRect,
             getScrollContainerRect: () => {
                 if (!this.scrollContainer || !this.scrollContainer.getBoundingClientRect) {
-                    this.scrollContainer = document.querySelector('.o_action_manager');
+                    this.scrollContainer = document.querySelector('.o_action_manager') || document.body;
                 }
                 return this.scrollContainer.getBoundingClientRect();
             },
@@ -190,7 +192,22 @@ const Wysiwyg = Widget.extend({
             },
             filterMutationRecords: (records) => {
                 return records.filter((record) => {
+                    if (record.type === 'attributes'
+                            && record.attributeName === 'aria-describedby') {
+                        const value = (record.oldValue || record.target.getAttribute(record.attributeName));
+                        if (value && value.startsWith('popover')) {
+                            // TODO maybe we should just always return false at
+                            // this point: never considering the
+                            // aria-describedby attribute for any tooltip?
+                            const popoverData = $(record.target).data('bs.popover');
+                            return !popoverData
+                                || popoverData.tip.id !== value
+                                || !popoverData.tip.classList.contains('o_edit_menu_popover');
+                        }
+                    }
                     return !(
+                        // TODO should probably not check o_header_standard
+                        // here, since it is a website class ?
                         (record.target.classList && record.target.classList.contains('o_header_standard')) ||
                         (record.type === 'attributes' && record.attributeName === 'data-last-history-steps')
                     );
@@ -1261,8 +1278,17 @@ const Wysiwyg = Widget.extend({
                         anchorOffset = focusOffset = index;
                     }
                 } else {
-                    anchorNode = link;
-                    focusNode = link;
+                    const isDirectionRight = getCursorDirection(selection.anchorNode, 0, selection.focusNode, 0) === DIRECTIONS.RIGHT;
+                    if (
+                        closestElement(selection.anchorNode, 'a') === link &&
+                        closestElement(selection.focusNode, 'a') === link
+                    ) {
+                        [anchorNode, focusNode] = isDirectionRight
+                            ? [selection.anchorNode, selection.focusNode]
+                            : [selection.focusNode, selection.anchorNode];
+                    } else {
+                        [anchorNode, focusNode] = [link, link];
+                    }
                 }
                 if (!focusOffset) {
                     focusOffset = focusNode.childNodes.length || focusNode.length;
@@ -1599,6 +1625,10 @@ const Wysiwyg = Widget.extend({
                     });
                     colorpicker.on('color_leave', null, ev => {
                         this.odooEditor.historyRevertCurrentStep();
+                        // Compute the selection to ensure it's preserved
+                        // between selectionchange events in case this gets
+                        // triggered multiple times quickly.
+                        this.odooEditor._computeHistorySelection();
                     });
                     colorpicker.on('enter_key_color_colorpicker', null, () => {
                         $dropdown.children('.dropdown-toggle').dropdown('hide');
@@ -1638,7 +1668,7 @@ const Wysiwyg = Widget.extend({
             const range = new Range();
             range.setStart(first, 0);
             range.setEnd(...endPos(last));
-            sel.addRange(range);
+            sel.addRange(getDeepRange(this.odooEditor.editable, { range }));
         }
 
         const hexColor = this._colorToHex(color);

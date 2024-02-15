@@ -170,7 +170,7 @@ class HrExpense(models.Model):
             taxes = expense.tax_ids.compute_all(amount, expense.currency_id, quantity, expense.product_id, expense.employee_id.user_id.partner_id)
             expense.untaxed_amount = taxes.get('total_excluded')
 
-    @api.depends("sheet_id.account_move_id.line_ids")
+    @api.depends('sheet_id.account_move_id.line_ids.amount_residual')
     def _compute_amount_residual(self):
         for expense in self:
             if not expense.sheet_id:
@@ -418,13 +418,18 @@ Or send your receipts at <a href="mailto:%(email)s?subject=Lunch%%20with%%20cust
             raise UserError(_("You cannot report expenses for different companies in the same report."))
 
         todo = self.filtered(lambda x: x.payment_mode=='own_account') or self.filtered(lambda x: x.payment_mode=='company_account')
+        expense_name = False
         if len(todo) == 1:
             expense_name = todo.name
         else:
             dates = todo.mapped('date')
-            min_date = format_date(self.env, min(dates))
-            max_date = format_date(self.env, max(dates))
-            expense_name = min_date if max_date == min_date else "%s - %s" % (min_date, max_date)
+            if False not in dates:  # If at least one date isn't set, we don't set a default name
+                min_date = format_date(self.env, min(dates))
+                max_date = format_date(self.env, max(dates))
+                if min_date == max_date:
+                    expense_name = min_date
+                else:
+                    expense_name = _("%(date_from)s - %(date_to)s", date_from=min_date, date_to=max_date)
 
         values = {
             'default_company_id': self.company_id.id,
@@ -919,12 +924,11 @@ class HrExpenseSheet(models.Model):
         for sheet in self:
             sheet.total_amount = sum(sheet.expense_line_ids.mapped('total_amount_company'))
 
-    @api.depends("account_move_id.line_ids")
+    @api.depends('account_move_id.amount_residual_signed')
     def _compute_amount_residual(self):
         for sheet in self:
-            payment_term_lines = sheet.account_move_id.sudo().line_ids \
-                .filtered(lambda line: line.expense_id in sheet.expense_line_ids and line.account_internal_type in ('receivable', 'payable'))
-            sheet.amount_residual = -sum(payment_term_lines.mapped('amount_residual'))
+            # Expense moves are outbound, so amount_residual_signed are negative
+            sheet.amount_residual = -sheet.account_move_id.amount_residual_signed
 
     @api.depends('account_move_id.payment_state')
     def _compute_payment_state(self):
@@ -1066,13 +1070,13 @@ class HrExpenseSheet(models.Model):
     def action_unpost(self):
         self = self.with_context(clean_context(self.env.context))
         moves = self.account_move_id
+        draft_moves = moves.filtered(lambda m: m.state == 'draft')
+        (moves - draft_moves)._reverse_moves(cancel=True)
         self.write({
             'account_move_id': False,
             'state': 'draft',
         })
-        draft_moves = moves.filtered(lambda m: m.state == 'draft')
         draft_moves.unlink()
-        (moves - draft_moves)._reverse_moves(cancel=True)
 
     def action_get_attachment_view(self):
         res = self.env['ir.actions.act_window']._for_xml_id('base.action_attachment')

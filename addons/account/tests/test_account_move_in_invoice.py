@@ -848,6 +848,37 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
             'amount_total': 1384.0,
         })
 
+    def test_compute_cash_rounding_lines(self):
+        cash_rounding_add_invoice_line = self.env['account.cash.rounding'].create({
+            'name': 'Add invoice line Rounding Down',
+            'rounding': .1,
+            'strategy': 'add_invoice_line',
+            'profit_account_id': self.company_data['default_account_revenue'].id,
+            'loss_account_id': self.company_data['default_account_expense'].id,
+            'rounding_method': 'DOWN',
+        })
+        move = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'partner_id': self.partner_a.id,
+            'invoice_date': '2019-01-01',
+            'invoice_cash_rounding_id': cash_rounding_add_invoice_line.id,
+            'invoice_line_ids': [
+                Command.create({
+                    'name': 'line',
+                    'price_unit': 295,
+                }),
+                Command.create({
+                    'name': 'cost',
+                    'price_unit': 280.33,
+                }),
+                Command.create({
+                    'name': 'cost neg',
+                    'price_unit': -280.33,
+                }),
+            ],
+        })
+        self.assertFalse(move.line_ids.filtered(lambda line: line.is_rounding_line))
+
     def test_in_invoice_line_onchange_cash_rounding_1(self):
         # Test 'add_invoice_line' rounding
         move_form = Form(self.invoice)
@@ -2024,12 +2055,13 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
         allowing them to view the invoice without needing to log in.
         """
 
-        # Create a simple invoice for the partner
         invoice = self.init_invoice(
             'out_invoice', partner=self.partner_a, invoice_date='2023-04-17', amounts=[100])
-
-        # Set the invoice to the 'posted' state
         invoice.action_post()
+
+        # add a follower to the invoice
+        self.partner_b.email = 'partner_b@example.com'
+        invoice.message_subscribe(self.partner_b.ids)
 
         # Create a partner not related to the invoice
         additional_partner = self.env['res.partner'].create({
@@ -2048,8 +2080,10 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
         ).create({'is_print': False})
         invoice_send_wizard.partner_ids |= additional_partner
 
+        # prevent mail.mail record from being deleted after being sent.
         invoice_send_wizard.template_id.auto_delete = False
 
+        # send the invoice
         invoice_send_wizard.send_and_print_action()
 
         # Find the email sent to the additional partner
@@ -2058,6 +2092,14 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
             ('recipient_ids', '=', additional_partner.id)
         ])
         self.assertTrue(additional_partner_mail)
-
         self.assertIn('access_token=', additional_partner_mail.body_html,
                       "The additional partner should be sent the link including the token")
+
+        # Find the email sent to the followers
+        follower_mail = self.env['mail.mail'].search([
+            ('res_id', '=', invoice.id),
+            ('recipient_ids', '=', self.partner_b.id)
+        ])
+        self.assertTrue(follower_mail)
+        self.assertNotIn('access_token=', follower_mail.body_html,
+                      "The followers should not bet sent the access token by default")
