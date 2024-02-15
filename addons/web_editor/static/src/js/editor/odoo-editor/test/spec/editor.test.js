@@ -127,6 +127,14 @@ describe('Editor', () => {
                 });
             });
         });
+        describe('sanitize should modify p within li', () => {
+            it('should convert p into span if p has classes', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li><p class="class-1">abc</p><p class="class-2">def</p></li></ul>',
+                    contentAfter: '<ul><li><span class="class-1">abc</span><span class="class-2">def</span></li></ul>',
+                });
+            });
+        });
     });
     describe('deleteForward', () => {
         describe('Selection collapsed', () => {
@@ -3425,6 +3433,15 @@ X[]
                 contentAfter: `<p>a&nbsp;[]</p>`,
             });
         });
+        it('should transform the space node preceded by a styled element to &nbsp;', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: `<p><strong>ab</strong> [cd]</p>`,
+                stepFunction: async editor => {
+                    await insertText(editor, 'x');
+                },
+                contentAfter: `<p><strong>ab</strong>&nbsp;x[]</p>`,
+            });
+        });
     });
 
     describe('insertParagraphBreak', () => {
@@ -4290,12 +4307,40 @@ X[]
         it('should transform url after space', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>a http://test.com b http://test.com[] c http://test.com d</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p>a http://test.com b <a href="http://test.com">http://test.com</a> []&nbsp;c http://test.com d</p>',
+            });
+        });
+        it('should transform url followed by punctuation characters after space', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>http://test.com.[]</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p><a href="http://test.com">http://test.com</a>. []</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>test.com...[]</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p><a href="http://test.com">test.com</a>... []</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>test.com,[]</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p><a href="http://test.com">test.com</a>, []</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>test.com,hello[]</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p><a href="http://test.com">test.com</a>,hello []</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>http://test.com[]</p>',
                 stepFunction: async (editor) => {
-                    editor.testMode = false;
-                    await insertText(editor, ' ');
+                    // Setup: simulate multiple text nodes in a p: <p>"http://test" ".com"</p>
+                    editor.editable.firstChild.firstChild.splitText(11);
+                    // Action: insert space
+                    insertText(editor, ' ');
                 },
-                contentAfter: '<p>a http://test.com b <a href="http://test.com">http://test.com</a>[] c http://test.com d</p>',
-                //in reality: '<p>a http://test.com b <a href="http://test.com">http://test.com</a>&nbsp;[] c http://test.com d</p>'
+                contentAfter: '<p><a href="http://test.com">http://test.com</a> []</p>',
             });
         });
         it('should transform url after enter', async () => {
@@ -4322,39 +4367,15 @@ X[]
         it('should not transform an email url after space', async () => {
             await testEditor(BasicEditor, {
                 contentBefore: '<p>user@domain.com[]</p>',
-                stepFunction: async (editor) => {
-                    editor.testMode = false;
-                    const selection = document.getSelection();
-                    const anchorOffset = selection.anchorOffset;
-                    const p = editor.editable.querySelector('p');
-                    const textNode = p.childNodes[0];
-                    await triggerEvent(editor.editable, 'keydown', {key: ' ', code: 'Space'});
-                    textNode.textContent = "user@domain.com\u00a0";
-                    selection.extend(textNode, anchorOffset + 1);
-                    selection.collapseToEnd();
-                    await triggerEvent(editor.editable, 'input', {data: ' ', inputType: 'insertText' });
-                    await triggerEvent(editor.editable, 'keyup', {key: ' ', code: 'Space'});
-                },
-                contentAfter: '<p>user@domain.com&nbsp;[]</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p>user@domain.com []</p>',
             });
         });
         it('should not transform url after two space', async () => {
             await testEditor(BasicEditor, {
-                contentBefore: '<p>a http://test.com b http://test.com [] c http://test.com d</p>',
-                stepFunction: async (editor) => {
-                    editor.testMode = false;
-                    const selection = document.getSelection();
-                    const anchorOffset = selection.anchorOffset;
-                    const p = editor.editable.querySelector('p');
-                    const textNode = p.childNodes[0];
-                    await triggerEvent(editor.editable, 'keydown', {key: ' ', code: 'Space'});
-                    textNode.textContent = "a http://test.com b http://test.com \u00a0 c http://test.com d";
-                    selection.extend(textNode, anchorOffset + 1);
-                    selection.collapseToEnd();
-                    await triggerEvent(editor.editable, 'input', {data: ' ', inputType: 'insertText' });
-                    await triggerEvent(editor.editable, 'keyup', {key: ' ', code: 'Space'});
-                },
-                contentAfter: '<p>a http://test.com b http://test.com &nbsp;[] c http://test.com d</p>',
+                contentBefore: '<p>a http://test.com b http://test.com&nbsp;[] c http://test.com d</p>',
+                stepFunction: editor => insertText(editor, ' '),
+                contentAfter: '<p>a http://test.com b http://test.com&nbsp; []&nbsp;c http://test.com d</p>',
             });
         });
     });
@@ -5093,7 +5114,14 @@ X[]
                 await testEditor(BasicEditor, {
                     contentBefore: '<table><tbody><tr style="height: 20px;"><td style="width: 20px;">ab</td><td>cd</td><td>ef[]</td></tr></tbody></table>',
                     stepFunction: async editor => triggerEvent(editor.editable, 'keydown', { key: 'Tab'}),
-                    contentAfter: '<table><tbody><tr style="height: 20px;"><td style="width: 20px;">ab</td><td>cd</td><td>ef</td></tr><tr style="height: 20px;"><td>[<p><br></p>]</td><td><p><br></p></td><td><p><br></p></td></tr></tbody></table>',
+                    contentAfter: '<table><tbody><tr style="height: 20px;"><td style="width: 20px;">ab</td><td>cd</td><td>ef</td></tr><tr style="height: 20px;"><td><p>[]<br></p></td><td><p><br></p></td><td><p><br></p></td></tr></tbody></table>',
+                });
+            });
+            it('should not select whole text of the next cell', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<table><tbody><tr style="height: 20px;"><td style="width: 20px;">ab</td><td>[cd]</td><td>ef</td></tr></tbody></table>',
+                    stepFunction: async editor => triggerEvent(editor.editable, 'keydown', { key: 'Tab'}),
+                    contentAfter: '<table><tbody><tr style="height: 20px;"><td style="width: 20px;">ab</td><td>cd</td><td>ef[]</td></tr></tbody></table>',
                 });
             });
         });
@@ -7106,6 +7134,42 @@ X[]
                 await testEditor(BasicEditor, {
                     contentBefore: '<hr contenteditable="false">[]',
                     contentAfter: '<hr contenteditable="false">',
+                });
+            });
+        });
+        describe('rating star elements', () => {
+            it('add star elements', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[]</p>',
+                    stepFunction: async editor => {
+                        await insertText(editor,'/');
+                        await insertText(editor, '3star');
+                        await triggerEvent(editor.editable, 'keyup')
+                        await triggerEvent(editor.editable, 'keydown', {key: 'Enter'})
+                        await nextTick()
+                    },
+                    contentAfterEdit: `<p>\u200B<span contenteditable="false" class="o_stars o_three_stars" id="checkId-1"><i class="fa fa-star-o" contenteditable="false">\u200B</i><i class="fa fa-star-o" contenteditable="false">\u200B</i><i class="fa fa-star-o" contenteditable="false">\u200B</i></span>\u200B[]</p>`,
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p>[]</p>',
+                    stepFunction: async editor => {
+                        await insertText(editor,'/');
+                        await insertText(editor, '5star');
+                        await triggerEvent(editor.editable, 'keyup')
+                        await triggerEvent(editor.editable, 'keydown', {key: 'Enter'})
+                        await nextTick()
+                    },
+                    contentAfterEdit: `<p>\u200B<span contenteditable="false" class="o_stars o_five_stars" id="checkId-1"><i class="fa fa-star-o" contenteditable="false">\u200B</i><i class="fa fa-star-o" contenteditable="false">\u200B</i><i class="fa fa-star-o" contenteditable="false">\u200B</i><i class="fa fa-star-o" contenteditable="false">\u200B</i><i class="fa fa-star-o" contenteditable="false">\u200B</i></span>\u200B[]</p>`,
+                });
+            });
+            it('should delete star rating elements when delete is pressed twice', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: `<p>\u200B<span contenteditable="false" class="o_stars o_three_stars"><i class="fa fa-star-o" id="checkId-1" contenteditable="false">\u200B</i><i class="o_stars fa fa-star-o" id="checkId-2" contenteditable="false">\u200B</i><i class="o_stars fa fa-star-o" id="checkId-3" contenteditable="false">\u200B</i></span>\u200B[]</p>`,
+                    stepFunction: async editor => {
+                        await deleteBackward(editor)
+                        await deleteBackward(editor)
+                    },
+                    contentAfter: '<p>\u200B[]<br></p>'
                 });
             });
         });

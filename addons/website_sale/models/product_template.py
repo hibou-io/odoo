@@ -273,7 +273,7 @@ class ProductTemplate(models.Model):
         for template in self:
             price_reduce = sales_prices[template.id]
 
-            product_taxes = template.sudo().taxes_id.filtered(lambda t: t.company_id == t.env.company)
+            product_taxes = template.sudo().taxes_id.filtered(lambda t: t.company_id in t.env.company.parent_ids)
             taxes = fiscal_position.map_tax(product_taxes)
 
             base_price = None
@@ -687,6 +687,14 @@ class ProductTemplate(models.Model):
     @api.model
     def _get_alternative_product_filter(self):
         return self.env.ref('website_sale.dynamic_filter_cross_selling_alternative_products').id
+
+    @api.model
+    def _get_product_types_allow_zero_price(self):
+        """
+        Returns a list of detailed types (`product.template.detailed_type`) that can ignore the
+        `prevent_zero_price_sale` rule when buying products on a website.
+        """
+        return []
 
     # ---------------------------------------------------------
     # Rating Mixin API

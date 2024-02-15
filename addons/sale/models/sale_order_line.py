@@ -81,7 +81,7 @@ class SaleOrderLine(models.Model):
     product_id = fields.Many2one(
         comodel_name='product.product',
         string="Product",
-        change_default=True, ondelete='restrict', check_company=True, index='btree_not_null',
+        change_default=True, ondelete='restrict', index='btree_not_null',
         domain="[('sale_ok', '=', True)]")
     product_template_id = fields.Many2one(
         string="Product Template",
@@ -433,6 +433,7 @@ class SaleOrderLine(models.Model):
                     continue
                 fiscal_position = line.order_id.fiscal_position_id
                 cache_key = (fiscal_position.id, company.id, tuple(taxes.ids))
+                cache_key += line._get_custom_compute_tax_cache_key()
                 if cache_key in cached_taxes:
                     result = cached_taxes[cache_key]
                 else:
@@ -440,6 +441,10 @@ class SaleOrderLine(models.Model):
                     cached_taxes[cache_key] = result
                 # If company_id is set, always filter taxes by the company
                 line.tax_id = result
+
+    def _get_custom_compute_tax_cache_key(self):
+        """Hook method to be able to set/get cached taxes while computing them"""
+        return tuple()
 
     @api.depends('product_id', 'product_uom', 'product_uom_qty')
     def _compute_pricelist_item_id(self):
@@ -459,12 +464,13 @@ class SaleOrderLine(models.Model):
         for line in self:
             # check if there is already invoiced amount. if so, the price shouldn't change as it might have been
             # manually edited
-            if line.qty_invoiced > 0:
+            if line.qty_invoiced > 0 or (line.product_id.expense_policy == 'cost' and line.is_expense):
                 continue
             if not line.product_uom or not line.product_id:
                 line.price_unit = 0.0
             else:
-                price = line.with_company(line.company_id)._get_display_price()
+                line = line.with_company(line.company_id)
+                price = line._get_display_price()
                 line.price_unit = line.product_id._get_tax_included_unit_price(
                     line.company_id or line.env.company,
                     line.order_id.currency_id,
@@ -1122,20 +1128,23 @@ class SaleOrderLine(models.Model):
             'sale_line_ids': [Command.link(self.id)],
             'is_downpayment': self.is_downpayment,
         }
-        analytic_account_id = self.order_id.analytic_account_id.id
-        if self.analytic_distribution and not self.display_type:
-            res['analytic_distribution'] = self.analytic_distribution
-        if analytic_account_id and not self.display_type:
-            analytic_account_id = str(analytic_account_id)
-            if 'analytic_distribution' in res:
-                res['analytic_distribution'][analytic_account_id] = res['analytic_distribution'].get(analytic_account_id, 0) + 100
-            else:
-                res['analytic_distribution'] = {analytic_account_id: 100}
+        self._set_analytic_distribution(res, **optional_values)
         if optional_values:
             res.update(optional_values)
         if self.display_type:
             res['account_id'] = False
         return res
+
+    def _set_analytic_distribution(self, inv_line_vals, **optional_values):
+        analytic_account_id = self.order_id.analytic_account_id.id
+        if self.analytic_distribution and not self.display_type:
+            inv_line_vals['analytic_distribution'] = self.analytic_distribution
+        if analytic_account_id and not self.display_type:
+            analytic_account_id = str(analytic_account_id)
+            if 'analytic_distribution' in inv_line_vals:
+                inv_line_vals['analytic_distribution'][analytic_account_id] = inv_line_vals['analytic_distribution'].get(analytic_account_id, 0) + 100
+            else:
+                inv_line_vals['analytic_distribution'] = {analytic_account_id: 100}
 
     def _prepare_procurement_values(self, group_id=False):
         """ Prepare specific key for moves or other components that will be created from a stock rule

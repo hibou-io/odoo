@@ -186,6 +186,11 @@ export class Thread extends Record {
     invitedMembers = Record.many("ChannelMember");
     chatPartner = Record.one("Persona");
     composer = Record.one("Composer", { inverse: "thread", onDelete: (r) => r.delete() });
+    correspondent2 = Record.one("Persona", {
+        compute() {
+            return this.computeCorrespondent();
+        },
+    });
     counter = 0;
     /** @type {string} */
     custom_channel_name;
@@ -274,6 +279,10 @@ export class Thread extends Record {
     custom_notifications = false;
     /** @type {String} */
     mute_until_dt;
+    /** @type {Boolean} */
+    isLocallyPinned = false;
+    /** @type {"not_fetched"|"pending"|"fetched"} */
+    fetchMembersState = "not_fetched";
 
     get accessRestrictedToGroupText() {
         if (!this.authorizedGroupFullName) {
@@ -360,8 +369,11 @@ export class Thread extends Record {
             .filter((p) => p.notEq(this._store.self));
     }
 
-    /** @type {import("models").Persona|undefined} */
     get correspondent() {
+        return this.correspondent2;
+    }
+
+    computeCorrespondent() {
         if (this.type === "channel") {
             return undefined;
         }

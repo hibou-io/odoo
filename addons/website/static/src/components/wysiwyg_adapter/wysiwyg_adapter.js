@@ -7,6 +7,7 @@ import { useHotkey } from '@web/core/hotkeys/hotkey_hook';
 import { Wysiwyg } from "@web_editor/js/wysiwyg/wysiwyg";
 import weUtils from '@web_editor/js/common/utils';
 import { isMediaElement } from '@web_editor/js/editor/odoo-editor/src/utils/utils';
+import { cloneContentEls } from "@website/js/utils";
 
 import { EditMenuDialog, MenuDialog } from "../dialog/edit_menu";
 import { WebsiteDialog } from '../dialog/dialog';
@@ -80,7 +81,8 @@ export class WysiwygAdapterComponent extends Wysiwyg {
 
         this.oeStructureSelector = '#wrapwrap .oe_structure[data-oe-xpath][data-oe-id]';
         this.oeFieldSelector = '#wrapwrap [data-oe-field]:not([data-oe-sanitize-prevent-edition])';
-        this.oeCoverSelector = '#wrapwrap .s_cover[data-res-model], #wrapwrap .o_record_cover_container[data-res-model]';
+        this.oeRecordCoverSelector = "#wrapwrap .o_record_cover_container[data-res-model]";
+        this.oeCoverSelector = `#wrapwrap .s_cover[data-res-model], ${this.oeRecordCoverSelector}`;
         if (this.props.savableSelector) {
             this.savableSelector = this.props.savableSelector;
         } else {
@@ -91,6 +93,15 @@ export class WysiwygAdapterComponent extends Wysiwyg {
         useHotkey('control+k', () => {});
 
         onWillStart(() => {
+            // Destroy the widgets before instantiating the wysiwyg.
+            // grep: RESTART_WIDGETS_EDIT_MODE
+            // TODO ideally this should be done as close as the restart as
+            // as possible to avoid long flickering when entering edit mode. At
+            // moment some RPC are awaited before the restart so it is not
+            // ideal. But this has to be done before adding o_editable classes
+            // in the DOM. To review once everything is OWLified.
+            this._websiteRootEvent("widgets_stop_request");
+
             const pageOptionEls = this.websiteService.pageDocument.querySelectorAll('.o_page_option_data');
             for (const pageOptionEl of pageOptionEls) {
                 const optionName = pageOptionEl.name;
@@ -176,6 +187,8 @@ export class WysiwygAdapterComponent extends Wysiwyg {
                         this._toggleMegaMenu($toggle[0]);
                     }
                 })
+                // FIXME this is not right, the observer should not be inactive
+                // for async periods of time.
                 .then(() => this.odooEditor.observerActive());
         });
 
@@ -196,6 +209,7 @@ export class WysiwygAdapterComponent extends Wysiwyg {
         }
         // The jquery instance inside the iframe needs to be aware of the wysiwyg.
         this.websiteService.contentWindow.$('#wrapwrap').data('wysiwyg', this);
+        // grep: RESTART_WIDGETS_EDIT_MODE
         await new Promise((resolve, reject) => this._websiteRootEvent('widgets_start_request', {
             editableMode: true,
             onSuccess: resolve,
@@ -357,6 +371,8 @@ export class WysiwygAdapterComponent extends Wysiwyg {
                 showChecklist: false,
                 showAnimateText: true,
                 showTextHighlights: true,
+                showFontSize: false,
+                useFontSizeInput: true,
             },
             context: this._context,
             editable: this.$editable,
@@ -397,11 +413,17 @@ export class WysiwygAdapterComponent extends Wysiwyg {
             // generated a new stack and break the "redo" of the editor.
             this.odooEditor.automaticStepSkipStack();
             for (const record of records) {
-                const $savable = $(record.target).closest(this.savableSelector);
-
                 if (record.attributeName === 'contenteditable') {
                     continue;
                 }
+
+                const $savable = $(record.target).closest(this.savableSelector);
+                if (!$savable.length) {
+                    continue;
+                }
+
+                // Mark any savable element dirty if any tracked mutation occurs
+                // inside of it.
                 $savable.not('.o_dirty').each(function () {
                     if (!this.hasAttribute('data-oe-readonly')) {
                         this.classList.add('o_dirty');
@@ -473,7 +495,13 @@ export class WysiwygAdapterComponent extends Wysiwyg {
             .not('input, [data-oe-readonly], ' +
                  '[data-oe-type="monetary"], [data-oe-many2one-id], [data-oe-field="arch"]:empty')
             .filter((_, el) => {
-                return !$(el).closest('.o_not_editable').length;
+                // The whole record cover is considered editable by the editor,
+                // which makes it possible to add content (text, images,...)
+                // from the text tools. To fix this issue, we need to reduce the
+                // editable area to its editable fields only, but first, we need
+                // to remove the cover along with its descendants from the
+                // initial editable zones.
+                return !$(el).closest('.o_not_editable').length && !el.closest(this.oeRecordCoverSelector);
             });
 
         // TODO migrate in master. This stable fix restores the possibility to
@@ -499,7 +527,8 @@ export class WysiwygAdapterComponent extends Wysiwyg {
         // oe_structure editable. This avoids having a selection range span
         // over all further inactive tabs when using Chrome.
         // grep: .s_tabs
-        $extraEditableZones = $extraEditableZones.add($editableSavableZones.find('.tab-pane > .oe_structure'));
+        $extraEditableZones = $extraEditableZones.add($editableSavableZones.find('.tab-pane > .oe_structure'))
+            .add(this.websiteService.pageDocument.querySelectorAll(`${this.oeRecordCoverSelector} [data-oe-field]:not([data-oe-field="arch"])`));
 
         return $editableSavableZones.add($extraEditableZones).toArray();
     }
@@ -756,6 +785,13 @@ export class WysiwygAdapterComponent extends Wysiwyg {
      * @returns {boolean} true if the page has been altered.
      */
     _isDirty() {
+        // TODO improve in master: the way we check if the page is dirty should
+        // match the fact the save will actually do something or not. Right now,
+        // this check checks the whole page, including the non editable parts,
+        // regardless of the fact something can be saved inside or not. It is
+        // also thus of course considering the page dirty too often by mistake
+        // since non editable parts can have their DOM changed without impacting
+        // the save (e.g. menus being folded into the "+" menu for example).
         return this.isDirty() || Object.values(this.pageOptions).some(option => option.isDirty);
     }
     _trigger_up(ev) {
@@ -869,11 +905,27 @@ export class WysiwygAdapterComponent extends Wysiwyg {
     /**
      * @override
      */
-    async _saveElement($el, context, withLang) {
+    async _saveElement($el, context, withLang, ...rest) {
         var promises = [];
 
-        // Saving a view content
-        await super._saveElement(...arguments);
+        // Saving Embed Code snippets with <script> in the database, as these
+        // elements are removed in edit mode.
+        if ($el[0].querySelector(".s_embed_code")) {
+            // Copied so as not to impact the actual DOM and prevent scripts
+            // from loading.
+            const $clonedEl = $el.clone(true, true);
+            for (const embedCodeEl of $clonedEl[0].querySelectorAll(".s_embed_code")) {
+                const embedTemplateEl = embedCodeEl.querySelector(".s_embed_code_saved");
+                if (embedTemplateEl) {
+                    embedCodeEl.querySelector(".s_embed_code_embedded")
+                        .replaceChildren(cloneContentEls(embedTemplateEl.content, true));
+                }
+            }
+            await super._saveElement($clonedEl, context, withLang, ...rest);
+        } else {
+            // Saving a view content
+            await super._saveElement(...arguments);
+        }
 
         // Saving mega menu options
         if ($el.data('oe-field') === 'mega_menu_content') {

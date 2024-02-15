@@ -77,6 +77,9 @@ function serviceCached(service) {
         },
     });
 }
+// Outdated snippets whose alert has been discarded.
+const controlledSnippets = new Set();
+const clearControlledSnippets = () => controlledSnippets.clear();
 /**
  * @param {HTMLElement} el
  * @param {string} [title]
@@ -1778,7 +1781,7 @@ const ColorpickerUserValueWidget = SelectUserValueWidget.extend({
             options.getTemplate = wysiwyg.getColorpickerTemplate.bind(wysiwyg);
         }
         this.colorPaletteWrapper?.destroy();
-        const sidebarDocument = this.colorPaletteEl.ownerDocument; 
+        const sidebarDocument = this.colorPaletteEl.ownerDocument;
         if (!(this.colorPaletteEl instanceof sidebarDocument.defaultView.HTMLElement)) {
             // When inside an iframe, the element for mounting a component must
             // be an instance of the iframe's HTMLElement, or else target
@@ -3250,7 +3253,8 @@ const SnippetOptionWidget = Widget.extend({
      */
     isTopFirstOption: false,
     /**
-     * Forces the target to not be possible to remove.
+     * Forces the target to not be possible to remove. It will also hide the
+     * clone button.
      *
      * @type {boolean}
      */
@@ -4526,7 +4530,6 @@ registry.sizing = SnippetOptionWidget.extend({
         let resizeValues = this._getSize();
         this.$handles.on('mousedown', function (ev) {
             ev.preventDefault();
-            self.options.wysiwyg.odooEditor.automaticStepUnactive('resizing');
             isMobile = weUtils.isMobileView(self.$target[0]);
 
             // First update size values as some element sizes may not have been
@@ -4581,6 +4584,15 @@ registry.sizing = SnippetOptionWidget.extend({
                 return;
             }
 
+            // Locking the mutex during the resize. Started here to avoid
+            // empty returns.
+            let resizeResolve;
+            const prom = new Promise(resolve => resizeResolve = () => resolve());
+            self.trigger_up("snippet_edition_request", { exec: () => {
+                self.trigger_up("disable_loading_effect");
+                return prom;
+            }});
+
             // If we are in grid mode, add a background grid and place it in
             // front of the other elements.
             const rowEl = self.$target[0].parentNode;
@@ -4588,8 +4600,8 @@ registry.sizing = SnippetOptionWidget.extend({
             if (rowEl.classList.contains("o_grid_mode") && !isMobile) {
                 self.options.wysiwyg.odooEditor.observerUnactive('displayBackgroundGrid');
                 backgroundGridEl = gridUtils._addBackgroundGrid(rowEl, 0);
-                self.options.wysiwyg.odooEditor.observerActive('displayBackgroundGrid');
                 gridUtils._setElementToMaxZindex(backgroundGridEl, rowEl);
+                self.options.wysiwyg.odooEditor.observerActive('displayBackgroundGrid');
             }
 
             // For loop to handle the cases where it is ne, nw, se or sw. Since
@@ -4620,6 +4632,8 @@ registry.sizing = SnippetOptionWidget.extend({
 
                 directions.push(props);
             }
+
+            self.options.wysiwyg.odooEditor.automaticStepUnactive('resizing');
 
             const cursor = $handle.css('cursor') + '-important';
             const $body = $(this.ownerDocument.body);
@@ -4690,15 +4704,25 @@ registry.sizing = SnippetOptionWidget.extend({
                     self.$target[0].classList.add(gColClass.substring(2));
                 }
 
+                self.options.wysiwyg.odooEditor.automaticStepActive('resizing');
+
+                // Freeing the mutex once the resizing is done.
+                resizeResolve();
+                self.trigger_up("enable_loading_effect");
+
                 if (directions.every(dir => dir.begin === dir.current)) {
                     return;
                 }
 
                 setTimeout(function () {
                     self.options.wysiwyg.odooEditor.historyStep();
-                }, 0);
 
-                self.options.wysiwyg.odooEditor.automaticStepActive('resizing');
+                    self.trigger_up("snippet_edition_request", { exec: async () => {
+                        await new Promise(resolve => {
+                            self.trigger_up("snippet_option_update", { onSuccess: () => resolve() });
+                        });
+                    }});
+                }, 0);
             };
             $body.on('mousemove', bodyMouseMove);
             $body.on('mouseup', bodyMouseUp);
@@ -4977,10 +5001,6 @@ registry['sizing_x'] = registry.sizing.extend({
      * @override
      */
     async _notifyResizeChange() {
-        this.trigger_up("option_update", {
-            optionName: "layout_column",
-            name: "change_column_size",
-        });
         this.trigger_up('option_update', {
             optionName: 'StepsConnector',
             name: 'change_column_size',
@@ -5211,6 +5231,7 @@ registry.layout_column = SnippetOptionWidget.extend(ColumnLayoutMixin, {
      * @override
      */
     notify(name) {
+        // TODO: left in stable for compatibility. Remove this in master.
         if (name === "change_column_size") {
             this.updateUI();
         }
@@ -5649,6 +5670,21 @@ registry.SnippetMove = SnippetOptionWidget.extend(ColumnLayoutMixin, {
         $overlayArea.prepend($buttons[1]);
         $overlayArea.prepend($buttons[0]);
 
+        // Needed for compatibility (with already dropped snippets).
+        // If the target is a column, check if all the columns are either mobile
+        // ordered or not. If they are not consistent, then we remove the mobile
+        // order classes from all of them, to avoid issues.
+        const parentEl = this.$target[0].parentElement;
+        if (parentEl.classList.contains("row")) {
+            const columnEls = [...parentEl.children];
+            const orderedColumnEls = columnEls.filter(el => this._getItemMobileOrder(el));
+            if (orderedColumnEls.length && orderedColumnEls.length !== columnEls.length) {
+                orderedColumnEls.forEach(el => {
+                    el.className = el.className.replace(/\border(-lg)?-[0-9]+\b/g, "");
+                });
+            }
+        }
+
         return this._super(...arguments);
     },
     /**
@@ -5677,6 +5713,16 @@ registry.SnippetMove = SnippetOptionWidget.extend(ColumnLayoutMixin, {
     /**
      * @override
      */
+    onMove() {
+        this._super.apply(this, arguments);
+        // Remove all the mobile order classes after a drag and drop.
+        [...this.$target[0].parentElement.children].forEach(el => {
+            el.className = el.className.replace(/\border(-lg)?-[0-9]+\b/g, "");
+        });
+    },
+    /**
+     * @override
+     */
     onRemove() {
         this._super.apply(this, arguments);
         const targetMobileOrder = this._getItemMobileOrder(this.$target[0]);
@@ -5684,13 +5730,7 @@ registry.SnippetMove = SnippetOptionWidget.extend(ColumnLayoutMixin, {
         // removed snippet must be filled in.
         if (targetMobileOrder) {
             const targetOrder = parseInt(targetMobileOrder[1]);
-
-            [...this.$target[0].parentElement.children].forEach(el => {
-                const elOrder = parseInt(this._getItemMobileOrder(el)[1]);
-                if (elOrder > targetOrder) {
-                    el.classList.replace(`order-${elOrder}`, `order-${elOrder - 1}`);
-                }
-            });
+            this._fillRemovedItemGap(this.$target[0].parentElement, targetOrder);
         }
     },
 
@@ -5721,18 +5761,30 @@ registry.SnippetMove = SnippetOptionWidget.extend(ColumnLayoutMixin, {
             this._swapMobileOrders(widgetValue, siblingEls);
         } else {
             switch (widgetValue) {
-                case "prev":
-                    this.$target[0].previousElementSibling.before(this.$target[0]);
+                case "prev": {
+                    // Consider only visible elements.
+                    let prevEl = this.$target[0].previousElementSibling;
+                    while (prevEl && window.getComputedStyle(prevEl).display === "none") {
+                        prevEl = prevEl.previousElementSibling;
+                    }
+                    prevEl?.insertAdjacentElement("beforebegin", this.$target[0]);
                     if (isNavItem) {
                         $tabPane.prev().before($tabPane);
                     }
                     break;
-                case "next":
-                    this.$target[0].nextElementSibling.after(this.$target[0]);
+                }
+                case "next": {
+                    // Consider only visible elements.
+                    let nextEl = this.$target[0].nextElementSibling;
+                    while (nextEl && window.getComputedStyle(nextEl).display === "none") {
+                        nextEl = nextEl.nextElementSibling;
+                    }
+                    nextEl?.insertAdjacentElement("afterend", this.$target[0]);
                     if (isNavItem) {
                         $tabPane.next().after($tabPane);
                     }
                     break;
+                }
             }
             if (mobileOrder) {
                 for (const el of siblingEls) {
@@ -5786,13 +5838,34 @@ registry.SnippetMove = SnippetOptionWidget.extend(ColumnLayoutMixin, {
             }
             // On mobile, items' reordering is independent from desktop inside
             // a snippet (left or right), not at a higher level (up or down).
-            if (moveLeftOrRight && isMobileView && this._getItemMobileOrder(this.$target[0])) {
-                const firstOrLast = widgetName === "move_left_opt" ? "0" :
-                    this.$target[0].parentElement.children.length - 1;
-                return !this.$target[0].classList.contains(`order-${firstOrLast}`);
+            if (moveLeftOrRight && isMobileView) {
+                const targetMobileOrder = this._getItemMobileOrder(this.$target[0]);
+                if (targetMobileOrder) {
+                    const siblingEls = this.$target[0].parentElement.children;
+                    const orderModifier = widgetName === "move_left_opt" ? -1 : 1;
+                    let delta = 0;
+                    while (true) {
+                        delta += orderModifier;
+                        const nextOrderClass = `order-${parseInt(targetMobileOrder[1]) + delta}`;
+                        const siblingEl = [...siblingEls].find(el => el.classList.contains(nextOrderClass));
+                        if (!siblingEl) {
+                            break;
+                        }
+                        if (window.getComputedStyle(siblingEl).display === "none") {
+                            continue;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
             }
-            const firstOrLastChild = moveUpOrLeft ? ":first-child" : ":last-child";
-            return !this.$target.is(firstOrLastChild);
+            // Consider only visible elements.
+            const direction = moveUpOrLeft ? "previousElementSibling" : "nextElementSibling";
+            let siblingEl = this.$target[0][direction];
+            while (siblingEl && window.getComputedStyle(siblingEl).display === "none") {
+                siblingEl = siblingEl[direction];
+            }
+            return !!siblingEl;
         }
         return this._super(...arguments);
     },
@@ -5805,10 +5878,22 @@ registry.SnippetMove = SnippetOptionWidget.extend(ColumnLayoutMixin, {
     _swapMobileOrders(widgetValue, siblingEls) {
         const targetMobileOrder = this._getItemMobileOrder(this.$target[0]);
         const orderModifier = widgetValue === "prev" ? -1 : 1;
-        const newOrderClass = `order-${parseInt(targetMobileOrder[1]) + orderModifier}`;
-        const comparedEl = [...siblingEls].find(el => el.classList.contains(newOrderClass));
-        this.$target[0].classList.replace(targetMobileOrder[0], newOrderClass);
-        comparedEl.classList.replace(newOrderClass, targetMobileOrder[0]);
+        let delta = 0;
+        while (true) {
+            delta += orderModifier;
+            const newOrderClass = `order-${parseInt(targetMobileOrder[1]) + delta}`;
+            const comparedEl = [...siblingEls].find(el => el.classList.contains(newOrderClass));
+            // TODO In master: remove break.
+            if (!comparedEl) {
+                break;
+            }
+            if (window.getComputedStyle(comparedEl).display === "none") {
+                continue;
+            }
+            this.$target[0].classList.replace(targetMobileOrder[0], newOrderClass);
+            comparedEl.classList.replace(newOrderClass, targetMobileOrder[0]);
+            break;
+        }
     },
     /**
      * @returns {Boolean}
@@ -6178,11 +6263,15 @@ const ImageHandlerOption = SnippetOptionWidget.extend({
         }
     },
     /**
-     * Returns a list of valid formats for a given image.
+     * Returns a list of valid formats for a given image or an empty list if
+     * there is no mimetypeBeforeConversion data attribute on the image.
      *
      * @private
      */
     async _computeAvailableFormats() {
+        if (!this.mimetypeBeforeConversion) {
+            return [];
+        }
         const img = this._getImg();
         const original = await loadImage(this.originalSrc);
         const maxWidth = img.dataset.width ? img.naturalWidth : original.naturalWidth;
@@ -6258,6 +6347,7 @@ const ImageHandlerOption = SnippetOptionWidget.extend({
         }
         this.originalId = img.dataset.originalId;
         this.originalSrc = img.dataset.originalSrc;
+        this.mimetypeBeforeConversion = img.dataset.mimetypeBeforeConversion;
     },
     /**
      * Sets the image's width to its suggested size.
@@ -6330,6 +6420,9 @@ const ImageHandlerOption = SnippetOptionWidget.extend({
      * @override
      */
     _computeWidgetVisibility(widgetName, params) {
+        if (widgetName === "format_select_opt" && !this.mimetypeBeforeConversion) {
+            return false;
+        }
         if (this._isImageProcessingWidget(widgetName, params)) {
             const img = this._getImg();
             return this._isImageSupportedForProcessing(img, true);
@@ -6936,7 +7029,8 @@ registry.ImageTools = ImageHandlerOption.extend({
         if (widgetName.startsWith('img-shape-color')) {
             const img = this._getImg();
             const shapeName = img.dataset.shape;
-            if (!shapeName) {
+            const shapeColors = img.dataset.shapeColors;
+            if (!shapeName || !shapeColors) {
                 return false;
             }
             const colors = img.dataset.shapeColors.split(';');
@@ -7149,6 +7243,7 @@ registry.ImageTools = ImageHandlerOption.extend({
                 delete img.dataset.hoverEffectColor;
                 delete img.dataset.hoverEffectStrokeWidth;
                 delete img.dataset.hoverEffectIntensity;
+                img.classList.remove("o_animate_on_hover");
                 return;
             }
             if (img.dataset.mimetype !== "image/svg+xml") {
@@ -8790,20 +8885,80 @@ registry.many2one = SnippetOptionWidget.extend({
  * Allows to display a warning message on outdated snippets.
  */
 registry.VersionControl = SnippetOptionWidget.extend({
+
+    //--------------------------------------------------------------------------
+    // Options
+    //--------------------------------------------------------------------------
+
+    /**
+     * Replaces an outdated snippet by its new version.
+     */
+    async replaceSnippet() {
+        // Getting the new block version.
+        let newBlockEl;
+        const snippet = this.$target[0].dataset.snippet;
+        this.trigger_up("find_snippet_template", {
+            snippet: this.$target[0],
+            callback: (snippetTemplate) => {
+                newBlockEl = snippetTemplate.querySelector(`[data-snippet=${snippet}]`).cloneNode(true);
+            },
+        });
+        // Replacing the block.
+        this.options.wysiwyg.odooEditor.historyPauseSteps();
+        this.$target[0].classList.add("d-none"); // Hiding the block to replace it smoothly.
+        this.$target[0].insertAdjacentElement("beforebegin", newBlockEl);
+        // Initializing the new block as if it was dropped: the mutex needs to
+        // be free for that so we wait for it first.
+        this.options.wysiwyg.waitForEmptyMutexAction().then(async () => {
+            await this.options.wysiwyg.snippetsMenu.callPostSnippetDrop($(newBlockEl));
+            await new Promise(resolve => {
+                this.trigger_up("remove_snippet",
+                    {$snippet: this.$target, onSuccess: resolve, shouldRecordUndo: false}
+                );
+            });
+            this.options.wysiwyg.odooEditor.historyUnpauseSteps();
+            newBlockEl.classList.remove("oe_snippet_body");
+            this.options.wysiwyg.odooEditor.historyStep();
+        });
+    },
+    /**
+     * Allows to still access the options of an outdated block, despite the
+     * warning.
+     */
+    discardAlert() {
+        const alertEl = this.$el[0].querySelector("we-alert");
+        const optionsSectionEl = this.$overlay.data("$optionsSection")[0];
+        alertEl.remove();
+        optionsSectionEl.classList.remove("o_we_outdated_block_options");
+        // Preventing the alert to reappear at each render.
+        controlledSnippets.add(this.$target[0].dataset.snippet);
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
     /**
      * @override
      */
-    start: function () {
-        this.trigger_up('get_snippet_versions', {
-            snippetName: this.$target[0].dataset.snippet,
+    _renderCustomXML(uiFragment) {
+        const snippetName = this.$target[0].dataset.snippet;
+        // Do not display the alert if it was previously discarded.
+        if (controlledSnippets.has(snippetName)) {
+            return;
+        }
+        this.trigger_up("get_snippet_versions", {
+            snippetName: snippetName,
             onSuccess: snippetVersions => {
-                const isUpToDate = snippetVersions && ['vjs', 'vcss', 'vxml'].every(key => this.$target[0].dataset[key] === snippetVersions[key]);
+                const isUpToDate = snippetVersions && ["vjs", "vcss", "vxml"].every(key => this.$target[0].dataset[key] === snippetVersions[key]);
                 if (!isUpToDate) {
-                    this.$el.prepend(renderToElement('web_editor.outdated_block_message'));
+                    uiFragment.prepend(renderToElement("web_editor.outdated_block_message"));
+                    // Hide the other options, to only have the alert displayed.
+                    const optionsSectionEl = this.$overlay.data("$optionsSection")[0];
+                    optionsSectionEl.classList.add("o_we_outdated_block_options");
                 }
             },
         });
-        return this._super(...arguments);
     },
 });
 
@@ -8846,6 +9001,7 @@ registry.SnippetSave = SnippetOptionWidget.extend({
                                 ? _t("Custom %s", this.data.snippetName)
                                 : _t("Custom Button");
                             const targetCopyEl = this.$target[0].cloneNode(true);
+                            targetCopyEl.classList.add('s_custom_snippet');
                             delete targetCopyEl.dataset.name;
                             if (isButton) {
                                 targetCopyEl.classList.remove("mb-2");
@@ -8855,6 +9011,18 @@ registry.SnippetSave = SnippetOptionWidget.extend({
                             // current widget has been destroyed and is orphaned, so this._rpc
                             // will not work as it can't trigger_up. For this reason, we need
                             // to bypass the service provider and use the global RPC directly
+
+                            // Get editable parent TODO find proper method to get it directly
+                            let editableParentEl;
+                            for (const parentEl of this.options.getContentEditableAreas()) {
+                                if (parentEl.contains(this.$target[0])) {
+                                    editableParentEl = parentEl;
+                                    break;
+                                }
+                            }
+                            context['model'] = editableParentEl.dataset.oeModel;
+                            context['field'] = editableParentEl.dataset.oeField;
+                            context['resId'] = editableParentEl.dataset.oeId;
                             await jsonrpc(`/web/dataset/call_kw/ir.ui.view/save_snippet`, {
                                 model: "ir.ui.view",
                                 method: "save_snippet",
@@ -9282,4 +9450,5 @@ export default {
     registry: registry,
     serviceCached,
     clearServiceCache,
+    clearControlledSnippets,
 };

@@ -21,11 +21,11 @@
                     <filter string="Starred Tasks" name="starred_tasks" domain="[('priority', '=', '1')]"/>
                     <separator groups="project.group_project_task_dependencies"/>
                     <filter string="Blocked" name="blocked" domain="[('state', '=', '04_waiting_normal')]" groups="project.group_project_task_dependencies"/>
-                    <filter string="Blocking" name="blocking" domain="[('state', 'not in', ['1_done','1_canceled']), ('dependent_ids', '!=', False)]" groups="project.group_project_task_dependencies"/>
+                    <filter string="Blocking" name="blocking" domain="[('state', 'in', ['01_in_progress', '02_changes_requested', '03_approved', '04_waiting_normal']), ('dependent_ids', '!=', False)]" groups="project.group_project_task_dependencies"/>
                     <separator/>
                     <filter string="Last Stage Update" name="date_last_stage_update" date="date_last_stage_update"/>
                     <separator/>
-                    <filter string="Open Tasks" name="open_tasks" domain="[('state', 'not in', ['1_done','1_canceled'])]"/>
+                    <filter string="Open Tasks" name="open_tasks" domain="[('state', 'in', ['01_in_progress', '02_changes_requested', '03_approved', '04_waiting_normal'])]"/>
                     <filter string="Closed Tasks" name="closed_tasks" domain="[('state', 'in', ['1_done','1_canceled'])]"/>
                     <filter string="Closed On" name="closed_on" domain="[('state', 'in', ['1_done','1_canceled'])]" date="date_last_stage_update"/>
                     <separator/>
@@ -293,7 +293,7 @@
                         </button>
                         <button name="%(project_task_action_sub_task)d" type="action" class="oe_stat_button" icon="fa-tasks"
                             invisible="not id or subtask_count == 0"
-                            context="{'default_user_ids': user_ids, 'default_project_id': project_id, 'default_milestone_id': milestone_id, 'subtask_action': True}">
+                            context="{'default_user_ids': user_ids, 'default_milestone_id': milestone_id, 'subtask_action': True}">
                             <div class="o_field_widget o_stat_info">
                                 <div class="d-flex align-items-baseline gap-1">
                                     <span class="o_stat_value order-1">
@@ -332,6 +332,7 @@
                     </div>
                     <group>
                         <group>
+                            <field name="display_in_project" invisible="1" force_save="1"/>
                             <field name="project_id"
                                    domain="[('active', '=', True), '|', ('company_id', '=', False), ('company_id', '=?', company_id)]"
                                    widget="project"
@@ -750,6 +751,7 @@
                           scales="month,year">
                     <field name="allow_milestones" invisible="1" />
                     <field name="project_id" widget="project" invisible="context.get('default_project_id', False)"/>
+                    <field name="display_in_project" invisible="1"/>
                     <field name="subtask_count" invisible="1"/>
                     <field name="milestone_id" invisible="not allow_milestones or not milestone_id"/>
                     <field name="user_ids" widget="many2many_avatar_user" invisible="not user_ids"/>
@@ -758,7 +760,7 @@
                     <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" invisible="not tag_ids"/>
                     <field name="stage_id" invisible="not project_id or not stage_id"/>
                     <field name="state" widget="project_task_state_selection" readonly="1"/>
-                    <field name="personal_stage_id" string="Personal Stage" invisible="project_id or not personal_stage_id"/>
+                    <field name="personal_stage_id" string="Personal Stage" options="{'no_open': True}" invisible="project_id or not personal_stage_id"/>
                     <field name="task_properties"/>
                 </calendar>
             </field>
@@ -1039,7 +1041,7 @@
             <field name="name">Overpassed Tasks</field>
             <field name="res_model">project.task</field>
             <field name="view_mode">tree,form,calendar,graph,kanban</field>
-            <field name="domain">[('state', 'not in', ['1_done', '1_canceled']), ('date_deadline','&lt;',time.strftime('%Y-%m-%d')), ('project_id', '!=', False), ('display_in_project', '=', True)]</field>
+            <field name="domain">[('state', 'in', ['01_in_progress', '02_changes_requested', '03_approved', '04_waiting_normal']), ('date_deadline','&lt;',time.strftime('%Y-%m-%d')), ('project_id', '!=', False), ('display_in_project', '=', True)]</field>
             <field name="filter" eval="True"/>
             <field name="search_view_id" ref="view_task_search_form"/>
         </record>

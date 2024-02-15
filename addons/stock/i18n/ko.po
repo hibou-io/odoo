@@ -3,17 +3,18 @@
 # 	* stock
 # 
 # Translators:
-# Wil Odoo, 2023
-# Sarah Park, 2023
-# Daye Jeong, 2023
+# Wil Odoo, 2024
+# Martin Trigaux, 2024
+# Daye Jeong, 2024
+# Sarah Park, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:54+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Daye Jeong, 2023\n"
+"Last-Translator: Sarah Park, 2024\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -105,6 +106,13 @@ msgstr "# 반품"
 
 #. module: stock
 #. odoo-python
+#: code:addons/stock/models/stock_warehouse.py:0
+#, python-format
+msgid "%(name)s (copy)(%(id)s)"
+msgstr "%(name)s (사본)(%(id)s)"
+
+#. module: stock
+#. odoo-python
 #: code:addons/stock/wizard/stock_replenishment_info.py:0
 #, python-format
 msgid ""
@@ -126,6 +134,7 @@ msgstr "%(warehouse)s : %(supplier)s로부터 품목 공급"
 #: code:addons/stock/models/stock_location.py:0
 #: code:addons/stock/models/stock_location.py:0
 #: code:addons/stock/models/stock_package_type.py:0
+#: code:addons/stock/models/stock_picking.py:0
 #: code:addons/stock/models/stock_picking.py:0
 #: code:addons/stock/models/stock_rule.py:0
 #: code:addons/stock/models/stock_storage_category.py:0
@@ -500,6 +509,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
 msgid "<span class=\"o_stat_text\">Allocation</span>"
 msgstr "<span class=\"o_stat_text\">배정</span>"
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.view_picking_form
+msgid "<span class=\"o_stat_text\">Detailed Operations</span>"
+msgstr "<span class=\"o_stat_text\">세부 작업</span>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.product_form_view_procurement_button
@@ -1218,6 +1232,11 @@ msgid "At Confirmation"
 msgstr "확인 시"
 
 #. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.search_product_lot_filter
+msgid "At Customer"
+msgstr ""
+
+#. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_lot__message_attachment_count
 #: model:ir.model.fields,field_description:stock.field_stock_picking__message_attachment_count
 #: model:ir.model.fields,field_description:stock.field_stock_scrap__message_attachment_count
@@ -1296,8 +1315,8 @@ msgid "Automatic No Step Added"
 msgstr "추가 단계없이 자동화"
 
 #. module: stock
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/stock/models/stock_picking.py:0
 #: code:addons/stock/static/src/widgets/forecast_widget.xml:0
 #: model:ir.model.fields.selection,name:stock.selection__stock_move__state__assigned
@@ -1734,6 +1753,7 @@ msgstr "회사"
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__company_id
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__company_id
 #: model_terms:ir.ui.view,arch_db:stock.quant_search_view
+#: model_terms:ir.ui.view,arch_db:stock.search_product_lot_filter
 msgid "Company"
 msgstr "회사"
 
@@ -2131,6 +2151,7 @@ msgstr "새로운 창고를 생성하면 보관 위치 설정이 자동으로 �
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__date
+#: model_terms:ir.ui.view,arch_db:stock.search_product_lot_filter
 #: model_terms:ir.ui.view,arch_db:stock.view_move_search
 msgid "Creation Date"
 msgstr "작성일자"
@@ -2139,6 +2160,11 @@ msgstr "작성일자"
 #: model:ir.model.fields,help:stock.field_stock_picking__date
 msgid "Creation Date, usually the time of the order"
 msgstr "작성일, 일반적으로 주문 시간"
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.search_product_lot_filter
+msgid "Creation date"
+msgstr "작성일"
 
 #. module: stock
 #. odoo-python
@@ -2735,6 +2761,7 @@ msgstr "목적지 주소 "
 #. odoo-python
 #: code:addons/stock/models/stock_rule.py:0
 #: model:ir.model.fields,field_description:stock.field_stock_move__location_dest_id
+#: model:ir.model.fields,field_description:stock.field_stock_move_line__picking_location_dest_id
 #: model:ir.model.fields,field_description:stock.field_stock_picking__location_dest_id
 #: model:ir.model.fields,field_description:stock.field_stock_rule__location_dest_id
 #: model_terms:ir.ui.view,arch_db:stock.view_move_search
@@ -2784,7 +2811,7 @@ msgstr "목적지 경로"
 #. module: stock
 #. odoo-python
 #: code:addons/stock/models/stock_move.py:0
-#: model_terms:ir.ui.view,arch_db:stock.view_picking_form
+#: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "Detailed Operations"
 msgstr "세부 작업"
@@ -3044,9 +3071,8 @@ msgid ""
 " inventory adjustments, batch picking, moving lots or pallets, low inventory"
 " checks, etc. Go to the \"Apps\" menu to activate the barcode interface."
 msgstr ""
-"Odoo 바코드 앱으로 빠른 업무 처리를 경험해 보세요. 인터넷 연결이 안정적이지 않더라도 문제 없이 작동합니다. 재고 조정, 일괄 "
-"픽업, LOT 및 팔레트 이동, 재고 부족 알림 등 모든 업무 전반에서 활용이 가능합니다. 앱 메뉴로 이동하여 바코드 인터페이스를 "
-"활성화하세요."
+"Odoo 바코드 앱으로 업무를 빠르게 처리해 보세요. 인터넷 연결이 안정적이지 않더라도 문제 없이 작동합니다. 재고 조정, 일괄 피킹, "
+"로트 및 팔레트 이동, 재고 부족 알림 등 업무 전반에서 걸쳐 활용할 수 있습니다. 앱 메뉴로 이동하여 바코드 인터페이스를 활성화하세요."
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__tracking
@@ -3573,7 +3599,7 @@ msgstr "다음 스케줄까지 숨깁니다"
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__hide_picking_type
 msgid "Hide Picking Type"
-msgstr "픽업 유형 숨기기"
+msgstr "피킹 유형 숨기기"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__hide_reservation_method
@@ -3813,6 +3839,7 @@ msgstr "이 체크박스를 선택하면, 해당 작업에 대한 라벨을 인�
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move__show_operations
+#: model:ir.model.fields,help:stock.field_stock_picking__show_operations
 #: model:ir.model.fields,help:stock.field_stock_picking_type__show_operations
 msgid ""
 "If this checkbox is ticked, the pickings lines will represent detailed stock"
@@ -3894,6 +3921,11 @@ msgstr "로트 번호 가져오기"
 #, python-format
 msgid "Import Template for Inventory Adjustments"
 msgstr "재고 조정용 서식 가져오기"
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.quant_search_view
+msgid "In Stock"
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse__in_type_id
@@ -4058,6 +4090,7 @@ msgstr "잘못된 도메인 왼쪽 피연산자 %s"
 #. module: stock
 #. odoo-python
 #: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
+#: code:addons/stock/models/stock_lot.py:0
 #, python-format
 msgid "Invalid domain operator %s"
 msgstr "잘못된 도메인 피연산자 %s"
@@ -4065,6 +4098,7 @@ msgstr "잘못된 도메인 피연산자 %s"
 #. module: stock
 #. odoo-python
 #: code:addons/stock/models/product.py:0 code:addons/stock/models/product.py:0
+#: code:addons/stock/models/stock_lot.py:0
 #, python-format
 msgid "Invalid domain right operand '%s'. It must be of type Integer/Float"
 msgstr "도메인의 우측 피연산자 값 '%s' 항목이 잘못되었습니다. 값은 반드시 정수 또는 부동 소수점 형식이어야 합니다."
@@ -4323,6 +4357,14 @@ msgid "Keep Difference"
 msgstr "차이 유지"
 
 #. module: stock
+#. odoo-javascript
+#: code:addons/stock/static/src/widgets/lots_dialog.xml:0
+#: code:addons/stock/static/src/widgets/lots_dialog.xml:0
+#, python-format
+msgid "Keep current lines"
+msgstr ""
+
+#. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_inventory_conflict_form_view
 msgid ""
 "Keep the <strong>Counted Quantity</strong> (the Difference will be updated)"
@@ -4579,6 +4621,11 @@ msgstr "이 위치가 회사간에 공유되는 경우 이 필드를 공백으�
 #: model_terms:ir.ui.view,arch_db:stock.view_move_form
 msgid "Linked Moves"
 msgstr "연결된 이동"
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.view_picking_form
+msgid "List view of detailed operations"
+msgstr ""
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
@@ -4863,6 +4910,14 @@ msgstr "수동"
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__auto__manual
 msgid "Manual Operation"
 msgstr "수동 작업"
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/wizard/product_replenish.py:0
+#: code:addons/stock/wizard/product_replenish.py:0
+#, python-format
+msgid "Manual Replenishment"
+msgstr "수동 보충"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_picking_type__reservation_method__manual
@@ -5352,8 +5407,8 @@ msgid "Normal"
 msgstr "일반"
 
 #. module: stock
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/stock/models/stock_picking.py:0
 #: code:addons/stock/static/src/stock_forecasted/forecasted_details.xml:0
 #: code:addons/stock/static/src/widgets/forecast_widget.xml:0
@@ -5470,6 +5525,7 @@ msgstr "사무용 의자"
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__qty_on_hand
 #: model_terms:ir.ui.view,arch_db:stock.product_product_stock_tree
 #: model_terms:ir.ui.view,arch_db:stock.quant_search_view
+#: model_terms:ir.ui.view,arch_db:stock.search_product_lot_filter
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_product_template_tree
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_product_tree
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_quant_tree_simple
@@ -5478,6 +5534,7 @@ msgid "On Hand"
 msgstr "보유량"
 
 #. module: stock
+#: model:ir.model.fields,field_description:stock.field_stock_lot__product_qty
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_quant_tree_editable
 #: model_terms:ir.ui.view,arch_db:stock.view_stock_quant_tree_inventory_editable
 msgid "On Hand Quantity"
@@ -6630,12 +6687,12 @@ msgstr "풀 방식"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule
 msgid "Pull Rule"
-msgstr "끌어오기 규칙"
+msgstr "풀 전략"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_stock_rule
 msgid "Push Rule"
-msgstr "밀어넣기 규칙"
+msgstr "푸시 전략"
 
 #. module: stock
 #: model:ir.model.fields.selection,name:stock.selection__stock_rule__action__push
@@ -6644,6 +6701,7 @@ msgstr "푸시 방식"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_form
+#: model_terms:ir.ui.view,arch_db:stock.view_stock_move_line_detailed_operation_tree
 msgid "Put in Pack"
 msgstr "포장에 넣기"
 
@@ -6764,7 +6822,6 @@ msgstr "포장 개봉 수량"
 #: code:addons/stock/static/src/client_actions/stock_traceability_report_backend.xml:0
 #: model:ir.model.fields,field_description:stock.field_product_replenish__quantity
 #: model:ir.model.fields,field_description:stock.field_report_stock_quantity__product_qty
-#: model:ir.model.fields,field_description:stock.field_stock_lot__product_qty
 #: model:ir.model.fields,field_description:stock.field_stock_move__quantity
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__quantity
 #: model:ir.model.fields,field_description:stock.field_stock_quant__quantity
@@ -7835,13 +7892,6 @@ msgid "Sequence picking"
 msgstr "선별 순서"
 
 #. module: stock
-#. odoo-python
-#: code:addons/stock/models/stock_picking.py:0
-#, python-format
-msgid "Sequences %s already exist."
-msgstr "해당하는 %s 순서가 이미 존재합니다."
-
-#. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__lot_ids
 msgid "Serial Numbers"
 msgstr "일련번호"
@@ -8035,6 +8085,7 @@ msgstr "수량 삭제 버튼 표시"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__show_operations
+#: model:ir.model.fields,field_description:stock.field_stock_picking__show_operations
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__show_operations
 msgid "Show Detailed Operations"
 msgstr "세부 작업 표시"
@@ -8061,11 +8112,6 @@ msgstr "LOT 텍스트 표시"
 #: model:ir.model.fields,field_description:stock.field_product_template__show_on_hand_qty_status_button
 msgid "Show On Hand Qty Status Button"
 msgstr "보유 수량 상태 버튼 표시"
-
-#. module: stock
-#: model:ir.model.fields,field_description:stock.field_stock_picking__show_operations
-msgid "Show Operations"
-msgstr "작업 표시"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking_type__show_picking_type
@@ -8196,6 +8242,7 @@ msgstr "원본 문서"
 #. odoo-python
 #: code:addons/stock/models/stock_rule.py:0
 #: model:ir.model.fields,field_description:stock.field_stock_move__location_id
+#: model:ir.model.fields,field_description:stock.field_stock_move_line__picking_location_id
 #: model:ir.model.fields,field_description:stock.field_stock_picking__location_id
 #: model:ir.model.fields,field_description:stock.field_stock_rule__location_src_id
 #: model:ir.model.fields,field_description:stock.field_stock_scrap__location_id
@@ -8509,6 +8556,11 @@ msgid "Storage Locations"
 msgstr "저장 공간"
 
 #. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.view_stock_move_line_operation_tree
+msgid "Store To"
+msgstr ""
+
+#. module: stock
 #: model:ir.model.fields,help:stock.field_res_config_settings__group_stock_multi_locations
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid ""
@@ -8663,6 +8715,13 @@ msgstr "새로 생성된 이동의 예상 배송일은 이 리드타임을 기�
 #: model:ir.model.fields,help:stock.field_stock_package_type__sequence
 msgid "The first in the sequence is the default one."
 msgstr "순서의 첫 번째가 기본입니다."
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/wizard/product_replenish.py:0
+#, python-format
+msgid "The following replenishment order have been generated"
+msgstr "다음과 같이 보충 주문서가 생성되었습니다."
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_product_replenish
@@ -9077,6 +9136,17 @@ msgstr "이 레코드는 이미 존재합니다."
 #, python-format
 msgid "This report cannot be used for done and not done %s at the same time"
 msgstr "이 보고서는 %s 항목을 동시에 완료 및 미완료로 사용할 수 없습니다. "
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/models/stock_picking.py:0
+#, python-format
+msgid ""
+"This sequence prefix is already being used by another operation type. It is "
+"recommended that you select a unique prefix to avoid issues and/or repeated "
+"reference values or assign the existing reference sequence to this operation"
+" type."
+msgstr ""
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__property_stock_production
@@ -9592,8 +9662,8 @@ msgid "Update Quantities"
 msgstr "수량 업데이트"
 
 #. module: stock
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/stock/models/product.py:0
 #: code:addons/stock/static/src/stock_forecasted/forecasted_buttons.xml:0
 #: code:addons/stock/static/src/stock_forecasted/forecasted_buttons.xml:0
@@ -10127,11 +10197,6 @@ msgid "Write one lot/serial name per line, followed by the quantity."
 msgstr "Lot/일련번호를 한 줄에 하나씩 적고, 그 뒤에 수량을 적습니다."
 
 #. module: stock
-#: model_terms:ir.ui.view,arch_db:stock.view_stock_move_line_operation_tree
-msgid "Write your SN/LN one by one or copy paste a list."
-msgstr "SN/LN을 하나씩 쓰거나 목록을 복사하여 붙여 넣습니다."
-
-#. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_quant_relocate_view_form
 msgid ""
 "You are about to move quantities in a package without moving the full package.\n"
@@ -10557,6 +10622,13 @@ msgstr "내부 작업 유형을 수행하려면 저장 위치를 ​​활성화
 
 #. module: stock
 #. odoo-python
+#: code:addons/stock/wizard/product_replenish.py:0
+#, python-format
+msgid "You need to select a route to replenish your products"
+msgstr ""
+
+#. module: stock
+#. odoo-python
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
 msgid "You need to set a Serial Number before generating more."
@@ -10590,7 +10662,7 @@ msgstr "귀사의 이용약관을 반영하여 이 문서를 업데이트해야 
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "You still have ongoing operations for picking types %s in warehouse %s"
-msgstr "%s 창고의 %s 픽업 유형에 대한 작업이 아직 진행 중입니다."
+msgstr "%s 창고의 %s 피킹 유형에 대한 작업이 아직 진행 중입니다."
 
 #. module: stock
 #. odoo-python
@@ -10738,6 +10810,11 @@ msgstr "예: 실제 위치하고 있는 장소"
 #: model_terms:ir.ui.view,arch_db:stock.view_picking_type_form
 msgid "e.g. Receptions"
 msgstr "예: 수취"
+
+#. module: stock
+#: model_terms:ir.ui.view,arch_db:stock.view_stock_move_line_operation_tree
+msgid "e.g. SN000001"
+msgstr "예: SN000001"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_location_form

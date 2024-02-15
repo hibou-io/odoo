@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from pytz import UTC
+from pytz import timezone, UTC
 from datetime import date, datetime, time
 
 from odoo import api, fields, models
@@ -35,7 +35,7 @@ class Employee(models.Model):
     contract_ids = fields.One2many('hr.contract', 'employee_id', string='Employee Contracts')
     contract_id = fields.Many2one(
         'hr.contract', string='Current Contract', groups="hr.group_hr_user",
-        domain="[('company_id', '=', company_id), ('employee_id', '=', id)]", help='Current contract of the employee')
+        domain="[('company_id', '=', company_id), ('employee_id', '=', id)]", help='Current contract of the employee', copy=False)
     calendar_mismatch = fields.Boolean(related='contract_id.calendar_mismatch')
     contracts_count = fields.Integer(compute='_compute_contracts_count', string='Contract Count')
     contract_warning = fields.Boolean(string='Contract Warning', store=True, compute='_compute_contract_warning', groups="hr.group_hr_user")
@@ -145,7 +145,21 @@ class Employee(models.Model):
         valid_contracts = self.sudo()._get_contracts(date_from, date_to, states=['open', 'close'])
         if not valid_contracts:
             return super()._get_calendar_attendances(date_from, date_to)
-        return valid_contracts.resource_calendar_id.get_work_duration_data(date_from, date_to)
+        employee_tz = timezone(self.tz) if self.tz else None
+        duration_data = {'days': 0, 'hours': 0}
+        for contract in valid_contracts:
+            contract_start = datetime.combine(contract.date_start, time.min, employee_tz)
+            contract_end = datetime.combine(contract.date_end or date.max, time.max, employee_tz)
+            calendar = contract.resource_calendar_id or contract.company_id.resource_calendar_id
+            contract_duration_data = calendar\
+                .with_context(employee_timezone=employee_tz)\
+                .get_work_duration_data(
+                    max(date_from, contract_start),
+                    min(date_to, contract_end),
+                    domain=[('company_id', 'in', [False, contract.company_id.id])])
+            duration_data['days'] += contract_duration_data['days']
+            duration_data['hours'] += contract_duration_data['hours']
+        return duration_data
 
     def write(self, vals):
         res = super().write(vals)

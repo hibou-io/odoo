@@ -7,14 +7,15 @@
 # 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2023
 # Chloe Wang, 2023
 # Jeffery CHEN <jeffery9@gmail.com>, 2023
+# 何彬 <vnsoft.he@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:54+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Jeffery CHEN <jeffery9@gmail.com>, 2023\n"
+"Last-Translator: 何彬 <vnsoft.he@gmail.com>, 2024\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,7 +26,7 @@ msgstr ""
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__lead_all_assigned_month_count
 msgid "# Leads/Opps assigned this month"
-msgstr "本月指派的潜在客户/商机"
+msgstr "本月指派的线索/商机"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_recurring_plan__number_of_months
@@ -45,21 +46,21 @@ msgstr "逾期商机"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__lead_unassigned_count
 msgid "# Unassigned Leads"
-msgstr "未指派的潜在客户"
+msgstr "未指派的线索"
 
 #. module: crm
 #. odoo-python
 #: code:addons/crm/models/crm_team.py:0
 #, python-format
 msgid "%(assigned)s leads allocated among %(team_count)s teams."
-msgstr "在%(team_count)s团队中指派%(assigned)s的潜在客户。"
+msgstr "在%(team_count)s团队中指派%(assigned)s的线索。"
 
 #. module: crm
 #. odoo-python
 #: code:addons/crm/models/crm_team.py:0
 #, python-format
 msgid "%(assigned)s leads allocated to %(team_name)s team."
-msgstr "指派给%(team_name)s团队的%(assigned)s潜在客户。"
+msgstr "指派给%(team_name)s团队的%(assigned)s线索。"
 
 #. module: crm
 #. odoo-python
@@ -73,7 +74,7 @@ msgstr "%(attach_name)s（来自%(lead_name)s）"
 #: code:addons/crm/models/crm_team.py:0
 #, python-format
 msgid "%(duplicates)s duplicates leads have been merged."
-msgstr "%(duplicates)s重复的潜在客户已合并。"
+msgstr "%(duplicates)s重复的线索已合并。"
 
 #. module: crm
 #. odoo-python
@@ -81,7 +82,7 @@ msgstr "%(duplicates)s重复的潜在客户已合并。"
 #, python-format
 msgid ""
 "%(members_assigned)s leads assigned among %(member_count)s salespersons."
-msgstr "在%(member_count)s销售人员中指派%(members_assigned)s的潜在客户。"
+msgstr "在%(member_count)s销售人员中指派%(members_assigned)s的线索。"
 
 #. module: crm
 #. odoo-python
@@ -137,7 +138,7 @@ msgstr "<i class=\"fa fa-gear\" role=\"img\" title=\"切换到自动概率\" ari
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.sales_team_form_view_in_crm
 msgid "<i class=\"fa fa-info-circle me-2\" title=\"Assigned Lead Count\"/>"
-msgstr "<i class=\"fa fa-info-circle me-2\" title=\"分配的潜在客户数量\"/>"
+msgstr "<i class=\"fa fa-info-circle me-2\" title=\"分配的线索数量\"/>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
@@ -174,8 +175,8 @@ msgid ""
 "<span class=\"o_stat_text\" invisible=\"duplicate_lead_count &lt; 2\">Similar Leads</span>\n"
 "                                    <span class=\"o_stat_text\" invisible=\"duplicate_lead_count &gt; 1\">Similar Lead</span>"
 msgstr ""
-"<span class=\"o_stat_text\" invisible=\"duplicate_lead_count &lt; 2\">类似潜在客户</span>\n"
-"                                    <span class=\"o_stat_text\" invisible=\"duplicate_lead_count &gt; 1\">类似潜在客户</span>"
+"<span class=\"o_stat_text\" invisible=\"duplicate_lead_count &lt; 2\">类似线索</span>\n"
+"                                    <span class=\"o_stat_text\" invisible=\"duplicate_lead_count &gt; 1\">类似线索</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.utm_campaign_view_form
@@ -183,13 +184,13 @@ msgid ""
 "<span class=\"o_stat_text\" invisible=\"not use_leads\">Leads</span>\n"
 "                        <span class=\"o_stat_text\" invisible=\"use_leads\">Opportunities</span>"
 msgstr ""
-"<span class=\"o_stat_text\" invisible=\"not use_leads\">潜在客户</span>\n"
+"<span class=\"o_stat_text\" invisible=\"not use_leads\">线索</span>\n"
 "                        <span class=\"o_stat_text\" invisible=\"use_leads\">机会</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lost_reason_view_form
 msgid "<span class=\"o_stat_text\"> Leads</span>"
-msgstr "<span class=\"o_stat_text\">潜在客户</span>"
+msgstr "<span class=\"o_stat_text\">线索</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
@@ -231,7 +232,7 @@ msgid ""
 "<span> leads assigned this month\n"
 "                            on a maximum of </span>"
 msgstr ""
-"<span> 本月分配的潜在客户\n"
+"<span> 本月分配的线索\n"
 "                            最多为</span>"
 
 #. module: crm
@@ -242,7 +243,7 @@ msgstr "<span>预计收入：</span>"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "<span>Merged the Lead/Opportunity</span>"
-msgstr "<span>合并潜在客户/商机</span>"
+msgstr "<span>合并线索/商机</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
@@ -253,7 +254,7 @@ msgid ""
 "                                    specified otherwise.\n"
 "                                </span>"
 msgstr ""
-"<span>根据规则定期分配潜在客户</span><br/>\n"
+"<span>根据规则定期分配线索</span><br/>\n"
 "                                <span invisible=\"not crm_use_auto_assignment\">\n"
 "                                    所有销售团队默认使用此设置，\n"
 "                                    除非另有指定。\n"
@@ -346,7 +347,7 @@ msgstr ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: white; padding: 0; border-collapse:separate;\">\n"
 "                <tr><td valign=\"middle\">\n"
-"                    <span style=\"font-size: 10px;\">您的潜在客户/商机</span><br>\n"
+"                    <span style=\"font-size: 10px;\">您的线索/商机</span><br>\n"
 "                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">对您的产品感兴趣</span>\n"
 "                </td><td valign=\"middle\" align=\"right\">\n"
 "                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: 48px;\" t-att-alt=\"object.company_id.name\">\n"
@@ -449,7 +450,7 @@ msgstr "已启用"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner_mass__lead_tomerge_ids
 msgid "Active Leads"
-msgstr "活跃的潜在客户"
+msgstr "活跃的线索"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_activity_report_action
@@ -489,7 +490,7 @@ msgstr "活动异常标示"
 
 #. module: crm
 #: model:ir.ui.menu,name:crm.mail_activity_plan_menu_config_lead
-msgid "Activity Plan"
+msgid "Activity Plans"
 msgstr "活动计划"
 
 #. module: crm
@@ -545,7 +546,7 @@ msgstr "添加下一个%s"
 msgid ""
 "Additional filter domain when fetching unassigned leads to allocate to the "
 "team."
-msgstr "获取未指派的潜在客户时使用的额外筛选器域，以便将潜在客户指派给该团队。"
+msgstr "获取未指派的线索时使用的额外筛选器域，以便将线索指派给该团队。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
@@ -639,7 +640,7 @@ msgid ""
 "As you are a member of no Sales Team, you are showed the Pipeline of the <b>first team by default.</b>\n"
 "                                        To work with the CRM, you should <a name=\"%d\" type=\"action\" tabindex=\"-1\">join a team.</a>"
 msgstr ""
-"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售渠道。\n"
+"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售流水线。\n"
 "                                        要使用客户关系管理，应<a name=\"%d\" type=\"action\" tabindex=\"-1\">加入一个团队。</a>"
 
 #. module: crm
@@ -650,13 +651,13 @@ msgid ""
 "As you are a member of no Sales Team, you are showed the Pipeline of the <b>first team by default.</b>\n"
 "                                        To work with the CRM, you should join a team."
 msgstr ""
-"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售渠道。\n"
+"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售流水线。\n"
 "                                        要使用客户关系管理，应加入一个团队。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.sales_team_form_view_in_crm
 msgid "Assign Leads"
-msgstr "分配潜在客户"
+msgstr "分配线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.merge_opportunity_form
@@ -711,7 +712,7 @@ msgstr "团队%(team)s的分配域名的格式不正确"
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner__lead_id
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner_mass__lead_id
 msgid "Associated Lead"
-msgstr "关联潜在客户"
+msgstr "关联线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__message_attachment_count
@@ -746,7 +747,7 @@ msgstr "自动概率"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team_member__assignment_max
 msgid "Average Leads Capacity (on 30 days)"
-msgstr "平均处理潜在客户能力（30 天）"
+msgstr "平均处理线索能力（30 天）"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__is_blacklisted
@@ -800,7 +801,7 @@ msgstr "客户关系管理阶段"
 #. module: crm
 #: model:ir.actions.server,name:crm.ir_cron_crm_lead_assign_ir_actions_server
 msgid "CRM: Lead Assignment"
-msgstr "客户关系管理：潜在客户指派"
+msgstr "客户关系管理：线索指派"
 
 #. module: crm
 #: model:ir.model,name:crm.model_calendar_event
@@ -844,7 +845,7 @@ msgstr "频道"
 msgid ""
 "Check this box to filter and qualify incoming requests as leads before "
 "converting them into opportunities and assigning them to a salesperson."
-msgstr "选中此复选框，可将收到的请求筛选并鉴定为潜在客户，然后再将其转换为商机并分配给销售人员。"
+msgstr "选中此复选框，可将收到的请求筛选并鉴定为线索，然后再将其转换为商机并分配给销售人员。"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team__use_opportunities
@@ -866,7 +867,7 @@ msgstr "城市"
 msgid ""
 "Classify and analyze your lead/opportunity categories like: Training, "
 "Service"
-msgstr "归类并分析潜在客户/商机的类别，例如：培训，服务"
+msgstr "归类并分析线索/商机的类别，例如：培训，服务"
 
 #. module: crm
 #. odoo-javascript
@@ -875,7 +876,7 @@ msgstr "归类并分析潜在客户/商机的类别，例如：培训，服务"
 msgid ""
 "Click on the breadcrumb to go back to your Pipeline. Odoo will save all "
 "modifications as you navigate."
-msgstr "点击面包屑导航，返回您的销售过程。Odoo 会在您切换浏览画面时保存所有修改。"
+msgstr "点击面包屑导航，返回您的流水线。Odoo 会在您切换浏览画面时保存所有修改。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__date_closed
@@ -955,7 +956,7 @@ msgstr "恭喜， 祝您钓到大鱼！：)"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_pls_update_view_form
 msgid "Consider leads created as of the:"
-msgstr "考虑截至以下日期创建的潜在客户："
+msgstr "考虑截至以下日期创建的线索："
 
 #. module: crm
 #: model:ir.model,name:crm.model_res_partner
@@ -999,7 +1000,7 @@ msgstr "转化日期"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
 msgid "Conversion Date from Lead to Opportunity"
-msgstr "从潜在客户转化为商机的日期"
+msgstr "从线索转化为商机的日期"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_lead2opportunity_partner_mass
@@ -1009,12 +1010,12 @@ msgstr "转化选项"
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead2opportunity_partner_mass
 msgid "Convert Lead to Opportunity (in mass)"
-msgstr "潜在客户转化为商机（批量）"
+msgstr "线索转化为商机（批量）"
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead2opportunity_partner
 msgid "Convert Lead to Opportunity (not in mass)"
-msgstr "潜在客户转化为商机（非批量）"
+msgstr "线索转化为商机（非批量）"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_lead2opportunity_partner_mass
@@ -1048,7 +1049,7 @@ msgstr "转化为商机"
 msgid ""
 "Convert visitors of your website into leads and perform data enrichment "
 "based on their IP address"
-msgstr "将网站访客转化为潜在客户，并根据 IP 地址进行数据丰富"
+msgstr "将网站访客转化为线索，并根据 IP 地址进行数据丰富"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead__email_state__correct
@@ -1074,7 +1075,7 @@ msgstr "国家/地区"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__module_website_crm_iap_reveal
 msgid "Create Leads/Opportunities from your website's traffic"
-msgstr "从网站流量创建潜在客户/商机"
+msgstr "从网站流量创建线索/商机"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_lead2opportunity_partner
@@ -1084,7 +1085,7 @@ msgstr "创建商机"
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_lead_all_leads
 msgid "Create a Lead"
-msgstr "创建潜在客户"
+msgstr "创建线索"
 
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_lost_reason_action
@@ -1099,7 +1100,7 @@ msgstr "创建定期计划"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__lead_mining_in_pipeline
 msgid "Create a lead mining request directly from the opportunity pipeline."
-msgstr "直接从商机销售过程创建潜在客户挖掘申请。"
+msgstr "直接从商机流水线创建线索挖掘申请。"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead2opportunity_partner__action__create
@@ -1114,7 +1115,7 @@ msgstr "创建新客户"
 #: model_terms:ir.actions.act_window,help:crm.crm_case_form_view_salesteams_opportunity
 #, python-format
 msgid "Create a new lead"
-msgstr "创建新潜在客户"
+msgstr "创建新线索"
 
 #. module: crm
 #. odoo-python
@@ -1129,7 +1130,7 @@ msgstr "创建商机"
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
 #, python-format
 msgid "Create an opportunity to start playing with your pipeline."
-msgstr "创建商机，以开始销售程序。"
+msgstr "创建商机，以开始流水线。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner__create_uid
@@ -1183,7 +1184,7 @@ msgstr "客户关系管理：预测"
 #. module: crm
 #: model:ir.actions.server,name:crm.action_your_pipeline
 msgid "Crm: My Pipeline"
-msgstr "客户关系管理：我的销售过程"
+msgstr "客户关系管理：我的流水线"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__company_currency
@@ -1279,7 +1280,7 @@ msgstr "您是否知道电邮发送至"
 msgid ""
 "Did you know emails sent to a Sales Team alias generate opportunities in "
 "your pipeline?"
-msgstr "您是否知道发送给销售团队别名的电邮会在销售过程中生成商机？"
+msgstr "您是否知道发送给销售团队别名的电邮会在流水线中生成商机？"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_4
@@ -1409,29 +1410,29 @@ msgstr "电子邮件：欢迎演示"
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__res_config_settings__lead_enrich_auto__auto
 msgid "Enrich all leads automatically"
-msgstr "自动丰富所有潜在客户"
+msgstr "自动丰富所有线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__lead_enrich_auto
 msgid "Enrich lead automatically"
-msgstr "自动丰富潜在客户"
+msgstr "自动丰富线索"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__res_config_settings__lead_enrich_auto__manual
 msgid "Enrich leads on demand only"
-msgstr "仅按需丰富潜在客户"
+msgstr "仅按需丰富线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__module_crm_iap_enrich
 msgid ""
 "Enrich your leads automatically with company data based on their email "
 "address."
-msgstr "根据潜在客户的电子邮箱地址、使用公司数据自动丰富潜在客户。"
+msgstr "根据线索的电子邮箱地址、使用公司数据自动丰富线索。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Enrich your leads with company data based on their email addresses"
-msgstr "根据潜在客户的电子邮箱地址、使用公司数据自动丰富潜在客户"
+msgstr "根据线索的电子邮箱地址、使用公司数据自动丰富线索"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_stage__requirements
@@ -1448,7 +1449,7 @@ msgstr "预估赢得商机的日期。"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__lead_all_assigned_month_exceeded
 msgid "Exceed monthly lead assignement"
-msgstr "超出每月潜在客户分配"
+msgstr "超出每月线索分配"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__date_deadline
@@ -1522,12 +1523,12 @@ msgstr "用于存储经已净化的电话号码的字段。有助于加快搜索
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead_scoring_frequency_field
 msgid "Fields that can be used for predictive lead scoring computation"
-msgstr "可用于计算预测潜在客户评分的字段"
+msgstr "可用于计算预测线索评分的字段"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_stage__fold
 msgid "Folded in Pipeline"
-msgstr "在销售过程中折叠"
+msgstr "在流水线中折叠"
 
 #. module: crm
 #: model:mail.activity.type,name:crm.mail_activity_demo_followup_quote
@@ -1557,7 +1558,7 @@ msgid ""
 "targeted to your needs: company size, industry, etc. To help you test the "
 "feature, we offer you 200 credits for free."
 msgstr ""
-"对销售团队而言，没有什么比缺乏潜在客户更糟糕。幸运的是，只需点击几下，就可以生成专门针对您需求的潜在客户：公司规模、行业等。为了帮助您测试该功能，特向您免费提供"
+"对销售团队而言，没有什么比缺乏线索更糟糕。幸运的是，只需点击几下，就可以生成专门针对您需求的线索：公司规模、行业等。为了帮助您测试该功能，特向您免费提供"
 " 200 个积分。"
 
 #. module: crm
@@ -1601,12 +1602,12 @@ msgstr "未来活动"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__module_crm_iap_mine
 msgid "Generate new leads based on their country, industries, size, etc."
-msgstr "基于国家/地区、行业、规模等信息生成新的潜在客户。"
+msgstr "基于国家/地区、行业、规模等信息生成新的线索。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Generate new leads based on their country, industry, size, etc."
-msgstr "基于国家/地区、行业、规模等信息生成新的潜在客户。"
+msgstr "基于国家/地区、行业、规模等信息生成新的线索。"
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead_lost
@@ -1740,7 +1741,7 @@ msgstr "导入和同步"
 #: code:addons/crm/models/crm_lead.py:0
 #, python-format
 msgid "Import Template for Leads & Opportunities"
-msgstr "为潜在客户和商机导入模板"
+msgstr "为线索和商机导入模板"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
@@ -1836,7 +1837,7 @@ msgstr "看板状态"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_digest_digest__kpi_crm_lead_created_value
 msgid "Kpi Crm Lead Created Value"
-msgstr "KPI客户关系管理潜在客户创建值"
+msgstr "KPI客户关系管理线索创建值"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_digest_digest__kpi_crm_opportunities_won_value
@@ -1923,93 +1924,93 @@ msgstr "最近活动"
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_tree_view_leads
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 msgid "Lead"
-msgstr "潜在客户"
+msgstr "线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__assignment_enabled
 #: model:ir.model.fields,field_description:crm.field_crm_team_member__assignment_enabled
 msgid "Lead Assign"
-msgstr "潜在客户指派"
+msgstr "线索指派"
 
 #. module: crm
 #. odoo-python
 #: code:addons/crm/models/crm_team.py:0
 #, python-format
 msgid "Lead Assignment requested by %(user_name)s"
-msgstr "%(user_name)s要求的潜在客户指派"
+msgstr "%(user_name)s要求的线索指派"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__assignment_max
 msgid "Lead Average Capacity"
-msgstr "潜在客户平均能力"
+msgstr "线索平均能力"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Lead Enrichment"
-msgstr "丰富潜在客户"
+msgstr "丰富线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Lead Generation"
-msgstr "生成潜在客户"
+msgstr "生成线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Lead Mining"
-msgstr "挖掘潜在客户"
+msgstr "挖掘线索"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.mail_activity_plan_action_lead
 msgid "Lead Plans"
-msgstr "潜在客户计划"
+msgstr "线索计划"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__lead_properties_definition
 msgid "Lead Properties"
-msgstr "潜在客户属性"
+msgstr "线索属性"
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead_scoring_frequency
 msgid "Lead Scoring Frequency"
-msgstr "潜在客户评分频率"
+msgstr "线索评分频率"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__predictive_lead_scoring_fields
 msgid "Lead Scoring Frequency Fields"
-msgstr "潜在客户评分频率字段"
+msgstr "线索评分频率字段"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__predictive_lead_scoring_fields_str
 msgid "Lead Scoring Frequency Fields in String"
-msgstr "字符串中的潜在客户评分频率字段"
+msgstr "字符串中的线索评分频率字段"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__predictive_lead_scoring_start_date
 msgid "Lead Scoring Starting Date"
-msgstr "潜在客户评分开始日期"
+msgstr "线索评分开始日期"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__predictive_lead_scoring_start_date_str
 msgid "Lead Scoring Starting Date in String"
-msgstr "字符串中的潜在客户评分开始日期"
+msgstr "字符串中的线索评分开始日期"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_activity_report_view_search
 #: model_terms:ir.ui.view,arch_db:crm.crm_activity_report_view_tree
 msgid "Lead Tags"
-msgstr "潜在客户标签"
+msgstr "线索标签"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team_member__lead_month_count
 msgid "Lead assigned to this member those last 30 days"
-msgstr "‎过去 30 天内分配给该成员的潜在客户"
+msgstr "‎过去 30 天内分配给该成员的线索"
 
 #. module: crm
 #. odoo-python
 #: code:addons/crm/models/crm_lead.py:0
 #, python-format
 msgid "Lead or Opportunity"
-msgstr "潜在客户/商机"
+msgstr "线索/商机"
 
 #. module: crm
 #. odoo-python
@@ -2018,17 +2019,17 @@ msgstr "潜在客户/商机"
 msgid ""
 "Lead/Opportunities automatic assignment is limited to managers or "
 "administrators"
-msgstr "潜在客户/商机自动分配仅限于经理或管理员"
+msgstr "线索/商机自动分配仅限于经理或管理员"
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead
 msgid "Lead/Opportunity"
-msgstr "潜在客户/商机"
+msgstr "线索/商机"
 
 #. module: crm
 #: model:mail.message.subtype,description:crm.mt_lead_create
 msgid "Lead/Opportunity created"
-msgstr "已创建的潜在顾客/商机"
+msgstr "已创建的线索/商机"
 
 #. module: crm
 #. odoo-python
@@ -2048,12 +2049,12 @@ msgstr "已创建的潜在顾客/商机"
 #: model_terms:ir.ui.view,arch_db:crm.utm_campaign_view_kanban
 #, python-format
 msgid "Leads"
-msgstr "潜在客户"
+msgstr "线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team_member__lead_month_count
 msgid "Leads (30 days)"
-msgstr "潜在客户（30天）"
+msgstr "线索（30天）"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.action_report_crm_lead_salesteam
@@ -2061,7 +2062,7 @@ msgstr "潜在客户（30天）"
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_graph_lead
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_pivot_lead
 msgid "Leads Analysis"
-msgstr "潜在客户分析"
+msgstr "线索分析"
 
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.action_report_crm_lead_salesteam
@@ -2070,35 +2071,35 @@ msgid ""
 "the treatment delays or number of leads per state. You can sort out your "
 "leads analysis by different groups to get accurate grained analysis."
 msgstr ""
-"通过潜在客户分析，可以查看与不同客户关系管理相关的信息，例如，处理延迟或不同状态下的潜在客户的人数。可以根据分组整理潜在客户分析，以获得准确、精确的分析结果。"
+"通过线索分析，可以查看与不同客户关系管理相关的信息，例如，处理延迟或不同状态下的线索的人数。可以根据分组整理线索分析，以获得准确、精确的分析结果。"
 
 #. module: crm
 #. odoo-python
 #: code:addons/crm/models/crm_team.py:0
 #, python-format
 msgid "Leads Assigned"
-msgstr "分派的潜在客户"
+msgstr "分派的线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lost_reason__leads_count
 msgid "Leads Count"
-msgstr "潜在客户计数"
+msgstr "线索计数"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_calendar_view_leads
 msgid "Leads Generation"
-msgstr "生成潜在客户"
+msgstr "生成线索"
 
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_lead_all_leads
 msgid ""
 "Leads are the qualification step before the creation of an opportunity."
-msgstr "潜在客户是创建商机前的资格认证步骤。"
+msgstr "线索是创建商机前的资格认证步骤。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_activity
 msgid "Leads or Opportunities"
-msgstr "潜在客户或商机"
+msgstr "线索或商机"
 
 #. module: crm
 #. odoo-python
@@ -2108,39 +2109,39 @@ msgstr "潜在客户或商机"
 msgid ""
 "Leads team allocation should be done for at least 0.2 or maximum 30 work "
 "days, not %.2f."
-msgstr "潜在客户团队分配应在至少 0.2 个或最多 30 个工作日内完成，而非%.2f。"
+msgstr "线索团队分配应在至少 0.2 个或最多 30 个工作日内完成，而非%.2f。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 msgid "Leads that are assigned to me"
-msgstr "分配给我的潜在客户"
+msgstr "分配给我的线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 msgid "Leads that are not assigned"
-msgstr "未分配的潜在客户"
+msgstr "未分配的线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_lead2opportunity_partner_mass
 msgid ""
 "Leads that you selected that have duplicates. If the list is empty, it means"
 " that no duplicates were found"
-msgstr "选择的潜在客户有重复。如果列表为空，表明未发现重复潜在客户"
+msgstr "选择的线索有重复。如果列表为空，表明未发现重复线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_lead2opportunity_partner_mass
 msgid "Leads with existing duplicates (for information)"
-msgstr "存在重复的潜在客户（用于信息）"
+msgstr "存在重复的线索（用于信息）"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_merge_opportunity__opportunity_ids
 msgid "Leads/Opportunities"
-msgstr "潜在客户/商机"
+msgstr "线索/商机"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_utm_campaign__crm_lead_count
 msgid "Leads/Opportunities count"
-msgstr "潜在客户/商机计数"
+msgstr "线索/商机计数"
 
 #. module: crm
 #. odoo-javascript
@@ -2167,7 +2168,7 @@ msgstr "链接至现有客户"
 msgid ""
 "Linked partner (optional). Usually created when converting the lead. You can"
 " find a partner by its Name, TIN, Email or Internal Reference."
-msgstr "链接的合作伙伴（可选）。通常在转化潜在客户时创建。可以通过名称、TIN、电子邮箱或内部参考号找到合作伙伴。"
+msgstr "链接的合作伙伴（可选）。通常在转化线索时创建。可以通过名称、TIN、电子邮箱或内部参考号找到合作伙伴。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_incoming_local
@@ -2217,7 +2218,7 @@ msgstr "丢失计数"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_lost_view_form
 msgid "Lost Lead"
-msgstr "失去潜在客户"
+msgstr "失去线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__lost_reason_id
@@ -2362,7 +2363,7 @@ msgstr "合并"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.merge_opportunity_form
 msgid "Merge Leads/Opportunities"
-msgstr "合并潜在客户/商机"
+msgstr "合并线索/商机"
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_merge_opportunity
@@ -2372,7 +2373,7 @@ msgstr "合并商机"
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead2opportunity_partner_mass__deduplicate
 msgid "Merge with existing leads/opportunities of each partner"
-msgstr "与各合作伙伴的现有潜在客户/商机合并"
+msgstr "与各合作伙伴的现有线索/商机合并"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead2opportunity_partner__name__merge
@@ -2414,7 +2415,7 @@ msgstr "每月"
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team__assignment_max
 msgid "Monthly average leads capacity for all salesmen belonging to the team"
-msgstr "该团队所有销售人员每月平均处理潜在客户的能力"
+msgstr "该团队所有销售人员每月平均处理线索的能力"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__is_membership_multi
@@ -2441,14 +2442,14 @@ msgstr "我的截止日期"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 msgid "My Leads"
-msgstr "我的潜在客户"
+msgstr "我的线索"
 
 #. module: crm
 #: model:ir.ui.menu,name:crm.menu_crm_opportunities
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_opportunities_filter
 msgid "My Pipeline"
-msgstr "我的销售过程"
+msgstr "我的流水线"
 
 #. module: crm
 #: model:crm.stage,name:crm.stage_lead1
@@ -2458,12 +2459,12 @@ msgstr "新建"
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_lead_action_open_lead_form
 msgid "New Lead"
-msgstr "新的潜在客户"
+msgstr "新的线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_digest_digest__kpi_crm_lead_created
 msgid "New Leads"
-msgstr "新的潜在客户"
+msgstr "新的线索"
 
 #. module: crm
 #. odoo-python
@@ -2547,7 +2548,7 @@ msgstr "无主题"
 msgid ""
 "No allocated leads to %(team_name)s team and its salespersons because no "
 "unassigned lead matches its domain."
-msgstr "没有分配给%(team_name)s团队或其销售人员的潜在客户，因为没有未分配的潜在客户与其域名相匹配。"
+msgstr "没有分配给%(team_name)s团队或其销售人员的线索，因为没有未分配的线索与其域名相匹配。"
 
 #. module: crm
 #. odoo-python
@@ -2556,7 +2557,7 @@ msgstr "没有分配给%(team_name)s团队或其销售人员的潜在客户，�
 msgid ""
 "No allocated leads to %(team_name)s team because it has no capacity. Add "
 "capacity to its salespersons."
-msgstr "没有分配给%(team_name)s团队的潜在客户，因为团队已无容量。为销售人员添加容量。"
+msgstr "没有分配给%(team_name)s团队的线索，因为团队已无容量。为销售人员添加容量。"
 
 #. module: crm
 #. odoo-python
@@ -2565,7 +2566,7 @@ msgstr "没有分配给%(team_name)s团队的潜在客户，因为团队已无�
 msgid ""
 "No allocated leads to any team or salesperson. Check your Sales Teams and "
 "Salespersons configuration as well as unassigned leads."
-msgstr "没有分配给任何团队或销售人员的潜在客户。请检查销售团队和销售人员配置以及未分配的潜在客户。"
+msgstr "没有分配给任何团队或销售人员的线索。请检查销售团队和销售人员配置以及未分配的线索。"
 
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_opportunity_report_action
@@ -2586,7 +2587,7 @@ msgstr "无数据！"
 msgid ""
 "No lead assigned to salespersons because no unassigned lead matches their "
 "domains."
-msgstr "没有分配给销售人员的潜在客户，因为没有未分配的潜在客户与其相匹配。"
+msgstr "没有分配给销售人员的线索，因为没有未分配的线索与其相匹配。"
 
 #. module: crm
 #. odoo-python
@@ -2595,7 +2596,7 @@ msgstr "没有分配给销售人员的潜在客户，因为没有未分配的潜
 msgid ""
 "No new lead allocated to %(team_name)s team because no unassigned lead "
 "matches its domain."
-msgstr "没有新的潜在客户分配给%(team_name)s团队，因为没有未分配的潜在客户与其相匹配。"
+msgstr "没有新的线索分配给%(team_name)s团队，因为没有未分配的线索与其相匹配。"
 
 #. module: crm
 #. odoo-python
@@ -2603,7 +2604,7 @@ msgstr "没有新的潜在客户分配给%(team_name)s团队，因为没有未�
 #, python-format
 msgid ""
 "No new lead allocated to the teams because no lead match their domains."
-msgstr "没有新的潜在客户分配给团队，因为没有匹配的潜在客户。"
+msgstr "没有新的线索分配给团队，因为没有匹配的线索。"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead__kanban_state__grey
@@ -2645,7 +2646,7 @@ msgstr "备注："
 #: code:addons/crm/static/src/js/tours/crm.js:0
 #, python-format
 msgid "Now, <b>add your Opportunity</b> to your Pipeline."
-msgstr "现在，<b>添加商机</b>到您的销售过程中。"
+msgstr "现在，<b>添加商机</b>到您的流水线中。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__message_needaction_counter
@@ -2667,7 +2668,7 @@ msgstr "每个 cron 执行之间的间隔类型数（例如：每2天或每 4 �
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team__lead_all_assigned_month_count
 msgid "Number of leads and opportunities assigned this last month."
-msgstr "上个月分配的潜在客户和商机数量。"
+msgstr "上个月分配的线索和商机数量。"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__message_needaction_counter
@@ -2685,7 +2686,7 @@ msgid ""
 "Odoo helps you keep track of your sales pipeline to follow\n"
 "                    up potential sales and better forecast your future revenues."
 msgstr ""
-"Odoo 帮助您追踪销售过程，\n"
+"Odoo 帮助您追踪流水线，\n"
 "                    关注潜在销售机会，更好地预测未来收入。"
 
 #. module: crm
@@ -2748,7 +2749,7 @@ msgid ""
 "mainly used by the sales manager in order to do the periodic review with the"
 " channels of the sales pipeline."
 msgstr ""
-"通过商机分析，可以立即查看商机信息，例如，预期收入、计划成本、错过的期限或每次商机的互动次数。该报告主要供销售经理使用，以便对销售过程的流程进行周期性评估。"
+"通过商机分析，可以立即查看商机信息，例如，预期收入、计划成本、错过的期限或每次商机的互动次数。该报告主要供销售经理使用，以便对流水线的流程进行周期性评估。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_graph_forecast
@@ -2939,12 +2940,12 @@ msgstr "电话号码："
 #: model:ir.ui.menu,name:crm.menu_crm_config_lead
 #, python-format
 msgid "Pipeline"
-msgstr "销售过程"
+msgstr "流水线"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_activity_report_action_team
 msgid "Pipeline Activities"
-msgstr "销售过程活动"
+msgstr "流水线活动"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.action_report_crm_opportunity_salesteam
@@ -2953,7 +2954,7 @@ msgstr "销售过程活动"
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_graph
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_pivot
 msgid "Pipeline Analysis"
-msgstr "销售过程分析"
+msgstr "流水线分析"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_recurring_plan__name
@@ -2967,7 +2968,7 @@ msgstr "计划名称"
 msgid ""
 "Please select more than one element (lead or opportunity) from the list "
 "view."
-msgstr "请从列表视图选择一个以上元素（潜在客户或商机）。"
+msgstr "请从列表视图选择一个以上元素（线索或商机）。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead_pls_update__pls_fields
@@ -2995,27 +2996,27 @@ msgstr ""
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__duplicate_lead_ids
 msgid "Potential Duplicate Lead"
-msgstr "潜在的、重复的潜在客户"
+msgstr "潜在的、重复的线索"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__duplicate_lead_count
 msgid "Potential Duplicate Lead Count"
-msgstr "潜在的重复潜在客户计数"
+msgstr "潜在的重复线索计数"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Predictive Lead Scoring"
-msgstr "预测潜在客户评分"
+msgstr "预测线索评分"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__predictive_lead_scoring_field_labels
 msgid "Predictive Lead Scoring Field Labels"
-msgstr "预测潜在客户评分字段标签"
+msgstr "预测线索评分字段标签"
 
 #. module: crm
 #: model:ir.actions.server,name:crm.website_crm_score_cron_ir_actions_server
 msgid "Predictive Lead Scoring: Recompute Automated Probabilities"
-msgstr "预测潜在顾客评分：重新计算自动概率"
+msgstr "预测线索评分：重新计算自动概率"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__priority
@@ -3092,7 +3093,7 @@ msgstr "评级"
 #: code:addons/crm/static/src/js/tours/crm.js:0
 #, python-format
 msgid "Ready to boost your sales? Let's have a look at your <b>Pipeline</b>."
-msgstr "准备好提高销售额了吗？让我们来看看您的<b>销售过程</b>。"
+msgstr "准备好提高销售额了吗？让我们来看看您的<b>流水线</b>。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_force_thread_id
@@ -3102,13 +3103,13 @@ msgstr "记录对话串 ID"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__recurring_plan
 msgid "Recurring Plan"
-msgstr "定期计划"
+msgstr "循环计划"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_recurring_plan_action
 #: model:ir.ui.menu,name:crm.crm_recurring_plan_menu_config
 msgid "Recurring Plans"
-msgstr "定期计划"
+msgstr "循环计划"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_tree_view_oppor
@@ -3270,7 +3271,7 @@ msgstr "安排活动，以跟进您需要完成的所有事项。"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 msgid "Search Leads"
-msgstr "搜索潜在客户"
+msgstr "搜索线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lost_reason_view_search
@@ -3281,7 +3282,7 @@ msgstr "搜索商机"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.merge_opportunity_form
 msgid "Select Leads/Opportunities"
-msgstr "选择潜在客户/商机"
+msgstr "选择线索/商机"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.action_lead_mail_compose
@@ -3305,7 +3306,7 @@ msgstr "设置商机定期计划，显示合同续订周期<br>（例如：月�
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_stage_action
 msgid "Set a new stage in your opportunity pipeline"
-msgstr "在商机销售过程中设置新阶段"
+msgstr "在商机流水线中设置新阶段"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_config_settings_action
@@ -3316,7 +3317,7 @@ msgstr "设置"
 #. module: crm
 #: model:res.groups,name:crm.group_use_lead
 msgid "Show Lead Menu"
-msgstr "显示潜在客户菜单"
+msgstr "显示线索菜单"
 
 #. module: crm
 #: model:res.groups,name:crm.group_use_recurring_revenues
@@ -3333,12 +3334,12 @@ msgstr "显示下一操作日期在今天之前的所有商机"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_activity_report_view_search
 msgid "Show only lead"
-msgstr "仅显示潜在客户"
+msgstr "仅显示线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
 msgid "Show only leads"
-msgstr "仅显示潜在客户"
+msgstr "仅显示线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
@@ -3537,7 +3538,7 @@ msgid ""
 "The contacts below have been added as followers of this lead\n"
 "                        because they have been contacted less than 30 days ago on"
 msgstr ""
-"以下联系人已添加为该潜在客户的关注者\n"
+"以下联系人已添加为该线索的关注者\n"
 "                        因为在 30 天内联系过他们"
 
 #. module: crm
@@ -3545,7 +3546,7 @@ msgstr ""
 msgid ""
 "The email address associated with this channel. New emails received will "
 "automatically create new leads assigned to the channel."
-msgstr "与该渠道关联的电子邮箱地址。收到的新电子邮件会自动创建分配给该渠道的新潜在客户。"
+msgstr "与该渠道关联的电子邮箱地址。收到的新电子邮件会自动创建分配给该渠道的新线索。"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team__alias_model_id
@@ -3594,7 +3595,7 @@ msgstr "成功率基于阶段计算，但可以在统计分析中添加更多字
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_opportunity_report_action_lead
 msgid "This analysis shows you how many leads have been created per month."
-msgstr "该分析显示每月创建的潜在客户数量。"
+msgstr "该分析显示每月创建的线索数量。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_kanban_view_leads
@@ -3607,12 +3608,12 @@ msgstr "该工具条可根据计划活动来筛选商机。"
 msgid ""
 "This can be used to automatically assign leads to sales persons based on "
 "rules"
-msgstr "该功能可用于根据规则自动将潜在客户分配给销售人员"
+msgstr "该功能可用于根据规则自动将线索分配给销售人员"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "This can be used to compute statistical probability to close a lead"
-msgstr "该功能可用于计算关闭潜在客户的统计学概率"
+msgstr "该功能可用于计算关闭线索的统计学概率"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
@@ -3666,7 +3667,7 @@ msgstr "当某个阶段无记录可供显示时，在看板视图中该阶段会
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.sales_team_form_view_in_crm
 msgid "This will assign leads to all members. Do you want to proceed?"
-msgstr "该操作会将潜在客户分配给所有成员。确定继续吗？"
+msgstr "该操作会将线索分配给所有成员。确定继续吗？"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_0
@@ -3678,7 +3679,7 @@ msgstr "提示：将收到的电邮转化为商机"
 #: model:digest.tip,name:crm.digest_tip_crm_1
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_1
 msgid "Tip: Did you know Odoo has built-in lead mining?"
-msgstr "提示：您知道 Odoo 有内置潜在客户挖掘功能吗？"
+msgstr "提示：您知道 Odoo 有内置线索挖掘功能吗？"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_4
@@ -3690,7 +3691,7 @@ msgstr "提示：无需浪费时间记录客户数据"
 #: model:digest.tip,name:crm.digest_tip_crm_3
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_3
 msgid "Tip: Manage your pipeline"
-msgstr "提示：管理销售过程"
+msgstr "提示：管理流水线"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_2
@@ -3717,7 +3718,7 @@ msgstr "标题"
 msgid ""
 "To prevent data loss, Leads and Opportunities can only be merged by groups "
 "of %(max_length)s."
-msgstr "为防止数据丢失，潜在客户和商机只能按%(max_length)s组进行合并。"
+msgstr "为防止数据丢失，线索和商机只能按%(max_length)s组进行合并。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
@@ -3746,7 +3747,7 @@ msgstr "跟踪12个月"
 msgid ""
 "True if the monthly lead assignment count is greater than the maximum "
 "assignment limit, false otherwise."
-msgstr "如果每月潜在客户分配计数大于最大分配限制，则为真（true），否则为假（false）。"
+msgstr "如果每月线索分配计数大于最大分配限制，则为真（true），否则为假（false）。"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
@@ -3763,7 +3764,7 @@ msgstr "类型"
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_activity_report__lead_type
 msgid "Type is used to separate Leads and Opportunities"
-msgstr "类型用于区分潜在客户和商机"
+msgstr "类型用于区分线索和商机"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__activity_exception_decoration
@@ -3783,7 +3784,7 @@ msgstr "UTM 营销活动"
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__user_company_ids
 msgid "UX: Limit to lead company or all if no company"
-msgstr "UX：如果没有设定公司，则仅限潜在客户公司或全部"
+msgstr "UX：如果没有设定公司，则仅限线索公司或全部"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
@@ -3794,12 +3795,12 @@ msgstr "未分配"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_team_view_kanban_dashboard
 msgid "Unassigned Lead"
-msgstr "未分配潜在客户"
+msgstr "未分配线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_team_view_kanban_dashboard
 msgid "Unassigned Leads"
-msgstr "未分配潜在客户"
+msgstr "未分配线索"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_opportunities_filter
@@ -3830,7 +3831,7 @@ msgstr "更新概率"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_utm_campaign__use_leads
 msgid "Use Leads"
-msgstr "使用潜在客户"
+msgstr "使用线索"
 
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_lost_reason_action
@@ -3852,7 +3853,7 @@ msgid ""
 "                    a contact form filled in your website, or a file of unqualified\n"
 "                    prospects you import, etc."
 msgstr ""
-"在创建商机或客户之前，如果需要验证步骤，应使用潜在客户信息。\n"
+"在创建商机或客户之前，如果需要验证步骤，应使用线索信息。\n"
 "                    可以是您收到的名片、\n"
 "                    在您的网站中填写的联系人表单、或\n"
 "                    您导入的未经确认的文件等。"
@@ -3866,7 +3867,7 @@ msgid ""
 "qualified, the lead can be converted into a business opportunity and/or a "
 "new customer in your address book."
 msgstr ""
-"如果在创建商机或客户之前需要验证步骤，应使用潜在客户。可以是您收到的名片，在您的网站中填写的联系人表单，或您导入的不合格潜在客户的文件等。通过验证后，潜在客户可以转化为通讯录中的商机和/或新客户。"
+"如果在创建商机或客户之前需要验证步骤，应使用线索。可以是您收到的名片，在您的网站中填写的联系人表单，或您导入的不合格线索的文件等。通过验证后，线索可以转化为通讯录中的商机和/或新客户。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
@@ -3891,7 +3892,7 @@ msgstr "使用新建按钮，或设置电子邮件别名，以测试电子邮件
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_opportunity_report_action
 msgid "Use this menu to have an overview of your Pipeline."
-msgstr "使用该菜单概览销售过程。"
+msgstr "使用该菜单概览流水线。"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_stage__sequence
@@ -3926,7 +3927,7 @@ msgstr "非常高"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Visits to Leads"
-msgstr "访问潜在客户"
+msgstr "访问线索"
 
 #. module: crm
 #: model:crm.lost.reason,name:crm.lost_reason_2
@@ -4017,7 +4018,7 @@ msgstr "是"
 #: code:addons/crm/static/src/js/tours/crm.js:0
 #, python-format
 msgid "You can make your opportunity advance through your pipeline from here."
-msgstr "可以在此处通过销售过程推进商机。"
+msgstr "可以在此处通过流水线推进商机。"
 
 #. module: crm
 #. odoo-python
@@ -4106,12 +4107,12 @@ msgstr "例如：https://www.odoo.com"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "for the leads created as of the"
-msgstr "对于目前创建的潜在客户日期截至"
+msgstr "对于目前创建的线索日期截至"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
 msgid "generate opportunities in your pipeline?<br>"
-msgstr "在销售过程中创建商机？<br>"
+msgstr "在流水线中创建商机？<br>"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_stage__team_count

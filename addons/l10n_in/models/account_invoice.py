@@ -32,18 +32,19 @@ class AccountMove(models.Model):
     l10n_in_reseller_partner_id = fields.Many2one('res.partner', 'Reseller', domain=[('vat', '!=', False)], help="Only Registered Reseller")
     l10n_in_journal_type = fields.Selection(string="Journal Type", related='journal_id.type')
 
-    @api.depends('partner_id')
+    @api.depends('partner_id', 'partner_id.l10n_in_gst_treatment')
     def _compute_l10n_in_gst_treatment(self):
         indian_invoice = self.filtered(lambda m: m.country_code == 'IN')
         for record in indian_invoice:
-            gst_treatment = record.partner_id.l10n_in_gst_treatment
-            if not gst_treatment:
-                gst_treatment = 'unregistered'
-                if record.partner_id.country_id.code == 'IN' and record.partner_id.vat:
-                    gst_treatment = 'regular'
-                elif record.partner_id.country_id and record.partner_id.country_id.code != 'IN':
-                    gst_treatment = 'overseas'
-            record.l10n_in_gst_treatment = gst_treatment
+            if record.state == 'draft':
+                gst_treatment = record.partner_id.l10n_in_gst_treatment
+                if not gst_treatment:
+                    gst_treatment = 'unregistered'
+                    if record.partner_id.country_id.code == 'IN' and record.partner_id.vat:
+                        gst_treatment = 'regular'
+                    elif record.partner_id.country_id and record.partner_id.country_id.code != 'IN':
+                        gst_treatment = 'overseas'
+                record.l10n_in_gst_treatment = gst_treatment
         (self - indian_invoice).l10n_in_gst_treatment = False
 
     @api.depends('partner_id', 'company_id')
@@ -62,12 +63,22 @@ class AccountMove(models.Model):
             else:
                 move.l10n_in_state_id = False
 
+    def _get_name_invoice_report(self):
+        if self.country_code == 'IN':
+            # TODO: remove the view mode check in master, only for stable releases
+            in_invoice_view = self.env.ref('l10n_in.l10n_in_report_invoice_document_inherit', raise_if_not_found=False)
+            if (in_invoice_view and in_invoice_view.sudo().mode == "primary"):
+                return 'l10n_in.l10n_in_report_invoice_document_inherit'
+        return super()._get_name_invoice_report()
+
     def _post(self, soft=True):
         """Use journal type to define document type because not miss state in any entry including POS entry"""
         posted = super()._post(soft)
         gst_treatment_name_mapping = {k: v for k, v in
                              self._fields['l10n_in_gst_treatment']._description_selection(self.env)}
         for move in posted.filtered(lambda m: m.country_code == 'IN'):
+            if move.l10n_in_state_id and not move.l10n_in_state_id.l10n_in_tin:
+                raise UserError(_("Please set a valid TIN Number on the Place of Supply %s", move.l10n_in_state_id.name))
             if not move.company_id.state_id:
                 msg = _("Your company %s needs to have a correct address in order to validate this invoice.\n"
                 "Set the address of your company (Don't forget the State field)", move.company_id.name)

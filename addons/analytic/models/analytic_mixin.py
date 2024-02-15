@@ -11,7 +11,6 @@ class AnalyticMixin(models.AbstractModel):
     analytic_distribution = fields.Json(
         'Analytic Distribution',
         compute="_compute_analytic_distribution", store=True, copy=True, readonly=False,
-        precompute=True
     )
     # Json non stored to be able to search on analytic_distribution.
     analytic_distribution_search = fields.Json(
@@ -93,7 +92,7 @@ class AnalyticMixin(models.AbstractModel):
             decimal_precision = self.env['decimal.precision'].precision_get('Percentage Analytic')
             distribution_by_root_plan = {}
             for analytic_account_ids, percentage in (self.analytic_distribution or {}).items():
-                for analytic_account in self.env['account.analytic.account'].browse(map(int, analytic_account_ids.split(","))):
+                for analytic_account in self.env['account.analytic.account'].browse(map(int, analytic_account_ids.split(","))).exists():
                     root_plan = analytic_account.root_plan_id
                     distribution_by_root_plan[root_plan.id] = distribution_by_root_plan.get(root_plan.id, 0) + percentage
 

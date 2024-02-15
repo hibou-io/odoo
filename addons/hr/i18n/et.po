@@ -13,23 +13,24 @@
 # Piia Paurson <piia@avalah.ee>, 2023
 # Martin Aavastik <martin@avalah.ee>, 2023
 # Patrick-Jordan Kiudorv, 2023
-# Anna, 2023
 # Arma Gedonsky <armagedonsky@hot.ee>, 2023
 # JanaAvalah, 2023
-# Leaanika Randmets, 2023
 # Martin Trigaux, 2023
 # Eneli Õigus <enelioigus@gmail.com>, 2023
 # Rivo Zängov <eraser@eraser.ee>, 2023
 # Triine Aavik <triine@avalah.ee>, 2023
 # Katrin Kampura, 2023
+# Mihkel avalah, 2023
+# Leaanika Randmets, 2023
+# Anna, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-26 21:55+0000\n"
+"POT-Creation-Date: 2024-01-05 12:31+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Katrin Kampura, 2023\n"
+"Last-Translator: Anna, 2024\n"
 "Language-Team: Estonian (https://app.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -96,7 +97,7 @@ msgstr "12 päeva aastas, sealhulgas <br> 6 teie valikul."
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.print_employee_badge
 msgid "12345678901"
-msgstr ""
+msgstr "12345678901"
 
 #. module: hr
 #: model_terms:hr.job,job_details:hr.job_ceo
@@ -224,7 +225,7 @@ msgstr "<span class=\"o_stat_text\">Ühendatud alates</span>"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_partner_view_form
 msgid "<span class=\"o_stat_text\">Employee</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Töötaja</span>"
 
 #. module: hr
 #: model_terms:hr.job,job_details:hr.job_ceo
@@ -385,6 +386,15 @@ msgstr "Lisa uus plaan"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__departure_description
 msgid "Additional Information"
 msgstr "Lisainfo"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+#, python-format
+msgid ""
+"Additional Information: \n"
+" %(description)s"
+msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__additional_note
@@ -889,6 +899,16 @@ msgstr "Loo kasutaja"
 #: model_terms:ir.actions.act_window,help:hr.hr_department_tree_action
 msgid "Create a new department"
 msgstr "Looge uus osakond"
+
+#. module: hr
+#: model_terms:ir.actions.act_window,help:hr.hr_contract_type_action
+msgid "Create a new employment type"
+msgstr ""
+
+#. module: hr
+#: model_terms:ir.actions.act_window,help:hr.hr_work_location_action
+msgid "Create a new work location"
+msgstr ""
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_ceo
@@ -1442,7 +1462,7 @@ msgstr "Pakutakse puuvilju, kohvi ja suupisteid."
 #. module: hr
 #: model:hr.contract.type,name:hr.contract_type_full_time
 msgid "Full-Time"
-msgstr ""
+msgstr "Täistööaeg"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_filter
@@ -1909,7 +1929,7 @@ msgstr "Töötaja %s juht ei ole määratud."
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.print_employee_badge
 msgid "Marc Demo"
-msgstr ""
+msgstr "Marc Demo"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__marital
@@ -2090,11 +2110,6 @@ msgid "No Tags found ! Let's create one"
 msgstr ""
 
 #. module: hr
-#: model_terms:ir.actions.act_window,help:hr.hr_work_location_action
-msgid "No Work Locations found ! Let's create one"
-msgstr ""
-
-#. module: hr
 #: model_terms:hr.job,website_description:hr.job_ceo
 #: model_terms:hr.job,website_description:hr.job_consultant
 #: model_terms:hr.job,website_description:hr.job_cto
@@ -2168,7 +2183,7 @@ msgstr "Sellele ametikohale palgatud töötajate arv värbamise etapis."
 #: model:ir.model.fields,help:hr.field_hr_employee__message_needaction_counter
 #: model:ir.model.fields,help:hr.field_hr_job__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "Tegevust nõudvate sõnumite arv"
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_department__message_has_error_counter
@@ -2207,7 +2222,7 @@ msgstr ""
 #. module: hr
 #: model:ir.model.fields.selection,name:hr.selection__hr_work_location__location_type__office
 msgid "Office"
-msgstr ""
+msgstr "Büroo"
 
 #. module: hr
 #: model:res.groups,name:hr.group_hr_user
@@ -2288,7 +2303,7 @@ msgstr "Põhiliin"
 #. module: hr
 #: model:hr.contract.type,name:hr.contract_type_part_time
 msgid "Part-Time"
-msgstr ""
+msgstr "Osaline tööaeg"
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_employee__user_partner_id
@@ -2328,16 +2343,6 @@ msgstr "Palgaarvestus"
 #: model_terms:hr.job,website_description:hr.job_trainee
 msgid "Perfect written English"
 msgstr "Väga hea inglise keel kirjas"
-
-#. module: hr
-#: model_terms:hr.job,description:hr.job_consultant
-#: model_terms:hr.job,description:hr.job_developer
-#: model_terms:hr.job,description:hr.job_marketing
-msgid ""
-"Perform assigned responsibilities, collaborate with team members, and adhere"
-" to company policies. Strong communication, problem-solving, and work ethic "
-"required. Adaptability, initiative, and willingness to learn are valued."
-msgstr ""
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_ceo
@@ -2486,7 +2491,7 @@ msgstr "Prindi märk"
 #: model_terms:ir.ui.view,arch_db:hr.res_users_view_form_profile
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "Private Address"
-msgstr "Isiklik aadress"
+msgstr "Privaatne aadress"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__private_car_plate
@@ -2650,7 +2655,7 @@ msgstr "Seotud töötaja"
 #. module: hr
 #: model:ir.model.fields,help:hr.field_res_partner__employee_ids
 msgid "Related employees based on their private address"
-msgstr "Seotud töötajad nende isikliku aadressi alusel"
+msgstr "Seotud töötajad nende privaatse aadressi alusel"
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_employee__user_id
@@ -2758,7 +2763,7 @@ msgstr "Kool"
 #. module: hr
 #: model:hr.contract.type,name:hr.contract_type_seasonal
 msgid "Seasonal"
-msgstr ""
+msgstr "Hooajaline"
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_employee__coach_id
@@ -2828,7 +2833,7 @@ msgstr "Isikukood"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.print_employee_badge
 msgid "Software Developer"
-msgstr ""
+msgstr "Tarkvaraarendaja"
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_ceo
@@ -2976,6 +2981,15 @@ msgid ""
 msgstr ""
 "ISO riigi kood kahe tähega. \n"
 "Saad kasutada seda välja kiirotsinguks."
+
+#. module: hr
+#: model_terms:hr.job,description:hr.job_marketing
+msgid ""
+"The Marketing Manager defines the mid- to long-term marketing strategy for his covered market segments in the World.\n"
+"              He develops and monitors the annual budget in collaboration with Sales.\n"
+"              He defines the products and customers portfolio according to the marketing plan.\n"
+"              This mission requires strong collaboration with Technical Service and Sales."
+msgstr ""
 
 #. module: hr
 #. odoo-python
@@ -3197,7 +3211,7 @@ msgstr "Kasutaja partner"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_job_view_kanban
 msgid "Vacancies:"
-msgstr ""
+msgstr "Vabad töökohad:"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_res_company__hr_presence_control_ip_list
@@ -3226,8 +3240,8 @@ msgstr ""
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__visa_expire
 #: model:ir.model.fields,field_description:hr.field_res_users__visa_expire
-msgid "Visa Expire Date"
-msgstr "Viisa aegumine"
+msgid "Visa Expiration Date"
+msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__visa_no
@@ -3241,6 +3255,19 @@ msgstr "Viisa nr"
 #, python-format
 msgid "Warning"
 msgstr "Hoiatus"
+
+#. module: hr
+#: model_terms:hr.job,description:hr.job_consultant
+msgid ""
+"We are currently looking for someone like that to join our Consultant team."
+msgstr ""
+
+#. module: hr
+#: model_terms:hr.job,description:hr.job_developer
+msgid ""
+"We are currently looking for someone like that to join our Web team.\n"
+"                Someone who can snap out of coding and perform analysis or meet clients to explain the technical possibilities that can meet their needs."
+msgstr ""
 
 #. module: hr
 #: model_terms:hr.job,website_description:hr.job_ceo
@@ -3349,13 +3376,6 @@ msgstr "Töö asukoht"
 #: model:ir.ui.menu,name:hr.menu_hr_work_location_tree
 msgid "Work Locations"
 msgstr "Töö asukohad"
-
-#. module: hr
-#: model_terms:ir.actions.act_window,help:hr.hr_work_location_action
-msgid ""
-"Work Locations are used to define more precisely where your employee is "
-"located everyday."
-msgstr ""
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__mobile_phone
@@ -3513,4 +3533,4 @@ msgstr "piiratud töötajatega"
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__work_permit_name
 msgid "work_permit_name"
-msgstr ""
+msgstr "work_permit_name"

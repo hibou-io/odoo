@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import _, api, exceptions, fields, models
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.tools import safe_eval
+from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
@@ -65,6 +66,15 @@ TIME_TRIGGERS = [
     'on_time_updated',
 ]
 
+def get_webhook_request_payload():
+    if not request:
+        return None
+    try:
+        payload = request.get_json_data()
+    except ValueError:
+        payload = {**request.httprequest.args}
+    return payload
+
 
 class BaseAutomation(models.Model):
     _name = 'base.automation'
@@ -86,7 +96,7 @@ class BaseAutomation(models.Model):
     )
     url = fields.Char(compute='_compute_url')
     webhook_uuid = fields.Char(string="Webhook UUID", readonly=True, copy=False, default=lambda self: str(uuid4()))
-    record_getter = fields.Char(default="env[payload.get('_model')].browse(payload.get('id'))",
+    record_getter = fields.Char(default="model.env[payload.get('_model')].browse(int(payload.get('_id')))",
                                 help="This code will be run to find on which record the automation rule should be run.")
     log_webhook_calls = fields.Boolean(string="Log Calls", default=False)
     active = fields.Boolean(default=True, help="When unchecked, the rule is hidden and will not be executed.")
@@ -489,7 +499,7 @@ class BaseAutomation(models.Model):
 
         if not record.exists():
             msg = "Webhook #%s could not be triggered because no record to run it on was found."
-            msg_args = (self.id)
+            msg_args = (self.id,)
             _logger.warning(msg, *msg_args)
             if self.log_webhook_calls:
                 ir_logging_sudo.create(self._prepare_loggin_values(message=msg % msg_args, level="ERROR"))
@@ -795,7 +805,7 @@ class BaseAutomation(models.Model):
                         if 'domain' in res:
                             result.setdefault('domain', {}).update(res['domain'])
                         if 'warning' in res:
-                            result['warning'] += res["warning"]
+                            result['warning'] = res["warning"]
                 return result
 
             return base_automation_onchange
@@ -806,7 +816,7 @@ class BaseAutomation(models.Model):
             """ Patch method `name` on `model`, unless it has been patched already. """
             if model not in patched_models[name]:
                 patched_models[name].add(model)
-                ModelClass = type(model)
+                ModelClass = model.env.registry[model._name]
                 method.origin = getattr(ModelClass, name)
                 setattr(ModelClass, name, method)
 
@@ -818,8 +828,8 @@ class BaseAutomation(models.Model):
             if Model is None:
                 _logger.warning(
                     "Automation rule with name '%s' (ID %d) depends on model %s (ID: %d)",
-                    automation_rule.id,
                     automation_rule.name,
+                    automation_rule.id,
                     automation_rule.model_name,
                     automation_rule.model_id.id)
                 continue
@@ -839,6 +849,8 @@ class BaseAutomation(models.Model):
                 method = make_onchange(automation_rule.id)
                 for field in automation_rule.on_change_field_ids:
                     Model._onchange_methods[field.name].append(method)
+                if automation_rule.on_change_field_ids:
+                    self.env.registry.clear_cache('templates')
 
             if automation_rule.model_id.is_mail_thread and automation_rule.trigger in MAIL_TRIGGERS:
                 def _message_post(self, *args, **kwargs):
