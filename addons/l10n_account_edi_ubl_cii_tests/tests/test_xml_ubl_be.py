@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import base64
+from lxml import etree
+
 from odoo.addons.l10n_account_edi_ubl_cii_tests.tests.common import TestUBLCommon
 from odoo.tests import tagged
 from odoo import Command
-import base64
+
 
 @tagged('post_install_l10n', 'post_install', '-at_install')
 class TestUBLBE(TestUBLCommon):
@@ -424,6 +427,73 @@ class TestUBLBE(TestUBLCommon):
             ],
         )
         self._assert_invoice_attachment(invoice, None, 'from_odoo/bis3_pay_term_ecotax.xml')
+
+    def test_export_with_changed_taxes(self):
+        invoice = self._generate_move(
+            self.partner_1,
+            self.partner_2,
+            move_type='out_invoice',
+            invoice_line_ids=[
+                {
+                    'product_id': self.product_a.id,
+                    'quantity': 1,
+                    'price_unit': 200,
+                    'tax_ids': [Command.set([self.tax_21.id])],
+                },
+                {
+                    'product_id': self.product_a.id,
+                    'quantity': 1,
+                    'price_unit': 200,
+                    'tax_ids': [Command.set([self.tax_21.id])],
+                },
+                {
+                    'product_id': self.product_b.id,
+                    'quantity': 1,
+                    'price_unit': 100,
+                    'tax_ids': [Command.set([self.tax_12.id])],
+                },
+                {
+                    'product_id': self.product_b.id,
+                    'quantity': 1,
+                    'price_unit': 100,
+                    'tax_ids': [Command.set([self.tax_12.id])],
+                },
+            ],
+        )
+        self.assertRecordValues(invoice, [{
+            'amount_untaxed': 600.00,
+            'amount_tax': 108.00,  # tax_12: 24.00 ; tax_21: 84.00
+            'amount_total': 708.00
+        }])
+
+        invoice.button_draft()
+        tax_lines = invoice.line_ids.filtered(lambda line: line.display_type == 'tax')
+        tax_line_21 = next((line for line in tax_lines if line.name == 'tax_21'))
+        tax_line_12 = next((line for line in tax_lines if line.name == 'tax_12'))
+        invoice.line_ids = [
+            Command.update(tax_line_21.id, {'amount_currency': -84.03}), # distribute  3 cents over 2 lines
+            Command.update(tax_line_12.id, {'amount_currency': -23.99}), # distribute -1 cent  over 2 lines
+        ]
+        invoice.action_post()
+
+        self.assertRecordValues(invoice, [{
+            'amount_untaxed': 600.00,
+            'amount_tax': 108.02,  # tax_12: 23.99 ; tax_21: 84.03
+            'amount_total': 708.02
+        }])
+
+        self._assert_invoice_attachment(invoice, None, 'from_odoo/bis3_export_with_changed_taxes.xml')
+
+    def test_export_rounding_price_amount(self):
+        invoice = self._generate_move(
+            self.partner_1,
+            self.partner_2,
+            move_type='out_invoice',
+            invoice_line_ids=[{'quantity': 3, 'price_unit': 102.15}],
+        )
+        attachment = invoice._get_edi_attachment(self.edi_format)
+        price_amount = etree.fromstring(attachment.raw).find('.//{*}InvoiceLine/{*}Price/{*}PriceAmount')
+        self.assertEqual(price_amount.text, '102.15')
 
     ####################################################
     # Test import

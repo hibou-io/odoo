@@ -6,15 +6,15 @@
 # Friederike Fasterling-Nesselbosch, 2022
 # Martin Trigaux, 2022
 # Marianna Ciofani, 2023
-# Sergio Zanchetta <primes2h@gmail.com>, 2023
+# Sergio Zanchetta <primes2h@gmail.com>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0+e\n"
+"Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 12:49+0000\n"
+"POT-Creation-Date: 2024-02-06 13:31+0000\n"
 "PO-Revision-Date: 2022-09-22 05:53+0000\n"
-"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2023\n"
+"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2024\n"
 "Language-Team: Italian (https://app.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -112,10 +112,10 @@ msgid ""
 "* 'Open automatically' displays the button and automatically opens the conversation pane.\n"
 "* 'Hide' hides the chat button on the pages.\n"
 msgstr ""
-"* 'Mostra' visualizza il pulsante della chat sulle pagine.\n"
-"* 'Mostra con notifica' è 'Mostra' con l'aggiunta di un testo fluttuante proprio vicino al pulsante.\n"
-"* 'Apri automaticamente' mostra il pulsante e apre automaticamente il riquadro della conversazione.\n"
-"* 'Nascondi' nasconde il pulsante della chat nelle varie pagine.\n"
+"* \"Mostra\" visualizza il pulsante della chat nelle pagine.\n"
+"* \"Mostra con notifica\" è \"Mostra\" con l'aggiunta di un testo fluttuante a fianco del pulsante.\n"
+"* \"Apri automaticamente\" visualizza il pulsante e apre automaticamente la conversazione.\n"
+"* \"Nascondi\" nasconde il pulsante della chat nelle pagine.\n"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.livechat_email_template
@@ -493,14 +493,6 @@ msgstr "Chiudi"
 
 #. module: im_livechat
 #. odoo-javascript
-#: code:addons/im_livechat/static/src/legacy/widgets/public_livechat_window/public_livechat_window.xml:0
-#: code:addons/im_livechat/static/src/legacy/widgets/public_livechat_window/public_livechat_window.xml:0
-#, python-format
-msgid "Close chat window"
-msgstr "Chiudi finestra chat"
-
-#. module: im_livechat
-#. odoo-javascript
 #: code:addons/im_livechat/static/src/legacy/widgets/feedback/feedback.xml:0
 #, python-format
 msgid "Close conversation"
@@ -685,10 +677,10 @@ msgid ""
 "installed on your server, otherwise, the countries of the rule will not be "
 "taken into account."
 msgstr ""
-"Definisci le regole per il canale di supporto dal vivo. Puoi scegliere di "
-"adottare un'azione per un determinato URL o nazione.<br/> Per individuare il"
-" paese, è necessario installare GeoIP sul server, altrimenti le nazioni "
-"selezionate per la regola non verranno prese in considerazione."
+"Definire le regole per il canale di supporto dal vivo. È possibile applicare"
+" un'azione per l'URL fornito e per nazione.<br/> Per identificare la nazione"
+" è necessario installare GeoIP nel server, altrimenti non vengono prese in "
+"considerazione le nazioni della regola."
 
 #. module: im_livechat
 #: model:ir.model.fields,help:im_livechat.field_im_livechat_channel_rule__auto_popup_timer
@@ -698,8 +690,8 @@ msgid ""
 "not be taken into account."
 msgstr ""
 "Ritardo (in secondi) nell'apertura automatica della finestra di dialogo. "
-"Nota: il parametro verrà preso in considerazione solo se è selezionata "
-"l'azione \"Apertura automatica\"."
+"Nota: questo parametro viene preso in considerazione solo se è selezionata "
+"l'azione \"Apri automaticamente\"."
 
 #. module: im_livechat
 #. odoo-javascript
@@ -863,8 +855,9 @@ msgstr "Data/ora avvio sessione"
 
 #. module: im_livechat
 #. odoo-javascript
-#: code:addons/im_livechat/static/src/public_models/livechat_button_view.js:0
+#. odoo-python
 #: code:addons/im_livechat/models/im_livechat_channel.py:0
+#: code:addons/im_livechat/static/src/public_models/livechat_button_view.js:0
 #, python-format
 msgid "How may I help you?"
 msgstr "Come posso aiutarti?"
@@ -1052,7 +1045,7 @@ msgstr "Chat dal vivo"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_im_livechat_channel_rule__action
 msgid "Live Chat Button"
-msgstr "Pulsante livechat"
+msgstr "Pulsante chat dal vivo"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_search
@@ -1088,7 +1081,7 @@ msgstr "Canale chat dal vivo"
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_script__livechat_channel_count
 msgid "Livechat Channel Count"
-msgstr "Numero di canali livechat"
+msgstr "Numero canali chat dal vivo"
 
 #. module: im_livechat
 #: model:ir.model,name:im_livechat.model_im_livechat_channel_rule
@@ -1118,10 +1111,10 @@ msgid ""
 "your company livechat session performance. Extract information about the "
 "missed sessions, the audience, the duration of a session, etc."
 msgstr ""
-"Le statistiche relative al canale di supporto livechat ti permettono di "
-"controllare e analizzare facilmente le prestazioni delle sessioni di "
-"livechat della tua azienda. È possibile estrarre informazioni su sessioni "
-"perse, pubblico, durata di una sessione ecc."
+"Le statistiche del canale di supporto della chat dal vivo consentono di "
+"controllare e analizzare in modo semplice la prestazione di una sessione "
+"chat dell'azienda. Es. informazioni su sessioni perse, pubblico, durata di "
+"una sessione ecc."
 
 #. module: im_livechat
 #: model:ir.model,name:im_livechat.model_im_livechat_report_operator
@@ -1150,7 +1143,7 @@ msgstr "Finestra chat dal vivo"
 #: model:ir.model.fields,help:im_livechat.field_mail_channel__livechat_active
 msgid "Livechat session is active until visitor leaves the conversation."
 msgstr ""
-"La sessione di livechat è attiva fino a quando il visitatore abbandona la "
+"La sessione chat dal vivo è attiva fino a quando il visitatore esce dalla "
 "conversazione."
 
 #. module: im_livechat
@@ -1595,6 +1588,13 @@ msgid "Select an option above"
 msgstr "Seleziona una delle opzioni in alto"
 
 #. module: im_livechat
+#. odoo-javascript
+#: code:addons/im_livechat/static/src/legacy/widgets/feedback/feedback.xml:0
+#, python-format
+msgid "Send"
+msgstr "Invia"
+
+#. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_script_answer__sequence
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_script_step__sequence
 msgid "Sequence"
@@ -1720,11 +1720,11 @@ msgid ""
 "chat button will be hidden on the specified URL from the visitors located in"
 " these 2 countries. This feature requires GeoIP installed on your server."
 msgstr ""
-"La regola verrà applicata solo alle nazioni indicati. Ad esempio: se "
-"selezioni \"Belgio\" e \"Stati Uniti\" e configuri l'azione \"Nascondi\", il"
-" pulsante della chat verrà nascosto, per gli URL specificati, ai visitatori "
-"localizzati nei 2 paesi indicati. Questa funzionalità richiede "
-"l'installazione di GeoIP sul server."
+"La regola verrà applicata solo per queste nazioni. Esempio: selezionando "
+"\"Belgio\" e \"Stati Uniti\" e impostando l'azione a \"Nascondi\", il "
+"pulsante della chat verrà nascosto, usando l'URL specificata, per i "
+"visitatori situati in questi due Paesi. Questa funzionalità richiede GeoIP "
+"installato nel server."
 
 #. module: im_livechat
 #: model:res.groups,comment:im_livechat.im_livechat_group_manager
@@ -1874,7 +1874,7 @@ msgstr "Nome utente Livechat"
 #. module: im_livechat
 #: model:ir.model,name:im_livechat.model_res_users_settings
 msgid "User Settings"
-msgstr "Impostazioni utenti"
+msgstr "Impostazioni utente"
 
 #. module: im_livechat
 #: model:ir.model.fields,field_description:im_livechat.field_chatbot_message__user_script_answer_id
@@ -1993,7 +1993,7 @@ msgstr "chatbot_image"
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.chatbot_script_view_form
 msgid "e.g. \"Meeting Scheduler Bot\""
-msgstr "ad es. \"Bot pianificatore riunioni\""
+msgstr "ad es. \"Bot pianificatore incontri\""
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.chatbot_script_step_view_form
@@ -2003,7 +2003,7 @@ msgstr "ad es. Come posso aiutarti?"
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_rule_view_form
 msgid "e.g. /contactus"
-msgstr "z.B. /contactus"
+msgstr "es. /contattaci"
 
 #. module: im_livechat
 #: model_terms:ir.ui.view,arch_db:im_livechat.im_livechat_channel_view_form
