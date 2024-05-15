@@ -90,6 +90,11 @@ class Web_Editor(http.Controller):
 
             :returns PNG image converted from given font
         """
+        # For custom icons, use the corresponding custom font
+        if icon.isdigit():
+            if int(icon) == 57467:
+                font = "/web/static/fonts/tiktok_only.woff"
+
         size = max(width, height, 1) if width else size
         width = width or size
         height = height or size
@@ -119,14 +124,15 @@ class Web_Editor(http.Controller):
         image = Image.new("RGBA", (width, height), color)
         draw = ImageDraw.Draw(image)
 
-        boxw, boxh = draw.textsize(icon, font=font_obj)
+        box = draw.textbbox((0, 0), icon, font=font_obj)
+        boxw = box[2] - box[0]
+        boxh = box[3] - box[1]
         draw.text((0, 0), icon, font=font_obj)
-        left, top, right, bottom = image.getbbox()
 
         # Create an alpha mask
         imagemask = Image.new("L", (boxw, boxh), 0)
         drawmask = ImageDraw.Draw(imagemask)
-        drawmask.text((-left, -top), icon, font=font_obj, fill=255)
+        drawmask.text((-box[0], -box[1]), icon, font=font_obj, fill=255)
 
         # Create a solid color image and apply the mask
         if color.startswith('rgba'):
@@ -137,7 +143,7 @@ class Web_Editor(http.Controller):
 
         # Create output image
         outimage = Image.new("RGBA", (boxw, height), bg or (0, 0, 0, 0))
-        outimage.paste(iconimage, (left, top), iconimage)
+        outimage.paste(iconimage, (box[0], box[1]), iconimage)
 
         # output image
         output = io.BytesIO()
@@ -251,7 +257,7 @@ class Web_Editor(http.Controller):
         id_match = re.search('^/web/image/([^/?]+)', src)
         if id_match:
             url_segment = id_match.group(1)
-            number_match = re.match('^(\d+)', url_segment)
+            number_match = re.match(r'^(\d+)', url_segment)
             if '.' in url_segment: # xml-id
                 attachment = request.env['ir.http']._xmlid_to_obj(request.env, url_segment)
             elif number_match: # numeric id
@@ -374,7 +380,7 @@ class Web_Editor(http.Controller):
 
         # Compile regex outside of the loop
         # This will used to exclude library scss files from the result
-        excluded_url_matcher = re.compile("^(.+/lib/.+)|(.+import_bootstrap.+\.scss)$")
+        excluded_url_matcher = re.compile(r"^(.+/lib/.+)|(.+import_bootstrap.+\.scss)$")
 
         # First check the t-call-assets used in the related views
         url_infos = dict()

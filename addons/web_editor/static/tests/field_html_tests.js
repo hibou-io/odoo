@@ -277,7 +277,7 @@ QUnit.module('web_editor', {}, function () {
         });
 
         QUnit.test('colorpicker', async function (assert) {
-            assert.expect(7);
+            assert.expect(10);
 
             var form = await testUtils.createView({
                 View: FormView,
@@ -312,6 +312,19 @@ QUnit.module('web_editor', {}, function () {
                 return openingProm;
             }
 
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            await openColorpicker('#toolbar .note-back-color-preview');
+            assert.ok($('.note-back-color-preview').hasClass('show'),
+                "should display the color picker");
+
+            // Test that toolbar and colorpicker are hidden after bluring the toolbar.
+            Wysiwyg.setRange(pText, 1, pText, 1);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            assert.ok(document.querySelector('#toolbar').style.visibility === 'hidden', "toolbar should be hidden");
+            assert.containsNone($, ".dropdown-menu.show", "all dropdowns should be closed");
+
+            Wysiwyg.setRange(pText, 1, pText, 10);
             await new Promise(resolve => setTimeout(resolve, 50));
 
             await openColorpicker('#toolbar .note-back-color-preview');
@@ -626,8 +639,8 @@ QUnit.module('web_editor', {}, function () {
                 }
             });
 
-            let pText = $field.find('.note-editable p').first().contents()[0];
-            Wysiwyg.setRange(pText.firstChild, 0, pText.firstChild, pText.firstChild.length);
+            let pText = $field.find('.note-editable p a')[0];
+            Wysiwyg.setRange(pText.firstChild, 0, pText.lastChild, pText.lastChild.length);
             await testUtils.dom.triggerEvent($('#toolbar #create-link'), 'click');
             // load static xml file (dialog, link dialog)
             await defLinkDialog;
@@ -675,8 +688,8 @@ QUnit.module('web_editor', {}, function () {
                 }
             });
 
-            let pText = $field.find('.note-editable p').first().contents()[0];
-            Wysiwyg.setRange(pText.firstChild, 0, pText.firstChild, pText.firstChild.length);
+            let pText = $field.find('.note-editable p a')[0];
+            Wysiwyg.setRange(pText.firstChild, 0, pText.lastChild, pText.lastChild.length);
             await testUtils.dom.triggerEvent($('#toolbar #create-link'), 'click');
             // load static xml file (dialog, link dialog)
             await defLinkDialog;
@@ -725,17 +738,18 @@ QUnit.module('web_editor', {}, function () {
                 }
             });
 
-            let pText = $field.find('.note-editable p').first().contents()[0];
-            Wysiwyg.setRange(pText.firstChild, 0, pText.firstChild, pText.firstChild.length);
+
+            let pText = $field.find('.note-editable p a')[0];
+            Wysiwyg.setRange(pText.firstChild, 0, pText.lastChild, pText.lastChild.length);
             await testUtils.dom.triggerEvent($('#toolbar #create-link'), 'click');
             // load static xml file (dialog, link dialog)
             await defLinkDialog;
             $('.modal .tab-content .tab-pane').removeClass('fade'); // to be sync in test
             const $labelInputField = $('input#o_link_dialog_label_input');
             const $linkPreview = $('a#link-preview');
-            assert.strictEqual($labelInputField.val(), 'This website',
+            assert.strictEqual($labelInputField.val().replaceAll('\ufeff', ''), 'This website',
                 "The label input field should match the link's content");
-            assert.strictEqual($linkPreview.text().replace(/\u200B/g, ''), 'This website',
+            assert.strictEqual($linkPreview.text().replaceAll('\ufeff', ''), 'This website',
                 "Link label in preview should match label input field");
             await testUtils.fields.editAndTrigger($labelInputField, "New label", ['input']);
             await testUtils.nextTick();

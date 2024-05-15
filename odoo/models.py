@@ -69,7 +69,7 @@ _logger = logging.getLogger(__name__)
 _schema = logging.getLogger(__name__ + '.schema')
 _unlink = logging.getLogger(__name__ + '.unlink')
 
-regex_order = re.compile('^(\s*([a-z0-9:_]+|"[a-z0-9:_]+")(\s+(desc|asc))?\s*(,|$))+(?<!,)$', re.I)
+regex_order = re.compile(r'^(\s*([a-z0-9:_]+|"[a-z0-9:_]+")(\s+(desc|asc))?\s*(,|$))+(?<!,)$', re.I)
 regex_object_name = re.compile(r'^[a-z0-9_.]+$')
 regex_pg_name = re.compile(r'^[a-z_][a-z0-9_$]*$', re.I)
 regex_field_agg = re.compile(r'(\w+)(?::(\w+)(?:\((\w+)\))?)?')
@@ -5647,11 +5647,16 @@ Fields:
             records.sorted(key=lambda r: r.name)
         """
         if key is None:
-            recs = self.search([('id', 'in', self.ids)])
-            return self.browse(reversed(recs._ids)) if reverse else recs
-        if isinstance(key, str):
-            key = itemgetter(key)
-        return self.browse(item.id for item in sorted(self, key=key, reverse=reverse))
+            if any(self._ids):
+                ids = self.search([('id', 'in', self.ids)])._ids
+            else:  # Don't support new ids because search() doesn't work on new records
+                ids = self._ids
+            ids = tuple(reversed(ids)) if reverse else ids
+        else:
+            if isinstance(key, str):
+                key = itemgetter(key)
+            ids = tuple(item.id for item in sorted(self, key=key, reverse=reverse))
+        return self._browse(self.env, ids, self._prefetch_ids)
 
     def update(self, values):
         """ Update the records in ``self`` with ``values``. """

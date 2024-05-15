@@ -469,8 +469,9 @@ class AccountMove(models.Model):
             accounting_date = self.invoice_date
             if not self.is_sale_document(include_receipts=True):
                 accounting_date = self._get_accounting_date(self.invoice_date, self._affect_tax_report())
-            if accounting_date != self.date:
-                self.date = accounting_date
+            if self._context.get('force_onchange_currency') or accounting_date != self.date:
+                if accounting_date != self.date:
+                    self.date = accounting_date
                 self._onchange_currency()
             else:
                 self._onchange_recompute_dynamic_lines()
@@ -633,7 +634,7 @@ class AccountMove(models.Model):
 
     @api.model
     def _get_tax_grouping_key_from_tax_line(self, tax_line):
-        ''' Create the dictionary based on a tax line that will be used as key to group taxes together.
+        r''' Create the dictionary based on a tax line that will be used as key to group taxes together.
         /!\ Must be consistent with '_get_tax_grouping_key_from_base_line'.
         :param tax_line:    An account.move.line being a tax line (with 'tax_repartition_line_id' set then).
         :return:            A dictionary containing all fields on which the tax will be grouped.
@@ -652,7 +653,7 @@ class AccountMove(models.Model):
 
     @api.model
     def _get_tax_grouping_key_from_base_line(self, base_line, tax_vals):
-        ''' Create the dictionary based on a base line that will be used as key to group taxes together.
+        r''' Create the dictionary based on a base line that will be used as key to group taxes together.
         /!\ Must be consistent with '_get_tax_grouping_key_from_tax_line'.
         :param base_line:   An account.move.line being a base line (that could contains something in 'tax_ids').
         :param tax_vals:    An element of compute_all(...)['taxes'].
@@ -1243,6 +1244,9 @@ class AccountMove(models.Model):
 
         # Group the moves by journal and month
         for move in self:
+            if move.state == 'cancel':
+                continue
+
             move_has_name = move.name and move.name != '/'
             if move_has_name or move.state != 'posted':
                 try:
@@ -1649,7 +1653,7 @@ class AccountMove(models.Model):
     @api.depends('currency_id')
     def _compute_display_inactive_currency_warning(self):
         for move in self.with_context(active_test=False):
-            move.display_inactive_currency_warning = move.currency_id and not move.currency_id.active
+            move.display_inactive_currency_warning = move.state == 'draft' and move.currency_id and not move.currency_id.active
 
     def _compute_payments_widget_to_reconcile_info(self):
         for move in self:
@@ -2640,7 +2644,7 @@ class AccountMove(models.Model):
         """
         self.ensure_one()
         partner_ref = self.partner_id.ref
-        partner_ref_nr = re.sub('\D', '', partner_ref or '')[-21:] or str(self.partner_id.id)[-21:]
+        partner_ref_nr = re.sub(r'\D', '', partner_ref or '')[-21:] or str(self.partner_id.id)[-21:]
         partner_ref_nr = partner_ref_nr[-21:]
         check_digits = calc_check_digits('{}RF'.format(partner_ref_nr))
         reference = 'RF{} {}'.format(check_digits, " ".join(["".join(x) for x in zip_longest(*[iter(partner_ref_nr)]*4, fillvalue="")]))
@@ -2809,7 +2813,7 @@ class AccountMove(models.Model):
                 'credit': balance < 0.0 and -balance or 0.0,
             })
 
-            if not is_refund or self.tax_cash_basis_origin_move_id or self._context.get('reverse_move_type'):
+            if not is_refund or self.tax_cash_basis_origin_move_id or self._context.get('reverse_move_type') or self.move_type == 'entry':
                 # We don't map tax repartition for non-refund operations, for cash basis entries,
                 # nor when reversing the move_type
                 # Indeed, cancelling a cash basis entry usually happens when unreconciling and invoice,
@@ -3000,11 +3004,11 @@ class AccountMove(models.Model):
 
         # Search for partners in copy.
         cc_mail_addresses = email_split(msg_dict.get('cc', ''))
-        followers = [partner for partner in self._mail_find_partner_from_emails(cc_mail_addresses, extra_domain) if partner]
+        followers = [partner for partner in self._mail_find_partner_from_emails(cc_mail_addresses, extra_domain=extra_domain) if partner]
 
         # Search for partner that sent the mail.
         from_mail_addresses = email_split(msg_dict.get('from', ''))
-        senders = partners = [partner for partner in self._mail_find_partner_from_emails(from_mail_addresses, extra_domain) if partner]
+        senders = partners = [partner for partner in self._mail_find_partner_from_emails(from_mail_addresses, extra_domain=extra_domain) if partner]
 
         # Search for partners using the user.
         if not senders:
@@ -3017,7 +3021,7 @@ class AccountMove(models.Model):
                 body_mail_addresses = set(email_re.findall(msg_dict.get('body')))
                 partners = [
                     partner
-                    for partner in self._mail_find_partner_from_emails(body_mail_addresses, extra_domain)
+                    for partner in self._mail_find_partner_from_emails(body_mail_addresses, extra_domain=extra_domain)
                     if not is_internal_partner(partner) and partner.company_id.id in (False, company.id)
                 ]
 
@@ -3114,7 +3118,7 @@ class AccountMove(models.Model):
             if not move.invoice_date:
                 if move.is_sale_document(include_receipts=True):
                     move.invoice_date = fields.Date.context_today(self)
-                    move.with_context(check_move_validity=False)._onchange_invoice_date()
+                    move.with_context(check_move_validity=False, force_onchange_currency=True)._onchange_invoice_date()
                 elif move.is_purchase_document(include_receipts=True):
                     raise UserError(_("The Bill/Refund date is required to validate this document."))
 
@@ -3838,7 +3842,7 @@ class AccountMoveLine(models.Model):
         help="Tags assigned to this line by the tax creating it, if any. It determines its impact on financial reports.", tracking=True)
     tax_audit = fields.Char(string="Tax Audit String", compute="_compute_tax_audit", store=True,
         help="Computed field, listing the tax grids impacted by this line, and the amount it applies to each of them.")
-    tax_tag_invert = fields.Boolean(string="Invert Tags", compute='_compute_tax_tag_invert', store=True, readonly=False,
+    tax_tag_invert = fields.Boolean(string="Invert Tags", compute='_compute_tax_tag_invert', store=True, readonly=False, copy=False,
         help="Technical field. True if the balance of this move line needs to be "
              "inverted when computing its total for each tag (for sales invoices, for example).")
 
@@ -4378,7 +4382,7 @@ class AccountMoveLine(models.Model):
 
     @api.onchange('account_id')
     def _onchange_account_id(self):
-        ''' Recompute 'tax_ids' based on 'account_id'.
+        r''' Recompute 'tax_ids' based on 'account_id'.
         /!\ Don't remove existing taxes if there is no explicit taxes set on the account.
         '''
         for line in self:
@@ -4564,6 +4568,9 @@ class AccountMoveLine(models.Model):
                 elif record.tax_ids:
                     tax_type = record.tax_ids[0].type_tax_use
                     is_refund = (tax_type == 'sale' and record.debit) or (tax_type == 'purchase' and record.credit)
+
+                if record.tax_ids and record.move_id.reversed_entry_id:
+                    is_refund = not is_refund
 
                 record.tax_tag_invert = (tax_type == 'purchase' and is_refund) or (tax_type == 'sale' and not is_refund)
 
@@ -5084,7 +5091,7 @@ class AccountMoveLine(models.Model):
     # -------------------------------------------------------------------------
 
     def _prepare_reconciliation_partials(self):
-        ''' Prepare the partials on the current journal items to perform the reconciliation.
+        r''' Prepare the partials on the current journal items to perform the reconciliation.
         /!\ The order of records in self is important because the journal items will be reconciled using this order.
 
         :return: A recordset of account.partial.reconcile.

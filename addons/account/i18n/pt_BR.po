@@ -250,6 +250,15 @@ msgid "45 Days"
 msgstr "45 Dias"
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid ""
+"<br/>\n"
+"                            on this account:"
+msgstr ""
+"<br/>\n"
+"                            nessa conta:"
+
+#. module: account
 #: model:mail.template,body_html:account.email_template_edi_credit_note
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
@@ -10315,6 +10324,16 @@ msgid "Please define a payment method line on your payment."
 msgstr "Defina uma linha de método de pagamento no seu pagamento."
 
 #. module: account
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"A forma de pagamento selecionada não está disponível para este pagamento; "
+"selecione a forma de pagamento novamente."
+
+#. module: account
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Please first define a fiscal country for company %s."
@@ -16137,11 +16156,11 @@ msgstr ""
 #: code:addons/account/wizard/account_payment_register.py:0
 #, python-format
 msgid ""
-"You can't register payments for journal items being either all inbound, "
-"either all outbound."
+"You can't register payments for both inbound and outbound moves at the same "
+"time."
 msgstr ""
-"Você não pode registrar pagamentos para itens de diário que são todos de "
-"entrada ou de saída."
+"Não é possível registrar pagamentos  para movimentos de entrada e saída ao "
+"mesmo tempo."
 
 #. module: account
 #: code:addons/account/models/account_analytic_line.py:0
@@ -16244,10 +16263,26 @@ msgstr ""
 "rascunho de movimento e lance-o depois,"
 
 #. module: account
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot create recursive groups."
+msgstr "Não é possível criar grupos recursivos."
+
+#. module: account
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "You cannot delete an item linked to a posted entry."
 msgstr "Você não pode excluir um item vinculado a uma entrada lançada."
+
+#. module: account
+#: code:addons/account/models/account_account_tag.py:0
+#, python-format
+msgid ""
+"You cannot delete this account tag (%s), it is used on the chart of account "
+"definition."
+msgstr ""
+"Você não pode excluir esse marcador de conta (%s), ela é usada na definição "
+"do plano de contas."
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
@@ -16258,6 +16293,16 @@ msgid ""
 msgstr ""
 "Não é possível excluir esse lançamento, pois ele já consumiu um número de "
 "sequência e não é o último na cadeia. Em vez disso, tente revertê-lo."
+
+#. module: account
+#: code:addons/account/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"You cannot delete this report (%s), it is used by the accounting PDF "
+"generation engine."
+msgstr ""
+"Não é possível excluir o relatório (%s), pois ele é usado pelo mecanismo de "
+"geração de PDFs de contabilidade."
 
 #. module: account
 #: code:addons/account/models/res_config_settings.py:0

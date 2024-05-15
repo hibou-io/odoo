@@ -19,7 +19,7 @@
 # Camille Dantinne <cmd@odoo.com>, 2023
 # Martin Trigaux, 2023
 # jabiri7, 2023
-# Larissa Manderfeld, 2023
+# Larissa Manderfeld, 2024
 # Pedro M. Baeza <pedro.baeza@tecnativa.com>, 2024
 # 
 msgid ""
@@ -251,6 +251,15 @@ msgstr "30% Ahora, Balance 60 Días"
 #: model:account.payment.term,name:account.account_payment_term_45days
 msgid "45 Days"
 msgstr "45 Días"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid ""
+"<br/>\n"
+"                            on this account:"
+msgstr ""
+"<br/>\n"
+"                            en esta cuenta:"
 
 #. module: account
 #: model:mail.template,body_html:account.email_template_edi_credit_note
@@ -10456,6 +10465,16 @@ msgid "Please define a payment method line on your payment."
 msgstr "Por favor, defina un método de pago en su pago. "
 
 #. module: account
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"El método de pago seleccionado no está disponible para este pago. Seleccione"
+" por favor otro método de pago."
+
+#. module: account
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Please first define a fiscal country for company %s."
@@ -16341,10 +16360,10 @@ msgstr ""
 #: code:addons/account/wizard/account_payment_register.py:0
 #, python-format
 msgid ""
-"You can't register payments for journal items being either all inbound, "
-"either all outbound."
+"You can't register payments for both inbound and outbound moves at the same "
+"time."
 msgstr ""
-"No puede registrar pagos para apuntes que sean todos entrantes o todos "
+"No es posible registrar pagos a la vez de transacciones entrantes y "
 "salientes."
 
 #. module: account
@@ -16448,10 +16467,26 @@ msgstr ""
 "un asiento borrador, y publíquelo después."
 
 #. module: account
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot create recursive groups."
+msgstr "No es posible crear grupos recursivos."
+
+#. module: account
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "You cannot delete an item linked to a posted entry."
 msgstr "No puede eliminar un apunte vinculado a un asiento publicado."
+
+#. module: account
+#: code:addons/account/models/account_account_tag.py:0
+#, python-format
+msgid ""
+"You cannot delete this account tag (%s), it is used on the chart of account "
+"definition."
+msgstr ""
+"No puede eliminar esta etiqueta de cuenta (%s), ya que se utiliza en la "
+"definición del plan de cuentas."
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
@@ -16462,6 +16497,16 @@ msgid ""
 msgstr ""
 "No puede eliminar este asiento ya que ya consumió un número de secuencia y "
 "no es el último de la cadena. Debe revertirlo en su lugar."
+
+#. module: account
+#: code:addons/account/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"You cannot delete this report (%s), it is used by the accounting PDF "
+"generation engine."
+msgstr ""
+"No puede eliminar este informe (%s). El motor de generación de PDF de "
+"contabilidad lo utiliza."
 
 #. module: account
 #: code:addons/account/models/res_config_settings.py:0

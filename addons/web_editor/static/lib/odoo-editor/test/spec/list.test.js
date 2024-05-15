@@ -35,6 +35,20 @@ describe('List', () => {
                             contentAfter: '<ul><li>ab[]cd</li></ul>',
                         });
                     });
+                    it('should turn a ordered list into a unordered list', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<ol><li>ab[]cd</li></ol>',
+                            stepFunction: toggleUnorderedList,
+                            contentAfter: '<ul><li>ab[]cd</li></ul>',
+                        });
+                    });
+                    it('should turn a checked list into a unordered list', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<ul class="o_checklist"><li>ab[]cd</li></ul>',
+                            stepFunction: toggleUnorderedList,
+                            contentAfter: '<ul><li>ab[]cd</li></ul>',
+                        });
+                    });
                     it('should turn a heading into a list', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<h1>ab[]cd</h1>',
@@ -272,6 +286,20 @@ describe('List', () => {
                             contentAfter: '<ol><li>ab[]cd</li></ol>',
                         });
                     });
+                    it('should turn a unordered list into a ordered list', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<ul><li>ab[]cd</li></ul>',
+                            stepFunction: toggleOrderedList,
+                            contentAfter: '<ol><li>ab[]cd</li></ol>',
+                        });
+                    });
+                    it('should turn a checked list into a ordered list', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<ul class="o_checklist"><li>ab[]cd</li></ul>',
+                            stepFunction: toggleOrderedList,
+                            contentAfter: '<ol><li>ab[]cd</li></ol>',
+                        });
+                    });
                     it('should turn a heading into a list', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<h1>ab[]cd</h1>',
@@ -455,6 +483,22 @@ describe('List', () => {
                             contentBefore: '<p>ab[]cd</p>',
                             stepFunction: toggleCheckList,
                             // JW cAfter: '<ul class="o_checklist"><li>ab[]cd</li></ul>',
+                            contentAfter: '<ul class="o_checklist"><li>ab[]cd</li></ul>',
+                        });
+                    });
+                    it('should turn a ordered list into a checklist', async () => {
+                        await testEditor(BasicEditor, {
+                            removeCheckIds: true,
+                            contentBefore: '<ol><li>ab[]cd</li></ol>',
+                            stepFunction: toggleCheckList,
+                            contentAfter: '<ul class="o_checklist"><li>ab[]cd</li></ul>',
+                        });
+                    });
+                    it('should turn a unordered list into a checklist', async () => {
+                        await testEditor(BasicEditor, {
+                            removeCheckIds: true,
+                            contentBefore: '<ul><li>ab[]cd</li></ul>',
+                            stepFunction: toggleCheckList,
                             contentAfter: '<ul class="o_checklist"><li>ab[]cd</li></ul>',
                         });
                     });
@@ -5726,6 +5770,8 @@ describe('List', () => {
                             contentBefore:
                                 '<ul class="o_checklist"><li>ab</li><li class="o_checked"><a href="#">[cd</a></li><li>ef]</li><li>gh</li></ul>',
                             stepFunction: deleteBackward,
+                            contentAfterEdit:
+                                '<ul class="o_checklist"><li>ab</li><li placeholder="List" class="oe-hint">[]<br></li><li>gh</li></ul>',
                             contentAfter:
                                 '<ul class="o_checklist"><li>ab</li><li>[]<br></li><li>gh</li></ul>',
                         });
@@ -6017,6 +6063,48 @@ describe('List', () => {
                             <li>ghi</li>
                         </ol>`),
                 });
+            });
+            it('should empty list items, starting and ending with links', async () => {
+                // Since we introduce \ufeff characters in and around links, we
+                // can enter situations where the links aren't technically fully
+                // selected but should be treated as if they were. These tests
+                // are there to ensure that is the case. They represent four
+                // variations of the same situation, and have the same expected
+                // result.
+                const tests = [
+                    // (1) <a>[...</a>...<a>...]</a>
+                    '<ul><li>ab</li><li><a href="#">[cd</a></li><li>ef</li><li><a href="#a">gh]</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">[\ufeffcd</a></li><li>ef</li><li><a href="#a">gh\ufeff]</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">\ufeff[cd</a></li><li>ef</li><li><a href="#a">gh\ufeff]</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">[\ufeffcd</a></li><li>ef</li><li><a href="#a">gh]\ufeff</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">\ufeff[cd</a></li><li>ef</li><li><a href="#a">gh]\ufeff</a></li><li>ij</li></ul>',
+                    // (2) [<a>...</a>...<a>...]</a>
+                    '<ul><li>ab</li><li>[<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh]</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>[\ufeff<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh\ufeff]</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>\ufeff[<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh\ufeff]</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>[\ufeff<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh]\ufeff</a></li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>\ufeff[<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh]\ufeff</a></li><li>ij</li></ul>',
+                    // (3) <a>[...</a>...<a>...</a>]
+                    '<ul><li>ab</li><li><a href="#">[cd</a></li><li>ef</li><li><a href="#a">gh</a>]</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">[\ufeffcd</a></li><li>ef</li><li><a href="#a">gh</a>\ufeff]</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">\ufeff[cd</a></li><li>ef</li><li><a href="#a">gh</a>\ufeff]</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">[\ufeffcd</a></li><li>ef</li><li><a href="#a">gh</a>]\ufeff</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li><a href="#">\ufeff[cd</a></li><li>ef</li><li><a href="#a">gh</a>]\ufeff</li><li>ij</li></ul>',
+                    // (4) [<a>...</a>...<a>...</a>]
+                    '<ul><li>ab</li><li>[<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh</a>]</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>[\ufeff<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh</a>\ufeff]</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>\ufeff[<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh</a>\ufeff]</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>[\ufeff<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh</a>]\ufeff</li><li>ij</li></ul>',
+                    '<ul><li>ab</li><li>\ufeff[<a href="#">cd</a></li><li>ef</li><li><a href="#a">gh</a>]\ufeff</li><li>ij</li></ul>',
+                ];
+                for (const contentBefore of tests) {
+                    await testEditor(BasicEditor, {
+                        contentBefore,
+                        stepFunction: deleteBackward,
+                        contentAfterEdit: '<ul><li>ab</li><li placeholder="List" class="oe-hint">[]<br></li><li>ij</li></ul>',
+                        contentAfter: '<ul><li>ab</li><li>[]<br></li><li>ij</li></ul>',
+                    });
+                }
             });
         });
         describe('insertParagraphBreak', () => {

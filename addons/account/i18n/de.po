@@ -248,6 +248,15 @@ msgid "45 Days"
 msgstr "45 Tage"
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid ""
+"<br/>\n"
+"                            on this account:"
+msgstr ""
+"<br/>\n"
+"                            auf diesem Konto:"
+
+#. module: account
 #: model:mail.template,body_html:account.email_template_edi_credit_note
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
@@ -1147,7 +1156,7 @@ msgstr "<strong>Referenz:</strong>"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "<strong>Source:</strong>"
-msgstr "<strong>Referenz:</strong>"
+msgstr "<strong>Verweis:</strong>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_statement
@@ -10459,6 +10468,16 @@ msgstr ""
 "Bitte geben Sie auf Ihrer Zahlung eine Zeile für die Zahlungsmethode an."
 
 #. module: account
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"Die ausgewählte Zahlungsmethode ist für diese Zahlung nicht verfügbar. Bitte"
+" wählen Sie eine andere Zahlungsmethode."
+
+#. module: account
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "Please first define a fiscal country for company %s."
@@ -11507,7 +11526,7 @@ msgstr "Global runden"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__tax_calculation_rounding_method__round_per_line
 msgid "Round per Line"
-msgstr "In Zeile runden"
+msgstr "Je Zeile runden"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.rounding_form_view
@@ -16363,11 +16382,11 @@ msgstr ""
 #: code:addons/account/wizard/account_payment_register.py:0
 #, python-format
 msgid ""
-"You can't register payments for journal items being either all inbound, "
-"either all outbound."
+"You can't register payments for both inbound and outbound moves at the same "
+"time."
 msgstr ""
-"Sie können keine Zahlungen für Buchungszeilen erfassen, die entweder alle "
-"eingehend oder alle ausgehend sind."
+"Sie können nicht gleichzeitig Zahlungen für sowohl ein- als auch ausgehende "
+"Bewegungen registrieren."
 
 #. module: account
 #: code:addons/account/models/account_analytic_line.py:0
@@ -16471,12 +16490,28 @@ msgstr ""
 "danach."
 
 #. module: account
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot create recursive groups."
+msgstr "Sie können keine rekursiven Gruppen erstellen."
+
+#. module: account
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "You cannot delete an item linked to a posted entry."
 msgstr ""
 "Sie können keine Buchungszeile löschen, die mit einem gebuchtem Posten "
 "verbunden ist."
+
+#. module: account
+#: code:addons/account/models/account_account_tag.py:0
+#, python-format
+msgid ""
+"You cannot delete this account tag (%s), it is used on the chart of account "
+"definition."
+msgstr ""
+"Sie können dieses Konto-Stichwort (%s) nicht löschen, sie wird für die "
+"Definition des Kontenplans verwendet."
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
@@ -16488,6 +16523,16 @@ msgstr ""
 "Sie können diesen Eintrag nicht löschen, da er bereits eine Sequenznummer "
 "erhalten hat und nicht der letzte Eintrag in der Kette ist. Vermutlich "
 "sollten Sie ihn stattdessen rückgängig machen."
+
+#. module: account
+#: code:addons/account/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"You cannot delete this report (%s), it is used by the accounting PDF "
+"generation engine."
+msgstr ""
+"Sie können diesen Bericht nicht löschen (%s), er wird von der PDF-"
+"Generierungsmaschine der Buchhaltung verwendet."
 
 #. module: account
 #: code:addons/account/models/res_config_settings.py:0

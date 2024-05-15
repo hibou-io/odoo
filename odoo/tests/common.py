@@ -907,6 +907,20 @@ class SingleTransactionCase(BaseCase):
 class ChromeBrowserException(Exception):
     pass
 
+def save_test_file(test_name, content, prefix, extension='png', logger=_logger, document_type='Screenshot', date_format="%Y%m%d_%H%M%S_%f"):
+    assert re.fullmatch(r'\w*_', prefix)
+    assert re.fullmatch(r'[a-z]+', extension)
+    assert re.fullmatch(r'\w+', test_name)
+    now = datetime.now().strftime(date_format)
+    screenshots_dir = pathlib.Path(odoo.tools.config['screenshots']) / get_db_name() / 'screenshots'
+    screenshots_dir.mkdir(parents=True, exist_ok=True)
+    fname = f'{prefix}{now}_{test_name}.{extension}'
+    full_path = screenshots_dir / fname
+
+    with full_path.open('wb') as f:
+        f.write(content)
+    logger.runbot(f'{document_type} in: {full_path}')
+
 
 class ChromeBrowser():
     """ Helper object to control a Chrome headless process. """
@@ -998,35 +1012,34 @@ class ChromeBrowser():
         self._logger.warning("Chrome executable not found")
         raise unittest.SkipTest("Chrome executable not found")
 
-    def _spawn_chrome(self, cmd):
-        if os.name == 'nt':
-            proc = subprocess.Popen(cmd, stderr=subprocess.DEVNULL)
-            pid = proc.pid
-        else:
-            pid = os.fork()
-        if pid != 0:
-            port_file = pathlib.Path(self.user_data_dir, 'DevToolsActivePort')
-            for _ in range(100):
-                time.sleep(0.1)
-                if port_file.is_file() and port_file.stat().st_size > 5:
-                    with port_file.open('r', encoding='utf-8') as f:
-                        self.devtools_port = int(f.readline())
-                    break
-            else:
-                raise unittest.SkipTest('Failed to detect chrome devtools port after 2.5s.')
-            return pid
-        else:
-            if platform.system() != 'Darwin':
-                # since the introduction of pointer compression in Chrome 80 (v8 v8.0),
-                # the memory reservation algorithm requires more than 8GiB of virtual mem for alignment
-                # this exceeds our default memory limits.
-                # OSX already reserve huge memory for processes
+    def _chrome_without_limit(self, cmd):
+        if os.name == 'posix' and platform.system() != 'Darwin':
+            # since the introduction of pointer compression in Chrome 80 (v8 v8.0),
+            # the memory reservation algorithm requires more than 8GiB of
+            # virtual mem for alignment this exceeds our default memory limits.
+            def preexec():
                 import resource
                 resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-            # redirect browser stderr to /dev/null
-            with open(os.devnull, 'wb', 0) as stderr_replacement:
-                os.dup2(stderr_replacement.fileno(), sys.stderr.fileno())
-            os.execv(cmd[0], cmd)
+        else:
+            preexec = None
+
+        # pylint: disable=subprocess-popen-preexec-fn
+        return subprocess.Popen(cmd, stderr=subprocess.DEVNULL, preexec_fn=preexec)
+
+    def _spawn_chrome(self, cmd):
+        proc = self._chrome_without_limit(cmd)
+        pid = proc.pid
+        port_file = pathlib.Path(self.user_data_dir, 'DevToolsActivePort')
+        for _ in range(100):
+            time.sleep(0.1)
+            if port_file.is_file() and port_file.stat().st_size > 5:
+                with port_file.open('r', encoding='utf-8') as f:
+                    self.devtools_port = int(f.readline())
+                break
+        else:
+            raise unittest.SkipTest('Failed to detect chrome devtools port after 2.5s.')
+        return pid
+
 
     def _chrome_start(self):
         if self.chrome_pid is not None:
@@ -1093,6 +1106,7 @@ class ChromeBrowser():
         delay = 0.1
         tries = 0
         failure_info = None
+        message = ''
         while timeout > 0:
             try:
                 os.kill(self.chrome_pid, 0)
@@ -1558,6 +1572,11 @@ class Transport(xmlrpclib.Transport):
         return super().request(*args, **kwargs)
 
 
+class No404Filter(logging.Filter):
+    def filter(self, record):
+        return werkzeug.exceptions.NotFound.description not in record.getMessage()
+
+
 class HttpCase(TransactionCase):
     """ Transactional HTTP TestCase with url_open and Chrome headless helpers. """
     registry_test_mode = True
@@ -1749,6 +1768,10 @@ class HttpCase(TransactionCase):
         """Wrapper for `browser_js` to start the given `tour_name` with the
         optional delay between steps `step_delay`. Other arguments from
         `browser_js` can be passed as keyword arguments."""
+        no_404_filter = No404Filter()
+        http_logger = logging.getLogger('odoo.http')
+        http_logger.addFilter(no_404_filter)
+        self.addCleanup(http_logger.removeFilter, no_404_filter)
         step_delay = ', %s' % step_delay if step_delay else ''
         code = kwargs.pop('code', "odoo.startTour('%s'%s)" % (tour_name, step_delay))
         ready = kwargs.pop('ready', "odoo.__DEBUG__.services['web_tour.tour'].tours['%s'].ready" % tour_name)

@@ -3946,6 +3946,7 @@ msgid ""
 "Do not copy/paste code you do not understand, this could put your data at "
 "risk."
 msgstr ""
+"อย่าคัดลอก/วางโค้ดที่คุณไม่เข้าใจ เพราะอาจทำให้ข้อมูลของคุณมีความเสี่ยงได้"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_cards
@@ -5036,6 +5037,8 @@ msgid ""
 "Google doesn't need to be pinged anymore. It will automatically fetch your "
 "/sitemap.xml."
 msgstr ""
+"Google ไม่จำเป็นต้องส่ง Ping อีกต่อไป มันจะดึงข้อมูล /sitemap.xml "
+"ของคุณโดยอัตโนมัติ"
 
 #. module: website
 #: model:ir.model.fields,help:website.field_res_config_settings__google_search_console
@@ -5301,6 +5304,13 @@ msgstr "ซ่อน"
 #: model_terms:ir.ui.view,arch_db:website.s_popup_options
 msgid "Hide For"
 msgstr "ซ่อนเพื่อ"
+
+#. module: website
+#. openerp-web
+#: code:addons/website/static/src/snippets/s_popup/000.js:0
+#, python-format
+msgid "Hide the cookies bar"
+msgstr ""
 
 #. module: website
 #. openerp-web
@@ -8921,6 +8931,13 @@ msgid "Show reCaptcha Policy"
 msgstr "แสดงนโยบาย reCaptcha"
 
 #. module: website
+#. openerp-web
+#: code:addons/website/static/src/snippets/s_popup/000.js:0
+#, python-format
+msgid "Show the cookies bar"
+msgstr ""
+
+#. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
 msgid "Sidebar"
 msgstr "แถบด้านข้าง"
@@ -11344,6 +11361,17 @@ msgid ""
 msgstr "คุณไม่สามารถลบเว็บไซต์เริ่มต้น %s ได้ ลองเปลี่ยนการตั้งค่าแทน"
 
 #. module: website
+#: code:addons/website/models/website_menu.py:0
+#, python-format
+msgid ""
+"You cannot delete this website menu as this serves as the default parent "
+"menu for new websites (e.g., /shop, /event, ...)."
+msgstr ""
+"คุณไม่สามารถลบเมนูเว็บไซต์นี้ได้ "
+"เนื่องจากเมนูนี้ทำหน้าที่เป็นเมนูหลักเริ่มต้นสำหรับเว็บไซต์ใหม่ (เช่น /shop,"
+" /event, ...)"
+
+#. module: website
 #: code:addons/website/controllers/backend.py:0
 #, python-format
 msgid "You do not have sufficient rights to perform that action."
@@ -11461,7 +11489,7 @@ msgstr "อีเมลของคุณ"
 msgid ""
 "Your Embed Code snippet doesn't have anything to display. Click on Edit to "
 "modify it."
-msgstr ""
+msgstr "ข้อมูลโค้ดฝังของคุณไม่มีอะไรจะแสดง คลิกที่แก้ไขเพื่อแก้ไข"
 
 #. module: website
 #. openerp-web

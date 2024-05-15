@@ -244,6 +244,15 @@ msgid "45 Days"
 msgstr "45 giorni"
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid ""
+"<br/>\n"
+"                            on this account:"
+msgstr ""
+"<br/>\n"
+"                            su questo conto:"
+
+#. module: account
 #: model:mail.template,body_html:account.email_template_edi_credit_note
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
@@ -7555,7 +7564,7 @@ msgstr "Fatturate"
 #: model_terms:ir.ui.view,arch_db:account.view_invoice_tree
 #, python-format
 msgid "Invoices"
-msgstr "Fatture cliente"
+msgstr "Fatture"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.portal_my_home_invoice
@@ -10434,6 +10443,16 @@ msgstr "Contattare il contabile per stampare il risultato di integrità hash."
 #, python-format
 msgid "Please define a payment method line on your payment."
 msgstr "Definisci una linea di metodo di pagamento sul tuo pagamento."
+
+#. module: account
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"Il metodo di pagamento selezionato non è disponibile, seleziona di nuovo il "
+"metodo di pagamento."
 
 #. module: account
 #: code:addons/account/models/chart_template.py:0
@@ -16297,11 +16316,11 @@ msgstr ""
 #: code:addons/account/wizard/account_payment_register.py:0
 #, python-format
 msgid ""
-"You can't register payments for journal items being either all inbound, "
-"either all outbound."
+"You can't register payments for both inbound and outbound moves at the same "
+"time."
 msgstr ""
-"Impossibile registrare pagamenti per movimenti contabili che sono o tutti in"
-" entrata o tutti in uscita."
+"Non è possibile registrare nello stesso momento pagamenti sia per i "
+"movimenti in entrata che in uscita."
 
 #. module: account
 #: code:addons/account/models/account_analytic_line.py:0
@@ -16404,11 +16423,27 @@ msgstr ""
 "movimento in bozza, quindi confermarlo."
 
 #. module: account
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot create recursive groups."
+msgstr "Non è possibile creare gruppi ricorsivi."
+
+#. module: account
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "You cannot delete an item linked to a posted entry."
 msgstr ""
 "Impossibile eliminare un movimento collegato a una registrazione confermata."
+
+#. module: account
+#: code:addons/account/models/account_account_tag.py:0
+#, python-format
+msgid ""
+"You cannot delete this account tag (%s), it is used on the chart of account "
+"definition."
+msgstr ""
+"Non è possibile eliminare il tag del conto (%s) perché è utilizzato nella "
+"definizione del piano dei conti."
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
@@ -16419,6 +16454,16 @@ msgid ""
 msgstr ""
 "Non puoi cancellare questa voce, poiché ha già consumato un numero di "
 "sequenza e non è l'ultima nella catena. Devi invece ripristinarla."
+
+#. module: account
+#: code:addons/account/models/ir_actions_report.py:0
+#, python-format
+msgid ""
+"You cannot delete this report (%s), it is used by the accounting PDF "
+"generation engine."
+msgstr ""
+"Non è possibile eliminare questo rendiconto (%s). È utilizzato dal "
+"generatore PDF della contabilità."
 
 #. module: account
 #: code:addons/account/models/res_config_settings.py:0

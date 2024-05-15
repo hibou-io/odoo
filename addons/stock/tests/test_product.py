@@ -228,6 +228,8 @@ class TestVirtualAvailable(TestStockCommon):
         calling `name_search` with a negative operator will exclude T from the
         result.
         """
+        # To be able to test dynamic variant "variants" feature must be set up
+        self.env.user.write({'groups_id': [(4, self.env.ref('product.group_product_variant').id)]})
         template = self.env['product.template'].create({
             'name': 'Super Product',
         })
@@ -340,3 +342,28 @@ class TestVirtualAvailable(TestStockCommon):
         product_form.type = 'service'
         product = product_form.save()
         self.assertEqual(product.tracking, 'none')
+
+    def test_domain_locations_only_considers_selected_companies(self):
+        product = self.env['product.product'].create({'name': 'Product', 'type': 'product'})
+        company_a = self.env['res.company'].create({'name': 'Company A'})
+        company_b = self.env['res.company'].create({'name': 'Company B'})
+        warehouse_a = self.env['stock.warehouse'].create({
+            'code': 'WHA', 'company_id': company_a.id
+        })
+        warehouse_b = self.env['stock.warehouse'].create({
+            'code': 'WHB', 'company_id': company_b.id
+        })
+        self.env['stock.quant'].create([
+            {'product_id': product.id, 'location_id': warehouse_a.lot_stock_id.id, 'quantity': 1},
+            {'product_id': product.id, 'location_id': warehouse_b.lot_stock_id.id, 'quantity': 2},
+        ])
+
+        self.assertEqual(product.sudo().with_context(
+            allowed_company_ids=[company_a.id]
+        ).qty_available, 1)
+        self.assertEqual(product.sudo().with_context(
+            allowed_company_ids=[company_b.id]
+        ).qty_available, 2)
+        self.assertEqual(product.sudo().with_context(
+            allowed_company_ids=[company_a.id, company_b.id]
+        ).qty_available, 3)

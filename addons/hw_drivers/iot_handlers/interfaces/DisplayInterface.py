@@ -41,7 +41,7 @@ class DisplayInterface(Interface):
         display_devices = {}
         displays = subprocess.check_output(['tvservice', '-l']).decode()
         x_screen = 0
-        for match in finditer('Display Number (\d), type HDMI (\d)', displays):
+        for match in finditer(r'Display Number (\d), type HDMI (\d)', displays):
             display_id, hdmi_id = match.groups()
             tvservice_output = subprocess.check_output(['tvservice', '-nv', display_id]).decode().strip()
             if tvservice_output:
@@ -79,15 +79,18 @@ class DisplayInterface(Interface):
         if 'Pi 4' in rpi_type:
             hdmi_port.update({'hdmi_1': 7}) # HDMI 1
 
-        for hdmi in hdmi_port:
-            power_state_hdmi = Vcgencmd().display_power_state(hdmi_port.get(hdmi))
-            if power_state_hdmi == 'on':
-                iot_device = {
-                    'identifier': hdmi,
-                    'name': 'Display hdmi ' + str(x_screen),
-                    'x_screen': str(x_screen),
-                }
-                display_devices[hdmi] = iot_device
-                x_screen += 1
+        try:
+            for hdmi in hdmi_port:
+                power_state_hdmi = Vcgencmd().display_power_state(hdmi_port.get(hdmi))
+                if power_state_hdmi == 'on':
+                    iot_device = {
+                        'identifier': hdmi,
+                        'name': 'Display hdmi ' + str(x_screen),
+                        'x_screen': str(x_screen),
+                    }
+                    display_devices[hdmi] = iot_device
+                    x_screen += 1
+        except subprocess.CalledProcessError:
+            _logger.warning('Vcgencmd "display_power_state" method call failed')
 
         return display_devices

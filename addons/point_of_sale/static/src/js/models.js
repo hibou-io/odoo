@@ -158,7 +158,7 @@ exports.PosModel = Backbone.Model.extend({
             if(this.config.product_load_background)
                 this.loadProductsBackground();
         }
-        if(this.config.partner_load_background )
+        if(this.config.limited_partners_loading && this.config.partner_load_background )
             this.loadPartnersBackground();
 
         if(this.config.use_proxy){
@@ -1321,7 +1321,7 @@ exports.PosModel = Backbone.Model.extend({
                                     },
                                 })
                                 .catch(() => {
-                                    reject({ code: 401, message: 'Backend Invoice', data: { order: order } });
+                                    reject({ code: 401, message: 'Backend Invoice', data: { order: order }, server_ids: server_ids });
                                 });
                         } else {
                             reject({ code: 401, message: 'Backend Invoice', data: { order: order } });

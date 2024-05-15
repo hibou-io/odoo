@@ -43,6 +43,8 @@ import {
     isEmptyBlock,
     unwrapContents,
     getCursorDirection,
+    padLinkWithZws,
+    isLinkEligibleForZwnbsp,
 } from '../utils/utils.js';
 
 const TEXT_CLASSES_REGEX = /\btext-[^\s]*\b/;
@@ -198,7 +200,14 @@ function insert(editor, data, isText = true) {
     currentNode = lastChildNode || currentNode;
     selection.removeAllRanges();
     const newRange = new Range();
-    let lastPosition = rightPos(currentNode);
+    let lastPosition;
+    if (currentNode.nodeName === 'A' && isLinkEligibleForZwnbsp(currentNode)) {
+        padLinkWithZws(editor.editable, currentNode);
+        currentNode = currentNode.nextSibling;
+        lastPosition = getDeepestPosition(...rightPos(currentNode));
+    } else {
+        lastPosition = rightPos(currentNode);
+    }
     if (lastPosition[0] === editor.editable) {
         // Correct the position if it happens to be in the editable root.
         lastPosition = getDeepestPosition(...lastPosition);
@@ -439,14 +448,23 @@ export const editorCommands = {
                 textAlignStyles.set(block, block.style.textAlign);
             }
         });
+        // Calling `document.execCommand` will cause an input event with the
+        // input type "formatRemove". This would cause a new history step to be
+        // created in the middle of the process, which we prevent here.
+        editor.historyPauseSteps();
         editor.document.execCommand('removeFormat');
         for (const node of getTraversedNodes(editor.editable)) {
-            // The only possible background image on text is the gradient.
-            closestElement(node).style.backgroundImage = '';
+            if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute('color')) {
+                node.removeAttribute('color');
+            }
+            const element = closestElement(node);
+            element.style.removeProperty('color');
+            element.style.removeProperty('background');
         }
         textAlignStyles.forEach((textAlign, block) => {
             block.style.setProperty('text-align', textAlign);
         });
+        editor.historyUnpauseSteps();
     },
 
     // Align
@@ -624,7 +642,9 @@ export const editorCommands = {
                         ['inline', 'inline-block'].includes(getComputedStyle(node).display) &&
                         isVisibleStr(node.textContent) &&
                         !node.classList.contains('btn') &&
-                        !node.querySelector('font'))
+                        !node.querySelector('font')) &&
+                        node.nodeName !== 'A' &&
+                        !(node.nodeName === 'SPAN' && node.style['fontSize'])
                 ) {
                     // Node is a visible text or inline node without font nor a button:
                     // wrap it in a <font>.
