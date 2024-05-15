@@ -53,6 +53,8 @@ class PaymentTransaction(models.Model):
                 for so in tx.sale_order_ids:
                     so.reference = tx._compute_sale_order_reference(so)
 
+            if tx.operation == 'validation':
+                continue
             # Send the payment status email.
             # The transactions are manually cached while in a sudoed environment to prevent an
             # AccessError: In some circumstances, sending the mail would generate the report assets
@@ -104,9 +106,9 @@ class PaymentTransaction(models.Model):
         :return: None
         """
         super()._log_message_on_linked_documents(message)
-        self = self.with_user(SUPERUSER_ID)  # Log messages as 'OdooBot'
+        author = self.env.user.partner_id if self.env.uid == SUPERUSER_ID else self.partner_id
         for order in self.sale_order_ids or self.source_transaction_id.sale_order_ids:
-            order.message_post(body=message)
+            order.message_post(body=message, author_id=author.id)
 
     def _reconcile_after_done(self):
         """ Override of payment to automatically confirm quotations and generate invoices. """

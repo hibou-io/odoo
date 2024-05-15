@@ -53,7 +53,7 @@ msgid ""
 "<span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'demo'\"> (Demo)</span>\n"
 "                                        <span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'test'\"> (Test)</span>"
 msgstr ""
-"<span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'demo'\"> (Demonstración)</span>\n"
+"<span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'demo'\"> (Demostración)</span>\n"
 "                                        <span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'test'\"> (Prueba)</span>"
 
 #. module: account_peppol
@@ -190,7 +190,7 @@ msgstr "Cancelada"
 #: code:addons/account_peppol/models/account_move.py:0
 #, python-format
 msgid "Cannot cancel an entry that has already been sent to PEPPOL"
-msgstr "No se puede cancelar un asiento que ya se envió a PEPPOL"
+msgstr "No se puede cancelar un asiento que ya ha sido enviado a PEPPOL"
 
 #. module: account_peppol
 #. odoo-python
@@ -237,7 +237,7 @@ msgstr "Confirmar"
 #: code:addons/account_peppol/models/res_config_settings.py:0
 #, python-format
 msgid "Connection error, please try again later."
-msgstr "Errot de conexión, inténtelo de nuevo más tarde."
+msgstr "Error de conexión, inténtelo de nuevo más tarde."
 
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_res_partner
@@ -317,7 +317,7 @@ msgid ""
 "communication with the Peppol network."
 msgstr ""
 "El envío y recepción de facturas está simulado mientras se encuentra en modo"
-" demo. No habrá comunicación con la red Peppol."
+" de demostración. No habrá comunicación con la red Peppol."
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
@@ -377,7 +377,7 @@ msgstr "No válido"
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_company__account_peppol_proxy_state__not_verified
 msgid "Not verified"
-msgstr "No está verificado"
+msgstr "No verificado"
 
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__account_peppol_verification_label__not_verified
@@ -595,6 +595,13 @@ msgstr ""
 
 #. module: account_peppol
 #. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "Please install the phonenumbers library."
+msgstr "Instale la biblioteca de números de teléfono."
+
+#. module: account_peppol
+#. odoo-python
 #: code:addons/account_peppol/wizard/account_move_send.py:0
 #, python-format
 msgid "Please verify partner configuration in partner settings."
@@ -623,7 +630,7 @@ msgstr "Tipo de proxy"
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__account_move__peppol_move_state__to_send
 msgid "Queued"
-msgstr "En espera"
+msgstr "En cola"
 
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__account_move__peppol_move_state__ready
@@ -907,7 +914,7 @@ msgstr "Verifique el número de teléfono"
 #: model:ir.model.fields,field_description:account_peppol.field_account_move_send__peppol_warning
 #: model:ir.model.fields,field_description:account_peppol.field_res_config_settings__account_peppol_endpoint_warning
 msgid "Warning"
-msgstr "Alerta"
+msgstr "Advertencia"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form

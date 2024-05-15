@@ -141,6 +141,30 @@ function changePaddingSize(direction) {
 }
 
 /**
+ * Checks if an element is visible on the screen, i.e., not masked by another
+ * element.
+ * 
+ * @param {String} elementSelector The selector of the element to be checked.
+ * @returns {Object} The steps required to check if the element is visible.
+ */
+function checkIfVisibleOnScreen(elementSelector) {
+    return {
+        content: "Check if the element is visible on screen",
+        trigger: `${elementSelector}`,
+        run() {
+            const boundingRect = this.$anchor[0].getBoundingClientRect();
+            const centerX = boundingRect.left + boundingRect.width / 2;
+            const centerY = boundingRect.top + boundingRect.height / 2;
+            const iframeDocument = document.querySelector(".o_iframe").contentDocument;
+            const el = iframeDocument.elementFromPoint(centerX, centerY);
+            if (!this.$anchor[0].contains(el)) {
+                console.error("The element is not visible on screen");
+            }
+        },
+    };
+}
+
+/**
  * Simple click on an element in the page.
  * @param {*} elementName
  * @param {*} selector
@@ -187,7 +211,7 @@ function clickOnSnippet(snippet, position = "bottom") {
     };
 }
 
-function clickOnSave(position = "bottom") {
+function clickOnSave(position = "bottom", timeout) {
     return [{
         trigger: "div:not(.o_loading_dummy) > #oe_snippets button[data-action=\"save\"]:not([disabled])",
         // TODO this should not be needed but for now it better simulates what
@@ -201,6 +225,7 @@ function clickOnSave(position = "bottom") {
         in_modal: false,
         content: markup(_t("Good job! It's time to <b>Save</b> your work.")),
         position: position,
+        timeout: timeout,
     }, {
         trigger: 'iframe body:not(.editor_enable)',
         noPrepend: true,
@@ -303,10 +328,11 @@ function getClientActionUrl(path, edition) {
 function clickOnExtraMenuItem(stepOptions, backend = false) {
     return Object.assign({}, {
         content: "Click on the extra menu dropdown toggle if it is there",
-        trigger: `${backend ? "iframe" : ""} #top_menu`,
+        trigger: `${backend ? "iframe" : ""} .top_menu`,
         run: function () {
             const extraMenuButton = this.$anchor[0].querySelector('.o_extra_menu_items a.nav-link');
-            if (extraMenuButton) {
+            // Don't click on the extra menu button if it's already visible.
+            if (extraMenuButton && !extraMenuButton.classList.contains("show")) {
                 extraMenuButton.click();
             }
         },
@@ -445,6 +471,28 @@ function switchWebsite(websiteId, websiteName) {
     }];
 }
 
+/**
+ * Toggles the mobile preview on or off.
+ *
+ * @param {Boolean} toggleOn true to toggle the mobile preview on, false to
+ *     toggle it off.
+ * @returns {Array}
+ */
+function toggleMobilePreview(toggleOn) {
+    const onOrOff = toggleOn ? "on" : "off";
+    const mobileOnSelector = ".o_is_mobile";
+    const mobileOffSelector = ":not(.o_is_mobile)";
+    return [{
+        content: `Toggle the mobile preview ${onOrOff}`,
+        trigger: ".o_we_website_top_actions [data-action='mobile']",
+        extra_trigger: `iframe #wrapwrap${toggleOn ? mobileOffSelector : mobileOnSelector}`,
+    }, {
+        content: `Check that the mobile preview is ${onOrOff}`,
+        trigger: `iframe #wrapwrap${toggleOn ? mobileOnSelector : mobileOffSelector}`,
+        isCheck: true,
+    }];
+}
+
 export default {
     addMedia,
     assertCssVariable,
@@ -456,6 +504,7 @@ export default {
     changeImage,
     changeOption,
     changePaddingSize,
+    checkIfVisibleOnScreen,
     clickOnEditAndWaitEditMode,
     clickOnElement,
     clickOnExtraMenuItem,
@@ -475,4 +524,5 @@ export default {
     selectNested,
     selectSnippetColumn,
     switchWebsite,
+    toggleMobilePreview,
 };

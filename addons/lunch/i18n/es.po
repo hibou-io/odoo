@@ -249,7 +249,7 @@ msgstr ""
 "                <tr><td valign=\"middle\">\n"
 "                    <span style=\"font-size: 10px;\">Pedido de comida</span><br>\n"
 "                </td><td valign=\"middle\" align=\"right\" t-if=\"not user.company_id.uses_default_logo\">\n"
-"                    <img t-attf-src=\"/logo.png?company={{ user.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"user.company_id.name\">\n"
+"                    <img t-attf-src=\"/logotipo.png?company={{ user.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"user.company_id.name\">\n"
 "                </td></tr>\n"
 "                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
 "                  <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:16px 0px 16px 0px;\">\n"
@@ -428,7 +428,7 @@ msgstr "Icono de tipo de actvidad"
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_order_view_form
 msgid "Add To Cart"
-msgstr "Añadir al Carrito"
+msgstr "Añadir a la cesta"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_location__address
@@ -500,7 +500,8 @@ msgstr "Número de archivos adjuntos"
 #. module: lunch
 #: model:ir.model.constraint,message:lunch.constraint_lunch_supplier_automatic_email_time_range
 msgid "Automatic Email Sending Time should be between 0 and 12"
-msgstr "El Tiempo de Envío Automático de Emails debe estar entre 0 y 12"
+msgstr ""
+"La hora de envío automático de correos electrónicos debe estar entre 0 y 12"
 
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_supplier_view_form
@@ -584,6 +585,12 @@ msgid "Cancelled"
 msgstr "Cancelado"
 
 #. module: lunch
+#: code:addons/lunch/models/lunch_supplier.py:0
+#, python-format
+msgid "Cannot send an email to this supplier!"
+msgstr "No se puede enviar un correo electrónico a este proveedor"
+
+#. module: lunch
 #: model:ir.actions.act_window,name:lunch.lunch_cashmove_action_payment
 #: model:ir.ui.menu,name:lunch.lunch_cashmove_report_menu_payment
 msgid "Cash Moves"
@@ -607,7 +614,7 @@ msgstr "Categoría"
 #. module: lunch
 #: model:ir.model.fields.selection,name:lunch.selection__lunch_alert__mode__chat
 msgid "Chat notification"
-msgstr "Notificación en el chat"
+msgstr "Notificación de chat"
 
 #. module: lunch
 #: model:lunch.product,name:lunch.product_cheese_ham
@@ -880,37 +887,37 @@ msgstr "Todos"
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__topping_label_1
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_label_1
 msgid "Extra 1 Label"
-msgstr "1 Etiqueta Extra"
+msgstr "Etiqueta del extra 1"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__topping_quantity_1
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_quantity_1
 msgid "Extra 1 Quantity"
-msgstr "1 Cantidad Extra"
+msgstr "Cantidad del extra 1"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__topping_label_2
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_label_2
 msgid "Extra 2 Label"
-msgstr "2 Etiquetas Extras"
+msgstr "Etiqueta del extra 2"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__topping_quantity_2
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_quantity_2
 msgid "Extra 2 Quantity"
-msgstr "2 Cantidades Extras"
+msgstr "Cantidad del extra 2"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__topping_label_3
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_label_3
 msgid "Extra 3 Label"
-msgstr "3 Etiquetas Extras"
+msgstr "Etiqueta del extra 3"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__topping_quantity_3
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_quantity_3
 msgid "Extra 3 Quantity"
-msgstr "3 Cantidades Extras"
+msgstr "Cantidad del extra 3"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_order__display_toppings
@@ -960,12 +967,12 @@ msgstr "Icono de Font Awesome p. ej. fa-tasks"
 #. module: lunch
 #: model:ir.model.fields,help:lunch.field_lunch_supplier__email_formatted
 msgid "Format email address \"Name <email@domain>\""
-msgstr "Dirección de email con formato \"Nombre <email@domain>\""
+msgstr "Dirección de correo electrónico con formato \"Nombre <email@domain>\""
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__email_formatted
 msgid "Formatted Email"
-msgstr "Email formateado"
+msgstr "Correo electrónico formateado"
 
 #. module: lunch
 #: model_terms:lunch.product,description:lunch.product_italiana
@@ -999,7 +1006,7 @@ msgstr "Agrupar por"
 #: model_terms:lunch.product,description:lunch.product_club
 #: model_terms:lunch.product,description:lunch.product_club_0
 msgid "Ham, Cheese, Vegetables"
-msgstr "Jamón, queso, vegetales"
+msgstr "Jamón, queso, verduras"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__has_message
@@ -1111,7 +1118,7 @@ msgstr "Información, alérgenos, ...."
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_alert__available_today
 msgid "Is Displayed Today"
-msgstr "Se Visualiza Hoy"
+msgstr "Se muestra hoy"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_product__is_favorite
@@ -1188,7 +1195,7 @@ msgstr "Comidas"
 #. module: lunch
 #: model:ir.model,name:lunch.model_lunch_alert
 msgid "Lunch Alert"
-msgstr "Alerta de comida"
+msgstr "Alerta de almuerzo"
 
 #. module: lunch
 #: model:ir.actions.act_window,name:lunch.lunch_alert_action
@@ -1341,7 +1348,7 @@ msgstr "Moneda principal de la compañía."
 #. module: lunch
 #: model:ir.ui.menu,name:lunch.menu_lunch_admin
 msgid "Manager"
-msgstr "Responsable"
+msgstr "Gerente"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_res_config_settings__company_lunch_minimum_threshold
@@ -1502,7 +1509,7 @@ msgstr "No se ha encontrado ningún pedido anterior."
 #: model:ir.model.fields.selection,name:lunch.selection__lunch_supplier__topping_quantity_2__0_more
 #: model:ir.model.fields.selection,name:lunch.selection__lunch_supplier__topping_quantity_3__0_more
 msgid "None or More"
-msgstr "Ninguno o Más"
+msgstr "Ninguno o más"
 
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_order_view_search
@@ -1522,12 +1529,12 @@ msgstr "No hay nada que ordenar hoy"
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_alert__notification_moment
 msgid "Notification Moment"
-msgstr "Momento de Notificación"
+msgstr "Momento de notificación"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_alert__notification_time
 msgid "Notification Time"
-msgstr "Hora de Notificación"
+msgstr "Hora de notificación"
 
 #. module: lunch
 #: model:ir.model.constraint,message:lunch.constraint_lunch_alert_notification_time_range
@@ -1564,7 +1571,7 @@ msgstr "Número de mensajes con error de envío"
 #: model:ir.model.fields.selection,name:lunch.selection__lunch_supplier__topping_quantity_2__1_more
 #: model:ir.model.fields.selection,name:lunch.selection__lunch_supplier__topping_quantity_3__1_more
 msgid "One or More"
-msgstr "Uno o Más"
+msgstr "Uno o más"
 
 #. module: lunch
 #: model:ir.model.fields.selection,name:lunch.selection__lunch_supplier__topping_quantity_1__1
@@ -1646,7 +1653,7 @@ msgstr "Pasta"
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_cashmove_report_view_search
 msgid "Payment"
-msgstr "Pagos"
+msgstr "Pago"
 
 #. module: lunch
 #: model_terms:ir.actions.act_window,help:lunch.lunch_cashmove_action_payment
@@ -1736,7 +1743,7 @@ msgstr "Categoría de producto"
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_product_category__product_count
 msgid "Product Count"
-msgstr "Recuento de productos"
+msgstr "Número de productos"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_product__product_image
@@ -1914,7 +1921,7 @@ msgstr "Mostrar botón de confirmar"
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__show_order_button
 msgid "Show Order Button"
-msgstr "Mostrar botón de ordenar"
+msgstr "Mostrar botón de pedir"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_alert__until
@@ -2068,7 +2075,7 @@ msgstr ""
 #: code:addons/lunch/models/lunch_order.py:0
 #, python-format
 msgid "The vendor related to this order is not available today."
-msgstr "El vendedor relacionado a esta orden no está disponible hoy."
+msgstr "El proveedor relacionado a esta orden no está disponible hoy."
 
 #. module: lunch
 #: model_terms:ir.actions.act_window,help:lunch.lunch_order_action
@@ -2122,13 +2129,13 @@ msgstr "Para Ordenar"
 #: code:addons/lunch/static/src/components/lunch_dashboard.xml:0
 #, python-format
 msgid "To Pay"
-msgstr "Por pagar"
+msgstr "A pagar"
 
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_payment_dialog
 msgid "To add some money to your wallet, please contact your lunch manager."
 msgstr ""
-"Para agregar algo de dinero a su billetera, por favor contacte a su gerente "
+"Para agregar algo de dinero a su monedero, por favor contacte a su gerente "
 "de almuerzo."
 
 #. module: lunch
@@ -2160,8 +2167,8 @@ msgstr "Pedidos de hoy"
 #: model_terms:lunch.product,description:lunch.product_4formaggi
 msgid "Tomato sauce, Olive oil, Fresh Tomatoes, Onions, Vegetables, Parmesan"
 msgstr ""
-"Salsa de tomate, aceite de oliva, tomates frescos, cebollas, vegetales, "
-"queso parmesano"
+"Salsa de tomate, aceite de oliva, tomates frescos, cebollas, verduras, queso"
+" parmesano"
 
 #. module: lunch
 #: model_terms:lunch.product,description:lunch.product_Napoli
@@ -2187,22 +2194,22 @@ msgstr "Tomates, champiñones, queso mozzarella"
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_topping__topping_category
 msgid "Topping Category"
-msgstr "Categoría de aderezos"
+msgstr "Categoría de extras"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_ids_1
 msgid "Topping Ids 1"
-msgstr "Aderezo Ids 1"
+msgstr "ID del extra 1"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_ids_2
 msgid "Topping Ids 2"
-msgstr "Aderezos Ids 2"
+msgstr "ID del extra 2"
 
 #. module: lunch
 #: model:ir.model.fields,field_description:lunch.field_lunch_supplier__topping_ids_3
 msgid "Topping Ids 3"
-msgstr "Aderezos Ids 3"
+msgstr "ID del extra 3"
 
 #. module: lunch
 #. odoo-javascript
@@ -2335,7 +2342,7 @@ msgstr "Su cuenta"
 #: code:addons/lunch/static/src/components/lunch_dashboard.xml:0
 #, python-format
 msgid "Your Cart ("
-msgstr "Su carrito ("
+msgstr "Su cesta ("
 
 #. module: lunch
 #. odoo-python
@@ -2398,7 +2405,7 @@ msgstr "ej. Ordenar antes de las 11 AM"
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_supplier_view_form
 msgid "e.g. The Pizzeria Inn"
-msgstr "ej. La posada de la pizzería"
+msgstr "p. ej. The Pizzeria Inn"
 
 #. module: lunch
 #: model_terms:ir.ui.view,arch_db:lunch.lunch_cashmove_report_view_search_2

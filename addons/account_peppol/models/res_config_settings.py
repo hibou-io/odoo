@@ -80,6 +80,15 @@ class ResConfigSettings(models.TransientModel):
         return response
 
     # -------------------------------------------------------------------------
+    # ONCHANGE METHODS
+    # -------------------------------------------------------------------------
+
+    @api.onchange('account_peppol_endpoint')
+    def _onchange_account_peppol_endpoint(self):
+        if self.account_peppol_endpoint:
+            self.account_peppol_endpoint = ''.join(char for char in self.account_peppol_endpoint if char.isalnum())
+
+    # -------------------------------------------------------------------------
     # COMPUTE METHODS
     # -------------------------------------------------------------------------
     @api.depends('is_account_peppol_eligible', 'account_peppol_edi_user')
@@ -146,6 +155,8 @@ class ResConfigSettings(models.TransientModel):
         company = self.company_id
         edi_proxy_client = self.env['account_edi_proxy_client.user']
         edi_identification = edi_proxy_client._get_proxy_identification(company, 'peppol')
+        company.partner_id._check_peppol_eas()
+
         if company.partner_id._check_peppol_participant_exists(edi_identification) and not self.account_peppol_migration_key:
             raise UserError(
                 _("A participant with these details has already been registered on the network. "

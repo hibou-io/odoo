@@ -339,8 +339,8 @@ class Field(MetaField('DummyField', (object,), {})):
 
     def __repr__(self):
         if self.name is None:
-            return "<%s.%s>" % (__name__, type(self).__name__)
-        return "%s.%s" % (self.model_name, self.name)
+            return f"{'<%s.%s>'!r}" % (__name__, type(self).__name__)
+        return f"{'%s.%s'!r}" % (self.model_name, self.name)
 
     ############################################################################
     #
@@ -1861,6 +1861,8 @@ class _String(Field):
                     matches = get_close_matches(old_term_text, text2terms, 1, 0.9)
                     if matches:
                         closest_term = get_close_matches(old_term, text2terms[matches[0]], 1, 0)[0]
+                        if closest_term in translation_dictionary:
+                            continue
                         old_is_text = is_text(old_term)
                         closest_is_text = is_text(closest_term)
                         if old_is_text or not closest_is_text:
@@ -2404,18 +2406,18 @@ class Binary(Field):
             for record_no_bin_size, record in zip(records_no_bin_size, records):
                 try:
                     value = cache.get(record_no_bin_size, self)
-                    try:
-                        value = base64.b64decode(value)
-                    except (TypeError, binascii.Error):
-                        pass
+                    # don't decode non-attachments to be consistent with pg_size_pretty
+                    if not (self.store and self.column_type):
+                        with contextlib.suppress(TypeError, binascii.Error):
+                            value = base64.b64decode(value)
                     try:
                         if isinstance(value, (bytes, _BINARY)):
                             value = human_size(len(value))
                     except (TypeError):
                         pass
                     cache_value = self.convert_to_cache(value, record)
-                    dirty = self.column_type and self.store and any(records._ids)
-                    cache.set(record, self, cache_value, dirty=dirty)
+                    # the dirty flag is independent from this assignment
+                    cache.set(record, self, cache_value, check_dirty=False)
                 except CacheMiss:
                     pass
         else:
@@ -2456,6 +2458,7 @@ class Binary(Field):
         ])
 
     def write(self, records, value):
+        records = records.with_context(bin_size=False)
         if not self.attachment:
             super().write(records, value)
             return
@@ -2535,10 +2538,11 @@ class Image(Binary):
     def create(self, record_values):
         new_record_values = []
         for record, value in record_values:
-            # strange behavior when setting related image field, when `self`
-            # does not resize the same way as its related field
             new_value = self._image_process(value, record.env)
             new_record_values.append((record, new_value))
+            # when setting related image field, keep the unprocessed image in
+            # cache to let the inverse method use the original image; the image
+            # will be resized once the inverse has been applied
             cache_value = self.convert_to_cache(value if self.related else new_value, record)
             record.env.cache.update(record, self, itertools.repeat(cache_value))
         super(Image, self).create(new_record_values)
@@ -2560,6 +2564,16 @@ class Image(Binary):
         cache_value = self.convert_to_cache(value if self.related else new_value, records)
         dirty = self.column_type and self.store and any(records._ids)
         records.env.cache.update(records, self, itertools.repeat(cache_value), dirty=dirty)
+
+    def _inverse_related(self, records):
+        super()._inverse_related(records)
+        if not (self.max_width and self.max_height):
+            return
+        # the inverse has been applied with the original image; now we fix the
+        # cache with the resized value
+        for record in records:
+            value = self._process_related(record[self.name], record.env)
+            record.env.cache.set(record, self, value, dirty=(self.store and self.column_type))
 
     def _image_process(self, value, env):
         if self.readonly and not self.max_width and not self.max_height:
@@ -3573,7 +3587,7 @@ class Properties(Field):
             current_model = env[self.model_name]
             definition_record_field = current_model._fields[self.definition_record]
             container_model_name = definition_record_field.comodel_name
-            container_id = env[container_model_name].browse(container_id)
+            container_id = env[container_model_name].sudo().browse(container_id)
 
         properties_definition = container_id[self.definition_record_field]
         if not (properties_definition or (

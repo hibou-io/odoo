@@ -6,7 +6,7 @@ from markupsafe import Markup
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.osv.expression import AND
-from odoo.tools.float_utils import float_compare, float_is_zero, float_round
+from odoo.tools.float_utils import float_is_zero
 
 class StockPickingBatch(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
@@ -94,7 +94,7 @@ class StockPickingBatch(models.Model):
         for batch in self:
             batch.move_ids = batch.picking_ids.move_ids
             batch.move_line_ids = batch.picking_ids.move_line_ids
-            batch.show_check_availability = any(m.state not in ['assigned', 'done'] for m in batch.move_ids)
+            batch.show_check_availability = any(m.state not in ['assigned', 'cancel', 'done'] for m in batch.move_ids)
 
     @api.depends('state', 'move_ids', 'picking_type_id')
     def _compute_show_allocation(self):
@@ -236,7 +236,7 @@ class StockPickingBatch(models.Model):
         """
         self.ensure_one()
         if self.state not in ('done', 'cancel'):
-            move_line_ids = self.picking_ids[0]._package_move_lines()
+            move_line_ids = self.picking_ids[0]._package_move_lines(batch_pack=True)
             if move_line_ids:
                 res = move_line_ids.picking_id[0]._pre_put_in_pack_hook(move_line_ids)
                 if res:

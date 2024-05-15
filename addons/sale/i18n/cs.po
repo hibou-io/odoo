@@ -7,10 +7,11 @@
 # karolína schusterová <karolina.schusterova@vdp.sk>, 2023
 # Martin Trigaux, 2023
 # Ivana Bartonkova, 2023
-# Aleš Fiala <f.ales1@seznam.cz>, 2023
 # Tomáš Píšek, 2024
-# Vojtech Smolka, 2024
 # Wil Odoo, 2024
+# Aleš Fiala <f.ales1@seznam.cz>, 2024
+# Larissa Manderfeld, 2024
+# Vojtech Smolka, 2024
 # Katerina Horylova, 2024
 # Jakub Smolka, 2024
 # 
@@ -53,7 +54,7 @@ msgstr "Počet prodejních objednávek"
 #: code:addons/sale/models/sale_order_line.py:0
 #, python-format
 msgid "%(attribute)s: %(values)s"
-msgstr ""
+msgstr "%(attribute)s%(values)s"
 
 #. module: sale
 #. odoo-python
@@ -108,13 +109,13 @@ msgid ""
 "(object.state in ('draft', 'sent') and 'Quotation - %s' % (object.name)) or "
 "'Order - %s' % (object.name)"
 msgstr ""
-"(object.state in ('návrh', 'odesláno') and 'Nabídka- %s' % (object.name)) or"
-" 'Objednávka - %s' % (object.name)"
+"(object.state in ('draft', 'sent') and 'Nabídka- %s' % (object.name)) or "
+"'Objednávka - %s' % (object.name)"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "2023-12-31"
-msgstr ""
+msgstr "2023-12-31"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
@@ -750,6 +751,11 @@ msgid "<i class=\"fa fa-fw fa-check\"/> Paid"
 msgstr "<i class=\"fa fa-fw fa-check\"/> Zaplaceno"
 
 #. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
+msgid "<i class=\"fa fa-fw fa-check\"/> Reversed"
+msgstr "<i class=\"fa fa-fw fa-check\"/>Zrušeno"
+
+#. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_quotations
 msgid "<i class=\"fa fa-fw fa-clock-o\"/> Expired"
 msgstr "<i class=\"fa fa-fw fa-clock-o\"/> Vypršelo"
@@ -762,7 +768,7 @@ msgstr "<i class=\"fa fa-fw fa-clock-o\"/> Čekající platba"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.utm_campaign_view_kanban
 msgid "<i class=\"fa fa-fw fa-money me-1\" aria-label=\"Quotations\" role=\"img\"/>"
-msgstr ""
+msgstr "<i class=\"fa fa-fw fa-money me-1\" aria-label=\"Quotations\" role=\"img\"/>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_quotations
@@ -1174,9 +1180,7 @@ msgstr ""
 "Tato možnost může být užitečná např. pro sdílení souborů s popisem výrobku.\n"
 "Potvrzená objednávka: dokument bude zaslán zákazníkům a bude jim přístupný.\n"
 "Např. tato možnost může být užitečná pro sdílení uživatelské příručky nebo digitálního obsahu zakoupeného v elektronickém obchodě. \n"
-"Uvnitř citace: V případě, že se jedná o dokument, který je v nabídce, je možné použít tuto možnost: Dokument bude zařazen do pdf nabídky mezi stránky záhlaví a tabulku nabídky. \n"
-"\n"
-"Translated with www.DeepL.com/Translator (free version)"
+"Uvnitř citace: V případě, že se jedná o dokument, který je v nabídce, je možné použít tuto možnost: Dokument bude zařazen do pdf nabídky mezi stránky záhlaví a tabulku nabídky. "
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_payment_link_wizard__amount_paid
@@ -1426,7 +1430,7 @@ msgstr "Může upravovat produkt"
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
 #: model_terms:ir.ui.view,arch_db:sale.view_sale_advance_payment_inv
 msgid "Cancel"
-msgstr "Zrušit"
+msgstr "Zrušit objednávku"
 
 #. module: sale
 #. odoo-python
@@ -1476,8 +1480,6 @@ msgstr ""
 "Pokud chcete fakturovat místo toho na základě objednaného množství:\n"
 "   - U spotřebních nebo skladovatelných produktů otevřete produkt, přejděte na kartu \"Obecné informace\" a změňte \"Fakturační politiku\" z \"Dodaná množství\" na \"Objednaná množství\".\n"
 "   - U služeb (a ostatních produktů) změňte \"Invoicing Policy\" (Zásady fakturace) na \"Prepaid/Fixed Price\" (Předplacené/pevná cena).\n"
-"\n"
-"Translated with www.DeepL.com/Translator (free version)\n"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
@@ -2018,7 +2020,7 @@ msgstr "Vklad"
 #: model:ir.model.fields,field_description:sale.field_res_company__sale_down_payment_product_id
 #: model:ir.model.fields,field_description:sale.field_res_config_settings__deposit_default_product_id
 msgid "Deposit Product"
-msgstr "Vkladový produkt"
+msgstr "Zálohový produkt"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_line__name
@@ -2204,7 +2206,7 @@ msgstr "Předplatba (procentem)"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "Down payment <br/>"
-msgstr "Down payment <br/>"
+msgstr "Záloha <br/>"
 
 #. module: sale
 #. odoo-python
@@ -3008,7 +3010,7 @@ msgstr "Na řádku odpovědné prodejní objednávky chybí povinná pole."
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "Mitchell Admin"
-msgstr ""
+msgstr "Mitchell Admin"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__my_activity_date_deadline
@@ -3417,7 +3419,7 @@ msgstr "Objednávky na upsell"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "Oscar Morgan"
-msgstr ""
+msgstr "Oscar Morgan"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
@@ -3463,7 +3465,7 @@ msgstr "Kreditní varování partnera"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "Pay Now"
-msgstr "Zaplať nyní"
+msgstr "Zaplaťte nyní"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
@@ -4025,7 +4027,7 @@ msgstr "Chyba doručení SMS"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "SO0000"
-msgstr ""
+msgstr "SO0000"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
@@ -4409,7 +4411,7 @@ msgstr "Zašlete nabídku k otestování na zákaznický portál."
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_cancel_view_form
 msgid "Send and cancel"
-msgstr "Odeslat a zrušit"
+msgstr "Odeslat a zrušit objednávku"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
@@ -4953,6 +4955,14 @@ msgstr ""
 
 #. module: sale
 #. odoo-python
+#. odoo-python
+#: code:addons/sale/models/product_template.py:0
+#, python-format
+msgid "The product (%s) has incompatible values: %s"
+msgstr "Produkt (%s) má nekompatibilní hodnoty: %s"
+
+#. module: sale
+#. odoo-python
 #: code:addons/sale/wizard/sale_make_invoice_advance.py:0
 #, python-format
 msgid ""
@@ -4971,9 +4981,9 @@ msgid ""
 "to \"Ordered quantities\". Please update your deposit product to be able to "
 "create a deposit invoice."
 msgstr ""
-"Produkt používaný k fakturaci akontace by měl mít zásadu faktury nastavenou "
-"na \"Objednané množství\". Aktualizujte svůj vkladový produkt, abyste mohli "
-"vytvořit vkladovou fakturu."
+"Produkt používaný k vystavení zálohové faktury by měl mít  fakturační "
+"politiku nastavenou na \"Objednané množství\". Aktualizujte svůj zálohový "
+"produkt, abyste mohli vytvořit zálohovou fakturu."
 
 #. module: sale
 #. odoo-python
@@ -5528,6 +5538,13 @@ msgstr "Uzamčenou objednávku nelze zrušit. Nejprve ji prosím odemkněte."
 
 #. module: sale
 #. odoo-python
+#: code:addons/sale/models/sale_order.py:0
+#, python-format
+msgid "You cannot change the pricelist of a confirmed order !"
+msgstr ""
+
+#. module: sale
+#. odoo-python
 #: code:addons/sale/models/product_product.py:0
 #: code:addons/sale/models/product_template.py:0
 #, python-format
@@ -5653,6 +5670,8 @@ msgid ""
 "selected\n"
 "                    quotations?"
 msgstr ""
+"vybrané\n"
+"                    nabídky?"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document

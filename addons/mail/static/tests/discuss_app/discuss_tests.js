@@ -3,6 +3,7 @@
 import { startServer } from "@bus/../tests/helpers/mock_python_environment";
 import { makeFakePresenceService } from "@bus/../tests/helpers/mock_services";
 import { TEST_USER_IDS } from "@bus/../tests/helpers/test_constants";
+import { waitUntilSubscribe } from "@bus/../tests/helpers/websocket_event_deferred";
 
 import { Command } from "@mail/../tests/helpers/command";
 import { patchUiSize } from "@mail/../tests/helpers/patch_ui_size";
@@ -1828,6 +1829,8 @@ QUnit.test("Message shows up even if channel data is incomplete", async () => {
         ],
         channel_type: "chat",
     });
+    env.services["bus_service"].forceUpdateChannels();
+    await waitUntilSubscribe();
     await pyEnv.withUser(correspondentUserId, () =>
         env.services.rpc("/discuss/channel/notify_typing", {
             is_typing: true,
@@ -2052,4 +2055,42 @@ QUnit.test("Newly created chat should be at the top of the direct message list",
         text: "Jerry Golay",
         before: [".o-mail-DiscussSidebar-item", { text: "Albert" }],
     });
+});
+
+QUnit.test("Read of unread chat where new message is deleted should mark as read.", async () => {
+    const pyEnv = await startServer();
+    const partnerId = pyEnv["res.partner"].create({ name: "Marc Demo" });
+    const channelId = pyEnv["discuss.channel"].create({
+        channel_member_ids: [
+            Command.create({ partner_id: pyEnv.currentPartnerId }),
+            Command.create({ partner_id: partnerId }),
+        ],
+        channel_type: "chat",
+    });
+    const messageId = pyEnv["mail.message"].create({
+        author_id: partnerId,
+        body: "Heyo",
+        model: "discuss.channel",
+        res_id: channelId,
+        message_type: "comment",
+    });
+    const [memberId] = pyEnv["discuss.channel.member"].search([
+        ["channel_id", "=", channelId],
+        ["partner_id", "=", pyEnv.currentPartnerId],
+    ]);
+    pyEnv["discuss.channel.member"].write([memberId], {
+        seen_message_id: messageId,
+        message_unread_counter: 1,
+    });
+    const { env, openDiscuss } = await start();
+    await openDiscuss();
+    await contains("button", { text: "Marc Demo", contains: [".badge", { text: "1" }] });
+    // simulate deleted message
+    await env.services.rpc("/mail/message/update_content", {
+        message_id: messageId,
+        body: "",
+        attachment_ids: [],
+    });
+    await click("button", { text: "Marc Demo" });
+    await contains("button", { text: "Marc Demo", contains: [".badge", { count: 0 }] });
 });

@@ -167,7 +167,7 @@ class Task(models.Model):
         help="Sum of the hours allocated for all the sub-tasks (and their own sub-tasks) linked to this task. Usually less than or equal to the allocated hours of this task.")
     # Tracking of this field is done in the write function
     user_ids = fields.Many2many('res.users', relation='project_task_user_rel', column1='task_id', column2='user_id',
-        string='Assignees', context={'active_test': False}, tracking=True, default=_default_user_ids)
+        string='Assignees', context={'active_test': False}, tracking=True, default=_default_user_ids, domain="[('share', '=', False), ('active', '=', True)]")
     # User names displayed in project sharing views
     portal_user_names = fields.Char(compute='_compute_portal_user_names', compute_sudo=True, search='_search_portal_user_names')
     # Second Many2many containing the actual personal stage for the current user
@@ -665,6 +665,7 @@ class Task(models.Model):
         default['child_ids'] = [child.copy({'name': child.name}).id for child in self.child_ids]
         self_with_mail_context = self.with_context(mail_auto_subscribe_no_notify=True, mail_create_nosubscribe=True)
         task_copy = super(Task, self_with_mail_context).copy(default)
+        original_task_state = self.state
         if self.allow_task_dependencies:
             task_mapping = self.env.context.get('task_mapping')
             task_mapping[self.id] = task_copy.id
@@ -673,6 +674,8 @@ class Task(models.Model):
             self.write({'dependent_ids': [Command.unlink(t.id) for t in self.dependent_ids if t.id in new_tasks]})
             task_copy.write({'depend_on_ids': [Command.link(task_mapping.get(t.id, t.id)) for t in self.depend_on_ids]})
             task_copy.write({'dependent_ids': [Command.link(task_mapping.get(t.id, t.id)) for t in self.dependent_ids]})
+        if self.state != original_task_state:
+            self.write({'state': original_task_state})
         if self.allow_milestones:
             milestone_mapping = self.env.context.get('milestone_mapping', {})
             task_copy.milestone_id = milestone_mapping.get(task_copy.milestone_id.id, task_copy.milestone_id.id)
@@ -925,6 +928,7 @@ class Task(models.Model):
                     'display_in_project': False,
                 })
 
+            project_id = project_id or self.env.context.get('default_project_id')
             if project_id and not "company_id" in vals:
                 vals["company_id"] = self.env["project.project"].browse(
                     project_id
@@ -1567,6 +1571,7 @@ class Task(models.Model):
             'search_view_ref': 'project.project_sharing_project_task_view_search',
         }).action_open_parent_task()
         action['views'] = [(self.env.ref('project.project_sharing_project_task_view_form').id, 'form')]
+        action['search_view_id'] = self.env.ref("project.project_sharing_project_task_view_search").id
         return action
 
     # ------------

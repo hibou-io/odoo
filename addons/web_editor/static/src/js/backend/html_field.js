@@ -245,6 +245,7 @@ export class HtmlField extends Component {
             },
             fieldId: this.props.id,
             editorPlugins: [...(wysiwygOptions.editorPlugins || []), QWebPlugin, this.MoveNodePlugin],
+            record: this.props.record,
         };
     }
     /**
@@ -441,7 +442,7 @@ export class HtmlField extends Component {
             div.style.display = 'none';
             div.append(editable);
             document.body.append(div);
-            const editableValue = this.wysiwyg.getValue({ $layout: $(editable) });
+            const editableValue = stripHistoryIds(this.wysiwyg.getValue({ $layout: $(editable) }));
             div.remove();
             parsedPreviousValue = domParser.parseFromString(editableValue, 'text/html').body;
         } else {
@@ -590,7 +591,7 @@ export class HtmlField extends Component {
         if (!(this.props.record.fieldNames.includes('attachment_ids') && this.props.record.resModel === 'mail.compose.message')) {
             return;
         }
-        this.props.record.data.attachment_ids.linkTo(attachment.res_id, attachment);
+        this.props.record.data.attachment_ids.linkTo(attachment.id, attachment);
     }
     _onDblClickEditableMedia(ev) {
         const el = ev.currentTarget;

@@ -12,11 +12,11 @@
 # Gennady Marchenko <gennadym@gmail.com>, 2023
 # Sergey Vilizhanin, 2023
 # ILMIR <karamov@it-projects.info>, 2023
-# Сергей Шебанин <sergey@shebanin.ru>, 2023
 # alenafairy, 2023
 # Martin Trigaux, 2023
 # Ivan Kropotkin <yelizariev@itpp.dev>, 2023
 # Alena Vlasova, 2023
+# Сергей Шебанин <sergey@shebanin.ru>, 2024
 # Wil Odoo, 2024
 # 
 msgid ""
@@ -814,6 +814,11 @@ msgstr "Работа в архиве"
 #: model_terms:ir.ui.view,arch_db:mrp.view_mrp_workcenter_search
 msgid "Archived"
 msgstr "Архивировано"
+
+#. module: mrp
+#: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
+msgid "Are you sure you want to cancel this manufacturing order?"
+msgstr "Вы уверены, что хотите отменить этот производственный заказ?"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrporder
@@ -4907,6 +4912,12 @@ msgid "Routing"
 msgstr "Технологический маршрут"
 
 #. module: mrp
+#: code:addons/mrp/models/stock_quant.py:0
+#, python-format
+msgid "Return to Inventory"
+msgstr ""
+
+#. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__routing_line_ids
 msgid "Routing Lines"
 msgstr "Позиции техн. маршрута"
@@ -5231,16 +5242,6 @@ msgstr ""
 "производство для получения правильных компонентов."
 
 #. module: mrp
-#: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
-msgid ""
-"Some product moves have already been confirmed, this manufacturing order "
-"can't be completely cancelled. Are you still sure you want to process?"
-msgstr ""
-"Некоторые перемещения продукции уже подтверждены, поэтому данный "
-"производственный заказ не может быть полностью отменен. Вы все еще уверены, "
-"что хотите обрабатывать заказ?"
-
-#. module: mrp
 #. odoo-python
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
@@ -5427,7 +5428,7 @@ msgstr "Перемещения запасов произведенных тов�
 #. module: mrp
 #: model:ir.actions.act_window,name:mrp.action_mrp_unbuild_moves
 msgid "Stock Moves"
-msgstr "Перемещения запасов"
+msgstr "Движения по складам"
 
 #. module: mrp
 #: model:ir.model,name:mrp.model_report_stock_report_reception
@@ -7123,6 +7124,15 @@ msgstr "Вы произвели меньше, чем первоначальны�
 #, python-format
 msgid "You should provide a lot number for the final product."
 msgstr "Вы должны указать номер партии для готовой продукции."
+
+#. module: mrp
+#. odoo-python
+#: code:addons/mrp/models/stock_quant.py:0
+#, python-format
+msgid ""
+"You should update the components quantity instead of directly updating the "
+"quantity of the kit product."
+msgstr ""
 
 #. module: mrp
 #: model:ir.model.fields.selection,name:mrp.selection__stock_picking_type__done_mrp_lot_label_to_print__zpl

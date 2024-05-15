@@ -25,6 +25,7 @@
         # security.xml first, data.xml need the group to exist (checking it)
         'security/website_security.xml',
         'security/ir.model.access.csv',
+        'data/image_library.xml',
         'data/ir_asset.xml',
         'data/ir_cron_data.xml',
         'data/mail_mail_data.xml',
@@ -114,6 +115,8 @@
         'views/neutralize_views.xml',
         'wizard/base_language_install_views.xml',
         'wizard/website_robots.xml',
+        # Replaces a post_init_hook that should be run on upgrade too.
+        'data/update_theme_images.xml',
     ],
     'demo': [
         'data/website_demo.xml',
@@ -130,6 +133,7 @@
             'website/static/src/scss/website_controller_page.scss',
             'website/static/src/scss/website.ui.scss',
             'website/static/src/libs/zoomodoo/zoomodoo.js',
+            'website/static/src/libs/bootstrap/bootstrap.js',
             'website/static/src/js/utils.js',
             'web/static/src/core/autocomplete/*',
             'website/static/src/components/autocomplete_with_pages/*',
@@ -195,6 +199,7 @@
             'website/static/src/components/fields/*',
             'website/static/src/components/fullscreen_indication/fullscreen_indication.js',
             'website/static/src/components/fullscreen_indication/fullscreen_indication.scss',
+            'website/static/src/components/fullscreen_indication/fullscreen_indication.xml',
             'website/static/src/components/website_loader/website_loader.js',
             'website/static/src/components/website_loader/website_loader.scss',
             'website/static/src/components/views/*',

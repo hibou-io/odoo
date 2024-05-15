@@ -335,11 +335,21 @@ patch(MockServer.prototype, {
             for (const channel of channels) {
                 const now = serializeDateTime(today());
                 notifications.push([
+                    [channel, "members"],
+                    "mail.record/insert",
+                    {
+                        Thread: {
+                            id: channel.id,
+                            is_pinned: true,
+                            model: "discuss.channel",
+                        },
+                    },
+                ]);
+                notifications.push([
                     channel,
                     "discuss.channel/last_interest_dt_changed",
                     {
                         id: channel.id,
-                        is_pinned: true,
                         last_interest_dt: now,
                     },
                 ]);
@@ -353,6 +363,16 @@ patch(MockServer.prototype, {
                 ]);
                 if (message.author_id === this.pyEnv.currentPartnerId) {
                     this._mockDiscussChannel_ChannelSeen(ids, message.id);
+                }
+            }
+            if (message.partner_ids) {
+                for (const partner_id of message.partner_ids) {
+                    const [partner] = this.getRecords("res.partner", [["id", "=", partner_id]]);
+                    notifications.push([
+                        partner,
+                        "mail.message/inbox",
+                        messageFormat
+                    ]);
                 }
             }
         }

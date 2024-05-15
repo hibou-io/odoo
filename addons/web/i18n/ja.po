@@ -3,8 +3,9 @@
 # 	* web
 # 
 # Translators:
-# Wil Odoo, 2023
 # Ryoko Tsuda <ryoko@quartile.co>, 2024
+# Martin Trigaux, 2024
+# Wil Odoo, 2024
 # Junko Augias, 2024
 # 
 msgid ""
@@ -1049,6 +1050,15 @@ msgstr "開始日を追加"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Add to Favorites"
+msgstr "お気に入りに追加"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/x2many/x2many_field.js:0
 #, python-format
 msgid "Add: %s"
@@ -1654,7 +1664,7 @@ msgstr "値を編集可能"
 #: model_terms:ir.ui.view,arch_db:web.view_base_document_layout
 #, python-format
 msgid "Cancel"
-msgstr "キャンセル"
+msgstr "取消"
 
 #. module: web
 #. odoo-javascript
@@ -1662,7 +1672,7 @@ msgstr "キャンセル"
 #: code:addons/web/static/src/core/file_upload/file_upload_progress_bar.xml:0
 #, python-format
 msgid "Cancel Upload"
-msgstr "アップロードをキャンセル"
+msgstr "アップロードを取消"
 
 #. module: web
 #. odoo-javascript
@@ -1801,12 +1811,12 @@ msgstr "クリック可能な"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/datetime/datetime_picker_popover.xml:0
 #: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
 #: code:addons/web/static/src/core/debug/debug_menu_items.xml:0
 #: code:addons/web/static/src/core/dialog/dialog.xml:0
 #: code:addons/web/static/src/core/dialog/dialog.xml:0
 #: code:addons/web/static/src/core/domain_selector_dialog/domain_selector_dialog.xml:0
-#: code:addons/web/static/src/core/errors/error_dialogs.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.xml:0
 #: code:addons/web/static/src/core/errors/error_dialogs.xml:0
@@ -2618,7 +2628,7 @@ msgstr "未来の日付が入力された場合は警告アイコンを表示し
 #: code:addons/web/static/src/core/file_upload/file_upload_progress_bar.js:0
 #, python-format
 msgid "Do you really want to cancel the upload of %s?"
-msgstr "本当に%sのアップロードをキャンセルしますか？"
+msgstr "本当に%sのアップロードを取消しますか？"
 
 #. module: web
 #. odoo-javascript
@@ -3521,8 +3531,8 @@ msgstr "ILY"
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #: code:addons/web/static/src/views/fields/datetime/datetime_field.js:0
 #, python-format
-msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"today\"."
-msgstr "ISO-フォーマット済日付 （例：\"2018-12-31\"） または  \"今日\""
+msgid "ISO-formatted date (e.g. \"2018-12-31\") or \"%s\"."
+msgstr "ISOフォーマット済日付 (例:  \"2018-12-31\")または \"%s\"。"
 
 #. module: web
 #. odoo-javascript
@@ -5019,6 +5029,13 @@ msgstr "有効ステータスではありません。クリックして変更し
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/fields/many2many_binary/many2many_binary_field.js:0
+#, python-format
+msgid "Number of files"
+msgstr "ファイル数"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #: code:addons/web/static/src/core/emoji_picker/emoji_data.js:0
 #, python-format
@@ -5737,6 +5754,13 @@ msgstr "進捗バー"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/view_components/column_progress.xml:0
+#, python-format
+msgid "Progress bar"
+msgstr "進捗バー"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/properties/properties_field.js:0
 #, python-format
 msgid "Properties"
@@ -5884,15 +5908,15 @@ msgstr "読取専用"
 #: code:addons/web/static/src/core/confirmation_dialog/confirmation_dialog.js:0
 #, python-format
 msgid ""
-"Ready to make your record disappear into thin air? Are you sure?\n"
-"It will be gone forever!\n"
-"\n"
+"Ready to make your record disappear into thin air? Are you sure?\r\n"
+"It will be gone forever!\r\n"
+"\r\n"
 "Think twice before you click that 'Delete' button!"
 msgstr ""
-"レコードを削除しますか？本当ですか？\n"
-"削除すると、戻すことはできません。\n"
-"\n"
-"'削除'ボタンをクリックする前に、よく考えて下さい！"
+"レコードを消去しますか？本当ですか？\r\n"
+"永遠に削除されます！\r\n"
+"\r\n"
+" '削除'ボタンを押す前に再度考えて下さい！"
 
 #. module: web
 #. odoo-javascript
@@ -6019,6 +6043,15 @@ msgstr "プロパティを削除"
 #, python-format
 msgid "Remove field"
 msgstr "フィールドを削除"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#: code:addons/web/static/src/views/fields/boolean_favorite/boolean_favorite_field.xml:0
+#, python-format
+msgid "Remove from Favorites"
+msgstr "お気に入りから削除"
 
 #. module: web
 #. odoo-javascript
@@ -6239,6 +6272,13 @@ msgstr "保存して新規"
 #, python-format
 msgid "Save as:"
 msgstr "名前を付けて保存 :"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/search/custom_favorite_item/custom_favorite_item.xml:0
+#, python-format
+msgid "Save current search"
+msgstr "現在の検索結果を保存"
 
 #. module: web
 #. odoo-javascript
@@ -6828,6 +6868,7 @@ msgstr "Tシャツ"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/commands/command_items.xml:0
 #: code:addons/web/static/src/webclient/user_menu/user_menu_items.xml:0
 #, python-format
 msgid "TIP"
@@ -7018,16 +7059,6 @@ msgid ""
 "browser console or server logs for details."
 msgstr ""
 "スタイルのコンパイルに失敗しました。これは管理者または開発者のエラーで、作業を続行する前にデータベース全体を修正する必要があります。詳細については、ブラウザコンソールまたはサーバログを参照して下さい。"
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/core/errors/error_dialogs.xml:0
-#, python-format
-msgid ""
-"The style compilation failed, see the error below. This is an administrator "
-"or developer error that must be fixed for the entire database before "
-"continuing working."
-msgstr "スタイルのコンパイルに失敗しました。これは管理者または開発者のエラーであり、作業を続行する前にデータベース全体を修正する必要があります。"
 
 #. module: web
 #. odoo-python
@@ -8477,6 +8508,7 @@ msgstr "いかり"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/commands/command_items.xml:0
 #: code:addons/web/static/src/core/domain_selector/utils.js:0
 #: code:addons/web/static/src/core/tree_editor/utils.js:0
 #, python-format
@@ -33455,6 +33487,13 @@ msgstr "ゾンビ"
 #, python-format
 msgid "— press"
 msgstr "ー押す"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/commands/command_items.xml:0
+#, python-format
+msgid "— search for"
+msgstr "— 検索"
 
 #. module: web
 #. odoo-javascript

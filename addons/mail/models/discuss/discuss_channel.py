@@ -171,7 +171,21 @@ class Channel(models.Model):
 
     def _search_is_member(self, operator, operand):
         is_in = (operator == '=' and operand) or (operator == '!=' and not operand)
-        return [('channel_member_ids', "any" if is_in else "not any", [('is_self', '=', True)])]
+        # Separate query to fetch candidate channels because the sub-select that _search would
+        # generate leads psql query plan to take bad decisions. When candidate ids are explicitly
+        # given it doesn't need to make (incorrect) guess, at the cost of one extra but fast query.
+        # It is expected to return hundreds of channels, a thousand at most, which is acceptable.
+        # A "join" would be ideal, but the ORM is currently not able to generate it from the domain.
+        current_partner, current_guest = self.env["res.partner"]._get_current_persona()
+        if current_guest:
+            # sudo: discuss.channel - sudo for performance, just checking existence
+            channels = current_guest.sudo().channel_ids
+        elif current_partner:
+            # sudo: discuss.channel - sudo for performance, just checking existence
+            channels = current_partner.sudo().channel_ids
+        else:
+            channels = self.env["discuss.channel"]
+        return [('id', "in" if is_in else "not in", channels.ids)]
 
     @api.depends('channel_member_ids')
     def _compute_member_count(self):
@@ -257,33 +271,25 @@ class Channel(models.Model):
             failing_channels = self.filtered(lambda channel: channel.channel_type != vals.get('channel_type'))
             if failing_channels:
                 raise UserError(_('Cannot change the channel type of: %(channel_names)s', channel_names=', '.join(failing_channels.mapped('name'))))
+        old_vals = {channel: channel._channel_basic_info() for channel in self}
+        result = super().write(vals)
         notifications = []
         for channel in self:
-            current_val = channel.read(vals.keys())[0]
+            info = channel._channel_basic_info()
             diff = {}
-            for key in vals.keys():
-                if current_val.get(key) != vals.get(key) and key != "image_128":
-                    diff[key] = vals[key]
+            for key, value in info.items():
+                if value != old_vals[channel][key]:
+                    diff[key] = value
             if diff:
                 notifications.append([channel, "mail.record/insert", {
                     "Thread": {
-                        "id": current_val["id"],
+                        "id": channel.id,
                         "model": "discuss.channel",
                         **diff
                     }
                 }])
-        result = super().write(vals)
         if vals.get('group_ids'):
             self._subscribe_users_automatically()
-        if 'image_128' in vals:
-            for channel in self:
-                notifications.append([channel, 'mail.record/insert', {
-                    'Thread': {
-                        'avatarCacheKey': channel._get_avatar_cache_key(),
-                        'id': channel.id,
-                        'model': "discuss.channel",
-                    }
-                }])
         self.env['bus.bus']._sendmany(notifications)
         return result
 
@@ -567,8 +573,11 @@ class Channel(models.Model):
         # Last interest and is_pinned are updated for a channel when posting a message.
         # So a notification is needed to update UI, and it should come before the
         # notification of the message itself to ensure the channel automatically opens.
-        payload = {"id": self.id, "is_pinned": True, "last_interest_dt": fields.Datetime.now()}
+        payload = {"id": self.id, "last_interest_dt": fields.Datetime.now()}
         bus_notifications = [
+            ((self, "members"), "mail.record/insert", {
+                "Thread": {"id": self.id, "is_pinned": True, "model": "discuss.channel"}
+            }),
             (self, "discuss.channel/last_interest_dt_changed", payload),
             (self, "discuss.channel/new_message", {"id": self.id, "message": message_format}),
         ]
@@ -760,6 +769,24 @@ class Channel(models.Model):
             self.add_members(guest_ids=guest.ids, post_joined_message=post_joined_message)
         return self.env.user.partner_id if not guest else self.env["res.partner"], guest
 
+    def _channel_basic_info(self):
+        self.ensure_one()
+        return {
+            'avatarCacheKey': self._get_avatar_cache_key(),
+            'channel_type': self.channel_type,
+            'memberCount': self.member_count,
+            'id': self.id,
+            'name': self.name,
+            'defaultDisplayMode': self.default_display_mode,
+            'description': self.description,
+            'uuid': self.uuid,
+            'group_based_subscription': bool(self.group_ids),
+            'create_uid': self.create_uid.id,
+            'authorizedGroupFullName': self.group_public_id.full_name,
+            'allow_public_upload': self.allow_public_upload,
+            'model': "discuss.channel",
+        }
+
     def _channel_info(self):
         """ Get the informations header for the current channels
             :returns a list of channels values
@@ -803,24 +830,8 @@ class Channel(models.Model):
             if (current_partner and member.partner_id == current_partner) or (current_guest and member.guest_id == current_guest):
                 member_of_current_user_by_channel[member.channel_id] = member
         for channel in self:
-            info = {
-                'avatarCacheKey': channel._get_avatar_cache_key(),
-                'channel_type': channel.channel_type,
-                'memberCount': channel.member_count,
-                'id': channel.id,
-                'name': channel.name,
-                'defaultDisplayMode': channel.default_display_mode,
-                'description': channel.description,
-                'uuid': channel.uuid,
-                'state': 'open',
-                'is_editable': channel.is_editable,
-                'is_minimized': False,
-                'group_based_subscription': bool(channel.group_ids),
-                'create_uid': channel.create_uid.id,
-                'authorizedGroupFullName': channel.group_public_id.full_name,
-                'allow_public_upload': channel.allow_public_upload,
-                'model': "discuss.channel",
-            }
+            info = channel._channel_basic_info()
+            info["is_editable"] = channel.is_editable
             # find the channel member state
             if current_partner or current_guest:
                 info['message_needaction_counter'] = channel.message_needaction_counter
@@ -1028,6 +1039,8 @@ class Channel(models.Model):
             ])
         ])
         member = self.env['discuss.channel.member'].search(channel_member_domain)
+        if not member:
+            return
         member.write({
             'fetched_message_id': max(member.fetched_message_id.id, last_message.id),
             'seen_message_id': last_message.id,

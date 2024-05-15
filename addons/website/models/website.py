@@ -8,6 +8,7 @@ import json
 import logging
 import re
 import requests
+import threading
 
 from lxml import etree, html
 from psycopg2 import sql
@@ -187,6 +188,16 @@ class Website(models.Model):
     @tools.ormcache('self.env.uid', 'self.id', cache='templates')
     def _get_menu_ids(self):
         return self.env['website.menu'].search([('website_id', '=', self.id)]).ids
+
+    @tools.ormcache('self.env.uid', 'self.id', cache='templates')
+    def is_menu_cache_disabled(self):
+        """
+        Checks if the website menu contains a record like url.
+        :return: True if the menu contains a record like url
+        """
+        return any(self.env['website.menu'].browse(self._get_menu_ids()).filtered(
+            lambda menu: menu.url and re.search(r"[/](([^/=?&]+-)?[0-9]+)([/]|$)", menu.url))
+        )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -645,10 +656,12 @@ class Website(models.Model):
 
         if translated_ratio > 0.8:
             try:
+                database_id = self.env['ir.config_parameter'].sudo().get_param('database.uuid')
                 response = self._OLG_api_rpc('/api/olg/1/generate_placeholder', {
                     'placeholders': list(generated_content.keys()),
                     'lang': website.default_lang_id.name,
                     'industry': industry,
+                    'database_id': database_id,
                 })
                 name_replace_parser = re.compile(r"XXXX", re.MULTILINE)
                 for key in generated_content:
@@ -1106,7 +1119,10 @@ class Website(models.Model):
         # there is one on request) or return a random one.
 
         # The format of `httprequest.host` is `domain:port`
-        domain_name = request and request.httprequest.host or ''
+        domain_name = (
+            request and request.httprequest.host
+            or hasattr(threading.current_thread(), 'url') and threading.current_thread().url
+            or '')
         website_id = self.sudo()._get_current_website_id(domain_name, fallback=fallback)
         return self.browse(website_id)
 
@@ -1319,7 +1335,7 @@ class Website(models.Model):
                 func = rule.endpoint.routing['sitemap']
                 if func is False:
                     continue
-                for loc in func(self.env, rule, query_string):
+                for loc in func(self.with_context(lang=self.default_lang_id.code).env, rule, query_string):
                     yield loc
                 continue
 
@@ -1355,7 +1371,7 @@ class Website(models.Model):
 
                     for rec in converter.generate(self.env, args=val, dom=query):
                         newval.append(val.copy())
-                        newval[-1].update({name: rec})
+                        newval[-1].update({name: rec.with_context(lang=self.default_lang_id.code)})
                 values = newval
 
             for value in values:
@@ -1385,15 +1401,16 @@ class Website(models.Model):
             domain = AND([domain, self.website_domain()])
         pages = self.env['website.page'].sudo().search(domain)
         if self:
-            pages = pages._get_most_specific_pages()
+            pages = pages.with_context(website_id=self.id)._get_most_specific_pages()
         return pages.ids
 
     def _get_website_pages(self, domain=None, order='name', limit=None):
+        website = self.get_current_website()
         if domain is None:
             domain = []
-        domain += self.get_current_website().website_domain()
+        domain += website.website_domain()
         pages = self.env['website.page'].sudo().search(domain, order=order, limit=limit)
-        pages = pages._get_most_specific_pages()
+        pages = pages.with_context(website_id=website.id)._get_most_specific_pages()
         return pages
 
     def search_pages(self, needle=None, limit=None):
