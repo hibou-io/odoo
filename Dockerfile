@@ -1,7 +1,7 @@
 FROM python:3.9-slim-bullseye
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
-ENV NODE_MAJOR=18
+ENV NODE_MAJOR=20
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
@@ -10,7 +10,7 @@ RUN set -x; \
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
     && apt-get update \
     && apt-get install -y curl ca-certificates gnupg \
-    # setup Node 16 sources \
+    # setup Node sources \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
@@ -59,7 +59,7 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-COPY --from=registry.gitlab.com/hibou-io/athene:node18--python /opt/athene /opt/athene
+COPY --from=registry.gitlab.com/hibou-io/athene:node20--python /opt/athene /opt/athene
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
