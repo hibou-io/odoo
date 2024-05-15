@@ -5,6 +5,7 @@ var concurrency = require('web.concurrency');
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 var dom = require('web.dom');
+const { session } = require('@web/session');
 const {Markup, sprintf, confine} = require('web.utils');
 var Widget = require('web.Widget');
 var options = require('web_editor.snippets.options');
@@ -1887,6 +1888,13 @@ var SnippetsMenu = Widget.extend({
         // own window and not on the top window lest jquery behave unexpectedly.
         this.$el = this.window.$(this.$el);
         this.$el.data('snippetMenu', this);
+
+        // TODO somehow this attribute is not on the HTML element of the backend
+        // ... it probably should be.
+        const context = this.options.context || session.user_context || {};
+        const userLang = context.user_lang || context.lang || 'en_US';
+        this.el.setAttribute('lang', userLang.replace('_', '-'));
+
         // We need to activate the touch events to be able to drag and drop
         // snippets on devices with a touch screen.
         this.__onTouchEvent = this._onTouchEvent.bind(this);
@@ -1982,9 +1990,7 @@ var SnippetsMenu = Widget.extend({
         if (!this.$scrollingElement[0]) {
             this.$scrollingElement = $(this.ownerDocument).find('.o_editable');
         }
-        this.$scrollingTarget = this.$scrollingElement.is(this.$body[0].ownerDocument.scrollingElement)
-            ? $(this.$body[0].ownerDocument.defaultView)
-            : this.$scrollingElement;
+        this.$scrollingTarget = $().getScrollingTarget(this.$scrollingElement);
         this._onScrollingElementScroll = _.throttle(() => {
             for (const editor of this.snippetEditors) {
                 editor.toggleOverlayVisibility(false);
@@ -2470,7 +2476,9 @@ var SnippetsMenu = Widget.extend({
 
         let iframeOffset;
         const bodyWindow = this.$body[0].ownerDocument.defaultView;
-        if (bodyWindow.frameElement && bodyWindow !== this.ownerDocument.defaultView) {
+        if (bodyWindow.frameElement
+                && bodyWindow !== this.ownerDocument.defaultView
+                && this.ownerDocument.querySelector(".ui-draggable-dragging")) {
             iframeOffset = bodyWindow.frameElement.getBoundingClientRect();
         }
 
@@ -3217,11 +3225,15 @@ var SnippetsMenu = Widget.extend({
             var $snippet = $(this);
             var $snippetBody = $snippet.find('.oe_snippet_body');
             const isSanitizeForbidden = $snippet.data('oeForbidSanitize');
-            const filterSanitize = isSanitizeForbidden === 'form'
-                ? $els => $els.filter((i, el) => !el.closest('[data-oe-sanitize]:not([data-oe-sanitize="allow_form"])'))
+            const checkSanitize = isSanitizeForbidden === "form"
+                ? (el) => !el.closest('[data-oe-sanitize]:not([data-oe-sanitize="allow_form"])')
                 : isSanitizeForbidden
-                    ? $els => $els.filter((i, el) => !el.closest('[data-oe-sanitize]'))
-                    : $els => $els;
+                    ? (el) => !el.closest('[data-oe-sanitize]')
+                    : () => true;
+            const isVisible = (el) => el.closest(".o_snippet_invisible")
+                ? !(el.offsetHeight === 0 || el.offsetWidth === 0)
+                : true;
+            const canDrop = ($els) => [...$els].some((el) => checkSanitize(el) && isVisible(el));
 
             var check = false;
             _.each(self.templateOptions, function (option, k) {
@@ -3231,8 +3243,8 @@ var SnippetsMenu = Widget.extend({
 
                 k = isSanitizeForbidden ? 'forbidden/' + k : k;
                 cache[k] = cache[k] || {
-                    'drop-near': option['drop-near'] ? filterSanitize(option['drop-near'].all()).length : 0,
-                    'drop-in': option['drop-in'] ? filterSanitize(option['drop-in'].all()).length : 0,
+                    'drop-near': option['drop-near'] ? canDrop(option['drop-near'].all()) : false,
+                    'drop-in': option['drop-in'] ? canDrop(option['drop-in'].all()) : false,
                 };
                 check = (cache[k]['drop-near'] || cache[k]['drop-in']);
             });
@@ -3477,9 +3489,9 @@ var SnippetsMenu = Widget.extend({
                     });
                     // If a modal is open, the scroll target must be that modal
                     const $openModal = self.getEditableArea().find('.modal:visible');
-                    if ($openModal.length) {
-                        self.draggableComponent.$scrollTarget = $openModal;
-                    }
+                    self.draggableComponent.$scrollTarget = $openModal.length
+                        ? $openModal
+                        : self.$scrollingElement;
 
                     // Trigger a scroll on the draggable element so that jQuery updates
                     // the position of the drop zones.
@@ -4022,7 +4034,9 @@ var SnippetsMenu = Widget.extend({
         const $snippet = $(this.invisibleDOMMap.get(ev.currentTarget));
         const isVisible = await this._execWithLoadingEffect(async () => {
             const editor = await this._createSnippetEditor($snippet);
-            return editor.toggleTargetVisibility();
+            const show = editor.toggleTargetVisibility();
+            this._disableUndroppableSnippets();
+            return show;
         }, true);
         $(ev.currentTarget).find('.fa')
             .toggleClass('fa-eye', isVisible)

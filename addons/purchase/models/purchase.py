@@ -386,7 +386,7 @@ class PurchaseOrder(models.Model):
 
         return groups
 
-    def _notify_by_email_prepare_rendering_context(self, message, msg_vals, model_description=False,
+    def _notify_by_email_prepare_rendering_context(self, message, msg_vals=False, model_description=False,
                                                    force_email_company=False, force_email_lang=False):
         render_context = super()._notify_by_email_prepare_rendering_context(
             message, msg_vals, model_description=model_description,
@@ -655,7 +655,6 @@ class PurchaseOrder(models.Model):
             'move_type': move_type,
             'narration': self.notes,
             'currency_id': self.currency_id.id,
-            'invoice_user_id': self.user_id and self.user_id.id or self.env.user.id,
             'partner_id': partner_invoice.id,
             'fiscal_position_id': (self.fiscal_position_id or self.fiscal_position_id._get_fiscal_position(partner_invoice)).id,
             'payment_reference': self.partner_ref or '',
@@ -1246,6 +1245,7 @@ class PurchaseOrderLine(models.Model):
         for line in self:
             if not line.product_id or line.invoice_lines or not line.company_id:
                 continue
+            line = line.with_company(line.company_id)
             params = {'order_id': line.order_id}
             seller = line.product_id._select_seller(
                 partner_id=line.partner_id,
@@ -1449,8 +1449,9 @@ class PurchaseOrderLine(models.Model):
         product_taxes = product_id.supplier_taxes_id.filtered(lambda x: x.company_id.id == company_id.id)
         taxes = po.fiscal_position_id.map_tax(product_taxes)
 
+        price_unit = seller.price if seller else product_id.standard_price
         price_unit = self.env['account.tax']._fix_tax_included_price_company(
-            seller.price, product_taxes, taxes, company_id) if seller else 0.0
+            price_unit, product_taxes, taxes, company_id)
         if price_unit and seller and po.currency_id and seller.currency_id != po.currency_id:
             price_unit = seller.currency_id._convert(
                 price_unit, po.currency_id, po.company_id, po.date_order or fields.Date.today())

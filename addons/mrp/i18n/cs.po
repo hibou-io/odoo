@@ -6,7 +6,6 @@
 # xlu <xlu@seznam.cz>, 2022
 # Damian Brencic <brencicdamian12313@gmail.com>, 2022
 # Tomas Bosek, 2022
-# Jakub Snášel <jakub@potisk-tricek.cz>, 2022
 # Marek Záda, 2022
 # karolína schusterová <karolina.schusterova@vdp.sk>, 2022
 # Jan Horzinka <jan.horzinka@centrum.cz>, 2022
@@ -19,7 +18,7 @@
 # Jiří Podhorecký, 2023
 # SlavekB <slavek.banko@axis.cz>, 2023
 # Tomáš Píšek, 2023
-# Jakub Smolka, 2023
+# Jakub Smolka, 2024
 # Aleš Fiala <f.ales1@seznam.cz>, 2024
 # 
 msgid ""
@@ -178,7 +177,7 @@ msgstr ": Nedostatečné množství k rozebrání"
 msgid "<i class=\"fa fa-ellipsis-v\" role=\"img\" aria-label=\"Manage\" title=\"Manage\"/>"
 msgstr ""
 "<i class=\"fa fa-ellipsis-v\" role=\"img\" aria-label=\"Manage\" "
-"title=\"Manage\"/>Prodej"
+"title=\"Spravovat\"/>"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.workcenter_line_kanban
@@ -2145,7 +2144,7 @@ msgstr "Zdarma k použití"
 #: model_terms:ir.ui.view,arch_db:mrp.report_mrp_bom
 #, python-format
 msgid "Free to Use / On Hand"
-msgstr ""
+msgstr "K dispozici / Na skladě"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_production_form_view
@@ -4271,6 +4270,12 @@ msgid "Route"
 msgstr "Pracovní postup"
 
 #. module: mrp
+#: code:addons/mrp/models/stock_quant.py:0
+#, python-format
+msgid "Return to Inventory"
+msgstr ""
+
+#. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__routing_line_ids
 msgid "Routing Lines"
 msgstr ""
@@ -5261,7 +5266,7 @@ msgstr "Horní vrstva dřevěného panelu."
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_bom_tree_view
 msgid "Total Duration"
-msgstr ""
+msgstr "Celková doba trvání"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_mrp_workcenter__workorder_late_count
@@ -5434,7 +5439,7 @@ msgstr "Rozbalit"
 #: code:addons/mrp/static/src/components/bom_overview_table/mrp_bom_overview_table.xml:0
 #, python-format
 msgid "Unit Cost"
-msgstr ""
+msgstr "Jednotkový náklad"
 
 #. module: mrp
 #: model:ir.model.fields,field_description:mrp.field_stock_move__unit_factor
@@ -6295,6 +6300,14 @@ msgid "You should provide a lot number for the final product."
 msgstr "Měli byste uvést šarže číslo hotového produktu."
 
 #. module: mrp
+#: code:addons/mrp/models/stock_quant.py:0
+#, python-format
+msgid ""
+"You should update the components quantity instead of directly updating the "
+"quantity of the kit product."
+msgstr ""
+
+#. module: mrp
 #: model_terms:ir.actions.act_window,help:mrp.mrp_production_action
 msgid "and build finished products using"
 msgstr ""
@@ -6407,7 +6420,7 @@ msgstr ""
 #: code:addons/mrp/models/mrp_production.py:0
 #, python-format
 msgid "split"
-msgstr ""
+msgstr "rozdělit"
 
 #. module: mrp
 #: model_terms:ir.ui.view,arch_db:mrp.mrp_routing_workcenter_form_view
