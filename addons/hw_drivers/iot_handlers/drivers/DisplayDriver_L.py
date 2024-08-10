@@ -7,6 +7,7 @@ import logging
 import netifaces as ni
 import os
 import subprocess
+import socket
 import threading
 import time
 
@@ -231,5 +232,15 @@ class DisplayController(http.Controller):
             'cust_js': cust_js,
             'display_ifaces': display_ifaces,
             'display_identifier': display_identifier,
+            'hostname': socket.gethostname(),
             'pairing_code': connection_manager.pairing_code,
         })
+
+    @http.route('/point_of_sale/iot_devices', type='json', auth='none', methods=['POST'])
+    def get_iot_devices(self):
+        iot_device = [{
+            'name': iot_devices[device].device_name,
+            'type': iot_devices[device].device_type,
+        } for device in iot_devices]
+
+        return json.dumps({'iot_device_status': iot_device})

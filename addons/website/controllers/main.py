@@ -648,6 +648,14 @@ class Website(Home):
             website._force()
         page = request.env['website'].new_page(path, add_menu=add_menu, sections_arch=kwargs.get('sections_arch'), **template)
         url = page['url']
+        # In case the page is created through the 404 "Create Page" button, the
+        # URL may use special characters which are slugified on page creation.
+        # If that URL is also a menu, we update it accordingly.
+        # NB: we don't want to slugify on menu creation as it could redirect
+        # towards files (with spaces, apostrophes, etc.).
+        menu = request.env['website.menu'].search([('url', '=', '/' + path)])
+        if menu:
+            menu.page_id = page['page_id']
 
         if redirect:
             if ext_special_case:  # redirect non html pages to backend to edit
@@ -758,11 +766,10 @@ class Website(Home):
         res = {'can_edit_seo': True}
         record = request.env[res_model].browse(res_id)
         try:
-            record.check_access_rights('write')
-            record.check_access_rule('write')
+            request.website._check_user_can_modify(record)
         except AccessError:
-            record = record.sudo()
             res['can_edit_seo'] = False
+        record = record.sudo()
 
         res.update(record.read(fields)[0])
         res['has_social_default_image'] = request.website.has_social_default_image
@@ -772,6 +779,22 @@ class Website(Home):
             res['seo_name'] = record.seo_name and slugify(record.seo_name) or ''
 
         return res
+
+    @http.route(['/website/check_can_modify_any'], type='json', auth="user", website=True)
+    def check_can_modify_any(self, records):
+        if not request.env.user.has_group('website.group_website_restricted_editor'):
+            raise werkzeug.exceptions.Forbidden()
+        first_error = None
+        for rec in records:
+            try:
+                record = request.env[rec['res_model']].browse(rec['res_id'])
+                request.website._check_user_can_modify(record)
+                return True
+            except AccessError as e:
+                if not first_error:
+                    first_error = e
+                continue
+        raise first_error
 
     @http.route(['/google<string(length=16):key>.html'], type='http', auth="public", website=True, sitemap=False)
     def google_console_search(self, key, **kwargs):

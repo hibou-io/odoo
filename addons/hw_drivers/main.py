@@ -50,7 +50,7 @@ class Manager(Thread):
                 'identifier': helpers.get_mac_address(),
                 'ip': domain,
                 'token': helpers.get_token(),
-                'version': helpers.get_version(),
+                'version': helpers.get_version(detailed_version=True),
             }
             devices_list = {}
             for device in iot_devices:
@@ -61,7 +61,15 @@ class Manager(Thread):
                     'manufacturer': iot_devices[device].device_manufacturer,
                     'connection': iot_devices[device].device_connection,
                 }
-            data = {'params': {'iot_box': iot_box, 'devices': devices_list,}}
+            devices_list_to_send = {
+                key: value for key, value in devices_list.items() if key != 'distant_display'
+            }
+            data = {
+                'params': {
+                    'iot_box': iot_box,
+                    'devices': devices_list_to_send,
+                }  # Don't send distant_display to the db
+            }
             # disable certifiacte verification
             urllib3.disable_warnings()
             http = urllib3.PoolManager(cert_reqs='CERT_NONE')
@@ -77,11 +85,12 @@ class Manager(Thread):
                 )
                 if iot_client:
                     iot_client.iot_channel = json.loads(resp.data).get('result', '')
-            except Exception as e:
-                _logger.error('Could not reach configured server')
-                _logger.error('A error encountered : %s ' % e)
+            except json.decoder.JSONDecodeError:
+                _logger.exception('Could not load JSON data: Received data is not in valid JSON format\ncontent:\n%s', resp.data)
+            except Exception:
+                _logger.exception('Could not reach configured server')
         else:
-            _logger.warning('Odoo server not set')
+            _logger.info('Ignoring sending the devices to the database: no associated database')
 
     def run(self):
         """
@@ -89,12 +98,12 @@ class Manager(Thread):
         """
 
         helpers.start_nginx_server()
-        _logger.info("IoT Box Image version: %s", helpers.get_version())
+        _logger.info("IoT Box Image version: %s", helpers.get_version(detailed_version=True))
         if platform.system() == 'Linux' and helpers.get_odoo_server_url():
             helpers.check_git_branch()
             helpers.generate_password()
         is_certificate_ok, certificate_details = helpers.get_certificate_status()
-        if not is_certificate_ok:
+        if not is_certificate_ok and certificate_details != 'ERR_IOT_HTTPS_CHECK_NO_SERVER':
             _logger.warning("An error happened when trying to get the HTTPS certificate: %s",
                             certificate_details)
 

@@ -1,7 +1,10 @@
 from types import SimpleNamespace
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import pkcs12
+from importlib import metadata
 from OpenSSL import crypto
+
+from odoo.tools import parse_version
 
 
 def load_key_and_certificates(content, password):
@@ -26,6 +29,13 @@ def load_key_and_certificates(content, password):
         private_bytes=private_key.private_bytes,
     )
 
+    if parse_version(metadata.version('cryptography')) < parse_version('42.0.0'):
+        not_valid_after = certificate.not_valid_after
+        not_valid_before = certificate.not_valid_before
+    else:
+        not_valid_after = certificate.not_valid_after_utc.replace(tzinfo=None)
+        not_valid_before = certificate.not_valid_before_utc.replace(tzinfo=None)
+
     simple_certificate = SimpleNamespace(
         fingerprint=certificate.fingerprint,
         issuer=SimpleNamespace(
@@ -39,8 +49,19 @@ def load_key_and_certificates(content, password):
                 for item in certificate.issuer.get_attributes_for_oid(oid)
             ]
         ),
-        not_valid_after=certificate.not_valid_after,
-        not_valid_before=certificate.not_valid_before,
+        subject=SimpleNamespace(
+            rfc4514_string=certificate.subject.rfc4514_string,
+            rdns=[
+                SimpleNamespace(rfc4514_string=item.rfc4514_string)
+                for item in certificate.subject.rdns
+            ],
+            get_attributes_for_oid=lambda oid: [
+                SimpleNamespace(value=item.value)
+                for item in certificate.subject.get_attributes_for_oid(oid)
+            ]
+        ),
+        not_valid_after=not_valid_after,
+        not_valid_before=not_valid_before,
         public_key=public_key,
         public_bytes=certificate.public_bytes,
         serial_number=certificate.serial_number,
