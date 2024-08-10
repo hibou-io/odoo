@@ -4,7 +4,7 @@ import { registry } from "@web/core/registry";
 import { _lt } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { initializeDesignTabCss } from "mass_mailing.design_constants";
-import { toInline, getCSSRules } from "web_editor.convertInline";
+import { toInline } from "web_editor.convertInline";
 import { loadBundle } from "@web/core/assets";
 import { qweb } from 'web.core';
 import { useService } from "@web/core/utils/hooks";
@@ -78,18 +78,17 @@ export class MassMailingHtmlField extends HtmlField {
         popover.style.left = leftPosition + 'px';
     }
 
-    async commitChanges() {
+    async commitChanges(...args) {
         if (this.props.readonly || !this.isRendered) {
-            return super.commitChanges();
+            return super.commitChanges(...args);
         }
-        if (!this._isDirty()) {
+        if (!this._isDirty() || this._pendingCommitChanges) {
             // In case there is still a pending change while committing the
             // changes from the save button, we need to wait for the previous
             // operation to finish, otherwise the "inline field" of the mass
             // mailing might not be saved.
             return this._pendingCommitChanges;
         }
-
         this._pendingCommitChanges = (async () => {
             const codeViewEl = this._getCodeViewEl();
             if (codeViewEl) {
@@ -103,8 +102,7 @@ export class MassMailingHtmlField extends HtmlField {
             const $editable = this.wysiwyg.getEditable();
             this.wysiwyg.odooEditor.historyPauseSteps();
             await this.wysiwyg.cleanForSave();
-
-            await super.commitChanges();
+            await super.commitChanges(...args);
 
             const $editorEnable = $editable.closest('.editor_enable');
             $editorEnable.removeClass('editor_enable');
@@ -129,8 +127,11 @@ export class MassMailingHtmlField extends HtmlField {
             // Wait for the css and images to be loaded.
             await iframePromise;
             const editableClone = iframe.contentDocument.querySelector('.note-editable');
-            this.cssRules = this.cssRules || getCSSRules($editable[0].ownerDocument);
-            await toInline($(editableClone), this.cssRules, $(iframe));
+            // The jQuery data are lost because of the cloning operations above.
+            // The hacky fix for stable is to simply add it back manually.
+            // TODO in master: Update toInline to use an options parameter.
+            $(editableClone).data("wysiwyg", this.wysiwyg);
+            await toInline($(editableClone), undefined, $(iframe));
             iframe.remove();
             this.wysiwyg.odooEditor.observerActive('toInline');
             const inlineHtml = editableClone.innerHTML;
@@ -140,6 +141,7 @@ export class MassMailingHtmlField extends HtmlField {
 
             const fieldName = this.props.inlineField;
             await this.props.record.update({[fieldName]: this._unWrap(inlineHtml)});
+            this._pendingCommitChanges = null;
         })();
         return this._pendingCommitChanges;
     }
@@ -376,6 +378,8 @@ export class MassMailingHtmlField extends HtmlField {
             // the Odoo editor before resetting the history.
             setTimeout(() => {
                 this.wysiwyg.historyReset();
+                // Update undo/redo buttons
+                this.wysiwyg.odooEditor.dispatchEvent(new Event('historyStep'));
 
                 // The selection has been lost when switching theme.
                 const document = this.wysiwyg.odooEditor.document;
@@ -438,6 +442,7 @@ export class MassMailingHtmlField extends HtmlField {
         if (this.env.mailingFilterTemplates && this.wysiwyg) {
             this._hideIrrelevantTemplates();
         }
+        this.wysiwyg.odooEditor.activateContenteditable();
     }
     _getCodeViewEl() {
         const codeView = this.wysiwyg &&

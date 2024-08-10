@@ -626,6 +626,14 @@ class Meeting(models.Model):
                     self.env.ref('calendar.calendar_template_meeting_changedate', raise_if_not_found=False)
                 )
 
+        # Change base event when the main base event is archived. If it isn't done when trying to modify
+        # all events of the recurrence an error can be thrown or all the recurrence can be deleted.
+        if values.get("active") is False:
+            recurrences = self.env["calendar.recurrence"].search([
+                ('base_event_id', 'in', self.ids)
+            ])
+            recurrences._select_new_base_event()
+
         return True
 
     def _check_private_event_conditions(self):
@@ -659,16 +667,23 @@ class Meeting(models.Model):
             for event in records:
                 if event['id'] in private_events.ids:
                     for field in private_fields:
-                        event[field] = _('Busy') if field in ['name', 'display_name'] else False
+                        if self._fields[field].type in ('one2many', 'many2many'):
+                            event[field] = []
+                        else:
+                            event[field] = _('Busy') if field in ('name', 'display_name') else False
 
             # Update the cache with the new hidden values.
             for field_name in private_fields:
                 if field_name in self._fields:
                     field = self._fields[field_name]
-                    replacement = field.convert_to_cache(
-                        _('Busy') if field_name in ['name', 'display_name'] else False,
-                        private_events)
-                    self.env.cache.update(private_events, field, repeat(replacement))
+                    value = False
+                    if field.type in ('one2many', 'many2many'):
+                        value = []
+                    elif field_name in ('name', 'display_name'):
+                        value = _('Busy')
+                    for private_event in private_events:
+                        replacement = field.convert_to_cache(value, private_event)
+                        self.env.cache.update(private_event, field, repeat(replacement))
         return records
 
     @api.model

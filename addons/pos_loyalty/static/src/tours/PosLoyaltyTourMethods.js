@@ -41,6 +41,11 @@ odoo.define('pos_loyalty.tour.PosCouponTourMethods', function (require) {
                     content: 'confirm inputted code',
                     trigger: '.popup-textinput .button.confirm',
                 },
+                {
+                    content: 'verify popup is closed',
+                    trigger: 'body:not(:has(.popup-textinput))',
+                    run: function () {}, // it's a check
+                },
             ];
             return steps;
         }
@@ -164,6 +169,15 @@ odoo.define('pos_loyalty.tour.PosCouponTourMethods', function (require) {
                     run: function () {},
                 }
             ]
+        }
+        pointsAwardedAre(points_str) {
+            return [
+                {
+                    content: 'loyalty points awarded ' + points_str,
+                    trigger: '.loyalty-points-won .value:contains("' + points_str + '")',
+                    run: function () {}, // it's a check
+                },
+            ];
         }
     }
 

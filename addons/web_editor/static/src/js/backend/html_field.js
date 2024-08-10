@@ -393,7 +393,7 @@ export class HtmlField extends Component {
                     // Avoid listening to changes made during the _toInline process.
                     toInlinePromise = this._toInline();
                 }
-                if (urgent) {
+                if (urgent && owl.status(this) !== 'destroyed') {
                     await this.updateValue();
                 }
                 await saveModifiedImagesPromise;
@@ -575,7 +575,7 @@ export class HtmlField extends Component {
         $odooEditor.removeClass('odoo-editor-editable');
         $editable.html(html);
 
-        await toInline($editable, this.cssRules, this.wysiwyg.$iframe);
+        await toInline($editable, undefined, this.wysiwyg.$iframe);
         $odooEditor.addClass('odoo-editor-editable');
 
         this.wysiwyg.setValue($editable.html());

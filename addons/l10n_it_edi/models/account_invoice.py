@@ -24,7 +24,7 @@ class AccountMove(models.Model):
     l10n_it_edi_transaction = fields.Char(copy=False, string="FatturaPA Transaction")
     l10n_it_edi_attachment_id = fields.Many2one('ir.attachment', copy=False, string="FatturaPA Attachment", ondelete="restrict")
 
-    l10n_it_stamp_duty = fields.Float(default=0, string="Dati Bollo", readonly=True, states={'draft': [('readonly', False)]})
+    l10n_it_stamp_duty = fields.Float(string="Dati Bollo", readonly=True, states={'draft': [('readonly', False)]})
 
     l10n_it_ddt_id = fields.Many2one('l10n_it.ddt', string='DDT', readonly=True, states={'draft': [('readonly', False)]}, copy=False)
 
@@ -236,7 +236,8 @@ class AccountMove(models.Model):
 
             normalized_vat = partner.vat
             normalized_country = partner.country_code
-            if partner.vat:
+            has_vat = partner.vat and not partner.vat in ['/', 'NA']
+            if has_vat:
                 normalized_vat = partner.vat.replace(' ', '')
                 if in_eu:
                     # If the partner is from the EU, the country-code prefix of the VAT must be taken away
@@ -254,7 +255,8 @@ class AccountMove(models.Model):
             # If it has a codice fiscale (and no country), it's an Italian partner
             if not normalized_country and partner.l10n_it_codice_fiscale:
                 normalized_country = 'IT'
-            elif not partner.vat and partner.country_id and partner.country_id.code != 'IT':
+            # If customer has not VAT
+            elif not has_vat and partner.country_id and partner.country_id.code != 'IT':
                 normalized_vat = '0000000'
 
             return {

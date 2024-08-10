@@ -292,7 +292,7 @@ QUnit.module('web_editor', {}, function () {
                 "should close the color picker");
 
             assert.strictEqual($field.find('.note-editable').html(),
-                '<p>t<font style="background-color: rgb(0, 255, 255);">oto toto </font>toto</p><p>tata</p>',
+                '<p>t<font style="background-color: rgba(0, 255, 255, 0.6);">oto toto </font>toto</p><p>tata</p>',
                 "should have rendered the field correctly in edit");
 
             var fontElement = $field.find('.note-editable font')[0];
@@ -315,7 +315,7 @@ QUnit.module('web_editor', {}, function () {
             await testUtils.dom.click($('#toolbar .note-back-color-preview [style="background-color: var(--we-cp-o-color-3);"]'));
 
             assert.strictEqual($field.find('.note-editable').html(),
-                '<p>t<font style="background-color: rgb(0, 255, 255);">oto t</font><font class="bg-o-color-3">oto to</font>to</p><p>tata</p>',
+                '<p>t<font style="background-color: rgba(0, 255, 255, 0.6);">oto t</font><font class="bg-o-color-3">oto to</font>to</p><p>tata</p>',
                 "should have rendered the field correctly in edit");
 
             // Make sure the reset button works too
@@ -325,7 +325,7 @@ QUnit.module('web_editor', {}, function () {
             // TODO right now the behavior is to force "inherit" as background
             // but it should remove the useless font element when possible.
             assert.strictEqual($field.find('.note-editable').html(),
-                '<p>t<font style="background-color: rgb(0, 255, 255);">oto t</font>oto toto</p><p>tata</p>',
+                '<p>t<font style="background-color: rgba(0, 255, 255, 0.6);">oto t</font>oto toto</p><p>tata</p>',
                 "should have properly reset the background color");
 
             // Select the whole paragraph.
@@ -986,7 +986,7 @@ QUnit.module('web_editor', {}, function () {
             const clipboardData = new DataTransfer();
             clipboardData.setData('text/plain', 'https://www.youtube.com/watch?v=qxb74CMR748');
             p.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true }));
-            assert.strictEqual(p.outerHTML, '<p>https://www.youtube.com/watch?v=qxb74CMR748<br></p>',
+            assert.strictEqual(p.outerHTML, '<p>https://www.youtube.com/watch?v=qxb74CMR748</p>',
                 "The URL should be inserted as text");
             assert.isVisible($('.oe-powerbox-wrapper:contains("Embed Youtube Video")'),
                 "The powerbox should be opened");
