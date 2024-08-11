@@ -379,9 +379,9 @@ class ProductProduct(models.Model):
         """
         if company is None:
             company = self.env.company
-        ValuationLayer = self.env['stock.valuation.layer']
+        ValuationLayer = self.env['stock.valuation.layer'].sudo()
         svls_to_vacuum_by_product = defaultdict(lambda: ValuationLayer)
-        res = ValuationLayer.sudo().read_group([
+        res = ValuationLayer.read_group([
             ('product_id', 'in', self.ids),
             ('remaining_qty', '<', 0),
             ('stock_move_id', '!=', False),
@@ -392,7 +392,7 @@ class ProductProduct(models.Model):
             svls_to_vacuum_by_product[group['product_id'][0]] = ValuationLayer.browse(group['ids'])
             min_create_date = min(min_create_date, group['create_date'])
         all_candidates_by_product = defaultdict(lambda: ValuationLayer)
-        res = ValuationLayer.sudo().read_group([
+        res = ValuationLayer.read_group([
             ('product_id', 'in', self.ids),
             ('remaining_qty', '>', 0),
             ('company_id', '=', company.id),
@@ -472,8 +472,8 @@ class ProductProduct(models.Model):
                 if product.valuation == 'real_time':
                     current_real_time_svls |= svl_to_vacuum
             real_time_svls_to_vacuum |= current_real_time_svls
-        ValuationLayer.sudo().create(new_svl_vals_manual)
-        vacuum_svls = ValuationLayer.sudo().create(new_svl_vals_real_time)
+        ValuationLayer.create(new_svl_vals_manual)
+        vacuum_svls = ValuationLayer.create(new_svl_vals_real_time)
 
         # If some negative stock were fixed, we need to recompute the standard price.
         for product in self:
@@ -681,9 +681,20 @@ class ProductProduct(models.Model):
                 raise UserError(_('You don\'t have any input valuation account defined on your product category. You must define one before processing this operation.'))
             if not product_accounts[product.id].get('stock_valuation'):
                 raise UserError(_('You don\'t have any stock valuation account defined on your product category. You must define one before processing this operation.'))
+            if not product_accounts[product.id].get('stock_output'):
+                raise UserError(
+                    _('You don\'t have any output valuation account defined on your product '
+                      'category. You must define one before processing this operation.')
+                )
 
-            debit_account_id = product_accounts[product.id]['stock_valuation'].id
-            credit_account_id = product_accounts[product.id]['stock_input'].id
+            precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+            if float_compare(out_stock_valuation_layer.quantity, 0, precision_digits=precision) == 1:
+                debit_account_id = product_accounts[product.id]['stock_valuation'].id
+                credit_account_id = product_accounts[product.id]['stock_input'].id
+            else:
+                debit_account_id = product_accounts[product.id]['stock_output'].id
+                credit_account_id = product_accounts[product.id]['stock_valuation'].id
+
             value = out_stock_valuation_layer.value
             move_vals = {
                 'journal_id': product_accounts[product.id]['stock_journal'].id,
@@ -751,7 +762,7 @@ class ProductProduct(models.Model):
         # price to estimate the anglo saxon price unit.
         missing = qty_to_invoice - qty_valued
         for sml in stock_moves.move_line_ids:
-            if not sml.owner_id or sml.owner_id == sml.company_id.partner_id:
+            if not sml._should_exclude_for_valuation():
                 continue
             missing -= sml.product_uom_id._compute_quantity(sml.qty_done, self.uom_id, rounding_method='HALF-UP')
         if float_compare(missing, 0, precision_rounding=self.uom_id.rounding) > 0:

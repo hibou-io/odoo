@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.tests import common
+from odoo.exceptions import ValidationError
 
 
 class TestFiscalPosition(common.TransactionCase):
@@ -210,6 +211,11 @@ class TestFiscalPosition(common.TransactionCase):
             'name': 'NL NO VAT',
             'country_id': self.nl.id,
         })
+        partner_us_vat = self.env['res.partner'].create({
+            'name': 'US VAT',
+            'vat': '34567',
+            'country_id': self.us.id,
+        })
         partner_us_no_vat = self.env['res.partner'].create({
             'name': 'US NO VAT',
             'country_id': self.us.id,
@@ -268,3 +274,56 @@ class TestFiscalPosition(common.TransactionCase):
             self.env['account.fiscal.position'].get_fiscal_position(partner_us_no_vat.id, partner_us_no_vat.id),
             fp_eu_extra
         )
+
+        # Case : 7
+        # Billing (VAT/country) : None/US
+        # Delivery (VAT/country) : NL/NL
+        # Expected FP : Régime Extra-Communautaire
+        self.assertEqual(
+            self.env['account.fiscal.position'].get_fiscal_position(partner_us_no_vat.id, partner_nl_vat.id),
+            fp_eu_extra
+        )
+
+        # Case : 8
+        # Billing (VAT/country) : US/US
+        # Delivery (VAT/country) : NL/NL
+        # Expected FP : Régime Extra-Communautaire
+        self.assertEqual(
+            self.env['account.fiscal.position'].get_fiscal_position(partner_us_vat.id, partner_nl_vat.id),
+            fp_eu_extra
+        )
+
+    def test_fiscal_position_constraint(self):
+        """
+        Test fiscal position constraint by updating the record
+        - with only zip_from value
+        - with only zip_to value
+        - with both zip_from and zip_to values
+        """
+        fiscal_position = self.fp.create({
+            'name': 'Test fiscal',
+            'auto_apply': True,
+            'country_id': self.be.id,
+            'vat_required': True,
+            'sequence': 10,
+        })
+        with self.assertRaises(ValidationError):
+            fiscal_position.write({
+                'zip_from' : '123',
+            })
+        with self.assertRaises(ValidationError):
+            fiscal_position.write({
+                'zip_to': '456',
+            })
+        fiscal_position.write({
+            'zip_from': '123',
+            'zip_to': '456',
+        })
+
+        self.assertRecordValues(fiscal_position, [{
+            'name': 'Test fiscal',
+            'auto_apply': True,
+            'country_id': self.be.id,
+            'zip_from': '123',
+            'zip_to': '456',
+        }])

@@ -17,6 +17,7 @@
 # Kevilyn Rosa, 2023
 # Éder Brito <britoederr@gmail.com>, 2023
 # a75f12d3d37ea5bf159c4b3e85eb30e7_0fa6927, 2023
+# Wil Odoo, 2024
 # Maitê Dietze, 2024
 # 
 msgid ""
@@ -1819,6 +1820,7 @@ msgstr "Ative para criar recibo de venda"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account_tag__active
 #: model:ir.model.fields,field_description:account.field_account_fiscal_position__active
+#: model:ir.model.fields,field_description:account.field_account_fiscal_position_tax__tax_dest_active
 #: model:ir.model.fields,field_description:account.field_account_incoterms__active
 #: model:ir.model.fields,field_description:account.field_account_journal__active
 #: model:ir.model.fields,field_description:account.field_account_payment_term__active
@@ -4158,6 +4160,11 @@ msgid "Counterpart Entries"
 msgstr "Lançamentos de contrapartida"
 
 #. module: account
+#: model:ir.model.fields,help:account.field_res_company__multi_vat_foreign_country_ids
+msgid "Countries for which the company has a VAT number"
+msgstr "Países para os quais a empresa tem um NIF"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_account_tag__country_id
 #: model:ir.model.fields,field_description:account.field_account_chart_template__country_id
 #: model:ir.model.fields,field_description:account.field_account_fiscal_position__country_id
@@ -4527,6 +4534,7 @@ msgstr "Criado em"
 #. module: account
 #: code:addons/account/wizard/account_automatic_entry_wizard.py:0
 #: code:addons/account/wizard/accrued_orders.py:0
+#: model:ir.model.fields,field_description:account.field_account_analytic_account__credit
 #: model:ir.model.fields,field_description:account.field_account_move_line__credit
 #: model_terms:ir.ui.view,arch_db:account.report_journal
 #, python-format
@@ -4967,6 +4975,7 @@ msgstr ""
 #. module: account
 #: code:addons/account/wizard/account_automatic_entry_wizard.py:0
 #: code:addons/account/wizard/accrued_orders.py:0
+#: model:ir.model.fields,field_description:account.field_account_analytic_account__debit
 #: model:ir.model.fields,field_description:account.field_account_move_line__debit
 #: model_terms:ir.ui.view,arch_db:account.report_journal
 #, python-format
@@ -5640,6 +5649,12 @@ msgid "Dynamic Reports"
 msgstr "Relatórios Dinâmicos"
 
 #. module: account
+#: model:ir.model.fields,help:account.field_account_tax_repartition_line__tag_ids_domain
+msgid "Dynamic domain used for the tag that can be set on tax"
+msgstr ""
+"Domínio dinâmico usado para o marcador que pode ser definido no imposto"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__module_l10n_eu_oss
 msgid "EU Intra-community Distance Selling"
 msgstr "Venda à distância intracomunitária da UE"
@@ -5884,7 +5899,7 @@ msgstr "Contas de despesas no modelo do produto"
 #: model:ir.model.fields,field_description:account.field_account_automatic_entry_wizard__expense_accrual_account
 #: model:ir.model.fields,field_description:account.field_res_company__expense_accrual_account_id
 msgid "Expense Accrual Account"
-msgstr "Conta de Acúmulo de Despesas"
+msgstr "Conta de provisão de despesas"
 
 #. module: account
 #: model:account.account.type,name:account.data_account_type_expenses
@@ -6068,6 +6083,7 @@ msgstr "Períodos Fiscais"
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__fiscal_position_id
 #: model:ir.model.fields,field_description:account.field_account_move__fiscal_position_id
 #: model:ir.model.fields,field_description:account.field_account_payment__fiscal_position_id
+#: model:ir.model.fields,field_description:account.field_res_company__fiscal_position_ids
 #: model:ir.model.fields,field_description:account.field_res_partner__property_account_position_id
 #: model:ir.model.fields,field_description:account.field_res_users__property_account_position_id
 #: model_terms:ir.ui.view,arch_db:account.view_account_position_filter
@@ -6233,6 +6249,11 @@ msgstr "Moeda Estrangeira"
 #: model:ir.model.fields,field_description:account.field_account_fiscal_position__foreign_vat
 msgid "Foreign Tax ID"
 msgstr "ID fiscal estrangeira"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_res_company__multi_vat_foreign_country_ids
+msgid "Foreign VAT countries"
+msgstr "Países com NIF estrangeiro"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_fiscal_position__foreign_vat_header_mode
@@ -7207,8 +7228,12 @@ msgstr "Intrastat"
 #. module: account
 #: code:addons/account/models/partner.py:0
 #, python-format
-msgid "Invalid \"Zip Range\", please configure it properly."
-msgstr "\"Faixa de CEP\"inválida, por favor, configure-a corretamente."
+msgid ""
+"Invalid \"Zip Range\", You have to configure both \"From\" and \"To\" values"
+" for the zip range and \"To\" should be greater than \"From\"."
+msgstr ""
+"\"Faixa de CEP\" inválida. Você precisa configurar os valores \"De\" e "
+"\"Paraq\" para o intervalo de CEP e \"Para\" deve ser maior que \"De\"."
 
 #. module: account
 #: code:addons/account/models/company.py:0
@@ -8634,7 +8659,7 @@ msgstr "Correspondência"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__matching_number
 msgid "Matching #"
-msgstr "Correspondência #"
+msgstr "Nº de correspondência"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_reconcile_model__matching_order
@@ -8674,6 +8699,11 @@ msgstr "Comentário"
 #, python-format
 msgid "Memo:"
 msgstr "Anotações:"
+
+#. module: account
+#: model:ir.model,name:account.model_base_partner_merge_automatic_wizard
+msgid "Merge Partner Wizard"
+msgstr "Mesclar assistente de parceiro"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account__message_has_error
@@ -8885,6 +8915,12 @@ msgstr "Negar o Saldo de Impostos"
 #: model:ir.model.fields,help:account.field_account_payment__amount_signed
 msgid "Negative value of amount field if payment_type is outbound"
 msgstr "Valor negativo do campo de valor se payment_type for de saída"
+
+#. module: account
+#: code:addons/account/models/account_tax.py:0
+#, python-format
+msgid "Nested group of taxes are not allowed."
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_bank_statement__state__open
@@ -9932,6 +9968,13 @@ msgid "Partner should be set"
 msgstr ""
 
 #. module: account
+#: code:addons/account/models/partner.py:0
+#, python-format
+msgid "Partners that are used in hashed entries cannot be merged."
+msgstr ""
+"Parceiros usados em entradas verificadas por hash não podem ser mesclados."
+
+#. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Pay your bills in one-click using Euro SEPA Service"
 msgstr "Pague suas contas em um clique usando o Serviço Euro SEPA"
@@ -10322,16 +10365,6 @@ msgstr ""
 #, python-format
 msgid "Please define a payment method line on your payment."
 msgstr "Defina uma linha de método de pagamento no seu pagamento."
-
-#. module: account
-#: code:addons/account/models/account_payment.py:0
-#, python-format
-msgid ""
-"The selected payment method is not available for this payment, please select"
-" the payment method again."
-msgstr ""
-"A forma de pagamento selecionada não está disponível para este pagamento; "
-"selecione a forma de pagamento novamente."
 
 #. module: account
 #: code:addons/account/models/chart_template.py:0
@@ -11268,7 +11301,7 @@ msgstr "Receita"
 #: model:ir.model.fields,field_description:account.field_account_automatic_entry_wizard__revenue_accrual_account
 #: model:ir.model.fields,field_description:account.field_res_company__revenue_accrual_account_id
 msgid "Revenue Accrual Account"
-msgstr "Conta de Acumulação de Receita"
+msgstr "Conta de provisão de receita"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__account_id
@@ -11286,7 +11319,7 @@ msgstr "Data de Estorno"
 #: model:ir.model.fields,field_description:account.field_account_move__reversal_move_id
 #: model:ir.model.fields,field_description:account.field_account_payment__reversal_move_id
 msgid "Reversal Move"
-msgstr "Movimento Reverso"
+msgstr "Movimentação de estorno"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_reversal__date
@@ -11297,20 +11330,20 @@ msgstr "Data do estorno"
 #: code:addons/account/wizard/accrued_orders.py:0
 #, python-format
 msgid "Reversal date must be posterior to date."
-msgstr "A data de reversão deve ser posterior à data."
+msgstr "A data de estorno deve ser posterior à data."
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__reversed_entry_id
 #: model:ir.model.fields,field_description:account.field_account_move__reversed_entry_id
 #: model:ir.model.fields,field_description:account.field_account_payment__reversed_entry_id
 msgid "Reversal of"
-msgstr "Reverso de"
+msgstr "Estorno de"
 
 #. module: account
 #: code:addons/account/wizard/account_move_reversal.py:0
 #, python-format
 msgid "Reversal of: %(move_name)s, %(reason)s"
-msgstr "Reverso de: %(move_name)s, %(reason)s"
+msgstr "Estorno de: %(move_name)s, %(reason)s"
 
 #. module: account
 #: code:addons/account/models/account_full_reconcile.py:0
@@ -11319,31 +11352,31 @@ msgstr "Reverso de: %(move_name)s, %(reason)s"
 #: code:addons/account/wizard/accrued_orders.py:0
 #, python-format
 msgid "Reversal of: %s"
-msgstr "Reversão de: %s"
+msgstr "Estorno de: %s"
 
 #. module: account
 #: model:ir.actions.act_window,name:account.action_view_account_move_reversal
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_reversal
 #: model_terms:ir.ui.view,arch_db:account.view_move_line_tree_grouped
 msgid "Reverse"
-msgstr "Reverso"
+msgstr "Estornar"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "Reverse Entry"
-msgstr "Entrada Reversa"
+msgstr "Lançamento de estorno"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_reversal
 msgid "Reverse Journal Entry"
-msgstr "Entrada de Diário Reversa"
+msgstr "Estornar lançamento de diário"
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
 #: code:addons/account/wizard/account_move_reversal.py:0
 #, python-format
 msgid "Reverse Moves"
-msgstr "Movimentações Reversas"
+msgstr "Movimentações de estorno"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_invoice_report__payment_state__reversed
@@ -11351,7 +11384,7 @@ msgstr "Movimentações Reversas"
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_filter
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "Reversed"
-msgstr "Revertido"
+msgstr "Estornado"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_bank_statement_form
@@ -12011,6 +12044,7 @@ msgid "Set active to false to hide the Journal without removing it."
 msgstr "Defina ativo como falso para esconder o Diário sem removê-lo."
 
 #. module: account
+#: model:ir.model.fields,help:account.field_account_fiscal_position_tax__tax_dest_active
 #: model:ir.model.fields,help:account.field_account_tax__active
 #: model:ir.model.fields,help:account.field_account_tax_template__active
 msgid "Set active to false to hide the tax without removing it."
@@ -13714,6 +13748,16 @@ msgid "The company this distribution line belongs to."
 msgstr "A empresa à qual esta linha de distribuição pertence."
 
 #. module: account
+#: code:addons/account/models/partner.py:0
+#, python-format
+msgid ""
+"The country of the foreign VAT number could not be detected. Please assign a"
+" country to the fiscal position or set a country group"
+msgstr ""
+"Não foi possível detetar o país do número de identificação fiscal "
+"estrangeiro. Atribua um país à posição fiscal ou defina um grupo de países"
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_tax_group__country_id
 msgid "The country for which this tax group is applicable."
 msgstr "O país para o qual este grupo de impostos se aplica."
@@ -14362,6 +14406,16 @@ msgid ""
 msgstr ""
 "A conta de destino selecionada está configurada para usar uma moeda específica. Cada entrada transferida para ele será convertida para esta moeda, causando\n"
 "                        a perda de qualquer valor em moeda estrangeira pré-existente."
+
+#. module: account
+#: code:addons/account/models/account_payment.py:0
+#, python-format
+msgid ""
+"The selected payment method is not available for this payment, please select"
+" the payment method again."
+msgstr ""
+"A forma de pagamento selecionada não está disponível para este pagamento; "
+"selecione a forma de pagamento novamente."
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_form
@@ -16103,7 +16157,7 @@ msgstr ""
 "diferentes."
 
 #. module: account
-#: code:addons/account/models/account_payment_method.py:0
+#: code:addons/account/models/account_journal.py:0
 #, python-format
 msgid ""
 "You can't have two payment method lines of the same payment type (%s) and "
@@ -16221,6 +16275,16 @@ msgid ""
 msgstr ""
 "Você não pode alterar a empresa proprietária de uma conta que já contém "
 "itens de diário."
+
+#. module: account
+#: code:addons/account/models/partner.py:0
+#, python-format
+msgid ""
+"You cannot create a fiscal position with a country outside of the selected "
+"country group."
+msgstr ""
+"Não é possível criar uma posição fiscal com um país fora do grupo de países "
+"selecionado."
 
 #. module: account
 #: code:addons/account/models/partner.py:0
@@ -16386,6 +16450,12 @@ msgstr ""
 "(contas: %s)"
 
 #. module: account
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot merge accounts."
+msgstr "Você não pode mesclar contas."
+
+#. module: account
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid ""
@@ -16512,7 +16582,7 @@ msgstr ""
 "reconciliações parciais ainda estiverem pendentes."
 
 #. module: account
-#: code:addons/account/models/account_account.py:0
+#: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "You cannot switch the type of a posted document."
 msgstr "Não é possível alterar o tipo de um documento lançado."
@@ -16947,6 +17017,11 @@ msgid ""
 msgstr ""
 "reserva-se o direito de solicitar um pagamento de juros fixos no valor de "
 "10% da quantia restante devida."
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_tax_repartition_line__tag_ids_domain
+msgid "tag domain"
+msgstr "domínio do marcador"
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
