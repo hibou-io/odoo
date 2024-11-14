@@ -58,6 +58,7 @@ class SaleOrderLine(models.Model):
             if product_name := self.env.context.get('sol_product_name') or self.env.context.get('default_name'):
                 product = self.env['product.product'].search([
                     ('name', 'ilike', product_name),
+                    ('type', '=', 'service'),
                     ('company_id', 'in', [False, self.env.company.id]),
                 ], limit=1)
                 if product:
@@ -186,7 +187,7 @@ class SaleOrderLine(models.Model):
             'active': True,
             'company_id': self.company_id.id,
             'allow_billable': True,
-            'user_id': False,
+            'user_id': self.product_id.project_template_id.user_id.id,
         }
 
     def _timesheet_create_project(self):

@@ -2093,8 +2093,9 @@ var SnippetsMenu = Widget.extend({
                 return;
             }
             const range = selection.getRangeAt(0);
-            $(range.startContainer).closest('.o_default_snippet_text').removeClass('o_default_snippet_text');
-            alreadySelectedElements.delete(range.startContainer);
+            const $defaultTextEl = $(range.startContainer).closest('.o_default_snippet_text');
+            $defaultTextEl.removeClass('o_default_snippet_text');
+            alreadySelectedElements.delete($defaultTextEl[0]);
         });
         const refreshSnippetEditors = debounce(() => {
             for (const snippetEditor of this.snippetEditors) {
@@ -3030,6 +3031,14 @@ var SnippetsMenu = Widget.extend({
         this._patchForComputeSnippetTemplates($html);
         var $scroll = $html.siblings('#o_scroll');
 
+        // TODO adapt in master. This patches the BlogPostTagSelection option
+        // in stable versions. Done here to avoid converting the html back to
+        // a string.
+        const optionEl = $html.find('[data-js="BlogPostTagSelection"][data-selector=".o_wblog_post_page_cover"]')[0];
+        if (optionEl) {
+            optionEl.dataset.selector = '.o_wblog_post_page_cover[data-res-model="blog.post"]';
+        }
+
         this.templateOptions = [];
         var selectors = [];
         var $styles = $html.find('[data-selector]');
@@ -3585,16 +3594,7 @@ var SnippetsMenu = Widget.extend({
                     }
 
                     var $target = $toInsert;
-
-                    if ($target[0].classList.contains("o_snippet_drop_in_only")) {
-                        // If it's a "drop in only" snippet, after dropping
-                        // it, we modify it so that it's no longer a
-                        // draggable snippet but rather simple HTML code, as
-                        // if the element had been created with the editor.
-                        $target[0].classList.remove("o_snippet_drop_in_only");
-                        delete $target[0].dataset.snippet;
-                        delete $target[0].dataset.name;
-                    }
+                    this._updateDroppedSnippet($target);
 
                     this.options.wysiwyg.odooEditor.observerUnactive('dragAndDropCreateSnippet');
                     await this._scrollToSnippet($target, this.$scrollable);
@@ -3835,6 +3835,23 @@ var SnippetsMenu = Widget.extend({
      */
     _allowInTranslationMode($snippet) {
         return globalSelector.is($snippet, { onlyTextOptions: true });
+    },
+    /**
+     * Allows to update the snippets to build & adapt dynamic content right
+     * after adding it to the DOM.
+     *
+     * @private
+     */
+    _updateDroppedSnippet($target) {
+        if ($target[0].classList.contains("o_snippet_drop_in_only")) {
+            // If it's a "drop in only" snippet, after dropping
+            // it, we modify it so that it's no longer a
+            // draggable snippet but rather simple HTML code, as
+            // if the element had been created with the editor.
+            $target[0].classList.remove("o_snippet_drop_in_only");
+            delete $target[0].dataset.snippet;
+            delete $target[0].dataset.name;
+        }
     },
 
     //--------------------------------------------------------------------------

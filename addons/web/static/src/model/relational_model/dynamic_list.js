@@ -163,9 +163,7 @@ export class DynamicList extends DataPoint {
     }
 
     selectDomain(value) {
-        return this.model.mutex.exec(() => {
-            this.isDomainSelected = value;
-        });
+        return this.model.mutex.exec(() => this._selectDomain(value));
     }
 
     sortBy(fieldName) {
@@ -341,13 +339,9 @@ export class DynamicList extends DataPoint {
             let lastSequence = (asc ? -1 : 1) * Infinity;
             for (let index = 0; index < originalList.length; index++) {
                 const sequence = getSequence(originalList[index]);
-                if (
-                    ((index < firstIndex || index >= lastIndex) &&
-                        ((asc && lastSequence >= sequence) ||
-                            (!asc && lastSequence <= sequence))) ||
-                    (index >= firstIndex && index < lastIndex && lastSequence === sequence)
-                ) {
+                if ((asc && lastSequence >= sequence) || (!asc && lastSequence <= sequence)) {
                     reorderAll = true;
+                    break;
                 }
                 lastSequence = sequence;
             }
@@ -410,6 +404,10 @@ export class DynamicList extends DataPoint {
                 dp[handleField] = dpData[handleField];
             }
         }
+    }
+
+    _selectDomain(value) {
+        this.isDomainSelected = value;
     }
 
     async _toggleArchive(isSelected, state) {

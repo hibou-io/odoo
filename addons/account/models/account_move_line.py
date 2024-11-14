@@ -804,7 +804,10 @@ class AccountMoveLine(models.Model):
                 tax = record.tax_repartition_line_id.tax_id or record.tax_ids[:1]
                 is_refund = record.is_refund
                 tax_type = tax.type_tax_use
-                record.tax_tag_invert = (tax_type == 'purchase' and is_refund) or (tax_type == 'sale' and not is_refund)
+                if record.display_type == 'epd':  # In case of early payment, tax_tag_invert is independent of the balance of the line
+                    record.tax_tag_invert = tax_type == 'purchase'
+                else:
+                    record.tax_tag_invert = (tax_type == 'purchase' and is_refund) or (tax_type == 'sale' and not is_refund)
             else:
                 # For invoices with taxes
                 record.tax_tag_invert = origin_move_id.is_inbound()
@@ -1401,7 +1404,7 @@ class AccountMoveLine(models.Model):
     # -------------------------------------------------------------------------
     def check_field_access_rights(self, operation, field_names):
         result = super().check_field_access_rights(operation, field_names)
-        if not fields:
+        if not field_names:
             weirdos = ['term_key', 'tax_key', 'compute_all_tax', 'epd_key', 'epd_needed', 'discount_allocation_key', 'discount_allocation_needed']
             result = [fname for fname in result if fname not in weirdos]
         return result
@@ -1465,7 +1468,7 @@ class AccountMoveLine(models.Model):
     def default_get(self, fields_list):
         defaults = super().default_get(fields_list)
         quick_encode_suggestion = self.env.context.get('quick_encoding_vals')
-        if quick_encode_suggestion:
+        if quick_encode_suggestion and self.env.context.get('default_display_type') not in ('line_section', 'line_note'):
             defaults['account_id'] = quick_encode_suggestion['account_id']
             defaults['price_unit'] = quick_encode_suggestion['price_unit']
             defaults['tax_ids'] = [Command.set(quick_encode_suggestion['tax_ids'])]
@@ -3284,6 +3287,9 @@ class AccountMoveLine(models.Model):
             'unece_uom_code': self.product_id.product_tmpl_id.uom_id._get_unece_code(),
         }
         return res
+
+    def _check_edi_line_tax_required(self):
+        return True
 
     # -------------------------------------------------------------------------
     # PUBLIC ACTIONS

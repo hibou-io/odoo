@@ -16,7 +16,7 @@ from odoo import Command, _, models, api
 from odoo.addons.base.models.ir_model import MODULE_UNINSTALL_FLAG
 from odoo.exceptions import AccessError, UserError
 from odoo.modules import get_resource_from_path
-from odoo.tools import file_open, get_lang, groupby, SQL
+from odoo.tools import file_open, float_compare, get_lang, groupby, SQL
 from odoo.tools.translate import code_translations, TranslationImporter
 
 _logger = logging.getLogger(__name__)
@@ -296,7 +296,7 @@ class AccountChartTemplate(models.AbstractModel):
             template_line_ids = [x for x in template.get('repartition_line_ids', []) if x[0] != Command.CLEAR]
             return (
                 tax.amount_type != template.get('amount_type', 'percent')
-                or tax.amount != template.get('amount', 0)
+                or float_compare(tax.amount, template.get('amount', 0), precision_digits=4) != 0
                 # Taxes that don't have repartition lines in their templates get theirs created by default
                 or len(template_line_ids) not in (0, len(tax.repartition_line_ids))
             )
@@ -396,7 +396,10 @@ class AccountChartTemplate(models.AbstractModel):
                     and isinstance(values[fname], (list, tuple))
                 ]
                 if x2manyfields:
-                    rec = self.ref(xmlid, raise_if_not_found=False)
+                    if isinstance(xmlid, int):
+                        rec = self.env[model_name].browse(xmlid).exists()
+                    else:
+                        rec = self.ref(xmlid, raise_if_not_found=False)
                     if rec:
                         for fname in x2manyfields:
                             for i, (line, (command, _id, vals)) in enumerate(zip(rec[fname], values[fname])):
@@ -431,6 +434,9 @@ class AccountChartTemplate(models.AbstractModel):
                 vals['currency_id'] = fiscal_country.currency_id.id
         if not company.country_id:
             vals['country_id'] = fiscal_country.id
+
+        # Ensure that we write on 'anglo_saxon_accounting' when changing to a CoA that relies on the default of `False`.
+        vals.setdefault('anglo_saxon_accounting', False)
 
         # This write method is important because it's overridden and has additional triggers
         # e.g it activates the currency
@@ -636,6 +642,20 @@ class AccountChartTemplate(models.AbstractModel):
             company.account_purchase_tax_id = self.env['account.tax'].search([
                 *self.env['account.tax']._check_company_domain(company),
                 ('type_tax_use', 'in', ('purchase', 'all'))], limit=1).id
+        # Set default taxes on products (only on products having already a tax set in another company, as some flows require no tax at all (e.g TIPS in PoS))
+        # We need to browse the product in sudo to check for the taxes_id and supplier_taxes_id fields regardless of the companies record rules
+        # that would, otherwise, just look empty all the time for the current user/company
+        sudoed_products = self.env['product.template'].sudo().search(self.env['product.template']._check_company_domain(company))
+
+        if company.account_sale_tax_id:
+            sudoed_products_sale = sudoed_products.filtered(
+                lambda p: p.taxes_id and not p.taxes_id.filtered_domain(p.taxes_id._check_company_domain(company)))
+            sudoed_products_sale._force_default_sale_tax(company)
+        if company.account_purchase_tax_id:
+            sudoed_products_purchase = sudoed_products.filtered(
+                lambda p: p.supplier_taxes_id and not p.supplier_taxes_id.filtered_domain(p.taxes_id._check_company_domain(company)))
+            sudoed_products_purchase._force_default_purchase_tax(company)
+
         # Display caba fields if there are caba taxes
         if not company.parent_id and self.env['account.tax'].search([('tax_exigibility', '=', 'on_payment')]):
             company.tax_exigibility = True
@@ -1089,12 +1109,17 @@ class AccountChartTemplate(models.AbstractModel):
         assert re.fullmatch(r"[a-z0-9_]+", module)
 
         def evaluate(key, value, model_fields):
+            if not value:
+                return value
             if '@' in key:
                 return value
             if '/' in key:
                 return []
-            if model_fields and model_fields[key].type in ('boolean', 'int', 'float'):
-                return ast.literal_eval(value) if value else False
+            if model_fields:
+                if model_fields[key].type in ('boolean', 'int', 'float'):
+                    return ast.literal_eval(value)
+                if model_fields[key].type == 'char':
+                    return value.strip()
             return value
 
         res = {}

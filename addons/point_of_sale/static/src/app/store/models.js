@@ -274,8 +274,8 @@ export class Product extends PosModel {
         const categories = this.parent_category_ids.concat(this.categ.id);
         return (
             (!item.categ_id || categories.includes(item.categ_id[0])) &&
-            (!item.date_start || deserializeDate(item.date_start) <= date) &&
-            (!item.date_end || deserializeDate(item.date_end) >= date)
+            (!item.date_start || deserializeDate(item.date_start, {zone: "utc"}) <= date) &&
+            (!item.date_end || deserializeDate(item.date_end, {zone: "utc"}) >= date)
         );
     }
     // Port of _get_product_price on product.pricelist.
@@ -1126,6 +1126,14 @@ export class Orderline extends PosModel {
     isPartOfCombo() {
         return Boolean(this.comboParent || this.comboLines?.length);
     }
+    getComboTotalPrice() {
+        const allLines = this.getAllLinesInCombo();
+        return allLines.reduce((total, line) => total + line.get_all_prices(1).priceWithTax, 0);
+    }
+    getComboTotalPriceWithoutTax() {
+        const allLines = this.getAllLinesInCombo();
+        return allLines.reduce((total, line) => total + line.get_all_prices(1).priceWithoutTax, 0);
+    }
     findAttribute(values, customAttributes) {
         const listOfAttributes = [];
         const addedPtal_id = [];
@@ -1421,7 +1429,9 @@ export class Order extends PosModel {
             this.init_from_JSON(options.json);
             const linesById = Object.fromEntries(this.orderlines.map((l) => [l.id || l.cid, l]));
             for (const line of this.orderlines) {
-                line.comboLines = line.combo_line_ids?.map((id) => linesById[id]);
+                line.comboLines = line.combo_line_ids
+                    ?.filter((id) => linesById[id])
+                    .map((id) => linesById[id]); 
                 const combo_parent_id = line.combo_parent_id?.[0] || line.combo_parent_id;
                 if (combo_parent_id) {
                     line.comboParent = linesById[combo_parent_id];
@@ -1474,10 +1484,7 @@ export class Order extends PosModel {
             this.sequence_number = this.pos.pos_session.sequence_number++;
         } else {
             this.sequence_number = json.sequence_number;
-            this.pos.pos_session.sequence_number = Math.max(
-                this.sequence_number + 1,
-                this.pos.pos_session.sequence_number
-            );
+            this.updateSequenceNumber(json);
         }
         this.session_id = this.pos.pos_session.id;
         this.uid = json.uid;
@@ -1565,6 +1572,12 @@ export class Order extends PosModel {
         this.ticketCode = json.ticket_code || "";
         this.lastOrderPrepaChange =
             json.last_order_preparation_change && JSON.parse(json.last_order_preparation_change);
+    }
+    updateSequenceNumber(json) {
+        this.pos.pos_session.sequence_number = Math.max(
+            this.sequence_number + 1,
+            this.pos.pos_session.sequence_number
+        );
     }
     export_as_JSON() {
         var orderLines, paymentLines;
@@ -2720,7 +2733,7 @@ export class Order extends PosModel {
         return false;
     }
     is_paid() {
-        return this.get_due() <= 0 && this.check_paymentlines_rounding();
+        return this.get_due() <= 0;
     }
     is_paid_with_cash() {
         return !!this.paymentlines.find(function (pl) {

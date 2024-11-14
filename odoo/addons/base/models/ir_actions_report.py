@@ -4,7 +4,7 @@ from markupsafe import Markup
 from urllib.parse import urlparse
 
 from odoo import api, fields, models, tools, SUPERUSER_ID, _
-from odoo.exceptions import UserError, AccessError
+from odoo.exceptions import UserError, AccessError, RedirectWarning
 from odoo.tools.safe_eval import safe_eval, time
 from odoo.tools.misc import find_in_path, ustr
 from odoo.tools import check_barcode_encoding, config, is_html_empty, parse_version, split_every
@@ -23,6 +23,7 @@ import json
 from lxml import etree
 from contextlib import closing
 from reportlab.graphics.barcode import createBarcodeDrawing
+from reportlab.pdfbase.pdfmetrics import getFont, TypeFace
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from collections import OrderedDict
 from collections.abc import Iterable
@@ -44,8 +45,17 @@ _logger = logging.getLogger(__name__)
 # before rendering a barcode (done in a C extension) and this part is not thread safe. We attempt
 # here to init the T1 fonts cache at the start-up of Odoo so that rendering of barcode in multiple
 # thread does not lock the server.
+_DEFAULT_BARCODE_FONT = 'Courier'
 try:
-    createBarcodeDrawing('Code128', value='foo', format='png', width=100, height=100, humanReadable=1).asString('png')
+    available = TypeFace(_DEFAULT_BARCODE_FONT).findT1File()
+    if not available:
+        substitution_font = 'NimbusMonoPS-Regular'
+        fnt = getFont(substitution_font)
+        if fnt:
+            _DEFAULT_BARCODE_FONT = substitution_font
+            fnt.ascent = 629
+            fnt.descent = -157
+    createBarcodeDrawing('Code128', value='foo', format='png', width=100, height=100, humanReadable=1, fontName=_DEFAULT_BARCODE_FONT).asString('png')
 except Exception:
     pass
 
@@ -591,6 +601,8 @@ class IrActionsReport(models.Model):
         }
         kwargs = {k: validator(kwargs.get(k, v)) for k, (v, validator) in defaults.items()}
         kwargs['humanReadable'] = kwargs.pop('humanreadable')
+        if kwargs['humanReadable']:
+            kwargs['fontName'] = _DEFAULT_BARCODE_FONT
 
         if barcode_type == 'UPCA' and len(value) in (11, 12, 13):
             barcode_type = 'EAN13'
@@ -676,6 +688,11 @@ class IrActionsReport(models.Model):
                 reader = PdfFileReader(stream)
                 writer.appendPagesFromReader(reader)
             except (PdfReadError, TypeError, NotImplementedError, ValueError):
+                # TODO : make custom_error_handler a parameter in master
+                custom_error_handler = self.env.context.get('custom_error_handler')
+                if custom_error_handler:
+                    custom_error_handler(stream)
+                    continue
                 raise UserError(_("Odoo is unable to merge the generated PDFs."))
         result_stream = io.BytesIO()
         streams.append(result_stream)
@@ -914,13 +931,38 @@ class IrActionsReport(models.Model):
                 else:
                     _logger.info("The PDF documents %r are now saved in the database", attachment_names)
 
+        stream_to_ids = {v['stream']: k for k, v in collected_streams.items() if v['stream']}
         # Merge all streams together for a single record.
-        streams_to_merge = [x['stream'] for x in collected_streams.values() if x['stream']]
+        streams_to_merge = list(stream_to_ids.keys())
+        error_record_ids = []
+
         if len(streams_to_merge) == 1:
             pdf_content = streams_to_merge[0].getvalue()
         else:
-            with self._merge_pdfs(streams_to_merge) as pdf_merged_stream:
+            with self.with_context(
+                    custom_error_handler=lambda error_stream: error_record_ids.append(stream_to_ids[error_stream])
+            )._merge_pdfs(streams_to_merge) as pdf_merged_stream:
                 pdf_content = pdf_merged_stream.getvalue()
+
+        if error_record_ids:
+            action = {
+                'type': 'ir.actions.act_window',
+                'name': _('Problematic record(s)'),
+                'res_model': report_sudo.model,
+                'domain': [('id', 'in', error_record_ids)],
+                'views': [(False, 'tree'), (False, 'form')],
+            }
+            num_errors = len(error_record_ids)
+            if num_errors == 1:
+                action.update({
+                    'views': [(False, 'form')],
+                    'res_id': error_record_ids[0],
+                })
+            raise RedirectWarning(
+                message=_('Odoo is unable to merge the generated PDFs because of %(num_errors)s corrupted file(s)', num_errors=num_errors),
+                action=action,
+                button_text=_('View Problematic Record(s)'),
+            )
 
         for stream in streams_to_merge:
             stream.close()

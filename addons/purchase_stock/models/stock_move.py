@@ -174,7 +174,7 @@ class StockMove(models.Model):
 
         if returned_move and self._is_out() and self._is_returned(valued_type='out'):
             returned_layer = returned_move.stock_valuation_layer_ids.filtered(lambda svl: not svl.stock_valuation_layer_id)[:1]
-            unit_diff = layer._get_layer_price_unit() - returned_layer._get_layer_price_unit()
+            unit_diff = layer._get_layer_price_unit() - returned_layer._get_layer_price_unit() if returned_layer else 0
         elif returned_move and returned_move._is_out() and returned_move._is_returned(valued_type='out'):
             returned_layer = returned_move.stock_valuation_layer_ids.filtered(lambda svl: not svl.stock_valuation_layer_id)[:1]
             unit_diff = returned_layer._get_layer_price_unit() - self.purchase_line_id._get_gross_price_unit()
@@ -254,7 +254,7 @@ class StockMove(models.Model):
 
     def _is_purchase_return(self):
         self.ensure_one()
-        return self.location_dest_id.usage == "supplier"
+        return self.location_dest_id.usage == "supplier" or self.location_dest_id == self.env.ref('stock.stock_location_inter_wh', raise_if_not_found=False)
 
     def _get_all_related_aml(self):
         # The back and for between account_move and account_move_line is necessary to catch the

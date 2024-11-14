@@ -316,9 +316,10 @@ class Channel(models.Model):
     def _subscribe_users_automatically_get_members(self):
         """ Return new members per channel ID """
         return dict(
-            (channel.id, (channel.group_ids.users.partner_id - channel.channel_partner_ids).ids)
-            for channel in self
-        )
+            (channel.id,
+             ((channel.group_ids.users.partner_id.filtered(lambda p: p.active) - channel.channel_partner_ids).ids))
+                for channel in self
+            )
 
     def action_unfollow(self):
         self._action_unfollow(self.env.user.partner_id)
@@ -487,8 +488,8 @@ class Channel(models.Model):
         message_type = msg_vals.get('message_type', 'comment') if msg_vals else message.message_type
         pids = msg_vals.get('partner_ids', []) if msg_vals else message.partner_ids.ids
 
-        # notify only user input (comment or incoming / outgoing emails)
-        if message_type not in ('comment', 'email', 'email_outgoing'):
+        # notify only user input (comment, whatsapp messages or incoming / outgoing emails)
+        if message_type not in ('comment', 'email', 'email_outgoing', 'whatsapp_message'):
             return []
 
         recipients_data = []
