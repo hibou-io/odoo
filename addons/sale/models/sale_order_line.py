@@ -850,7 +850,7 @@ class SaleOrderLine(models.Model):
         for line in self:
             amount_invoiced = 0.0
             for invoice_line in line._get_invoice_lines():
-                if invoice_line.move_id.state == 'posted':
+                if invoice_line.move_id.state == 'posted' or invoice_line.move_id.payment_state == 'invoicing_legacy':
                     invoice_date = invoice_line.move_id.invoice_date or fields.Date.today()
                     if invoice_line.move_id.move_type == 'out_invoice':
                         amount_invoiced += invoice_line.currency_id._convert(invoice_line.price_subtotal, line.currency_id, line.company_id, invoice_date)
@@ -1165,6 +1165,13 @@ class SaleOrderLine(models.Model):
                 'company_id': line.company_id.id,
             })
 
+    def _get_downpayment_line_price_unit(self, invoices):
+        return sum(
+            l.price_unit if l.move_id.move_type == 'out_invoice' else -l.price_unit
+            for l in self.invoice_lines
+            if l.move_id.state == 'posted' and l.move_id not in invoices  # don't recompute with the final invoice
+        )
+
     #=== CORE METHODS OVERRIDES ===#
 
     def name_get(self):
@@ -1185,3 +1192,6 @@ class SaleOrderLine(models.Model):
     def _is_not_sellable_line(self):
         # True if the line is a computed line (reward, delivery, ...) that user cannot add manually
         return False
+
+    def _sellable_lines_domain(self):
+        return [('is_downpayment', '=', False)]

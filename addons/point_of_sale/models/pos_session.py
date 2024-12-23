@@ -1259,6 +1259,7 @@ class PosSession(models.Model):
             'tax_base_amount': abs(base_amount_converted),
             'tax_repartition_line_id': repartition_line_id,
             'tax_tag_ids': [(6, 0, tag_ids)],
+            'display_type': 'tax',
         }
         return self._debit_amounts(partial_args, amount, amount_converted)
 
@@ -1558,7 +1559,7 @@ class PosSession(models.Model):
         if not sessions:
             raise UserError(_("There is no cash payment method for this PoS Session"))
 
-        self.env['account.bank.statement.line'].create([
+        self.env['account.bank.statement.line'].sudo().create([
             {
                 'pos_session_id': session.id,
                 'journal_id': session.cash_journal_id.id,
@@ -1809,7 +1810,6 @@ class PosSession(models.Model):
         config = self.env['pos.config'].search_read(**params['search_params'])[0]
         config['use_proxy'] = config['is_posbox'] and (config['iface_electronic_scale'] or config['iface_print_via_proxy']
                                                        or config['iface_scan_via_proxy'] or config['iface_customer_facing_display_via_proxy'])
-        config['has_cash_move_permission'] = self.user_has_groups('account.group_account_invoice')
         return config
 
     def _loader_params_pos_bill(self):
@@ -1861,7 +1861,10 @@ class PosSession(models.Model):
         }
 
     def _get_pos_ui_res_users(self, params):
-        user = self.env['res.users'].search_read(**params['search_params'])[0]
+        user = self.env['res.users'].search_read(**params['search_params'], limit=1)
+        if not user:
+            raise UserError(_("You do not have permission to open a POS session. Please try opening a session with a different user"))
+        user = user[0]
         user['role'] = 'manager' if any(id == self.config_id.group_pos_manager_id.id for id in user['groups_id']) else 'cashier'
         del user['groups_id']
         return user

@@ -6,7 +6,6 @@ from urllib3.contrib.pyopenssl import inject_into_urllib3
 from OpenSSL.crypto import load_certificate, load_privatekey, FILETYPE_PEM
 
 from odoo import fields, models, _
-from odoo.exceptions import UserError
 from odoo.tools import html_escape, zeep
 
 import math
@@ -114,6 +113,8 @@ class AccountEdiFormat(models.Model):
         tax_amount_retention = 0.0
         base_amount_not_subject = 0.0
         base_amount_not_subject_loc = 0.0
+        has_not_subject = False
+        has_not_subject_loc = False
         tax_subject_info_list = []
         tax_subject_isp_info_list = []
         for tax_values in tax_details['tax_details'].values():
@@ -150,8 +151,10 @@ class AccountEdiFormat(models.Model):
                 elif tax_values['l10n_es_type'] == 'retencion':
                     tax_amount_retention += tax_values['tax_amount']
                 elif tax_values['l10n_es_type'] == 'no_sujeto':
+                    has_not_subject = True
                     base_amount_not_subject += tax_values['base_amount']
                 elif tax_values['l10n_es_type'] == 'no_sujeto_loc':
+                    has_not_subject_loc = True
                     base_amount_not_subject_loc += tax_values['base_amount']
                 elif tax_values['l10n_es_type'] == 'ignore':
                     continue
@@ -163,8 +166,10 @@ class AccountEdiFormat(models.Model):
                 elif tax_values['l10n_es_type'] == 'retencion':
                     tax_amount_retention += tax_values['tax_amount']
                 elif tax_values['l10n_es_type'] == 'no_sujeto':
+                    has_not_subject = True
                     base_amount_not_subject += tax_values['base_amount']
                 elif tax_values['l10n_es_type'] == 'no_sujeto_loc':
+                    has_not_subject_loc = True
                     base_amount_not_subject_loc += tax_values['base_amount']
                 elif tax_values['l10n_es_type'] == 'ignore':
                     continue
@@ -204,9 +209,9 @@ class AccountEdiFormat(models.Model):
             tax_details_info['Sujeta']['NoExenta']['DesgloseIVA'].setdefault('DetalleIVA', [])
             tax_details_info['Sujeta']['NoExenta']['DesgloseIVA']['DetalleIVA'] += tax_subject_isp_info_list
 
-        if not invoice.company_id.currency_id.is_zero(base_amount_not_subject) and invoice.is_sale_document():
+        if has_not_subject and invoice.is_sale_document():
             tax_details_info['NoSujeta']['ImportePorArticulos7_14_Otros'] = round(sign * base_amount_not_subject, 2)
-        if not invoice.company_id.currency_id.is_zero(base_amount_not_subject_loc) and invoice.is_sale_document():
+        if has_not_subject_loc and invoice.is_sale_document():
             tax_details_info['NoSujeta']['ImporteTAIReglasLocalizacion'] = round(sign * base_amount_not_subject_loc, 2)
 
         return {
@@ -286,10 +291,18 @@ class AccountEdiFormat(models.Model):
                         'NombreRazon': com_partner.name[:120],
                     }
                 export_exempts = invoice.invoice_line_ids.tax_ids.filtered(lambda t: t.l10n_es_exempt_reason == 'E2')
-                invoice_node['ClaveRegimenEspecialOTrascendencia'] = '02' if export_exempts else '01'
+                # If an invoice line contains an OSS tax, the invoice is considered as an OSS operation
+                is_oss = self._has_oss_taxes(invoice)
+
+                if is_oss:
+                    invoice_node['ClaveRegimenEspecialOTrascendencia'] = '17'
+                elif export_exempts:
+                    invoice_node['ClaveRegimenEspecialOTrascendencia'] = '02'
+                else:
+                    invoice_node['ClaveRegimenEspecialOTrascendencia'] = '01'
             else:
                 info['IDFactura']['IDEmisorFactura'] = partner_info
-                info['IDFactura']['NumSerieFacturaEmisor'] = invoice.ref[:60]
+                info["IDFactura"]["NumSerieFacturaEmisor"] = (invoice.ref or "")[:60]
                 if not is_simplified:
                     invoice_node['Contraparte'] = {
                         **partner_info,
@@ -352,11 +365,6 @@ class AccountEdiFormat(models.Model):
                         invoice_node.setdefault('TipoDesglose', {})
                         invoice_node['TipoDesglose'].setdefault('DesgloseTipoOperacion', {})
                         invoice_node['TipoDesglose']['DesgloseTipoOperacion']['Entrega'] = tax_details_info_consu_vals['tax_details_info']
-                    if not invoice_node.get('TipoDesglose'):
-                        raise UserError(_(
-                            "In case of a foreign customer, you need to configure the tax scope on taxes:\n%s",
-                            "\n".join(invoice.line_ids.tax_ids.mapped('name'))
-                        ))
 
                     invoice_node['ImporteTotal'] = round(sign * (
                         tax_details_info_service_vals['tax_details']['base_amount']
@@ -541,8 +549,11 @@ class AccountEdiFormat(models.Model):
                         if partner_info.get('NIF') and partner_info['NIF'] == respl_partner_info.NIF:
                             inv = candidate
                             break
-                        if partner_info.get('IDOtro') and all(getattr(respl_partner_info.IDOtro, k) == v
-                                                              for k, v in partner_info['IDOtro'].items()):
+                        if (
+                            partner_info.get('IDOtro')
+                            and respl_partner_info['IDOtro']
+                            and all(respl_partner_info['IDOtro'][k] == v for k, v in partner_info['IDOtro'].items())
+                        ):
                             inv = candidate
                             break
 
@@ -576,6 +587,14 @@ class AccountEdiFormat(models.Model):
                 }
 
         return results
+
+    def _has_oss_taxes(self, invoice):
+        oss_tax_groups = self.env['ir.model.data'].search([
+            ('module', '=', 'l10n_eu_oss'),
+            ('model', '=', 'account.tax.group')])
+        lines = invoice.invoice_line_ids.filtered(lambda line: line.display_type not in ('line_section', 'line_note'))
+        tax_groups = lines.mapped('tax_ids.tax_group_id')
+        return bool(set(tax_groups.ids) & set(oss_tax_groups.mapped('res_id')))
 
     # -------------------------------------------------------------------------
     # EDI OVERRIDDEN METHODS

@@ -549,11 +549,19 @@ var SnippetEditor = Widget.extend({
         if ($parent.closest(':data("snippet-editor")').length) {
             const isEmptyAndRemovable = ($el, editor) => {
                 editor = editor || $el.data('snippet-editor');
-                const isEmpty = $el.text().trim() === ''
+
+                // Consider a <figure> element as empty if it only contains a
+                // <figcaption> element (e.g., when its image has just been
+                // removed).
+                const isEmptyFigureEl = $el[0].matches("figure")
+                    && $el[0].children.length === 1
+                    && $el[0].children[0].matches("figcaption");
+
+                const isEmpty = isEmptyFigureEl || ($el.text().trim() === ''
                     && $el.children().toArray().every(el => {
                         // Consider layout-only elements (like bg-shapes) as empty
                         return el.matches(this.layoutElementsSelector);
-                    });
+                    }));
                 return isEmpty && !$el.hasClass('oe_structure')
                     && !$el.parent().hasClass('carousel-item')
                     && (!editor || editor.isTargetParentEditable)
@@ -2034,13 +2042,14 @@ var SnippetsMenu = Widget.extend({
             // Note: we cannot listen to keyup in .o_default_snippet_text
             // elements via delegation because keyup only bubbles from focusable
             // elements which contenteditable are not.
-            const selection = this.ownerDocument.getSelection();
+            const selection = this.$body[0].ownerDocument.getSelection();
             if (!selection.rangeCount) {
                 return;
             }
             const range = selection.getRangeAt(0);
-            $(range.startContainer).closest('.o_default_snippet_text').removeClass('o_default_snippet_text');
-            alreadySelectedElements.delete(range.startContainer);
+            const $defaultTextEl = $(range.startContainer).closest('.o_default_snippet_text');
+            $defaultTextEl.removeClass('o_default_snippet_text');
+            alreadySelectedElements.delete($defaultTextEl[0]);
         });
         const refreshSnippetEditors = _.debounce(() => {
             for (const snippetEditor of this.snippetEditors) {
@@ -2899,6 +2908,13 @@ var SnippetsMenu = Widget.extend({
         exclude += `${exclude && ', '}.o_snippet_not_selectable`;
 
         let filterFunc = function () {
+            if (forDrop) {
+                // Prevents blocks from being dropped into an image field.
+                const selfOrParentEl = isChildren ? this.parentNode : this;
+                if (selfOrParentEl.closest("[data-oe-type=image]")) {
+                    return false;
+                }
+            }
             // Exclude what it is asked to exclude.
             if ($(this).is(exclude)) {
                 return false;
@@ -2992,6 +3008,14 @@ var SnippetsMenu = Widget.extend({
         var $html = $(html);
         this._patchForComputeSnippetTemplates($html);
         var $scroll = $html.siblings('#o_scroll');
+
+        // TODO adapt in master. This patches the BlogPostTagSelection option
+        // in stable versions. Done here to avoid converting the html back to
+        // a string.
+        const optionEl = $html.find('[data-js="BlogPostTagSelection"][data-selector=".o_wblog_post_page_cover"]')[0];
+        if (optionEl) {
+            optionEl.dataset.selector = '.o_wblog_post_page_cover[data-res-model="blog.post"]';
+        }
 
         this.templateOptions = [];
         var selectors = [];

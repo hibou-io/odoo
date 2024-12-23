@@ -4,7 +4,7 @@
 # 
 # Translators:
 # Martin Trigaux, 2023
-# Wil Odoo, 2023
+# Wil Odoo, 2024
 # Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2024
 # 
 msgid ""
@@ -3439,12 +3439,15 @@ msgid "Sick Time Off"
 msgstr "Лікарняний"
 
 #. module: hr_holidays
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave_accrual_plan.py:0
 #, python-format
 msgid ""
 "Some of the accrual plans you're trying to delete are linked to an existing "
 "allocation. Delete or cancel them first."
 msgstr ""
+"Деякі з планів накопичення, які ви намагаєтеся видалити, пов’язані з наявним"
+" розподілом. Спочатку видаліть або скасуйте їх."
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave_accrual_plan__time_off_type_id
@@ -3611,6 +3614,14 @@ msgid "Taken Leave"
 msgstr "Взята відпустка"
 
 #. module: hr_holidays
+#. odoo-python
+#: code:addons/hr_holidays/models/hr_leave_allocation.py:0
+#, python-format
+msgid ""
+"The Start Date of the Validity Period must be anterior to the End Date."
+msgstr "Дата початку Періоду дії має бути до Кінцевої дати."
+
+#. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave_accrual_level__start_count
 msgid ""
 "The accrual starts after a defined period from the allocation start date. "
@@ -3620,6 +3631,15 @@ msgstr ""
 "Нарахування починається після визначеного періоду з дати початку розподілу. "
 "Це поле визначає кількість днів, місяців або років, після яких "
 "використовується нарахування."
+
+#. module: hr_holidays
+#. odoo-python
+#: code:addons/hr_holidays/models/hr_leave_type.py:0
+#, python-format
+msgid ""
+"The allocation requirement of a time off type cannot be changed once leaves "
+"of that type have been taken. You should create a new time off type instead."
+msgstr ""
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave__color

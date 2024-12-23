@@ -6,9 +6,9 @@
 # Geoffrey_GMF <gmf@odoo.com>, 2022
 # Cécile Collart <cco@odoo.com>, 2022
 # Martin Trigaux, 2023
-# Wil Odoo, 2024
 # Jolien De Paepe, 2024
 # Larissa Manderfeld, 2024
+# Wil Odoo, 2024
 # Manon Rondou, 2024
 # 
 msgid ""
@@ -3460,6 +3460,7 @@ msgid "Sick Time Off"
 msgstr "Congé maladie"
 
 #. module: hr_holidays
+#. odoo-python
 #: code:addons/hr_holidays/models/hr_leave_accrual_plan.py:0
 #, python-format
 msgid ""
@@ -3634,6 +3635,16 @@ msgid "Taken Leave"
 msgstr "Congé pris"
 
 #. module: hr_holidays
+#. odoo-python
+#: code:addons/hr_holidays/models/hr_leave_allocation.py:0
+#, python-format
+msgid ""
+"The Start Date of the Validity Period must be anterior to the End Date."
+msgstr ""
+"La date de début de la période de validité doit être antérieure à la date de"
+" fin."
+
+#. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave_accrual_level__start_count
 msgid ""
 "The accrual starts after a defined period from the allocation start date. "
@@ -3643,6 +3654,18 @@ msgstr ""
 "Le cumul commence après une période définie à partir de la date de début de "
 "l'allocation. Ce champ définit le nombre de jours, mois ou années après "
 "lesquels le cumul est utilisé."
+
+#. module: hr_holidays
+#. odoo-python
+#: code:addons/hr_holidays/models/hr_leave_type.py:0
+#, python-format
+msgid ""
+"The allocation requirement of a time off type cannot be changed once leaves "
+"of that type have been taken. You should create a new time off type instead."
+msgstr ""
+"L'attribution d`une catégorie de congé ne peut pas être modifiée une fois "
+"que les congés de cette catégorie ont été pris. Créez plutôt une nouvelle "
+"catégorie de congés."
 
 #. module: hr_holidays
 #: model:ir.model.fields,help:hr_holidays.field_hr_leave__color
