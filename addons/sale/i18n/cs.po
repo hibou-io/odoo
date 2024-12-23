@@ -14,6 +14,7 @@
 # Vojtech Smolka, 2024
 # Katerina Horylova, 2024
 # Jakub Smolka, 2024
+# Marta Wacławek, 2024
 # 
 msgid ""
 msgstr ""
@@ -21,7 +22,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-08-13 10:28+0000\n"
 "PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Jakub Smolka, 2024\n"
+"Last-Translator: Marta Wacławek, 2024\n"
 "Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1172,15 +1173,9 @@ msgid ""
 "e.g. this option can be useful to share Product description files.\n"
 "Confirmed order: the document will be sent to and accessible by customers.\n"
 "e.g. this option can be useful to share User Manual or digital content bought on ecommerce. \n"
-"Inside quote: The document will be included in the pdf of the quotation between the header pages and the quote table. "
+"Inside quote: The document will be included in the pdf of the quotation \n"
+"and sale order between the header pages and the quote table. "
 msgstr ""
-"Umožňuje sdílet dokument se zákazníky v rámci prodeje.\n"
-"Pokud nechcete tento doklad s prodejním zákazníkem sdílet, ponechte jej prázdný.\n"
-"Nabídka: Dokument bude zaslán zákazníkům a bude pro ně kdykoli přístupný.\n"
-"Tato možnost může být užitečná např. pro sdílení souborů s popisem výrobku.\n"
-"Potvrzená objednávka: dokument bude zaslán zákazníkům a bude jim přístupný.\n"
-"Např. tato možnost může být užitečná pro sdílení uživatelské příručky nebo digitálního obsahu zakoupeného v elektronickém obchodě. \n"
-"Uvnitř citace: V případě, že se jedná o dokument, který je v nabídce, je možné použít tuto možnost: Dokument bude zařazen do pdf nabídky mezi stránky záhlaví a tabulku nabídky. "
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_payment_link_wizard__amount_paid
@@ -4221,7 +4216,6 @@ msgstr "Prodejní objednávka(y)"
 #: model:ir.ui.menu,name:sale.menu_sales_config
 #: model_terms:ir.ui.view,arch_db:sale.crm_team_view_kanban_dashboard
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_home_menu_sale
-#: model_terms:ir.ui.view,arch_db:sale.portal_my_home_sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_tree
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_view_search_inherit_quotation
 #: model_terms:ir.ui.view,arch_db:sale.view_order_product_search
@@ -4532,7 +4526,7 @@ msgstr "Podepsat a zaplatit nabídku"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "Sign &amp; Pay"
-msgstr "Podepsat &amp; zaplatit"
+msgstr "Podepsat a zaplatit"
 
 #. module: sale
 #: model:ir.model.fields.selection,name:sale.selection__res_company__sale_onboarding_payment_method__digital_signature
@@ -5015,6 +5009,16 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:sale.view_sale_advance_payment_inv
 msgid "There are existing"
 msgstr "Existují stávající"
+
+#. module: sale
+#. odoo-python
+#: code:addons/sale/wizard/sale_order_discount.py:0
+#, python-format
+msgid ""
+"There does not seem to be any discount product configured for this company "
+"yet. You can either use a per-line discount, or ask an administrator to "
+"grant the discount the first time."
+msgstr ""
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
@@ -5579,6 +5583,7 @@ msgstr ""
 "                ať už jde o skladovatelný produkt, spotřební materiál nebo službu."
 
 #. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.portal_my_home_sale
 #: model_terms:ir.ui.view,arch_db:sale.portal_my_orders
 msgid "Your Orders"
 msgstr "Vaše objednávky"

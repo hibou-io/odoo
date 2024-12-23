@@ -4,9 +4,9 @@
 # 
 # Translators:
 # 764374359f7a865bd0df682e21e54552_335e00f <6548f6be8d222d7d28a3e8d58aa819d1_1128047>, 2023
-# Ryoko Tsuda <ryoko@quartile.co>, 2024
 # Yoshi Tashiro (Quartile) <tashiro@roomsfor.hk>, 2024
 # Wil Odoo, 2024
+# Ryoko Tsuda <ryoko@quartile.co>, 2024
 # Junko Augias, 2024
 # 
 msgid ""
@@ -1520,6 +1520,20 @@ msgid ""
 msgstr "勘定科目%sは消込を許可していません。許可するには、まずこの勘定科目の設定を変更して下さい。"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_line.py:0
+#, python-format
+msgid "Account %s is of payable type, but is used in a sale operation."
+msgstr "勘定は %s 支払タイプですが、販売オペレーションで使用されています。"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_line.py:0
+#, python-format
+msgid "Account %s is of receivable type, but is used in a purchase operation."
+msgstr "勘定 %s は売掛タイプですが、購買オペレーションで使用されています。"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__module_account_avatax
 msgid "Account Avatax"
 msgstr "勘定Avatax"
@@ -2743,7 +2757,7 @@ msgstr "一致条件 (VAT/国)が満たされた場合、自動的に請求書�
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__4
 msgid "April"
-msgstr "四月"
+msgstr "4月"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_incoterms_form
@@ -2841,7 +2855,7 @@ msgstr "監査可能"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__8
 msgid "August"
-msgstr "八月"
+msgstr "8月"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_reconcile_model_search
@@ -4091,7 +4105,7 @@ msgstr "会社文書レイアウト"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_fiscal_position__fiscal_country_codes
 msgid "Company Fiscal Country Code"
-msgstr "会社の税法上の居住地国コード"
+msgstr "会社の会計上の国コード"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__is_storno
@@ -4481,7 +4495,7 @@ msgstr "新規の販売可能なプロダクトを作成します。"
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.res_partner_action_supplier
 msgid "Create a new supplier in your address book"
-msgstr "アドレス帳に新しいサプライヤを作成します。"
+msgstr "アドレス帳に新しい仕入先を作成します。"
 
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.action_tax_form
@@ -5049,11 +5063,6 @@ msgid "DELIVERED DUTY PAID"
 msgstr "DELIVERED DUTY PAID"
 
 #. module: account
-#: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__down
-msgid "DOWN"
-msgstr "切り捨て"
-
-#. module: account
 #: model:ir.ui.menu,name:account.menu_board_journal_1
 msgid "Dashboard"
 msgstr "ダッシュボード"
@@ -5061,7 +5070,7 @@ msgstr "ダッシュボード"
 #. module: account
 #: model:ir.actions.server,name:account.action_check_hash_integrity
 msgid "Data Inalterability Check"
-msgstr "データの不変性チェック"
+msgstr "データの変更不可チェック"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
@@ -5199,7 +5208,7 @@ msgstr "この仕訳項目とマッチしている借方仕訳項目。"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__12
 msgid "December"
-msgstr "十二月"
+msgstr "12月"
 
 #. module: account
 #: model:ir.model,name:account.model_decimal_precision
@@ -5519,7 +5528,7 @@ msgstr "方向指示サイン"
 #: model:ir.model.fields.selection,name:account.selection__account_report__filter_multi_company__disabled
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Disabled"
-msgstr "無効にします"
+msgstr "無効"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -5776,6 +5785,11 @@ msgstr "ドメイン計算式ショートカット"
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Domestic country of your accounting"
 msgstr "会計を処理する国"
+
+#. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__down
+msgid "Down"
+msgstr "切り捨て"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_send__checkbox_download
@@ -6409,7 +6423,7 @@ msgstr "お気に入り"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__2
 msgid "February"
-msgstr "二月"
+msgstr "2月"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_fiscal_position__state_ids
@@ -6495,7 +6509,7 @@ msgstr "1行目インデックス"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_resequence_wizard__first_name
 msgid "First New Sequence"
-msgstr "最初の新しい付番"
+msgstr "最初の新しいシーケンス番号"
 
 #. module: account
 #: model:onboarding.onboarding.step,done_text:account.onboarding_onboarding_step_create_invoice
@@ -6513,7 +6527,7 @@ msgstr "最初の定期的な仕訳"
 #: model:ir.model.fields,field_description:account.field_res_company__account_fiscal_country_id
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Fiscal Country"
-msgstr "税法上の居住地国"
+msgstr "会計上の国"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__account_fiscal_country_id
@@ -7037,11 +7051,6 @@ msgid "Growth Comparison"
 msgstr "成長率比較"
 
 #. module: account
-#: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__half-up
-msgid "HALF-UP"
-msgstr "切上げ"
-
-#. module: account
 #: model:ir.model,name:account.model_ir_http
 msgid "HTTP Routing"
 msgstr "HTTPルーティング"
@@ -7507,7 +7516,7 @@ msgstr "最初の請求書をインポート"
 #: model:ir.model.fields.selection,name:account.selection__account_move__payment_state__in_payment
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "In Payment"
-msgstr "支払中"
+msgstr "支払処理中"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_default_terms_and_conditions
@@ -7534,19 +7543,19 @@ msgstr "無効"
 #: model:ir.model.fields,field_description:account.field_account_move__inalterable_hash
 #: model:ir.model.fields,field_description:account.field_account_payment__inalterable_hash
 msgid "Inalterability Hash"
-msgstr "不変性ハッシュ"
+msgstr "変更不可ハッシュ"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
 msgid "Inalterability check"
-msgstr "不変性チェック"
+msgstr "変更不可チェック"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__secure_sequence_number
 #: model:ir.model.fields,field_description:account.field_account_move__secure_sequence_number
 #: model:ir.model.fields,field_description:account.field_account_payment__secure_sequence_number
 msgid "Inalteralbility No Gap Sequence #"
-msgstr "不変性ギャップなし付番数"
+msgstr "変更不可ギャップなしシーケンス"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_payment_method__payment_type__inbound
@@ -7939,7 +7948,7 @@ msgstr "請求書オンライン支払"
 #: model:ir.model.fields,field_description:account.field_account_move__invoice_outstanding_credits_debits_widget
 #: model:ir.model.fields,field_description:account.field_account_payment__invoice_outstanding_credits_debits_widget
 msgid "Invoice Outstanding Credits Debits Widget"
-msgstr "未払請求書クレジットデビットウィジェット"
+msgstr "請求書 未消込貸方借方ウィジェット"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__invoice_partner_display_name
@@ -8287,7 +8296,7 @@ msgstr "元は '%(previous)s' が更新されて '%(current)s'になりました
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__1
 msgid "January"
-msgstr "一月"
+msgstr "1月"
 
 #. module: account
 #: model:ir.model,name:account.model_account_journal
@@ -8574,12 +8583,12 @@ msgstr "JSONアクティビティデータ"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__7
 msgid "July"
-msgstr "七月"
+msgstr "7月"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__6
 msgid "June"
-msgstr "六月"
+msgstr "6月"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_journal__kanban_dashboard
@@ -9118,7 +9127,7 @@ msgstr "Marc Demo"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__3
 msgid "March"
-msgstr "三月"
+msgstr "3月"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_invoice_report__price_margin
@@ -9238,7 +9247,7 @@ msgstr "最大の税ロック日"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__5
 msgid "May"
-msgstr "五月"
+msgstr "5月"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment_register__communication
@@ -9476,6 +9485,11 @@ msgstr "検索可能な名前"
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Navigate easily through reports and see what is behind the numbers"
 msgstr "レポートを簡単にナビゲートして、数字の背景を確認します"
+
+#. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__half-up
+msgid "Nearest"
+msgstr "直近"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__need_cancel_request
@@ -9784,7 +9798,7 @@ msgstr "ノート"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__11
 msgid "November"
-msgstr "十一月"
+msgstr "11月"
 
 #. module: account
 #. odoo-javascript
@@ -9892,7 +9906,7 @@ msgstr "OFXインポート"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__10
 msgid "October"
-msgstr "十月"
+msgstr "10月"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_journal__invoice_reference_model__odoo
@@ -9921,7 +9935,7 @@ msgstr "Odooで顧客に関連したあらゆる活動を簡単に追跡でき�
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.res_partner_action_supplier
 msgid "Odoo helps you easily track all activities related to a supplier."
-msgstr "Odooでサプライヤに関連したあらゆる活動を簡単に追跡できます。"
+msgstr "Odooで仕入先に関連したあらゆる活動を簡単に追跡できます。"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_account__internal_group__off_balance
@@ -10357,14 +10371,14 @@ msgstr "未消込入金勘定科目"
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "Outstanding credits"
-msgstr "未回収売掛金"
+msgstr "未消込貸方"
 
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "Outstanding debits"
-msgstr "未処理借方"
+msgstr "未消込借方"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_invoice_filter
@@ -10553,7 +10567,7 @@ msgstr "取引先与信限度警告"
 #. module: account
 #: model:ir.actions.act_window,name:account.action_account_moves_ledger_partner
 msgid "Partner Ledger"
-msgstr "取引先仕訳"
+msgstr "取引先元帳"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_partner__use_partner_credit_limit
@@ -10681,7 +10695,7 @@ msgstr "支払に関するやり取り："
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_journal_form
 msgid "Payment Communications"
-msgstr "支払コミュニケーションズ"
+msgstr "支払に関するやり取り"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_tree
@@ -11754,7 +11768,7 @@ msgstr "RES取引先銀行"
 #. module: account
 #: model:ir.actions.act_window,name:account.action_account_resequence
 msgid "Resequence"
-msgstr "再順序付け"
+msgstr "再付番"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_form
@@ -12164,6 +12178,7 @@ msgstr "このページを保存して、戻って機能を設定してくださ
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_payment.py:0
+#: code:addons/account/wizard/account_payment_register.py:0
 #, python-format
 msgid "Scan me with your banking app."
 msgstr "銀行のアプリで私をスキャンします。"
@@ -12566,7 +12581,7 @@ msgstr "請求書で割引勘定を分ける"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__9
 msgid "September"
-msgstr "九月"
+msgstr "9月"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__sequence
@@ -13107,7 +13122,7 @@ msgstr "適しジャーナル"
 #: model:ir.model.fields,field_description:account.field_res_partner_bank__partner_supplier_rank
 #: model:ir.model.fields,field_description:account.field_res_users__supplier_rank
 msgid "Supplier Rank"
-msgstr "サプライヤランク"
+msgstr "仕入先ランク"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_journal__suspense_account_id
@@ -13614,6 +13629,15 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_report.py:0
+#, python-format
+msgid ""
+"The Availability is set to 'Country Matches' but the field Country is not "
+"set."
+msgstr "可用性は '国一致' に設定されていますが、国フィールドは設定されていません。"
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/account_move.py:0
 #, python-format
 msgid "The Bill/Refund date is required to validate this document."
@@ -13684,10 +13708,9 @@ msgstr "支払条件には、少なくとも1つ以上の％の行があり、�
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid ""
-"The Syscohada chart template shouldn't be selected directly. Instead, you "
-"should directly select the chart template related to your country."
-msgstr ""
-"Syscohada チャートテンプレートを直接選択すべきではありません。代わりに、あなたの国に関連するチャートテンプレートを直接選択して下さい。"
+"The %s chart template shouldn't be selected directly. Instead, you should "
+"directly select the chart template related to your country."
+msgstr "%sチャートテンプレートを直接選択しないで下さい。代わりに、あなたの国に関連するチャートテンプレートを直接選択して下さい。"
 
 #. module: account
 #. odoo-python
@@ -15314,11 +15337,6 @@ msgid "Type of the exception activity on record."
 msgstr "記録上の例外活動の種類。"
 
 #. module: account
-#: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__up
-msgid "UP"
-msgstr "切り上げ"
-
-#. module: account
 #. odoo-python
 #: code:addons/account/models/account_bank_statement.py:0
 #, python-format
@@ -15493,6 +15511,11 @@ msgstr "信頼できない支払カウント"
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "UoM"
 msgstr "測定単位"
+
+#. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__up
+msgid "Up"
+msgstr "切り上げ"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -16161,7 +16184,7 @@ msgstr "政府に送信された請求書のキャンセル要求しかできま
 #: code:addons/account/wizard/account_resequence.py:0
 #, python-format
 msgid "You can only resequence items from the same journal"
-msgstr "同じ仕訳の項目のみ、再順序付けできます"
+msgstr "同じ仕訳の項目のみ、再付番できます"
 
 #. module: account
 #. odoo-python
@@ -16197,7 +16220,7 @@ msgstr "ここで、検証後に顧客の請求書に表示されるデフォル
 #: code:addons/account/wizard/account_move_send.py:0
 #, python-format
 msgid "You can't Send & Print invoice(s) in draft state."
-msgstr "ドラフトの状態で請求書を送る＆印刷することはできません。"
+msgstr "ドラフトの状態で請求書を送信＆印刷することはできません。"
 
 #. module: account
 #. odoo-python
@@ -16244,6 +16267,13 @@ msgid ""
 "You can't create a new statement line without a suspense account set on the "
 "%s journal."
 msgstr "%sのジャーナルに設定された仮勘定をせずに新しい文の行を作成することはできません。"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_payment_register.py:0
+#, python-format
+msgid "You can't create payments for entries belonging to different branches."
+msgstr "異なる支店に属する仕訳に対して支払を作成することはできません。"
 
 #. module: account
 #. odoo-python
@@ -17135,12 +17165,12 @@ msgstr "から"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "outstanding credits"
-msgstr "未払貸方"
+msgstr "未消込貸方"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "outstanding debits"
-msgstr "未払借方"
+msgstr "未消込借方"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_register_form

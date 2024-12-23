@@ -1132,7 +1132,7 @@ export class Orderline extends PosModel {
     }
     getComboTotalPriceWithoutTax() {
         const allLines = this.getAllLinesInCombo();
-        return allLines.reduce((total, line) => total + line.get_all_prices(1).priceWithoutTax, 0);
+        return allLines.reduce((total, line) => total + line.get_base_price() / line.quantity, 0);
     }
     findAttribute(values, customAttributes) {
         const listOfAttributes = [];
@@ -1658,7 +1658,7 @@ export class Order extends PosModel {
             footer: this.pos.config.receipt_footer,
             // FIXME: isn't there a better way to handle this date?
             shippingDate:
-                this.shippingDate && formatDate(DateTime.fromJSDate(new Date(this.shippingDate))),
+                this.shippingDate && formatDate(DateTime.fromSQL(this.shippingDate)),
             headerData: {
                 ...this.pos.getReceiptHeaderData(this),
                 trackingNumber: this.trackingNumber,
@@ -2506,7 +2506,10 @@ export class Order extends PosModel {
                         orderLine.getUnitDisplayPriceBeforeDiscount() *
                         (orderLine.get_discount() / 100) *
                         orderLine.get_quantity();
-                    if (orderLine.display_discount_policy() === "without_discount") {
+                    if (
+                        orderLine.display_discount_policy() === "without_discount" &&
+                        !(orderLine.price_type === "manual")
+                    ) {
                         sum +=
                             (orderLine.get_taxed_lst_unit_price() -
                                 orderLine.getUnitDisplayPriceBeforeDiscount()) *

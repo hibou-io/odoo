@@ -468,11 +468,19 @@ var SnippetEditor = Widget.extend({
         if ($parent.closest(':data("snippet-editor")').length) {
             const isEmptyAndRemovable = ($el, editor) => {
                 editor = editor || $el.data('snippet-editor');
-                const isEmpty = $el.text().trim() === ''
+
+                // Consider a <figure> element as empty if it only contains a
+                // <figcaption> element (e.g., when its image has just been
+                // removed).
+                const isEmptyFigureEl = $el[0].matches("figure")
+                    && $el[0].children.length === 1
+                    && $el[0].children[0].matches("figcaption");
+
+                const isEmpty = isEmptyFigureEl || ($el.text().trim() === ''
                     && $el.children().toArray().every(el => {
                         // Consider layout-only elements (like bg-shapes) as empty
                         return el.matches(this.layoutElementsSelector);
-                    });
+                    }));
                 return isEmpty && !$el.hasClass('oe_structure')
                     && !$el.parent().hasClass('carousel-item')
                     && (!editor || editor.isTargetParentEditable)
@@ -1906,6 +1914,7 @@ var SnippetsMenu = Widget.extend({
         this.customizePanel = document.createElement('div');
         this.customizePanel.classList.add('o_we_customize_panel', 'd-none');
 
+        this.options.wysiwyg.toolbarEl.classList.add('d-none');
         this._toolbarWrapperEl = document.createElement('div');
         this._toolbarWrapperEl.classList.add('o_we_toolbar_wrapper');
         class WebsiteToolbar extends Component {
@@ -1932,7 +1941,6 @@ var SnippetsMenu = Widget.extend({
 
         const toolbarEl = this._toolbarWrapperEl.firstChild;
         toolbarEl.classList.remove('oe-floating');
-        this.options.wysiwyg.toolbarEl.classList.add('d-none');
         this.options.wysiwyg.setupToolbar(toolbarEl);
         this._addToolbar();
         this._checkEditorToolbarVisibilityCallback = this._checkEditorToolbarVisibility.bind(this);
@@ -2088,7 +2096,7 @@ var SnippetsMenu = Widget.extend({
             // Note: we cannot listen to keyup in .o_default_snippet_text
             // elements via delegation because keyup only bubbles from focusable
             // elements which contenteditable are not.
-            const selection = this.ownerDocument.getSelection();
+            const selection = this.$body[0].ownerDocument.getSelection();
             if (!selection.rangeCount) {
                 return;
             }
@@ -2937,6 +2945,13 @@ var SnippetsMenu = Widget.extend({
         exclude += `${exclude && ', '}.o_snippet_not_selectable`;
 
         let filterFunc = function () {
+            if (forDrop) {
+                // Prevents blocks from being dropped into an image field.
+                const selfOrParentEl = isChildren ? this.parentNode : this;
+                if (selfOrParentEl.closest("[data-oe-type=image]")) {
+                    return false;
+                }
+            }
             // Exclude what it is asked to exclude.
             if ($(this).is(exclude)) {
                 return false;
@@ -3193,9 +3208,25 @@ var SnippetsMenu = Widget.extend({
      * @param {jQuery}
      */
     _patchForComputeSnippetTemplates($html) {
+        // TODO: Remove in master and add it in template s_website_form
+        const websiteFormEditorOptionsEl = $html.find('[data-js="WebsiteFormEditor"]')[0];
+        if (websiteFormEditorOptionsEl) {
+            websiteFormEditorOptionsEl.dataset.dropExcludeAncestor = "form";
+        }
+
         // TODO: Remove in master and add it back in the template.
         const $vAlignOption = $html.find("#row_valign_snippet_option");
         $vAlignOption[0].dataset.js = "vAlignment";
+
+        // Replace the "src" attribute of iframes with "data-o-src-on-drop" to
+        // prevent the iframes from loading in the snippet menu. This is a fix
+        // in stable that is no longer needed in later versions, where the
+        // snippets' HTML code is no longer rendered in the snippet menu.
+        const iframeEls = $html.find("[data-snippet] iframe[src]");
+        for (const iframeEl of iframeEls) {
+            iframeEl.dataset.oSrcOnDrop = iframeEl.getAttribute("src");
+            iframeEl.removeAttribute("src");
+        }
     },
     /**
      * Creates a snippet editor to associated to the given snippet. If the given
@@ -3496,6 +3527,14 @@ var SnippetsMenu = Widget.extend({
                     });
                     dynamicSvg.src = colorCustomizedURL.pathname + colorCustomizedURL.search;
                 });
+
+                // The iframes must be loaded when the drag-and-drop starts and not when the snippet
+                // menu is loaded.
+                const iframeEls = $toInsert[0].querySelectorAll("iframe[data-o-src-on-drop]");
+                for (const iframeEl of iframeEls) {
+                    iframeEl.setAttribute("src", iframeEl.dataset.oSrcOnDrop);
+                    delete iframeEl.dataset.oSrcOnDrop;
+                }
 
                 if (!$selectorSiblings.length && !$selectorChildren.length) {
                     console.warn($snippet.find('.oe_snippet_thumbnail_title').text() + " have not insert action: data-drop-near or data-drop-in");

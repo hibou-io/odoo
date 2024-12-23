@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import datetime
@@ -6,7 +5,6 @@ import logging
 import traceback
 from collections import defaultdict
 from uuid import uuid4
-
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, exceptions, fields, models
@@ -64,6 +62,7 @@ TIME_TRIGGERS = [
     'on_time_created',
     'on_time_updated',
 ]
+
 
 def get_webhook_request_payload():
     if not request:
@@ -182,7 +181,8 @@ class BaseAutomation(models.Model):
         string='Before Update Domain',
         compute='_compute_filter_pre_domain',
         readonly=False, store=True,
-        help="If present, this condition must be satisfied before the update of the record.")
+        help="If present, this condition must be satisfied before the update of the record. "
+             "Not checked on record creation.")
     filter_domain = fields.Char(
         string='Apply on',
         help="If present, this condition must be satisfied before executing the automation rule.",
@@ -221,6 +221,7 @@ class BaseAutomation(models.Model):
                       action_names=', '.join(failing_actions.mapped('name'))
                      )
                 )
+
     @api.depends("trigger", "webhook_uuid")
     def _compute_url(self):
         for automation in self:
@@ -420,26 +421,43 @@ class BaseAutomation(models.Model):
                 ),
             }}
 
+    def _has_trigger_onchange(self):
+        return any(
+            automation.active and automation.trigger == 'on_change' and automation.on_change_field_ids
+            for automation in self
+        )
+
     @api.model_create_multi
     def create(self, vals_list):
         base_automations = super(BaseAutomation, self).create(vals_list)
         self._update_cron()
         self._update_registry()
+        if base_automations._has_trigger_onchange():
+            # Invalidate templates cache to update on_change attributes if needed
+            self.env.registry.clear_cache('templates')
         return base_automations
 
-    def write(self, vals):
+    def write(self, vals: dict):
+        clear_templates = self._has_trigger_onchange()
         res = super(BaseAutomation, self).write(vals)
         if set(vals).intersection(self.CRITICAL_FIELDS):
             self._update_cron()
             self._update_registry()
+            if clear_templates or self._has_trigger_onchange():
+                # Invalidate templates cache to update on_change attributes if needed
+                self.env.registry.clear_cache('templates')
         elif set(vals).intersection(self.RANGE_FIELDS):
             self._update_cron()
         return res
 
     def unlink(self):
+        clear_templates = self._has_trigger_onchange()
         res = super(BaseAutomation, self).unlink()
         self._update_cron()
         self._update_registry()
+        if clear_templates:
+            # Invalidate templates cache to update on_change attributes if needed
+            self.env.registry.clear_cache('templates')
         return res
 
     def copy(self, default=None):
@@ -579,7 +597,7 @@ class BaseAutomation(models.Model):
     def _get_cron_interval(self, automations=None):
         """ Return the expected time interval used by the cron, in minutes. """
         def get_delay(rec):
-            return rec.trg_date_range * DATE_RANGE_FACTOR[rec.trg_date_range_type]
+            return abs(rec.trg_date_range) * DATE_RANGE_FACTOR[rec.trg_date_range_type]
 
         if automations is None:
             automations = self.with_context(active_test=True).search([('trigger', 'in', TIME_TRIGGERS)])
@@ -652,14 +670,13 @@ class BaseAutomation(models.Model):
             self = self.with_context(__action_done=automation_done)
             records = records.with_context(__action_done=automation_done)
 
-        # modify records
-        if 'date_automation_last' in records._fields:
-            records.date_automation_last = fields.Datetime.now()
-
         # we process the automation on the records for which any watched field
         # has been modified, and only mark the automation as done for those
         records = records.filtered(self._check_trigger_fields)
         automation_done[self] = records_done + records
+
+        if records and 'date_automation_last' in records._fields:
+            records.date_automation_last = fields.Datetime.now()
 
         # prepare the contexts for server actions
         contexts = [
@@ -742,7 +759,7 @@ class BaseAutomation(models.Model):
                 pre = {a: a._filter_pre(records) for a in automations}
                 # read old values before the update
                 old_values = {
-                    record.id: {field_name: record[field_name] for field_name in vals if field_name in record._fields}
+                    record.id: {field_name: record[field_name] for field_name in vals if field_name in record._fields and record._fields[field_name].store}
                     for record in records
                 }
                 # call original method
@@ -894,8 +911,6 @@ class BaseAutomation(models.Model):
                 method = make_onchange(automation_rule.id)
                 for field in automation_rule.on_change_field_ids:
                     Model._onchange_methods[field.name].append(method)
-                if automation_rule.on_change_field_ids:
-                    self.env.registry.clear_cache('templates')
 
             if automation_rule.model_id.is_mail_thread and automation_rule.trigger in MAIL_TRIGGERS:
                 patch(Model, "message_post", make_message_post())

@@ -312,24 +312,23 @@ export class StaticList extends DataPoint {
             await this.model._askChanges(false);
         }
         return this.model.mutex.exec(async () => {
-            if (this.editedRecord) {
-                const isValid = this.editedRecord._checkValidity();
+            let editedRecord = this.editedRecord;
+            if (editedRecord) {
+                const isValid = editedRecord._checkValidity();
                 if (!isValid && validate) {
                     return false;
                 }
                 if (canAbandon !== false && !validate) {
-                    this._abandonRecords([this.editedRecord], { force: true });
+                    this._abandonRecords([editedRecord], { force: true });
                 }
                 // if we still have an editedRecord, it means it hasn't been abandonned
-                if (this.editedRecord) {
-                    if (isValid && !this.editedRecord.dirty && discard) {
+                editedRecord = this.editedRecord;
+                if (editedRecord) {
+                    if (isValid && !editedRecord.dirty && discard) {
                         return false;
                     }
-                    if (
-                        isValid ||
-                        (!this.editedRecord.dirty && !this.editedRecord._manuallyAdded)
-                    ) {
-                        this.editedRecord._switchMode("readonly");
+                    if (isValid || (!editedRecord.dirty && !editedRecord._manuallyAdded)) {
+                        editedRecord._switchMode("readonly");
                     }
                 }
             }
@@ -353,7 +352,8 @@ export class StaticList extends DataPoint {
 
     load({ limit, offset, orderBy } = {}) {
         return this.model.mutex.exec(async () => {
-            if (this.editedRecord && !(await this.editedRecord.checkValidity())) {
+            const editedRecord = this.editedRecord;
+            if (editedRecord && !(await editedRecord.checkValidity())) {
                 return;
             }
             limit = limit !== undefined ? limit : this.limit;
@@ -782,7 +782,8 @@ export class StaticList extends DataPoint {
         const options = {
             parentRecord: this._parent,
             onUpdate: async ({ withoutParentUpdate }) => {
-                if (!this.currentIds.includes(record.isNew ? record._virtualId : record.resId)) {
+                const id = record.isNew ? record._virtualId : record.resId;
+                if (!this.currentIds.includes(id)) {
                     // the record hasn't been added to the list yet (we're currently creating it
                     // from a dialog)
                     return;

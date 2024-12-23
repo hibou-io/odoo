@@ -1649,6 +1649,17 @@ msgstr "Variazione quantità di prodotto"
 
 #. module: stock
 #. odoo-python
+#: code:addons/stock/models/stock_move_line.py:0
+#, python-format
+msgid ""
+"Changing the Lot/Serial number for move lines with different products is not"
+" allowed."
+msgstr ""
+"Non è possibile modificare il numero di lotto/serie per le righe di "
+"movimento con vari prodotti."
+
+#. module: stock
+#. odoo-python
 #: code:addons/stock/models/product_strategy.py:0
 #: code:addons/stock/models/stock_location.py:0
 #: code:addons/stock/models/stock_lot.py:0
@@ -8781,7 +8792,7 @@ msgid ""
 "Storable products are physical items for which you manage the inventory "
 "level."
 msgstr ""
-"I prodotti immagazzinabili sono articoli fisici per i quali si gestisce il "
+"I prodotti stoccabili sono articoli fisici per i quali si gestisce il "
 "livello di inventario."
 
 #. module: stock
@@ -8921,6 +8932,13 @@ msgstr ""
 "Il valore \"Operazione manuale\" crea un movimento di magazzino dopo quello "
 "attuale. Con \"Automatico senza fase aggiunta\" nel movimento di origine "
 "viene sostituita l'ubicazione."
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid "The Lot/Serial number (%s) is linked to another product."
+msgstr "Numero di lotto/serie (%s) collegato ad un altro prodotto."
 
 #. module: stock
 #. odoo-python
@@ -10895,6 +10913,13 @@ msgstr ""
 "Da questa vista, non è possibile confezionare nello stesso collo quantità "
 "provenienti da vari trasferimenti. Prova ad aggiungerli ad un prelievo "
 "raggruppato e confezionali lì."
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/models/stock_quant.py:0
+#, python-format
+msgid "You cannot duplicate stock quants."
+msgstr "Non è possibile duplicare le quantità in stock."
 
 #. module: stock
 #. odoo-python
