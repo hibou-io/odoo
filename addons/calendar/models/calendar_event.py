@@ -289,11 +289,14 @@ class Meeting(models.Model):
     def _compute_user_can_edit(self):
         for event in self:
             # By default, only current attendees and the organizer can edit the event.
-            editor_candidates = event.partner_ids.user_ids + event.user_id
+            editor_candidates = set(event.partner_ids.user_ids + event.user_id)
             # Right before saving the event, old partners must be able to save changes.
             if event._origin:
-                editor_candidates += event._origin.partner_ids.user_ids
-            event.user_can_edit = self.env.user.id in editor_candidates.ids
+                editor_candidates |= set(event._origin.partner_ids.user_ids)
+            # Non-private events must be editable by uninvited administrators.
+            if self.env.user.has_group('base.group_system') and event.privacy != 'private':
+                editor_candidates.add(self.env.user)
+            event.user_can_edit = self.env.user in editor_candidates
 
     @api.depends('partner_ids')
     def _compute_invalid_email_partner_ids(self):
@@ -749,9 +752,10 @@ class Meeting(models.Model):
     def _check_private_event_conditions(self):
         """ Checks if the event is private, returning True if the conditions match and False otherwise. """
         self.ensure_one()
-        event_is_private = (self.privacy == 'private' or (not self.privacy and self.user_id and self.user_id.calendar_default_privacy == 'private'))
+        event_is_private = self.privacy == 'private'
+        calendar_is_private = not self.privacy and self.sudo().user_id.calendar_default_privacy == 'private'
         user_is_not_partner = self.user_id.id != self.env.uid and self.env.user.partner_id not in self.partner_ids
-        return event_is_private and user_is_not_partner
+        return (event_is_private or calendar_is_private) and user_is_not_partner
 
     @api.depends('privacy', 'user_id')
     def _compute_display_name(self):

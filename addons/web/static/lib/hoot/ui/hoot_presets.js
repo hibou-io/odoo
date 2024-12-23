@@ -33,7 +33,7 @@ export class HootPresets extends Component {
             </button>
             <t t-if="state.open">
                 <form
-                    class="hoot-config-dropdown animate-slide-down bg-base text-base mt-1 absolute flex flex-col end-0 px-2 py-3 shadow rounded shadow z-2"
+                    class="hoot-dropdown animate-slide-down bg-base text-base mt-1 absolute flex flex-col end-0 px-2 py-3 shadow rounded shadow z-2"
                     t-on-submit.prevent="refresh"
                 >
                     <t t-foreach="env.runner.presets.entries()" t-as="preset" t-key="preset[0]">
@@ -84,14 +84,18 @@ export class HootPresets extends Component {
                 this.state.open = false;
             }
         });
-        useWindowListener("click", (ev) => {
-            const path = ev.composedPath();
-            if (!path.includes(this.rootRef.el)) {
-                this.state.open = false;
-            } else if (path.includes(this.togglerRef.el)) {
-                this.state.open = !this.state.open;
-            }
-        });
+        useWindowListener(
+            "click",
+            (ev) => {
+                const path = ev.composedPath();
+                if (!path.includes(this.rootRef.el)) {
+                    this.state.open = false;
+                } else if (path.includes(this.togglerRef.el)) {
+                    this.state.open = !this.state.open;
+                }
+            },
+            { capture: true }
+        );
     }
 
     getPresetIcon() {
@@ -99,13 +103,17 @@ export class HootPresets extends Component {
         return activePreset?.icon || "fa-check-square-o";
     }
 
+    /**
+     * @param {string} presetId
+     * @param {Event & { currentTarget: HTMLInputElement }} ev
+     */
     onPresetChange(presetId, ev) {
-        if (ev.target.checked) {
+        if (ev.currentTarget.checked) {
             this.config.preset = presetId;
         } else {
             this.config.preset = "";
             if (presetId === "") {
-                ev.target.checked = true;
+                ev.currentTarget.checked = true;
             }
         }
     }

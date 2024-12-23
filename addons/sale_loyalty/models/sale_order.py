@@ -2,7 +2,6 @@
 
 import itertools
 import random
-
 from collections import defaultdict
 
 from odoo import _, api, fields, models
@@ -292,7 +291,14 @@ class SaleOrder(models.Model):
         base_lines = []
         for line in order_lines:
             base_line = line._prepare_base_line_for_taxes_computation()
-            base_line['discount_taxes'] = base_line['tax_ids'].flatten_taxes_hierarchy().filtered(lambda tax: tax.amount_type != 'fixed')
+            taxes = base_line['tax_ids'].flatten_taxes_hierarchy()
+            if not reward.program_id.is_payment_program:
+                # To compute the discountable amount we get the subtotal and add
+                # non-fixed tax totals. This way fixed taxes will not be discounted
+                # This does not apply to Gift Cards and e-Wallet, where the total
+                # order amount may be paid with the card balance
+                taxes = taxes.filtered(lambda t: t.amount_type != 'fixed')
+            base_line['discount_taxes'] = taxes
             base_lines.append(base_line)
         AccountTax._add_tax_details_in_base_lines(base_lines, self.company_id)
         AccountTax._round_base_lines_tax_details(base_lines, self.company_id)
@@ -600,15 +606,15 @@ class SaleOrder(models.Model):
                 continue
             mapped_taxes = self.fiscal_position_id.map_tax(tax)
             tax_desc = ''
-            if any(t.name for t in mapped_taxes):
+            if len(discountable_per_tax) > 1 and any(t.name for t in mapped_taxes):
                 tax_desc = _(
-                    ' - On product with the following taxes: %(taxes)s',
+                    ' - On products with the following taxes: %(taxes)s',
                     taxes=", ".join(mapped_taxes.mapped('name')),
                 )
             reward_dict[tax] = {
                 **base_reward_line_values,
                 'name': _(
-                    'Discount: %(desc)s%(tax_str)s',
+                    'Discount %(desc)s%(tax_str)s',
                     desc=reward.description,
                     tax_str=tax_desc,
                 ) if mapped_taxes else reward.description,
@@ -629,7 +635,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         today = fields.Date.context_today(self)
         return [('active', '=', True), ('sale_ok', '=', True),
-                ('company_id', 'in', (self.company_id.id, False)),
+                *self.env['loyalty.program']._check_company_domain([self.company_id.id, self.company_id.parent_id.id]),
                 '|', ('pricelist_ids', '=', False), ('pricelist_ids', 'in', [self.pricelist_id.id]),
                 '|', ('date_from', '=', False), ('date_from', '<=', today),
                 '|', ('date_to', '=', False), ('date_to', '>=', today)]
@@ -641,7 +647,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         today = fields.Date.context_today(self)
         return [('active', '=', True), ('program_id.sale_ok', '=', True),
-                ('company_id', 'in', (self.company_id.id, False)),
+                *self.env['loyalty.program']._check_company_domain([self.company_id.id, self.company_id.parent_id.id]),
                 '|', ('program_id.pricelist_ids', '=', False),
                      ('program_id.pricelist_ids', 'in', [self.pricelist_id.id]),
                 '|', ('program_id.date_from', '=', False), ('program_id.date_from', '<=', today),
@@ -1261,7 +1267,7 @@ class SaleOrder(models.Model):
                     )
                 elif not product_qty_matched:
                     program_result['error'] = _("You don't have the required product quantities on your sales order.")
-            elif not self._allow_nominative_programs():
+            elif self.partner_id.is_public and not self._allow_nominative_programs():
                 program_result['error'] = _("This program is not available for public users.")
             if 'error' not in program_result:
                 points_result = [points] + rule_points

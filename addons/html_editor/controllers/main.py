@@ -283,6 +283,7 @@ class HTML_Editor(http.Controller):
         """This route is used to determine the information of an attachment so that
         it can be used as a base to modify it again (crop/optimization/filters).
         """
+        self._clean_context()
         attachment = None
         if src.startswith('/web/image'):
             with contextlib.suppress(werkzeug.exceptions.NotFound, MissingError):
@@ -360,6 +361,8 @@ class HTML_Editor(http.Controller):
         Creates a modified copy of an attachment and returns its image_src to be
         inserted into the DOM.
         """
+        self._clean_context()
+        attachment = request.env['ir.attachment'].browse(attachment.id)
         fields = {
             'original_id': attachment.id,
             'datas': data,
@@ -567,15 +570,21 @@ class HTML_Editor(http.Controller):
 
             record_id = int(words.pop())
             action_name = words.pop()
-            action = Actions.sudo().search([('path', '=', action_name)])
-            if not action:
-                return {'error_msg': _("Action %s not found, link preview is not available, please check your url is correct", action_name)}
-            action_type = action.type
-            if action_type != 'ir.actions.act_window':
-                return {'other_error_msg': _("Action %s is not a window action, link preview is not available", action_name)}
-            action = request.env[action_type].browse(action.id)
+            if (action_name.startswith('m-') or '.' in action_name) and action_name in request.env and not request.env[action_name]._abstract:
+                # if path format is `odoo/<model>/<record_id>` so we use `action_name` as model name
+                model_name = action_name.removeprefix('m-')
+                model = request.env[model_name].with_context(context)
+            else:
+                action = Actions.sudo().search([('path', '=', action_name)])
+                if not action:
+                    return {'error_msg': _("Action %s not found, link preview is not available, please check your url is correct", action_name)}
+                action_type = action.type
+                if action_type != 'ir.actions.act_window':
+                    return {'other_error_msg': _("Action %s is not a window action, link preview is not available", action_name)}
+                action = request.env[action_type].browse(action.id)
 
-            model = request.env[action.res_model].with_context(context)
+                model = request.env[action.res_model].with_context(context)
+                
             record = model.browse(record_id)
 
             result = {}

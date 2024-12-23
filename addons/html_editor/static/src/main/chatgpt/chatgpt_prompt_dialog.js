@@ -1,8 +1,9 @@
 import { browser } from "@web/core/browser/browser";
 import { user } from "@web/core/user";
-import { useAutofocus } from "@web/core/utils/hooks";
+import { useAutofocus, useChildRef } from "@web/core/utils/hooks";
 import { useState, useEffect, useRef } from "@odoo/owl";
 import { ChatGPTDialog } from "./chatgpt_dialog";
+import { scrollTo } from "@web/core/utils/scrolling";
 
 export class ChatGPTPromptDialog extends ChatGPTDialog {
     static template = "html_editor.ChatGPTPromptDialog";
@@ -37,6 +38,7 @@ export class ChatGPTPromptDialog extends ChatGPTDialog {
             messages: [],
         });
         this.promptInputRef = useRef("promptInput");
+        this.modalRef = useChildRef();
         useAutofocus({ refName: "promptInput", mobile: true });
         useEffect(
             () => {
@@ -46,11 +48,27 @@ export class ChatGPTPromptDialog extends ChatGPTDialog {
             },
             () => [this.state.prompt]
         );
+        useEffect(
+            () => {
+                // Scroll to the latest message whenever new message
+                // is inserted.
+                const modalEl = this.modalRef.el.querySelector("main.modal-body");
+                const lastMessageEl = modalEl.lastElementChild;
+                scrollTo(lastMessageEl, {
+                    behavior: "smooth",
+                    isAnchor: true,
+                });
+            },
+            () => [this.state.conversationHistory.length]
+        );
     }
 
     onTextareaKeydown(ev) {
         if (ev.key === "Enter" && !ev.shiftKey) {
-            this.submitPrompt(ev);
+            ev.stopImmediatePropagation();
+            if (this.state.prompt.trim().length) {
+                this.submitPrompt(ev);
+            }
         }
     }
 

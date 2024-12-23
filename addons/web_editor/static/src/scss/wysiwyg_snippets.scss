@@ -548,6 +548,16 @@
                 }
             }
 
+            #translate .dropdown-menu {
+                min-width: auto;
+                max-width: 250px;
+
+                .dropdown-item {
+                    overflow-x: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+
             .dropdown-item {
                 @include we-icon-button('', $align: left); // Always a padding on the left
                 background-color: $o-we-sidebar-content-field-dropdown-item-bg;
@@ -559,6 +569,10 @@
                 &:hover, &:focus {
                     background: $o-we-dropdown-item-bg-hover;
                     color: $o-we-dropdown-item-hover-color;
+                }
+                &.active {
+                    background: $o-we-dropdown-item-active-bg;
+                    color: $o-we-dropdown-item-active-color;
                 }
             }
 
@@ -730,6 +744,8 @@
                     justify-content: space-between;
 
                     span {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                         color: white;
 
                         pre, blockquote {
@@ -1968,7 +1984,11 @@
             // does not make a scrollbar appear for no reason
             flex: 1 1 auto;
 
-            &::after {
+            // The backdrop is not added for "o_we_select_pager". This is
+            // because it covers the entire panel, making it unnecessary.
+            // Additionally, using the backdrop with an "o_we_select_pager"
+            // causes a CSS bug on Safari.
+            &:not(:has(.o_we_select_pager.o_we_widget_opened))::after {
                 content: "";
                 // We use a "sticky" position because it ensures that the
                 // backdrop covers the entire "customize panel" element, even
@@ -2965,6 +2985,11 @@ we-select.o_grid we-toggler {
                 img {
                     max-width: 100%;
                 }
+            }
+
+            .o_animate {
+                visibility: visible;
+                animation-name: none;
             }
         }
         .o_custom_snippet_wrap {

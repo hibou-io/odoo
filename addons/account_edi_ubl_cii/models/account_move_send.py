@@ -22,12 +22,10 @@ class AccountMoveSend(models.AbstractModel):
     def _get_alerts(self, moves, moves_data):
         # EXTENDS 'account'
         alerts = super()._get_alerts(moves, moves_data)
-        if not set(moves.partner_id.commercial_partner_id.mapped('invoice_edi_format')) - {False, 'facturx', 'oioubl_201'}:
-            return alerts
 
-        ubl_formats = set(self.env['res.partner']._get_ubl_cii_formats())
-        if ubl_moves := moves.filtered(lambda m: moves_data[m]['invoice_edi_format'] and moves_data[m]['invoice_edi_format'] in ubl_formats):
-            not_configured_company_partners = ubl_moves.company_id.partner_id.filtered(
+        peppol_formats = set(self.env['res.partner']._get_peppol_formats())
+        if peppol_format_moves := moves.filtered(lambda m: moves_data[m]['invoice_edi_format'] in peppol_formats):
+            not_configured_company_partners = peppol_format_moves.company_id.partner_id.filtered(
                 lambda partner: not (partner.peppol_eas and partner.peppol_endpoint)
             )
             if not_configured_company_partners:
@@ -37,26 +35,27 @@ class AccountMoveSend(models.AbstractModel):
                     'action_text': _("View Company"),
                     'action': not_configured_company_partners._get_records_action(),
                 }
-            not_configured_partners = ubl_moves.partner_id.commercial_partner_id.filtered(
+            not_configured_partners = peppol_format_moves.partner_id.commercial_partner_id.filtered(
                 lambda partner: not (partner.peppol_eas and partner.peppol_endpoint)
             )
             if not_configured_partners:
                 alerts['account_edi_ubl_cii_configure_partner'] = {
-                    'message': _("These partners are missing Peppol EAS or Peppol Endpoint field. "
+                    'message': _("These partners are missing Peppol Address. "
                                  "Please check those in their Accounting tab. "
                                  "Otherwise, the generated files will be incomplete."),
                     'level': 'info',
                     'action_text': _("View Partner(s)"),
                     'action': not_configured_partners._get_records_action(name=_("Check Partner(s)"))
                 }
-            moves_without_bank = ubl_moves.filtered(lambda m: not m.partner_bank_id)
-            if moves_without_bank:
-                alerts['account_edi_ubl_cii_configure_bank'] = {
-                    'message': _("Please add a Recipient bank in the 'Other Info' tab to generate a complete file."),
-                    'level': 'danger' if len(moves_without_bank) == 1 else 'warning',
-                    'action_text': _("View Invoice(s)"),
-                    'action': moves_without_bank._get_records_action(name=_("Check Invoice(s)")),
-                }
+
+        ubl_formats = set(self.env['res.partner']._get_ubl_cii_formats())
+        if moves_without_bank := moves.filtered(lambda m: m.move_type == 'out_invoice' and moves_data[m]['invoice_edi_format'] in ubl_formats and not m.partner_bank_id):
+            alerts['account_edi_ubl_cii_configure_bank'] = {
+                'message': _("Please add a Recipient bank in the 'Other Info' tab to generate a complete file."),
+                'level': 'danger' if len(moves_without_bank) == 1 else 'warning',
+                'action_text': _("View Invoice(s)"),
+                'action': moves_without_bank._get_records_action(name=_("Check Invoice(s)")),
+            }
         return alerts
 
     # -------------------------------------------------------------------------

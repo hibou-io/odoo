@@ -12,6 +12,7 @@ import * as Order from "@point_of_sale/../tests/tours/utils/generic_components/o
 import * as TicketScreen from "@point_of_sale/../tests/tours/utils/ticket_screen_util";
 import { inLeftSide, negateStep } from "@point_of_sale/../tests/tours/utils/common";
 import { registry } from "@web/core/registry";
+import * as Numpad from "@point_of_sale/../tests/tours/utils/numpad_util";
 
 const ProductScreen = { ...ProductScreenPos, ...ProductScreenResto };
 
@@ -54,7 +55,6 @@ function checkOrderChanges(expected_changes) {
 }
 
 registry.category("web_tour.tours").add("pos_restaurant_sync", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -70,6 +70,8 @@ registry.category("web_tour.tours").add("pos_restaurant_sync", {
             ProductScreen.clickDisplayedProduct("Coca-Cola"),
             ProductScreen.clickDisplayedProduct("Coca-Cola"),
             Chrome.clickPlanButton(),
+            // Check if there is no active Order
+            Chrome.activeTableOrOrderIs("Table"),
 
             // Create first order
             FloorScreen.clickTable("5"),
@@ -110,6 +112,8 @@ registry.category("web_tour.tours").add("pos_restaurant_sync", {
                     "acknowledge printing error ( because we don't have printer in the test. )",
             },
             ReceiptScreen.clickNextOrder(),
+            // Check if there ids no active Order
+            Chrome.activeTableOrOrderIs("Table"),
 
             // order on another table with a product variant
             FloorScreen.orderCountSyncedInTableIs("5", "1"),
@@ -121,7 +125,7 @@ registry.category("web_tour.tours").add("pos_restaurant_sync", {
                 content: "validate the variant dialog (with default values)",
             },
             ProductScreen.selectedOrderlineHas("Desk Organizer"),
-            checkOrderChanges([{ name: "Desk Organizer (S, Leather)", quantity: 1 }]),
+            checkOrderChanges([{ name: "Desk Organizer (Leather, S)", quantity: 1 }]),
             ProductScreen.clickOrderButton(),
             {
                 ...Dialog.confirm(),
@@ -179,7 +183,6 @@ registry.category("web_tour.tours").add("pos_restaurant_sync", {
  * This tour should be run after the first tour is done.
  */
 registry.category("web_tour.tours").add("pos_restaurant_sync_second_login", {
-    test: true,
     steps: () =>
         [
             // There is one draft synced order from the previous tour
@@ -220,7 +223,6 @@ registry.category("web_tour.tours").add("pos_restaurant_sync_second_login", {
 });
 
 registry.category("web_tour.tours").add("SaveLastPreparationChangesTour", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -239,7 +241,6 @@ const billScreenQRCode = {
 };
 
 registry.category("web_tour.tours").add("BillScreenTour", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -258,7 +259,6 @@ registry.category("web_tour.tours").add("BillScreenTour", {
 });
 
 registry.category("web_tour.tours").add("OrderTrackingTour", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -268,10 +268,12 @@ registry.category("web_tour.tours").add("OrderTrackingTour", {
             ProductScreen.clickDisplayedProduct("Coca-Cola", true, "2.0"),
             Chrome.clickPlanButton(),
             FloorScreen.clickTable("5"),
-            ProductScreen.selectedOrderlineHas("Coca-Cola", "2.0"),
-            ProductScreen.clickNumpad("⌫"),
-            ProductScreen.clickNumpad("1"),
-            ProductScreen.selectedOrderlineHas("Coca-Cola", "1.0"),
+            inLeftSide([
+                ...ProductScreen.clickLine("Coca-Cola", "2.0"),
+                ...ProductScreen.selectedOrderlineHasDirect("Coca-Cola", "2.0"),
+                ...["⌫", "1"].map(Numpad.click),
+                ...ProductScreen.selectedOrderlineHasDirect("Coca-Cola", "1.0"),
+            ]),
             ProductScreen.clickPayButton(),
             PaymentScreen.clickPaymentMethod("Bank"),
             PaymentScreen.clickValidate(),
@@ -284,7 +286,6 @@ registry.category("web_tour.tours").add("OrderTrackingTour", {
         ].flat(),
 });
 registry.category("web_tour.tours").add("CategLabelCheck", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -292,5 +293,99 @@ registry.category("web_tour.tours").add("CategLabelCheck", {
             FloorScreen.clickTable("5"),
             ProductScreen.clickDisplayedProduct("Test Multi Category Product"),
             ProductScreen.OrderButtonNotContain("Drinks"),
+        ].flat(),
+});
+registry.category("web_tour.tours").add("OrderChange", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            FloorScreen.clickTable("5"),
+            ProductScreen.clickDisplayedProduct("Coca-Cola", true, "1.0"),
+            ProductScreen.clickOrderButton(),
+            {
+                ...Dialog.confirm(),
+                content:
+                    "acknowledge printing error ( because we don't have printer in the test. )",
+            },
+            ProductScreen.orderlinesHaveNoChange(),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Cash"),
+            PaymentScreen.clickNumpad("+10"),
+            PaymentScreen.clickValidate(),
+            ReceiptScreen.isShown(),
+            TicketScreen.receiptChangeIs("7.80"),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("CrmTeamTour", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            FloorScreen.clickTable("5"),
+            ProductScreen.clickDisplayedProduct("Coca-Cola"),
+            Chrome.clickPlanButton(),
+            FloorScreen.clickTable("5"),
+            Chrome.clickPlanButton(),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("PoSPaymentSyncTour1", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            FloorScreen.clickTable("5"),
+            ProductScreen.clickDisplayedProduct("Coca-Cola"),
+            ProductScreen.totalAmountIs("2.20"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.emptyPaymentlines("2.20"),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickBackToProductScreen(),
+            ProductScreen.isShown(),
+            ProductScreen.clickOrderButton(),
+            ProductScreen.orderlinesHaveNoChange(),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("PoSPaymentSyncTour2", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            FloorScreen.clickTable("5"),
+            PaymentScreen.isShown(),
+            PaymentScreen.clickBackToProductScreen(),
+            ProductScreen.isShown(),
+            ProductScreen.clickDisplayedProduct("Coca-Cola"),
+            ProductScreen.totalAmountIs("4.40"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentlineDelButton("Bank", "2.20"),
+            PaymentScreen.emptyPaymentlines("4.40"),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickBackToProductScreen(),
+            ProductScreen.isShown(),
+            ProductScreen.clickOrderButton(),
+            ProductScreen.orderlinesHaveNoChange(),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("PoSPaymentSyncTour3", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            FloorScreen.clickTable("5"),
+            PaymentScreen.isShown(),
+            PaymentScreen.clickBackToProductScreen(),
+            ProductScreen.isShown(),
+            ProductScreen.clickDisplayedProduct("Coca-Cola"),
+            ProductScreen.totalAmountIs("6.60"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.remainingIs("2.2"),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickBackToProductScreen(),
+            ProductScreen.isShown(),
+            ProductScreen.clickOrderButton(),
+            ProductScreen.orderlinesHaveNoChange(),
         ].flat(),
 });

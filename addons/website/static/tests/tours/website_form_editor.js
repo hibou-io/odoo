@@ -1,6 +1,5 @@
 /** @odoo-module **/
 
-import { queryOne } from "@odoo/hoot-dom";
 import {
     changeOption,
     clickOnEditAndWaitEditMode,
@@ -31,7 +30,7 @@ for (const data of ESSENTIAL_FIELDS_VALID_DATA_FOR_DEFAULT_FORM) {
     essentialFieldsForDefaultFormFillInSteps.push({
         content: "Enter data in model-required field",
         trigger: `:iframe .s_website_form_model_required .s_website_form_input[name="${data.name}"]`,
-        run: `edit ${data.value}`,
+        run: `edit ${data.value} && press Tab`,
     });
 }
 
@@ -66,10 +65,7 @@ const selectButtonByData = function (data) {
     return [{
         content: "Open the select",
         trigger: `we-select:has(we-button[${data}]) we-toggler`,
-        run() {
-            // TODO: use run: "click", instead
-            this.anchor.click();
-        }
+        run: "click",
     }, {
         content: "Click on the option",
         trigger: `we-select we-button[${data}]`,
@@ -104,7 +100,7 @@ const addField = function (name, type, label, required, isCustom,
         ret.push({
             content: "Set the visibility condition",
             trigger: 'we-input[data-attribute-name="visibilityCondition"] input',
-            run: `edit ${display.condition}`,
+            run: `edit ${display.condition} && press Tab`,
         });
     }
     if (required) {
@@ -120,7 +116,7 @@ const addField = function (name, type, label, required, isCustom,
         ret.push({
             content: "Change the label text",
             trigger: 'we-input[data-set-label-text] input',
-            run: `edit ${label}`,
+            run: `edit ${label} && press Tab`,
         });
     }
     if (type !== 'checkbox' && type !== 'radio' && type !== 'select') {
@@ -144,7 +140,7 @@ const addExistingField = function (name, type, label, required, display) {
 registerWebsitePreviewTour("website_form_editor_tour", {
     url: '/',
     edition: true,
-    test: true,
+    checkDelay: 100,
 }, () => [
     // Drop a form builder snippet and configure it
     {
@@ -277,21 +273,15 @@ registerWebsitePreviewTour("website_form_editor_tour", {
     {
         content: "Change Option 1 label",
         trigger: 'we-list table input:eq(0)',
-        run: "edit Iphone",
+        run: "edit Iphone && press Tab",
     }, {
         content: "Change Option 2 label",
         trigger: 'we-list table input:eq(1)',
-        run: "edit Galaxy S",
+        run: "edit Galaxy S && press Tab",
     },{
         content: "Change first Option 3 label",
         trigger: 'we-list table input:eq(2)',
-        run: "edit Xperia",
-    },
-    {
-        // TODO: Fix code to avoid this behavior
-        content: "Click outside focused element before click on add new checkbox otherwise button does'nt work",
-        trigger: "we-list we-title",
-        run: "click",
+        run: "edit Xperia && press Tab",
     },
     {
         content: "Click on Add new Checkbox",
@@ -301,7 +291,7 @@ registerWebsitePreviewTour("website_form_editor_tour", {
     {
         content: "Change added Option label",
         trigger: 'we-list table input:eq(3)',
-        run: "edit Wiko Stairway",
+        run: "edit Wiko Stairway && press Tab",
     }, {
         content: "Check the resulting field",
         trigger: ":iframe .s_website_form_field.s_website_form_custom.s_website_form_required" +
@@ -321,7 +311,24 @@ registerWebsitePreviewTour("website_form_editor_tour", {
                     ":has(.checkbox:has(label:contains('Xperia')):has(input[type='checkbox'][required]))" +
                     ":has(.checkbox:has(label:contains('Wiko Stairway')):has(input[type='checkbox'][required]))",
     },
-
+    // Check conditional visibility for the relational fields
+    ...selectButtonByData("data-set-visibility='conditional'"),
+    ...selectButtonByData("data-set-visibility-dependency='recipient_ids'"),
+    ...selectButtonByText("Is not equal to"),
+    ...selectButtonByText("Mitchell Admin"),
+    ...clickOnSave(),
+    {
+        content: "Check 'products' field is visible.",
+        trigger: `:iframe .s_website_form:has(${triggerFieldByLabel("Products")}:visible)`,
+    }, {
+        content: "choose the option 'Mitchell Admin' of partner.",
+        trigger: ":iframe .checkbox:has(label:contains('Mitchell Admin')) input[type='checkbox']",
+        run: "click",
+    }, {
+        content: "Check 'products' field is not visible.",
+        trigger: ":iframe .s_website_form" +`:has(${triggerFieldByLabel("Products")}:not(:visible))`,
+    },
+    ...clickOnEditAndWaitEditMode(),
     ...addCustomField('selection', 'radio', 'Service', true),
     {
         content: "Change Option 1 label",
@@ -448,7 +455,7 @@ registerWebsitePreviewTour("website_form_editor_tour", {
         trigger: ":iframe .s_website_form_field.s_website_form_custom.s_website_form_required" +
                     ":has(label:contains('State'))" +
                     ":has(select[required])" +
-                    ":has(option[selected]:contains('Belgium'))" +
+                    ":has(option:contains('Belgium')):not([selected])" +
                     ":has(option:contains('France'))" +
                     ":has(option:contains('Canada'))" +
                     ":has(option:contains('44 - UK'))" +
@@ -480,17 +487,25 @@ registerWebsitePreviewTour("website_form_editor_tour", {
     }, {
         content: "Change button's style",
         trigger: '.dropdown:has([name="link_style_color"]) > button',
-        run: () => {
-            queryOne('.dropdown:has([name="link_style_color"]) > button').click();
-            queryOne('[data-value="secondary"]').click();
-            queryOne('.dropdown:has([name="link_style_shape"]) > button').click();
-            queryOne('[data-value="rounded-circle"]').click();
-            queryOne('.dropdown:has([name="link_style_size"]) > button').click();
-            queryOne('[data-value="sm"]').click();
-        },
+        run: "click",
+    }, {
+        trigger: "[data-value=custom]",
+        run: "click",
+    }, {
+        trigger: ".dropdown:has([name=link_style_shape]) > button",
+        run: "click",
+    }, {
+        trigger: "[data-value=rounded-circle]",
+        run: "click",
+    }, {
+        trigger: ".dropdown:has([name=link_style_size]) > button",
+        run: "click",
+    }, {
+        trigger: "[data-value=sm]",
+        run: "click",
     }, {
         content: "Check the resulting button",
-        trigger: ':iframe .s_website_form_send.btn.btn-sm.btn-secondary.rounded-circle',
+        trigger: ':iframe .s_website_form_send.btn.btn-sm.btn-custom.rounded-circle',
     },
     // Add a default value to a auto-fillable field.
     {
@@ -605,7 +620,7 @@ registerWebsitePreviewTour("website_form_editor_tour", {
      {
         content: "Write anything in C",
         trigger: `:iframe ${triggerFieldByLabel("field C")} input`,
-        run: "edit Mellon",
+        run: "edit Mellon && press Tab",
     }, {
         content: "Check that field B is visible, but field A is not",
         trigger: `:iframe .s_website_form:has(${triggerFieldByLabel("field B")}:visible)` +
@@ -735,7 +750,6 @@ return [
 registerWebsitePreviewTour('website_form_contactus_edition_with_email', {
     url: '/contactus',
     edition: true,
-    test: true,
 }, () => editContactUs([
     {
         content: 'Change the Recipient Email',
@@ -747,7 +761,6 @@ registerWebsitePreviewTour('website_form_contactus_edition_with_email', {
 registerWebsitePreviewTour('website_form_contactus_edition_no_email', {
     url: '/contactus',
     edition: true,
-    test: true,
 }, () => editContactUs([
     {
         content: "Change a random option",
@@ -760,7 +773,6 @@ registerWebsitePreviewTour('website_form_contactus_edition_no_email', {
 ]));
 
 registerWebsitePreviewTour('website_form_conditional_required_checkboxes', {
-    test: true,
     url: '/',
     edition: true,
 }, () => [
@@ -899,7 +911,6 @@ registerWebsitePreviewTour('website_form_conditional_required_checkboxes', {
 ]);
 
 registerWebsitePreviewTour('website_form_contactus_change_random_option', {
-    test: true,
     url: '/contactus',
     edition: true,
 }, () => editContactUs([
@@ -911,9 +922,30 @@ registerWebsitePreviewTour('website_form_contactus_change_random_option', {
     },
 ]));
 
+registerWebsitePreviewTour("website_form_nested_forms", {
+    url: "/my/account",
+    edition: true,
+},
+() => [
+    {
+        trigger: ".o_website_preview.editor_enable.editor_has_snippets",
+        noPrepend: true,
+    },
+    {
+        trigger: `#oe_snippets .oe_snippet[name="Form"].o_we_draggable .oe_snippet_thumbnail:not(.o_we_already_dragging)`,
+        content: "Try to drag the form into another form",
+        run: "drag_and_drop :iframe #wrap .o_portal_details a",
+    },
+    {
+        content: "Check the form was not dropped into another form",
+        trigger:
+            ":iframe form[action='/my/account']:not(:has([data-snippet='s_website_form']))",
+        run: () => null,
+    },
+]);
+
 // Check that the editable form content is actually editable.
 registerWebsitePreviewTour("website_form_editable_content", {
-    test: true,
     url: "/",
     edition: true,
 }, () => [
@@ -970,15 +1002,15 @@ registerWebsitePreviewTour("website_form_editable_content", {
         content: "Check that the new text value was correctly set",
         trigger: ":iframe section.s_website_form h5:contains(/^ABC$/)",
     },
-    {   content: "Remove the dropped column",
-        trigger: ":iframe .oe_overlay.oe_active .oe_snippet_remove",
+    {
+        content: "Remove the dropped column",
+        trigger: ":iframe .oe_overlay.oe_active .oe_snippet_remove:not(:visible)",
         run: "click",
     },
     ...clickOnSave(),
 ]);
 
 registerWebsitePreviewTour("website_form_special_characters", {
-    test: true,
     url: "/",
     edition: true,
 }, () => [

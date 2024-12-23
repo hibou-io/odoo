@@ -15,7 +15,9 @@ class PosSelfOrderController(http.Controller):
 
         # Create the order
         ir_sequence_session = pos_config.env['ir.sequence'].with_context(company_id=pos_config.company_id.id).next_by_code(f'pos.order_{pos_session.id}')
-        sequence_number = re.findall(r'\d+', ir_sequence_session)[0]
+        sequence_number = order.get('sequence_number')
+        if not sequence_number:
+            sequence_number = re.findall(r'\d+', ir_sequence_session)[0]
         order_reference = self._generate_unique_id(pos_session.id, pos_config.id, sequence_number, device_type)
         fiscal_position = (
             pos_config.takeaway_fp_id
@@ -116,6 +118,15 @@ class PosSelfOrderController(http.Controller):
             return {}
 
         return self._generate_return_values(orders, pos_config)
+
+    @http.route('/pos-self-order/get-available-tables', auth='public', type='json', website=True)
+    def get_available_tables(self, access_token, order_access_tokens):
+        pos_config = self._verify_pos_config(access_token)
+        orders = pos_config.current_session_id.order_ids.filtered_domain([
+            ("access_token", "not in", order_access_tokens)
+        ])
+        available_table_ids = pos_config.floor_ids.table_ids - orders.mapped('table_id')
+        return available_table_ids.read(['id'])
 
     @http.route('/kiosk/payment/<int:pos_config_id>/<device_type>', auth='public', type='json', website=True)
     def pos_self_order_kiosk_payment(self, pos_config_id, order, payment_method_id, access_token, device_type):

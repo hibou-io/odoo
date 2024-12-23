@@ -53,8 +53,7 @@ h6 {
     margin: 0;
 }
 
-button:enabled,
-summary {
+button:enabled {
     cursor: pointer;
 }
 
@@ -122,11 +121,11 @@ ul {
     }
 }
 
-.hoot-config-dropdown {
+.hoot-dropdown {
     width: clamp(200px, 256px, 100vw);
 }
 
-.hoot-search-dropdown {
+.hoot-dropdown-lg {
     width: clamp(300px, 100%, 100vw);
 }
 
@@ -245,10 +244,16 @@ input[type="checkbox"]:checked {
     grid-template-columns: 80px auto;
 }
 
+.hoot-any,
+.hoot-array,
+.hoot-date,
+.hoot-error,
+.hoot-function,
 .hoot-object {
     color: var(--text-report);
 }
 
+.hoot-node,
 .hoot-html {
     background: transparent;
     color: var(--text-report-html-tag);
@@ -267,14 +272,18 @@ input[type="checkbox"]:checked {
 }
 
 .hoot-boolean,
+.hoot-integer,
 .hoot-number {
     color: var(--text-report-number);
 }
 
-.hoot-string {
+.hoot-regex,
+.hoot-string,
+.hoot-symbol {
     color: var(--text-report-string);
 }
 
+.hoot-null,
 .hoot-undefined {
     color: var(--muted);
 }
@@ -1395,9 +1404,6 @@ input[type="checkbox"]:checked {
 
 .select-none {
     user-select: none;
-}
-.select-text {
-    user-select: text;
 }
 
 /* Whitespace */

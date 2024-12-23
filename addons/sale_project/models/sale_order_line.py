@@ -51,7 +51,6 @@ class SaleOrderLine(models.Model):
 
                 if not sale_order:
                     sale_order = self.env['sale.order'].create(so_create_values)
-                    sale_order.action_confirm()
                 default_values['order_id'] = sale_order.id
             if product_name := self.env.context.get('sol_product_name') or self.env.context.get('default_name'):
                 product = self.env['product.product'].search([
@@ -173,6 +172,13 @@ class SaleOrderLine(models.Model):
                     line.task_id.write({'allocated_hours': allocated_hours})
         return result
 
+    def copy_data(self, default=None):
+        data = super().copy_data(default)
+        for origin, datum in zip(self, data):
+            if origin.analytic_distribution == origin.order_id.project_id.sudo()._get_analytic_distribution():
+                datum['analytic_distribution'] = False
+        return data
+
     ###########################################
     # Service : Project and task generation
     ###########################################
@@ -284,6 +290,12 @@ class SaleOrderLine(models.Model):
         task.message_post(body=task_msg)
         return task
 
+    def _get_so_lines_task_global_project(self):
+        return self.filtered(lambda sol: sol.is_service and sol.product_id.service_tracking == 'task_global_project')
+
+    def _get_so_lines_new_project(self):
+        return self.filtered(lambda sol: sol.is_service and sol.product_id.service_tracking in ['project_only', 'task_in_project'])
+
     def _timesheet_service_generation(self):
         """ For service lines, create the task or the project. If already exists, it simply links
             the existing one to the line.
@@ -291,7 +303,7 @@ class SaleOrderLine(models.Model):
             new project/task. This explains the searches on 'sale_line_id' on project/task. This also
             implied if so line of generated task has been modified, we may regenerate it.
         """
-        so_line_task_global_project = self.filtered(lambda sol: sol.is_service and sol.product_id.service_tracking == 'task_global_project')
+        so_line_task_global_project = self._get_so_lines_task_global_project()
         products_no_project = so_line_task_global_project.filtered(
             lambda sol: not (sol.product_id.project_id or sol.order_id.project_id)
         ).product_id
@@ -301,7 +313,7 @@ class SaleOrderLine(models.Model):
                 "The following products need a project in which to put their task: %(product_names)s",
                 product_names=format_list(self.env, products_no_project.mapped('name')),
             ))
-        so_line_new_project = self.filtered(lambda sol: sol.is_service and sol.product_id.service_tracking in ['project_only', 'task_in_project'])
+        so_line_new_project = self._get_so_lines_new_project()
 
         # search so lines from SO of current so lines having their project generated, in order to check if the current one can
         # create its own project, or reuse the one of its order.
@@ -416,3 +428,9 @@ class SaleOrderLine(models.Model):
             :returns: Dict containing id of SOL as key and the action as value
         """
         return {}
+
+    def _prepare_procurement_values(self, group_id=False):
+        values = super()._prepare_procurement_values(group_id=group_id)
+        if self.project_id:
+            values['project_id'] = self.order_id.project_id.id
+        return values

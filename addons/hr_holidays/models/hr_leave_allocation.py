@@ -208,7 +208,9 @@ class HolidaysAllocation(models.Model):
     @api.depends('number_of_days')
     def _compute_number_of_hours_display(self):
         for allocation in self:
-            hours_per_day = allocation.employee_id.sudo().resource_id.calendar_id.hours_per_day or HOURS_PER_DAY
+            hours_per_day = allocation.employee_id.sudo().resource_calendar_id.hours_per_day \
+                            or allocation.holiday_status_id.company_id.resource_calendar_id.hours_per_day \
+                            or HOURS_PER_DAY
             allocation.number_of_hours_display = allocation.number_of_days * hours_per_day
 
     @api.depends('number_of_hours_display', 'number_of_days_display')
@@ -409,6 +411,7 @@ class HolidaysAllocation(models.Model):
         """
 
         date_to = date_to or fields.Date.today()
+        already_accrued = {allocation.id: allocation.number_of_days != 0 and allocation.accrual_plan_id.accrued_gain_time == 'start' for allocation in self}
         first_allocation = _("""This allocation have already ran once, any modification won't be effective to the days allocated to the employee. If you need to change the configuration of the allocation, delete and create a new one.""")
         for allocation in self:
             level_ids = allocation.accrual_plan_id.level_ids.sorted('sequence')
@@ -420,6 +423,7 @@ class HolidaysAllocation(models.Model):
             first_level = level_ids[0]
             first_level_start_date = allocation.date_from + get_timedelta(first_level.start_count, first_level.start_type)
             leaves_taken = allocation.leaves_taken if first_level.added_value_type == "day" else allocation.leaves_taken / (allocation.employee_id.sudo().resource_id.calendar_id.hours_per_day or HOURS_PER_DAY)
+            allocation.already_accrued = already_accrued[allocation.id]
             # first time the plan is run, initialize nextcall and take carryover / level transition into account
             if not allocation.nextcall:
                 # Accrual plan is not configured properly or has not started
@@ -558,15 +562,14 @@ class HolidaysAllocation(models.Model):
             # once, preventing double allocation.
             if allocation.accrual_plan_id.accrued_gain_time == 'start':
                 # check that we are at the start of a period, not on a carry-over or level transition date
-                current_level = current_level or allocation.accrual_plan_id.level_ids[0]
+                level_start = {level._get_level_transition_date(allocation.date_from): level for level in allocation.accrual_plan_id.level_ids}
+                current_level = level_start.get(allocation.actual_lastcall) or current_level or allocation.accrual_plan_id.level_ids[0]
                 period_start = current_level._get_previous_date(allocation.actual_lastcall)
-                if allocation.actual_lastcall != period_start:
-                    continue
-
                 if current_level.cap_accrued_time:
                     current_level_maximum_leave = current_level.maximum_leave if current_level.added_value_type == "day" else current_level.maximum_leave / (allocation.employee_id.sudo().resource_id.calendar_id.hours_per_day or HOURS_PER_DAY)
-                allocation._add_days_to_allocation(current_level, current_level_maximum_leave, leaves_taken, allocation.actual_lastcall, allocation.nextcall)
-                allocation.already_accrued = True
+                if allocation.actual_lastcall in {period_start, allocation.date_from} | set(level_start.keys()):
+                    allocation._add_days_to_allocation(current_level, current_level_maximum_leave, leaves_taken, period_start, allocation.nextcall)
+                    allocation.already_accrued = True
 
     @api.model
     def _update_accrual(self):
@@ -598,11 +601,11 @@ class HolidaysAllocation(models.Model):
             return 0
 
         fake_allocation = self.env['hr.leave.allocation'].with_context(default_date_from=accrual_date).new(origin=self)
-        fake_allocation.sudo()._process_accrual_plans(accrual_date, log=False)
+        fake_allocation.sudo().with_context(default_date_from=accrual_date)._process_accrual_plans(accrual_date, log=False)
         if self.type_request_unit in ['hour']:
             return float_round(fake_allocation.number_of_hours_display - self.number_of_hours_display, precision_digits=2)
         res = round((fake_allocation.number_of_days - self.number_of_days), 2)
-        self._invalidate_cache()
+        fake_allocation.invalidate_recordset()
         return res
 
     ####################################################
@@ -745,26 +748,6 @@ class HolidaysAllocation(models.Model):
     # Business methods
     ####################################################
 
-    def action_validate(self):
-        if any(allocation.state not in ['confirm', 'validate1'] and allocation.validation_type != 'no_validation' for allocation in self):
-            raise UserError(_('Allocation must be "To Approve" or "Second Approval" in order to validate it.'))
-
-        to_validate = self.filtered(lambda alloc: alloc.state == 'confirm' and alloc.validation_type != 'both')
-        to_second_validate = self.filtered(lambda alloc: alloc.state == 'validate1' and alloc.validation_type == 'both')
-        if to_validate:
-            to_validate.write({
-                'state': 'validate',
-                'approver_id': self.env.user.employee_id.id
-            })
-            to_validate.activity_update()
-        if to_second_validate:
-            to_second_validate.write({
-                'state': 'validate',
-                'second_approver_id': self.env.user.employee_id.id
-            })
-            to_second_validate.activity_update()
-        return True
-
     def action_set_to_confirm(self):
         if any(allocation.state != 'refuse' for allocation in self):
             raise UserError(_('Allocation state must be "Refused" in order to be reset to "To Approve".'))
@@ -777,18 +760,32 @@ class HolidaysAllocation(models.Model):
         return True
 
     def action_approve(self):
-        # if allocation_validation_type == 'both': this method is the first approval
-        # if allocation_validation_type != 'both': this method calls action_validate() below
+        self._action_approve()
+        return True
 
-        if any(allocation.validation_type != 'no_validation' and allocation.state != 'confirm' for allocation in self):
-            raise UserError(_('Allocation must be confirmed ("To Approve") in order to approve it.'))
+    def action_validate(self):
+        # We don't know all the places in all the apps where `action_validate` is called.
+        # Hence, `action_validate` is kept and not removed.
+        self._action_approve()
+        return True
+
+    def _action_approve(self):
+
+        if any(allocation.state not in ['confirm', 'validate1'] and allocation.validation_type != 'no_validation' for allocation in self):
+            raise UserError(_('Allocation must be confirmed "To Approve" or validated once "Second Approval" in order to approve it.'))
 
         current_employee = self.env.user.employee_id
-        self.filtered(lambda alloc: alloc.validation_type == 'both').write({'state': 'validate1', 'approver_id': current_employee.id})
+        # If a time-off type had validation_type = 'both' and after first validation the validation_type was changed to be != both,
+        # then it should be considered as a single_validate_allocation.
+        single_validate_allocs = self.filtered(lambda alloc: alloc.state == 'confirm' and alloc.validation_type != 'both')
+        first_validate_allocs = self.filtered(lambda alloc: alloc.state == 'confirm' and alloc.validation_type == 'both')
+        second_validate_allocs = self.filtered(lambda alloc: alloc.state == 'validate1')
 
-        self.filtered(lambda alloc: alloc.validation_type != 'both').action_validate()
+        single_validate_allocs.write({'state': 'validate', 'approver_id': current_employee.id})
+        first_validate_allocs.write({'state': 'validate1', 'approver_id': current_employee.id})
+        second_validate_allocs.write({'state': 'validate', 'second_approver_id': current_employee.id})
+
         self.activity_update()
-        return True
 
     def action_refuse(self):
         current_employee = self.env.user.employee_id
@@ -853,6 +850,8 @@ class HolidaysAllocation(models.Model):
         self.number_of_hours_display = 0.0
         self.number_of_days = 0.0
         self.already_accrued = False
+        self.carried_over_days_expiration_date = False
+        self.expiring_carryover_days = 0
         date_to = min(self.date_to, date.today()) if self.date_to else False
         self._process_accrual_plans(date_to)
 

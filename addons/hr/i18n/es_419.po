@@ -3,17 +3,17 @@
 # 	* hr
 # 
 # Translators:
-# Wil Odoo, 2024
 # Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2024
 # Fernanda Alvarez, 2024
+# Wil Odoo, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"POT-Creation-Date: 2024-12-16 13:39+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Fernanda Alvarez, 2024\n"
+"Last-Translator: Wil Odoo, 2024\n"
 "Language-Team: Spanish (Latin America) (https://app.transifex.com/odoo/teams/41243/es_419/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -69,12 +69,7 @@ msgstr "1 llamada telefónica"
 #: model_terms:hr.job,website_description:hr.job_marketing
 #: model_terms:hr.job,website_description:hr.job_trainee
 msgid "12 days / year, including <br>6 of your choice."
-msgstr "12 días al año, con<br> 6 a su elección."
-
-#. module: hr
-#: model_terms:ir.ui.view,arch_db:hr.print_employee_badge
-msgid "12345678901"
-msgstr "12345678901"
+msgstr "12 días al año,<br>con 6 a su elección."
 
 #. module: hr
 #: model_terms:hr.job,job_details:hr.job_ceo
@@ -300,6 +295,8 @@ msgstr "Se requiere una acción"
 msgid ""
 "Activate Remote Work to let Employees specify where they are working from."
 msgstr ""
+"Habilite la función de trabajo remoto para permitir que los empleados "
+"especifiquen desde dónde están trabajando."
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_department__active
@@ -637,6 +634,11 @@ msgstr "ID de credencial"
 #: model:ir.model.fields,field_description:hr.field_hr_employee__bank_account_id
 msgid "Bank Account"
 msgstr "Cuenta bancaria"
+
+#. module: hr
+#: model:ir.model,name:hr.model_res_partner_bank
+msgid "Bank Accounts"
+msgstr "Cuentas bancarias"
 
 #. module: hr
 #: model:ir.model,name:hr.model_base
@@ -984,7 +986,7 @@ msgstr "Creado el"
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__currency_id
 msgid "Currency"
-msgstr "Divisa"
+msgstr "Moneda"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_job__no_of_employee
@@ -1020,11 +1022,15 @@ msgid ""
 "Define the allowed IP to be displayed as Present. In case of multiple "
 "addresses, separate them by a coma."
 msgstr ""
+"Define la dirección IP permitida para que aparezca como Presente. En caso de"
+" que haya varias direcciones sepárelas con una coma."
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_config_settings_view_form
 msgid "Define the minimum number of sent emails to be displayed as Present."
 msgstr ""
+"Defina el número mínimo de correos electrónicos enviados para que aparezca "
+"como Presente."
 
 #. module: hr
 #: model:ir.model.fields,help:hr.field_hr_employee__resource_calendar_id
@@ -1033,6 +1039,8 @@ msgid ""
 "Define the working schedule of the resource. If not set, the resource will "
 "have fully flexible working hours."
 msgstr ""
+"Defina el horario de trabajo del recurso. Si no configura uno, sus horas de "
+"trabajo serán completamente flexibles. "
 
 #. module: hr
 #: model_terms:hr.job,description:hr.job_ceo
@@ -1189,6 +1197,12 @@ msgstr ""
 "Mostrar los ajustes de trabajo remoto para cada empleado y reportes "
 "específicos. Los iconos de asistencia se actualizarán con la ubicación de "
 "trabajo remota."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Divorced"
+msgstr "Divorciado"
 
 #. module: hr
 #: model:ir.model.fields.selection,name:hr.selection__hr_employee__certificate__doctor
@@ -1681,7 +1695,7 @@ msgstr "Visualización del icono de RR. HH."
 #. module: hr
 #: model:ir.model,name:hr.model_hr_manager_department_report
 msgid "Hr Manager Department Report"
-msgstr ""
+msgstr "Reporte de departamento del gerente de RR. HH."
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__hr_presence_state
@@ -1986,6 +2000,12 @@ msgid "Lead the entire sales cycle"
 msgstr "Dirigir todo el ciclo de ventas"
 
 #. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Legal Cohabitant"
+msgstr "Cohabitante legal"
+
+#. module: hr
 #: model_terms:ir.actions.act_window,help:hr.action_hr_job
 msgid "Let's create a job position."
 msgstr "Creemos un puesto de trabajo."
@@ -2063,11 +2083,6 @@ msgid "Manager of employee %s is not set."
 msgstr "No se ha establecido el gerente del empleado %s."
 
 #. module: hr
-#: model_terms:ir.ui.view,arch_db:hr.print_employee_badge
-msgid "Marc Demo"
-msgstr "Marc Demo"
-
-#. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__marital
 #: model:ir.model.fields,field_description:hr.field_res_users__marital
 #: model_terms:ir.ui.view,arch_db:hr.res_users_view_form_profile
@@ -2078,6 +2093,12 @@ msgstr "Estado civil"
 #: model:hr.job,name:hr.job_marketing
 msgid "Marketing and Community Manager"
 msgstr "Gerente de marketing y comunicación"
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Married"
+msgstr "Casado(a)"
 
 #. module: hr
 #: model:ir.model.fields.selection,name:hr.selection__hr_employee__certificate__master
@@ -2406,7 +2427,7 @@ msgstr "Nuestro producto"
 #. odoo-javascript
 #: code:addons/hr/static/src/components/avatar_card_resource/avatar_card_resource_popover.xml:0
 msgid "Out of Working Hours"
-msgstr ""
+msgstr "Fuera de horario laboral"
 
 #. module: hr
 #: model:ir.model.fields.selection,name:hr.selection__hr_employee__hr_icon_display__presence_out_of_working_hour
@@ -2416,7 +2437,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:hr.selection__hr_employee_public__hr_icon_display__presence_out_of_working_hour
 #: model:ir.model.fields.selection,name:hr.selection__hr_employee_public__hr_presence_state__out_of_working_hour
 msgid "Out of Working hours"
-msgstr ""
+msgstr "Fuera de horario laboral"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__pin
@@ -2604,12 +2625,12 @@ msgstr ""
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_config_settings_view_form
 msgid "Presence Condition"
-msgstr ""
+msgstr "Condición de asistencia"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_config_settings_view_form
 msgid "Presence Display"
-msgstr ""
+msgstr "Mostrar asistencia"
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_config_settings_view_form
@@ -3003,6 +3024,12 @@ msgid "Show employees"
 msgstr "Mostrar empleados"
 
 #. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Single"
+msgstr "Soltero(a)"
+
+#. module: hr
 #: model:ir.model.fields,field_description:hr.field_res_config_settings__module_hr_skills
 msgid "Skills Management"
 msgstr "Gestión de habilidades"
@@ -3017,11 +3044,6 @@ msgstr "Número de seguro social"
 #: model:ir.model.fields,help:hr.field_res_users__ssnid
 msgid "Social Security Number"
 msgstr "Número de seguridad social"
-
-#. module: hr
-#: model_terms:ir.ui.view,arch_db:hr.print_employee_badge
-msgid "Software Developer"
-msgstr "Desarrollador de software"
 
 #. module: hr
 #. odoo-python
@@ -3118,6 +3140,8 @@ msgid ""
 "Structure Employees per department and have an overview of e.g.\n"
 "                    expenses, timesheets, time off, recruitment, etc."
 msgstr ""
+"Estructura a los empleados por departamento, muestra un resumen de\n"
+"                    gastos, hojas de horas, tiempo personal, reclutamiento, etc."
 
 #. module: hr
 #: model:hr.contract.type,name:hr.contract_type_student
@@ -3177,8 +3201,12 @@ msgstr "Temporal"
 #. module: hr
 #. odoo-python
 #: code:addons/hr/models/hr_employee.py:0
-msgid "The Badge ID must be a sequence of digits."
-msgstr "El ID del gafete debe ser una secuencia de dígitos únicos."
+msgid ""
+"The Badge ID must be alphanumeric without any accents and no longer than 18 "
+"characters."
+msgstr ""
+"El ID de la credencial debe ser alfanumérico, no debe tener acentos y "
+"tampoco debe exceder los 18 caracteres."
 
 #. module: hr
 #: model:ir.model.constraint,message:hr.constraint_hr_employee_barcode_uniq
@@ -3221,6 +3249,7 @@ msgstr "El NIP debe ser numérico."
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "The default working hours are set in configuration."
 msgstr ""
+"Las horas de trabajo predeterminadas se establecen en la configuración."
 
 #. module: hr
 #. odoo-python
@@ -3318,11 +3347,14 @@ msgid ""
 "This report gives you an overview of your employees based on the measures of"
 " your choice."
 msgstr ""
+"Este reporte le proporciona información general de sus empleados con las "
+"medidas que seleccione."
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.res_config_settings_view_form
 msgid "This setting block is utilized to manage the frontend design."
 msgstr ""
+"Este bloque de ajustes se utiliza para gestionar el diseño del frontend."
 
 #. module: hr
 #. odoo-python
@@ -3341,7 +3373,7 @@ msgstr "Zona horaria"
 #: model:digest.tip,name:hr.digest_tip_hr_0
 #: model_terms:digest.tip,tip_description:hr.digest_tip_hr_0
 msgid "Tip: Where's Bryan?"
-msgstr ""
+msgstr "Consejo: ¿Dónde está Brian?"
 
 #. module: hr
 #. odoo-python
@@ -3529,6 +3561,12 @@ msgid ""
 msgstr ""
 "Si el empleado es un miembro del departamento del usuario activo o de uno de"
 " sus subdepartamentos."
+
+#. module: hr
+#. odoo-python
+#: code:addons/hr/models/hr_employee.py:0
+msgid "Widower"
+msgstr "Viudo(a)"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee__address_id
@@ -3756,7 +3794,7 @@ msgstr "departamento"
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.view_employee_form
 msgid "e.g. Building 2, Remote, etc."
-msgstr ""
+msgstr "Por ejemplo, edificio 2, casa, etc."
 
 #. module: hr
 #: model_terms:ir.ui.view,arch_db:hr.hr_employee_public_view_form

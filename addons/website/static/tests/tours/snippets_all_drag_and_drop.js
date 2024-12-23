@@ -68,17 +68,16 @@ for (let snippet of snippetsNames) {
         content: `Remove the ${snippet.name} snippet`, // Avoid bad perf if many snippets
         trigger: "we-button.oe_snippet_remove:last",
         run: "click",
-    }, 
+    },
     {
         trigger: "body[test-dd-snippet-removed]",
     },
     {
         content: `click on 'BLOCKS' tab (${snippet.name})`,
         trigger: ".o_we_add_snippet_btn",
-        run: function (actions) {
+        async run (actions) {
             document.body.removeAttribute("test-dd-snippet-removed");
-            // TODO: use actions.click(); instead
-            this.anchor.click();
+            await actions.click();
         },
     }];
 
@@ -114,7 +113,7 @@ for (let snippet of snippetsNames) {
 }
 
 registry.category("web_tour.tours").add("snippets_all_drag_and_drop", {
-    test: true,
+    checkDelay: 100,
     // To run the tour locally, you need to insert the URL sent by the python
     // tour here. There is currently an issue with tours which don't have an URL
     // url: '/?enable_editor=1&snippets_names=s_process_steps:columns,s_website_form:,s_...',

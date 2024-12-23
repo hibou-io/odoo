@@ -5,14 +5,17 @@
 # Translators:
 # Wil Odoo, 2024
 # Martin Trigaux, 2024
+# Chloe Wang, 2024
+# Odoo哥 <vnsoft.he@gmail.com>, 2024
+# Emily Jia <eji@odoo.com>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"POT-Creation-Date: 2024-12-16 13:39+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Martin Trigaux, 2024\n"
+"Last-Translator: Emily Jia <eji@odoo.com>, 2024\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -252,13 +255,13 @@ msgid ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: white; padding: 0; border-collapse:separate;\">\n"
 "                <tr><td valign=\"middle\">\n"
-"                    <span style=\"font-size: 10px;\">Your Lead/Opportunity</span><br>\n"
+"                    <span style=\"font-size: 10px;\">Your Lead/Opportunity</span><br/>\n"
 "                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Interest in your products</span>\n"
 "                </td><td valign=\"middle\" align=\"right\">\n"
-"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: 48px;\" t-att-alt=\"object.company_id.name\">\n"
+"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: 48px;\" t-att-alt=\"object.company_id.name\"/>\n"
 "                </td></tr>\n"
 "                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
-"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:4px 0px 32px 0px;\">\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:4px 0px 32px 0px;\"/>\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -270,15 +273,15 @@ msgid ""
 "                <tr>\n"
 "                    <td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                        <div>\n"
-"                            Hi <t t-out=\"object.partner_id and object.partner_id.name or ''\">Deco Addict</t>,<br><br>\n"
+"                            Hi <t t-out=\"object.partner_id and object.partner_id.name or ''\">Deco Addict</t>,<br/><br/>\n"
 "                            Welcome to <t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t>.\n"
-"                            It's great to meet you! Now that you're on board, you'll discover what <t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t> has to offer. My name is <t t-out=\"object.user_id.name or ''\">Marc Demo</t> and I'll help you get the most out of Odoo. Could we plan a quick demo soon?<br>\n"
-"                            Feel free to reach out at any time!<br><br>\n"
-"                            Best,<br>\n"
+"                            It's great to meet you! Now that you're on board, you'll discover what <t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t> has to offer. My name is <t t-out=\"object.user_id.name or ''\">Marc Demo</t> and I'll help you get the most out of Odoo. Could we plan a quick demo soon?<br/>\n"
+"                            Feel free to reach out at any time!<br/><br/>\n"
+"                            Best,<br/>\n"
 "                            <t t-if=\"object.user_id\">\n"
 "                                <b><t t-out=\"object.user_id.name or ''\">Marc Demo</t></b>\n"
-"                                <br>Email: <t t-out=\"object.user_id.email or ''\">mark.brown23@example.com</t>\n"
-"                                <br>Phone: <t t-out=\"object.user_id.phone or ''\">+1 650-123-4567</t>\n"
+"                                <br/>Email: <t t-out=\"object.user_id.email or ''\">mark.brown23@example.com</t>\n"
+"                                <br/>Phone: <t t-out=\"object.user_id.phone or ''\">+1 650-123-4567</t>\n"
 "                            </t>\n"
 "                            <t t-else=\"\">\n"
 "                                <t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t>\n"
@@ -292,8 +295,8 @@ msgid ""
 "    <!-- FOOTER -->\n"
 "    <tr>\n"
 "        <td align=\"center\" style=\"min-width: 590px; padding: 0 8px 0 8px; font-size:11px;\">\n"
-"            <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 4px 0px;\">\n"
-"            <b t-out=\"object.company_id.name or ''\">My Company (San Francisco)</b><br>\n"
+"            <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 4px 0px;\"/>\n"
+"            <b t-out=\"object.company_id.name or ''\">My Company (San Francisco)</b><br/>\n"
 "            <div style=\"color: #999999;\">\n"
 "                <t t-out=\"object.company_id.phone or ''\">+1 650-123-4567</t>\n"
 "                <t t-if=\"object.company_id.email\">\n"
@@ -323,13 +326,13 @@ msgstr ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: white; padding: 0; border-collapse:separate;\">\n"
 "                <tr><td valign=\"middle\">\n"
-"                    <span style=\"font-size: 10px;\">您的线索/商机</span><br>\n"
+"                    <span style=\"font-size: 10px;\">您的潜在客户/商机</span><br/>\n"
 "                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">对您的产品感兴趣</span>\n"
 "                </td><td valign=\"middle\" align=\"right\">\n"
-"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: 48px;\" t-att-alt=\"object.company_id.name\">\n"
+"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: 48px;\" t-att-alt=\"object.company_id.name\"/>\n"
 "                </td></tr>\n"
 "                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
-"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:4px 0px 32px 0px;\">\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:4px 0px 32px 0px;\"/>\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -341,18 +344,18 @@ msgstr ""
 "                <tr>\n"
 "                    <td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                        <div>\n"
-"                            <t t-out=\"object.partner_id and object.partner_id.name or ''\">Deco Addict</t>您好！<br><br>\n"
-"                            欢迎来到<t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t>。\n"
-"                            很高兴认识您！现在您能够进入系统，将探索<t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t> 提供的全部产品。我的名字是<t t-out=\"object.user_id.name or ''\">Marc Demo</t> ，将帮助您充分利用 Odoo 各项供能。我们能安排一次快速演示吗？<br>\n"
-"                            如有任何疑问，欢迎随时联系我们！<br><br>\n"
-"                            祝好<br>\n"
-"                            <t t-if=\"object.user_id\">\n"
-"                                <b><t t-out=\"object.user_id.name or ''\">Marc Demo</t></b>\n"
-"                                <br>电子邮箱：<t t-out=\"object.user_id.email or ''\">mark.brown23@example.com</t>\n"
-"                                <br>电话：<t t-out=\"object.user_id.phone or ''\">+1 650-123-4567</t>\n"
-"                            </t>\n"
+"                            您好，<t t-out=\"object.partner_id and object.partner_id.name or ''\">Deco Addict</t>：<br/><br/>\n"
+"                            欢迎来到<t t-out=\"object.company_id.name or ''\">我的公司（旧金山）</t>。\n"
+"                            很高兴见到您！您已加入了，您会发现<t t-out=\"object.company_id.name or ''\">我的公司（旧金山）</t>的功能。我叫<t t-out=\"object.user_id.name or ''\">Marc Demo</t>，将帮助您从Odoo获得最大收益。是否愿意计划快速演示？<br/>\n"
+"                            请随时联系我们！<br/><br/>\n"
+"                            谨上。<br/>\n"
+"                           <t t-if=\"object.user_id\">\n"
+"                               <b><t t-out=\"object.user_id.name or ''\">Marc Demo</t></b>\n"
+"                                <br/> 电子邮箱：<t t-out=\"object.user_id.email or ''\">mark.brown23@example.com</t>\n"
+"                                <br/> 电话：<t t-out=\"object.user_id.phone or ''\">+1 650-123-4567</t> </t>\n"
+"                            \n"
 "                            <t t-else=\"\">\n"
-"                                <t t-out=\"object.company_id.name or ''\">My Company (San Francisco)</t>\n"
+"                                <t t-out=\"object.company_id.name or ''\">我的公司（旧金山）</t>\n"
 "                            </t>\n"
 "                        </div>\n"
 "                    </td>\n"
@@ -363,15 +366,15 @@ msgstr ""
 "    <!-- FOOTER -->\n"
 "    <tr>\n"
 "        <td align=\"center\" style=\"min-width: 590px; padding: 0 8px 0 8px; font-size:11px;\">\n"
-"            <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 4px 0px;\">\n"
-"            <b t-out=\"object.company_id.name or ''\">My Company (San Francisco)</b><br>\n"
+"            <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 4px 0px;\"/>\n"
+"            <b t-out=\"object.company_id.name or ''\">我的公司（旧金山）</b><br/>\n"
 "            <div style=\"color: #999999;\">\n"
 "                <t t-out=\"object.company_id.phone or ''\">+1 650-123-4567</t>\n"
 "                <t t-if=\"object.company_id.email\">\n"
-"                    | <a t-attf-href=\"'mailto:%s' % {{ object.company_id.email }}\" style=\"text-decoration:none; color: #999999;\" t-out=\"object.company_id.email or ''\">info@yourcompany.com</a>\n"
+"                    |<a t-attf-href=\"'mailto:%s' % {{ object.company_id.email }}\" style=\"text-decoration:none; color: #999999;\" t-out=\"object.company_id.email or ''\">info@yourcompany.com</a>\n"
 "                </t>\n"
 "                <t t-if=\"object.company_id.website\">\n"
-"                    | <a t-attf-href=\"'%s' % {{ object.company_id.website }}\" style=\"text-decoration:none; color: #999999;\" t-out=\"object.company_id.website or ''\">http://www.example.com</a>\n"
+"                    |<a t-attf-href=\"'%s' % {{ object.company_id.website }}\" style=\"text-decoration:none; color: #999999;\" t-out=\"object.company_id.website or ''\">http://www.example.com</a>\n"
 "                </t>\n"
 "            </div>\n"
 "        </td>\n"
@@ -381,7 +384,7 @@ msgstr ""
 "</td></tr>\n"
 "<!-- POWERED BY -->\n"
 "<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
-"   由<a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=email\" style=\"color: #875A7B;\">Odoo</a>提供\n"
+"    由<a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=email\" style=\"color: #875A7B;\">Odoo</a>提供\n"
 "</td></tr>\n"
 "</table>\n"
 "        "
@@ -434,7 +437,7 @@ msgstr "所需操作"
 #: model_terms:ir.ui.view,arch_db:crm.crm_lost_reason_view_search
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
 msgid "Active"
-msgstr "已启用"
+msgstr "有效"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner_mass__lead_tomerge_ids
@@ -468,7 +471,7 @@ msgstr "活动完成目标"
 msgid ""
 "Activities marked as Done on Leads will appear here, providing an overview "
 "of lead interactions."
-msgstr ""
+msgstr "标记为 “潜在客户已完成” 的活动将显示在此处，提供潜在客户交互的概述。"
 
 #. module: crm
 #: model:ir.model,name:crm.model_mail_activity
@@ -534,7 +537,7 @@ msgstr "添加描述......"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Add a qualification step before the creation of an opportunity"
-msgstr "创建新商机之前添加资格认证步骤"
+msgstr "创建新商机之前添加线索"
 
 #. module: crm
 #. odoo-javascript
@@ -568,7 +571,7 @@ msgstr "别名"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_contact
 msgid "Alias Contact Security"
-msgstr "安全联系人别名"
+msgstr "别名授权于"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_domain_id
@@ -629,7 +632,7 @@ msgstr "应用去重"
 #: model_terms:ir.ui.view,arch_db:crm.crm_recurring_plan_view_search
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 msgid "Archived"
-msgstr "已存档"
+msgstr "已归档"
 
 #. module: crm
 #. odoo-python
@@ -638,7 +641,7 @@ msgid ""
 "As you are a member of no Sales Team, you are showed the Pipeline of the <b>first team by default.</b>\n"
 "                                        To work with the CRM, you should <a name=\"%d\" type=\"action\" tabindex=\"-1\">join a team.</a>"
 msgstr ""
-"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售流水线。\n"
+"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售商机。\n"
 "                                        要使用客户关系管理，应<a name=\"%d\" type=\"action\" tabindex=\"-1\">加入一个团队。</a>"
 
 #. module: crm
@@ -648,7 +651,7 @@ msgid ""
 "As you are a member of no Sales Team, you are showed the Pipeline of the <b>first team by default.</b>\n"
 "                                        To work with the CRM, you should join a team."
 msgstr ""
-"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售流水线。\n"
+"由于您不属于任何销售团队，<b>系统默认显示第一个团队</b>的销售商机。\n"
 "                                        要使用客户关系管理，应加入一个团队。"
 
 #. module: crm
@@ -713,7 +716,7 @@ msgstr "关联线索"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__message_attachment_count
 msgid "Attachment Count"
-msgstr "附件计数"
+msgstr "附件数量"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__assignment_auto_enabled
@@ -840,7 +843,7 @@ msgstr "频道"
 msgid ""
 "Check the Stage Tracker of Leads to identify bottlenecks in your Sales "
 "process."
-msgstr ""
+msgstr "检查销售线索阶段追踪器以识别销售流程中的瓶颈。"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_team__use_leads
@@ -877,7 +880,7 @@ msgstr "归类并分析线索/商机的类别，例如：培训，服务"
 msgid ""
 "Click on the breadcrumb to go back to your Pipeline. Odoo will save all "
 "modifications as you navigate."
-msgstr "点击面包屑导航，返回您的流水线。Odoo 会在您切换浏览画面时保存所有修改。"
+msgstr "点击面包屑导航，返回您的商机。Odoo 会在您切换浏览画面时保存所有修改。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__date_closed
@@ -1104,7 +1107,7 @@ msgstr "创建定期计划"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__lead_mining_in_pipeline
 msgid "Create a lead mining request directly from the opportunity pipeline."
-msgstr "直接从商机流水线创建线索挖掘申请。"
+msgstr "直接从商机商机创建线索挖掘申请。"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead2opportunity_partner__action__create
@@ -1131,7 +1134,7 @@ msgstr "创建商机"
 #: code:addons/crm/models/crm_lead.py:0
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
 msgid "Create an opportunity to start playing with your pipeline."
-msgstr "创建商机，以开始流水线。"
+msgstr "从你的线索中创建一个商机"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner__create_uid
@@ -1185,12 +1188,12 @@ msgstr "客户关系管理：预测"
 #. module: crm
 #: model:ir.actions.server,name:crm.action_your_pipeline
 msgid "Crm: My Pipeline"
-msgstr "客户关系管理：我的流水线"
+msgstr "客户关系管理：我的渠道"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__company_currency
 msgid "Currency"
-msgstr "币种"
+msgstr "币别"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_bounced_content
@@ -1213,7 +1216,7 @@ msgstr "客户"
 #. odoo-python
 #: code:addons/crm/models/crm_lead.py:0
 msgid "Customer Email"
-msgstr "客户电邮"
+msgstr "客户电子邮箱"
 
 #. module: crm
 #: model:ir.ui.menu,name:crm.res_partner_menu_customer
@@ -1270,14 +1273,14 @@ msgstr "描述"
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
 msgid "Did you know emails sent to"
-msgstr "您是否知道电邮发送至"
+msgstr "您是否知道电子邮件发送至"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
 msgid ""
 "Did you know emails sent to a Sales Team alias generate opportunities in "
 "your pipeline?"
-msgstr "您是否知道发送给销售团队别名的电邮会在流水线中生成商机？"
+msgstr "您是否知道发送给销售团队别名的电子邮件会在商机中生成商机？"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_4
@@ -1321,7 +1324,7 @@ msgstr "显示名称"
 #. odoo-python
 #: code:addons/crm/models/digest.py:0
 msgid "Do not have access, skip this data for user's digest email"
-msgstr "无访问权限，请跳过此数据以获取用户摘要电邮"
+msgstr "无访问权限，用户摘要邮件忽略该数据"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead2opportunity_partner__action__nothing
@@ -1527,7 +1530,7 @@ msgstr "可用于计算预测线索评分的字段"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_stage__fold
 msgid "Folded in Pipeline"
-msgstr "在流水线中折叠"
+msgstr "在渠道中折叠"
 
 #. module: crm
 #: model:mail.activity.type,name:crm.mail_activity_demo_followup_quote
@@ -1710,14 +1713,14 @@ msgstr "如果设置，该内容而非默认消息将自动发送给未经授权
 msgid ""
 "If the email address is on the blacklist, the contact won't receive mass "
 "mailing anymore, from any list"
-msgstr "如果电子邮箱地址被列入黑名单，则该联系人不会收到来自任何列表的群发电邮"
+msgstr "如果电子邮箱地址被列入黑名单，则该联系人不会收到来自任何列表的群发电子邮件"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__phone_sanitized_blacklisted
 msgid ""
 "If the sanitized phone number is on the blacklist, the contact won't receive"
 " mass mailing sms anymore, from any list"
-msgstr "如果已净化电话号码被列入黑名单，则该联系人不会收到来自任何列表的群发电邮"
+msgstr "如果已净化电话号码被列入黑名单，则该联系人不会收到来自任何列表的群发电子邮件"
 
 #. module: crm
 #: model:ir.ui.menu,name:crm.menu_import_crm
@@ -1733,7 +1736,7 @@ msgstr "为线索和商机导入模板"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
 msgid "Inactive"
-msgstr "未启用"
+msgstr "无效"
 
 #. module: crm
 #: model:ir.model.fields.selection,name:crm.selection__crm_lead__email_state__incorrect
@@ -1760,7 +1763,7 @@ msgstr "指示列入黑名单的经净化电话号码是否为手机号码。有
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
 msgid "Internal Notes"
-msgstr "内部凭单"
+msgstr "内部说明"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_res_config_settings__crm_auto_assignment_interval_type
@@ -1823,7 +1826,7 @@ msgstr "KPI客户关系管理商机赢得值"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__lang_active_count
 msgid "Lang Active Count"
-msgstr "已启用语言计数"
+msgstr "有效语言数量"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__lang_id
@@ -2063,7 +2066,7 @@ msgstr "分派的线索"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lost_reason__leads_count
 msgid "Leads Count"
-msgstr "线索计数"
+msgstr "线索数量"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_calendar_view_leads
@@ -2111,7 +2114,7 @@ msgstr "线索/商机"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_utm_campaign__crm_lead_count
 msgid "Leads/Opportunities count"
-msgstr "线索/商机计数"
+msgstr "线索/商机数量"
 
 #. module: crm
 #. odoo-javascript
@@ -2123,7 +2126,7 @@ msgstr "让我们<b>计划一场活动。</b>"
 #: model_terms:ir.actions.act_window,help:crm.crm_activity_report_action
 #: model_terms:ir.actions.act_window,help:crm.crm_activity_report_action_team
 msgid "Let's get to work!"
-msgstr ""
+msgstr "让我们开始工作吧！"
 
 #. module: crm
 #. odoo-javascript
@@ -2147,7 +2150,7 @@ msgstr "链接的合作伙伴（可选）。通常在转化线索时创建。可
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_incoming_local
 msgid "Local-part based incoming detection"
-msgstr "基于本地部件的来件检测"
+msgstr "收件时检测本地的别名域"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__lang_code
@@ -2185,7 +2188,7 @@ msgstr "丢失评论"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead_scoring_frequency__lost_count
 msgid "Lost Count"
-msgstr "丢失计数"
+msgstr "丢失数量"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_lost_view_form
@@ -2285,7 +2288,7 @@ msgstr "市场营销："
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_leads_filter
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_opportunities_filter
 msgid "Medium"
-msgstr "媒介"
+msgstr "中等"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
@@ -2417,7 +2420,7 @@ msgstr "我的线索"
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_search
 #: model_terms:ir.ui.view,arch_db:crm.view_crm_case_opportunities_filter
 msgid "My Pipeline"
-msgstr "我的流水线"
+msgstr "我的渠道"
 
 #. module: crm
 #: model:crm.stage,name:crm.stage_lead1
@@ -2560,7 +2563,7 @@ msgstr "没有销售员"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__email_normalized
 msgid "Normalized Email"
-msgstr "规范化电邮"
+msgstr "规范化电子邮件"
 
 #. module: crm
 #: model:crm.lost.reason,name:crm.lost_reason_3
@@ -2581,7 +2584,7 @@ msgstr "备注："
 #. odoo-javascript
 #: code:addons/crm/static/src/js/tours/crm.js:0
 msgid "Now, <b>add your Opportunity</b> to your Pipeline."
-msgstr "现在，<b>添加商机</b>到您的流水线中。"
+msgstr "现在，<b>添加商机</b>到您的渠道中。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__message_needaction_counter
@@ -2621,7 +2624,7 @@ msgid ""
 "Odoo helps you keep track of your sales pipeline to follow\n"
 "                    up potential sales and better forecast your future revenues."
 msgstr ""
-"Odoo 帮助您追踪流水线，\n"
+"Odoo 帮助您追踪商机，\n"
 "                    关注潜在销售机会，更好地预测未来收入。"
 
 #. module: crm
@@ -2689,7 +2692,7 @@ msgid ""
 "mainly used by the sales manager in order to do the periodic review with the"
 " channels of the sales pipeline."
 msgstr ""
-"通过商机分析，可以立即查看商机信息，例如，预期收入、计划成本、错过的期限或每次商机的互动次数。该报告主要供销售经理使用，以便对流水线的流程进行周期性评估。"
+"通过商机分析，可以立即查看商机信息，例如，预期收入、计划成本、错过的期限或每次商机的互动次数。该报告主要供销售经理使用，以便对商机的流程进行周期性评估。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_graph_forecast
@@ -2729,7 +2732,7 @@ msgstr "商机"
 #: model:ir.model.fields,field_description:crm.field_res_partner__opportunity_count
 #: model:ir.model.fields,field_description:crm.field_res_users__opportunity_count
 msgid "Opportunity Count"
-msgstr ""
+msgstr "商机数量"
 
 #. module: crm
 #: model:mail.message.subtype,name:crm.mt_lead_create
@@ -2878,12 +2881,12 @@ msgstr "电话号码："
 #: model:ir.ui.menu,name:crm.crm_opportunity_report_menu
 #: model:ir.ui.menu,name:crm.menu_crm_config_lead
 msgid "Pipeline"
-msgstr "流水线"
+msgstr "渠道"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_activity_report_action_team
 msgid "Pipeline Activities"
-msgstr "流水线活动"
+msgstr "渠道活动"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.action_report_crm_opportunity_salesteam
@@ -2892,7 +2895,7 @@ msgstr "流水线活动"
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_graph
 #: model_terms:ir.ui.view,arch_db:crm.crm_opportunity_report_view_pivot
 msgid "Pipeline Analysis"
-msgstr "流水线分析"
+msgstr "渠道分析"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_recurring_plan__name
@@ -2930,7 +2933,7 @@ msgstr "潜在的、重复的线索"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__duplicate_lead_count
 msgid "Potential Duplicate Lead Count"
-msgstr "潜在的重复线索计数"
+msgstr "潜在的重复线索数量"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
@@ -2984,7 +2987,7 @@ msgstr "属性"
 #. module: crm
 #: model:crm.stage,name:crm.stage_lead3
 msgid "Proposition"
-msgstr "建议"
+msgstr "提案"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__recurring_revenue_monthly_prorated
@@ -3020,7 +3023,7 @@ msgstr "评级"
 #. odoo-javascript
 #: code:addons/crm/static/src/js/tours/crm.js:0
 msgid "Ready to boost your sales? Let's have a look at your <b>Pipeline</b>."
-msgstr "准备好提高销售额了吗？让我们来看看您的<b>流水线</b>。"
+msgstr "准备好提高销售额了吗？让我们来看看您的<b>渠道</b>。"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_team__alias_force_thread_id
@@ -3085,7 +3088,7 @@ msgstr "重复"
 #. module: crm
 #: model:ir.ui.menu,name:crm.crm_menu_report
 msgid "Reporting"
-msgstr "报告"
+msgstr "报表"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_stage__requirements
@@ -3213,7 +3216,7 @@ msgstr "要进行合并，请从列表中至少选择两个潜在客户/销售�
 #: model:ir.actions.act_window,name:crm.action_lead_mail_compose
 #: model:ir.actions.act_window,name:crm.action_lead_mass_mail
 msgid "Send email"
-msgstr "发送电邮"
+msgstr "发送电子邮件"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_recurring_plan__sequence
@@ -3231,7 +3234,7 @@ msgstr "设置商机定期计划，显示合同续订周期<br>（例如：月�
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_stage_action
 msgid "Set a new stage in your opportunity pipeline"
-msgstr "在商机流水线中设置新阶段"
+msgstr "在商机商机中设置新阶段"
 
 #. module: crm
 #: model:ir.actions.act_window,name:crm.crm_config_settings_action
@@ -3477,7 +3480,7 @@ msgstr "该别名对应的模型（Odoo 文档种类）。任何不属于回复�
 msgid ""
 "The name of the email alias, e.g. 'jobs' if you want to catch emails for "
 "<jobs@example.odoo.com>"
-msgstr "电邮别名，例如，如果要收取<jobs@example.odoo.com>的电邮，别名应为“jobs”"
+msgstr "电子邮箱别名，例如：如果要收取<jobs@example.odoo.com>的电子邮件，别名应为“jobs”"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__partner_name
@@ -3589,7 +3592,7 @@ msgstr "该操作会将线索分配给所有成员。确定继续吗？"
 #: model:digest.tip,name:crm.digest_tip_crm_0
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
 msgid "Tip: Convert incoming emails into opportunities"
-msgstr "提示：将收到的电邮转化为商机"
+msgstr "提示：将收到的电子邮件转化为商机"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_1
@@ -3607,13 +3610,13 @@ msgstr "提示：无需浪费时间记录客户数据"
 #: model:digest.tip,name:crm.digest_tip_crm_6
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_6
 msgid "Tip: Identify Bottlenecks at a glance"
-msgstr ""
+msgstr "提示：一目了然地识别瓶颈"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_3
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_3
 msgid "Tip: Manage your pipeline"
-msgstr "提示：管理流水线"
+msgstr "提示：管理渠道"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_2
@@ -3625,7 +3628,7 @@ msgstr "提示：利用人工智能预测赢得商机的机率"
 #: model:digest.tip,name:crm.digest_tip_crm_7
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_7
 msgid "Tip: Turn Sales Forecasting into Child's Play"
-msgstr ""
+msgstr "提示：将销售预测变成小菜一碟"
 
 #. module: crm
 #: model:digest.tip,name:crm.digest_tip_crm_5
@@ -3674,12 +3677,12 @@ msgstr "跟踪12个月"
 msgid ""
 "True if the monthly lead assignment count is greater than the maximum "
 "assignment limit, false otherwise."
-msgstr "如果每月线索分配计数大于最大分配限制，则为真（true），否则为假（false）。"
+msgstr "如果每月线索分配数量大于最大分配限制，则为真（true），否则为假（false）。"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
 msgid "Try sending an email"
-msgstr "尝试发送电邮"
+msgstr "尝试发送电子邮件"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_activity_report__lead_type
@@ -3814,7 +3817,7 @@ msgstr "使用 <i>新建</i>按钮，或发送电子邮件至%(email_link)s 测�
 msgid ""
 "Use the CRM Forecast Kanban to easily define when Opportunities are expected"
 " to be won."
-msgstr ""
+msgstr "使用 CRM 预测看板，轻松定义预计何时赢得商机。"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
@@ -3825,7 +3828,7 @@ msgstr "使用新建按钮，或设置电子邮件别名，以测试电子邮件
 #. module: crm
 #: model_terms:ir.actions.act_window,help:crm.crm_opportunity_report_action
 msgid "Use this menu to have an overview of your Pipeline."
-msgstr "使用该菜单概览流水线。"
+msgstr "使用该菜单概览商机。"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_stage__sequence
@@ -3920,7 +3923,7 @@ msgstr "赢得"
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead_scoring_frequency__won_count
 msgid "Won Count"
-msgstr "赢得计数"
+msgstr "赢得数量"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_res_users__target_sales_won
@@ -3948,7 +3951,7 @@ msgstr "是"
 #. odoo-javascript
 #: code:addons/crm/static/src/js/tours/crm.js:0
 msgid "You can make your opportunity advance through your pipeline from here."
-msgstr "可以在此处通过流水线推进商机。"
+msgstr "可以在此处通过商机推进商机。"
 
 #. module: crm
 #. odoo-python
@@ -4044,7 +4047,7 @@ msgstr "对于目前创建的线索日期截至"
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0
 msgid "generate opportunities in your pipeline?<br>"
-msgstr "在流水线中创建商机？<br>"
+msgstr "在渠道中创建商机？<br>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_kanban_view_leads

@@ -59,9 +59,7 @@ export class TicketScreen extends Component {
         this.ui = useState(useService("ui"));
         this.dialog = useService("dialog");
         this.numberBuffer = useService("number_buffer");
-        this.doPrint = useTrackedAsync((_selectedSyncedOrder) =>
-            this.pos.printReceipt({ order: _selectedSyncedOrder })
-        );
+        this.doPrint = useTrackedAsync((_selectedSyncedOrder) => this.print(_selectedSyncedOrder));
         this.numberBuffer.use({
             triggerAtInput: (event) => this._onUpdateSelectedOrderline(event),
         });
@@ -84,6 +82,9 @@ export class TicketScreen extends Component {
             this.onFilterSelected(this.state.filter);
         });
     }
+    async print(order) {
+        await this.pos.printReceipt({ order: order });
+    }
     async onFilterSelected(selectedFilter) {
         this.state.filter = selectedFilter;
 
@@ -102,6 +103,9 @@ export class TicketScreen extends Component {
     async onSearch(search) {
         this.state.search = search;
         this.state.page = 1;
+        if (this.state.filter == "SYNCED") {
+            await this._fetchSyncedOrders();
+        }
     }
     onClickOrder(clickedOrder) {
         this.state.selectedOrder = clickedOrder;
@@ -402,6 +406,7 @@ export class TicketScreen extends Component {
             (orders.length === 1 && orders[0].lines.length === 0) ||
             (this.ui.isSmall && order != this.state.selectedOrder) ||
             this.isDefaultOrderEmpty(order) ||
+            order.finalized ||
             order.payment_ids.some(
                 (payment) => payment.is_electronic() && payment.get_payment_status() === "done"
             ) ||

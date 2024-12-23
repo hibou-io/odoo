@@ -10,7 +10,8 @@ import {
 } from "@odoo/owl";
 import { isNode, toSelector } from "@web/../lib/hoot-dom/helpers/dom";
 import { isIterable } from "@web/../lib/hoot-dom/hoot_dom_utils";
-import { Markup, toExplicitString } from "../hoot_utils";
+import { logger } from "../core/logger";
+import { getTypeOf, Markup, stringify, toExplicitString } from "../hoot_utils";
 
 /**
  * @typedef {{
@@ -24,7 +25,6 @@ import { Markup, toExplicitString } from "../hoot_utils";
 
 const {
     Object: { keys: $keys },
-    console: { log: $log },
 } = globalThis;
 
 //-----------------------------------------------------------------------------
@@ -73,7 +73,10 @@ export class HootTechnicalValue extends Component {
         </t>
         <t t-elif="isNode(value)">
             <t t-set="elParts" t-value="toSelector(value, { object: true })" />
-            <button class="hoot-html" t-on-click="log">
+            <button
+                class="hoot-html"
+                t-on-click.stop="log"
+            >
                 <t>&lt;<t t-esc="elParts.tag" /></t>
                 <t t-if="elParts.id">
                     <span class="hoot-html-id" t-esc="elParts.id" />
@@ -87,7 +90,10 @@ export class HootTechnicalValue extends Component {
         <t t-elif="value and typeof value === 'object'">
             <t t-set="labelSize" t-value="getLabelAndSize()" />
             <pre class="hoot-technical">
-                <button class="hoot-object inline-flex items-center gap-1 me-1" t-on-click="onClick">
+                <button
+                    class="hoot-object inline-flex items-center gap-1 me-1"
+                    t-on-click.stop="onClick"
+                >
                     <t t-if="labelSize[1] > 0">
                         <i
                             class="fa fa-caret-right flex justify-center w-2 transition"
@@ -138,18 +144,17 @@ export class HootTechnicalValue extends Component {
             </pre>
         </t>
         <t t-else="">
-            <span t-attf-class="hoot-{{ typeof value }}">
-                <t t-if="typeof value === 'string'">
-                    <t>"</t><t t-esc="explicitValue" /><t>"</t>
-                </t>
-                <t t-else="" t-esc="explicitValue" />
+            <span t-attf-class="hoot-{{ getTypeOf(value) }}">
+                <t t-esc="typeof value === 'string' ? stringify(explicitValue) : explicitValue" />
             </span>
         </t>
     `;
 
-    toSelector = toSelector;
+    getTypeOf = getTypeOf;
     isIterable = isIterable;
     isNode = isNode;
+    stringify = stringify;
+    toSelector = toSelector;
 
     get explicitValue() {
         return toExplicitString(this.value);
@@ -207,7 +212,7 @@ export class HootTechnicalValue extends Component {
             return;
         }
         this.logged = true;
-        $log(this.value);
+        logger.debug(this.value);
     }
 
     wrapPromiseValue(promise) {

@@ -1,9 +1,9 @@
 /** @odoo-module */
 
-import { describe, expect, makeExpect, mountOnFixture, test } from "@odoo/hoot";
-import { check, tick } from "@odoo/hoot-dom";
+import { describe, expect, makeExpect, test } from "@odoo/hoot";
+import { check, manuallyDispatchProgrammaticEvent, tick } from "@odoo/hoot-dom";
 import { Component, xml } from "@odoo/owl";
-import { parseUrl } from "../local_helpers";
+import { mountForTest, parseUrl } from "../local_helpers";
 
 import { Test } from "../../core/test";
 
@@ -42,7 +42,8 @@ describe(parseUrl(import.meta.url), () => {
 
     test("makeExpect with a test", async () => {
         const [customExpect, hooks] = makeExpect({ headless: true });
-        const customTest = new Test(null, "test", {}, () => {
+        const customTest = new Test(null, "test", {});
+        customTest.setRunFn(() => {
             customExpect({ key: true }).toEqual({ key: true });
             customExpect("oui").toBe("non");
         });
@@ -59,7 +60,8 @@ describe(parseUrl(import.meta.url), () => {
 
     test("makeExpect with a test flagged with TODO", async () => {
         const [customExpect, hooks] = makeExpect({ headless: true });
-        const customTest = new Test(null, "test", { todo: true }, () => {
+        const customTest = new Test(null, "test", { todo: true });
+        customTest.setRunFn(() => {
             customExpect(1).toBe(1);
         });
 
@@ -87,7 +89,7 @@ describe(parseUrl(import.meta.url), () => {
         expect(results.pass).toBe(false);
         expect(results.assertions).toHaveLength(1);
         expect(results.assertions[0].message).toBe(
-            "expected at least one assertion, but none were run"
+            "expected at least 1 assertion, but none were run"
         );
     });
 
@@ -140,7 +142,7 @@ describe(parseUrl(import.meta.url), () => {
     });
 
     test("'expect' results contain the correct informations", async () => {
-        await mountOnFixture(/* xml */ `
+        await mountForTest(/* xml */ `
             <label style="color: #f00">
                 Checkbox
                 <input class="cb" type="checkbox" />
@@ -347,22 +349,22 @@ describe(parseUrl(import.meta.url), () => {
 
         test("verifyErrors", async () => {
             expect.assertions(1);
-            expect.errors(2);
+            expect.errors(3);
 
-            const asyncBoom = async () => {
-                throw new Error("rejection");
+            const boom = (msg) => {
+                throw new Error(msg);
             };
 
-            const boom = () => {
-                throw new Error("error");
-            };
+            // Timeout
+            setTimeout(() => boom("timeout"));
+            // Promise
+            Promise.resolve().then(() => boom("async"));
+            // Event
+            manuallyDispatchProgrammaticEvent(window, "error", { message: "event" });
 
-            asyncBoom();
-            setTimeout(boom);
-            await tick();
             await tick();
 
-            expect.verifyErrors(["error", "rejection"]);
+            expect.verifyErrors(["event", "async", "timeout"]);
         });
 
         test("verifySteps", () => {
@@ -383,8 +385,18 @@ describe(parseUrl(import.meta.url), () => {
     });
 
     describe("DOM matchers", () => {
+        test("toBeChecked", async () => {
+            await mountForTest(/* xml */ `
+                <input type="checkbox" />
+                <input type="checkbox" checked="" />
+            `);
+
+            expect("input:first").not.toBeChecked();
+            expect("input:last").toBeChecked();
+        });
+
         test("toHaveAttribute", async () => {
-            await mountOnFixture(/* xml */ `
+            await mountForTest(/* xml */ `
                 <input type="number" disabled="" />
             `);
 
@@ -394,7 +406,7 @@ describe(parseUrl(import.meta.url), () => {
         });
 
         test("toHaveCount", async () => {
-            await mountOnFixture(/* xml */ `
+            await mountForTest(/* xml */ `
                 <ul>
                     <li>milk</li>
                     <li>eggs</li>
@@ -411,6 +423,16 @@ describe(parseUrl(import.meta.url), () => {
             expect("li:contains(milk)").toHaveCount(2);
         });
 
+        test("toHaveProperty", async () => {
+            await mountForTest(/* xml */ `
+                <input type="search" readonly="" />
+            `);
+
+            expect("input").toHaveProperty("type", "search");
+            expect("input").not.toHaveProperty("readonly");
+            expect("input").toHaveProperty("readOnly", true);
+        });
+
         test("toHaveText", async () => {
             class TextComponent extends Component {
                 static props = {};
@@ -422,7 +444,7 @@ describe(parseUrl(import.meta.url), () => {
                 nbsp = "\u00a0";
             }
 
-            await mountOnFixture(TextComponent);
+            await mountForTest(TextComponent);
 
             expect(".with").toHaveText("With nbsp");
             expect(".with").toHaveText("With\u00a0nbsp", { raw: true });
@@ -431,6 +453,40 @@ describe(parseUrl(import.meta.url), () => {
             expect(".without").toHaveText("Without nbsp");
             expect(".without").not.toHaveText("Without\u00a0nbsp");
             expect(".without").not.toHaveText("Without\u00a0nbsp", { raw: true });
+        });
+
+        test("toHaveInnerHTML", async () => {
+            await mountForTest(/* xml */ `
+                <div class="parent">
+                    <p>
+                        abc<strong>def</strong>ghi
+                        <br />
+                        <input type="text" />
+                    </p>
+                </div>
+            `);
+
+            expect(".parent").toHaveInnerHTML(/* xml */ `
+                <p>abc<strong>def</strong>ghi<br><input type="text"></p>
+            `);
+        });
+
+        test("toHaveOuterHTML", async () => {
+            await mountForTest(/* xml */ `
+                <div class="parent">
+                    <p>
+                        abc<strong>def</strong>ghi
+                        <br />
+                        <input type="text" />
+                    </p>
+                </div>
+            `);
+
+            expect(".parent").toHaveOuterHTML(/* xml */ `
+                <div class="parent">
+                    <p>abc<strong>def</strong>ghi<br><input type="text"></p>
+                </div>
+            `);
         });
     });
 });

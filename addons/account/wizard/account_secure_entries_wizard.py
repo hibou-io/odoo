@@ -87,7 +87,7 @@ class AccountSecureEntries(models.TransientModel):
         for journal, journal_moves in moves.grouped('journal_id').items():
             for chain_moves in journal_moves.grouped('sequence_prefix').values():
                 chain_info = chain_moves._get_chain_info(force_hash=True)
-                if chain_info is False:
+                if not chain_info:
                     continue
 
                 last_move_hashed = chain_info['last_move_hashed']
@@ -195,6 +195,14 @@ class AccountSecureEntries(models.TransientModel):
                         **self.env['account.journal']._show_sequence_holes(domain),
                         'views': [[self.env.ref('account.view_move_tree_multi_edit').id, 'list'], [self.env.ref('account.view_move_form').id, 'form']],
                     }
+                }
+
+            moves_to_hash_after_selected_date = wizard.move_to_hash_ids.filtered(lambda move: move.date > wizard.hash_date)
+            if moves_to_hash_after_selected_date:
+                warnings['account_move_to_secure_after_selected_date'] = {
+                    'message': _("Securing these entries will also secure entries after the selected date."),
+                    'action_text': _("Review"),
+                    'action': wizard.action_show_moves(moves_to_hash_after_selected_date),
                 }
 
             wizard.warnings = warnings

@@ -3,7 +3,7 @@
 import { Component, useRef, useState, xml } from "@odoo/owl";
 import { logLevels } from "../core/logger";
 import { refresh } from "../core/url";
-import { useWindowListener } from "../hoot_utils";
+import { useAutofocus, useWindowListener } from "../hoot_utils";
 import { generateSeed, internalRandom } from "../mock/math";
 import { toggleColorScheme, useColorScheme } from "./hoot_colors";
 import { HootCopyButton } from "./hoot_copy_button";
@@ -40,11 +40,11 @@ export class HootConfigDropdown extends Component {
                 class="flex bg-btn rounded p-2 transition-colors"
                 title="Configuration"
             >
-                <i class="fa fa-cog" />
+                <i class="fa fa-cog transition" t-att-class="{ 'rotate-90': state.open }" />
             </button>
             <t t-if="state.open">
                 <form
-                    class="hoot-config-dropdown animate-slide-down bg-base text-base mt-1 absolute flex flex-col end-0 px-2 py-3 shadow rounded shadow z-2"
+                    class="hoot-dropdown animate-slide-down bg-base text-base mt-1 absolute flex flex-col end-0 px-2 py-3 shadow rounded shadow z-2"
                     t-on-submit.prevent="refresh"
                 >
                     <div
@@ -58,7 +58,7 @@ export class HootConfigDropdown extends Component {
                                 class="px-1 transition-colors"
                                 t-att-class="{ 'border rounded text-primary border-primary': config.order === order.value }"
                                 t-att-title="order.title"
-                                t-on-click="() => this.setExecutionOrder(order.value)"
+                                t-on-click.stop="() => this.setExecutionOrder(order.value)"
                             >
                                 <i class="fa transition" t-att-class="{ [order.icon]: true }"/>
                             </button>
@@ -92,13 +92,14 @@ export class HootConfigDropdown extends Component {
                             <span class="text-muted whitespace-nowrap ms-1">Seed:</span>
                             <input
                                 type="text"
+                                autofocus=""
                                 class="w-full outline-none border-b border-primary px-1"
                                 t-model.number="config.random"
                             />
                             <button
                                 type="button"
                                 title="Generate new random seed"
-                                t-on-click="resetSeed"
+                                t-on-click.stop="resetSeed"
                             >
                                 <i class="fa fa-repeat" />
                             </button>
@@ -143,7 +144,8 @@ export class HootConfigDropdown extends Component {
                         <small class="flex items-center p-1 pt-0 gap-1">
                             <span class="text-muted whitespace-nowrap ms-1">Failed tests:</span>
                             <input
-                                type="number"
+                                type="text"
+                                autofocus=""
                                 class="outline-none w-full border-b border-primary px-1"
                                 t-model.number="config.bail"
                             />
@@ -165,7 +167,8 @@ export class HootConfigDropdown extends Component {
                         <small class="flex items-center p-1 pt-0 gap-1">
                             <span class="text-muted whitespace-nowrap ms-1">Level:</span>
                             <select
-                                class="outline-none w-full border-b border-primary px-1"
+                                autofocus=""
+                                class="outline-none w-full bg-base text-base border-b border-primary px-1"
                                 t-model.number="config.loglevel"
                             >
                                 <t t-foreach="logLevels" t-as="level" t-key="level.value">
@@ -204,7 +207,7 @@ export class HootConfigDropdown extends Component {
                         type="button"
                         class="p-1 hover:bg-gray-300 dark:hover:bg-gray-700"
                         title="Toggle the color scheme of the UI"
-                        t-on-click="toggleColorScheme"
+                        t-on-click.stop="toggleColorScheme"
                     >
                         <i t-attf-class="fa fa-{{ color.scheme === 'light' ? 'moon' : 'sun' }}-o" />
                         Color scheme
@@ -238,41 +241,46 @@ export class HootConfigDropdown extends Component {
         this.config = useState(this.env.runner.config);
         this.state = useState({ open: false });
 
+        useAutofocus(this.rootRef);
         useWindowListener("keydown", (ev) => {
             if (this.state.open && ev.key === "Escape") {
                 ev.preventDefault();
                 this.state.open = false;
             }
         });
-        useWindowListener("click", (ev) => {
-            const path = ev.composedPath();
-            if (!path.includes(this.rootRef.el)) {
-                this.state.open = false;
-            } else if (path.includes(this.togglerRef.el)) {
-                this.state.open = !this.state.open;
-            }
-        });
+        useWindowListener(
+            "click",
+            (ev) => {
+                const path = ev.composedPath();
+                if (!path.includes(this.rootRef.el)) {
+                    this.state.open = false;
+                } else if (path.includes(this.togglerRef.el)) {
+                    this.state.open = !this.state.open;
+                }
+            },
+            { capture: true }
+        );
     }
 
     /**
-     * @param {Event} ev
+     * @param {Event & { currentTarget: HTMLInputElement }} ev
      */
     onBailChange(ev) {
-        this.config.bail = ev.target.checked ? 1 : 0;
+        this.config.bail = ev.currentTarget.checked ? 1 : 0;
     }
 
     /**
-     * @param {Event} ev
+     * @param {Event & { currentTarget: HTMLInputElement }} ev
      */
     onLogLevelChange(ev) {
-        this.config.loglevel = ev.target.checked ? logLevels.SUITES : logLevels.RUNNER;
+        this.config.loglevel = ev.currentTarget.checked ? logLevels.SUITES : logLevels.RUNNER;
     }
 
     /**
-     * @param {Event} ev
+     * @param {Event & { currentTarget: HTMLInputElement }} ev
      */
     onRandomChange(ev) {
-        if (ev.target.checked) {
+        if (ev.currentTarget.checked) {
             this.resetSeed();
         } else {
             this.config.random = 0;

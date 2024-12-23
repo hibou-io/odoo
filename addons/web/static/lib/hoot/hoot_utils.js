@@ -1,6 +1,7 @@
 /** @odoo-module */
 
-import { reactive, useExternalListener } from "@odoo/owl";
+import { queryAll } from "@odoo/hoot-dom";
+import { reactive, useEffect, useExternalListener } from "@odoo/owl";
 import { isNode } from "@web/../lib/hoot-dom/helpers/dom";
 import { isIterable, toSelector } from "@web/../lib/hoot-dom/hoot_dom_utils";
 import { DiffMatchPatch } from "./lib/diff_match_patch";
@@ -12,10 +13,12 @@ import { getRunner } from "./main_runner";
  * @typedef {"any"
  *  | "bigint"
  *  | "boolean"
+ *  | "date"
  *  | "error"
  *  | "function"
  *  | "integer"
  *  | "node"
+ *  | "null"
  *  | "number"
  *  | "object"
  *  | "regex"
@@ -53,15 +56,17 @@ import { getRunner } from "./main_runner";
 //-----------------------------------------------------------------------------
 
 const {
-    Array: { isArray: $isArray },
+    Array: { from: $from, isArray: $isArray },
     Boolean,
     clearTimeout,
     console: { debug: $debug },
     Date,
     Error,
     ErrorEvent,
+    JSON: { parse: $parse, stringify: $stringify },
+    localStorage,
     Map,
-    Math: { floor },
+    Math: { floor: $floor, max: $max, min: $min },
     Number: { isInteger: $isInteger, isNaN: $isNaN, parseFloat: $parseFloat },
     navigator: { clipboard: $clipboard },
     Object: {
@@ -70,6 +75,7 @@ const {
         defineProperty: $defineProperty,
         entries: $entries,
         fromEntries: $fromEntries,
+        getOwnPropertyDescriptors: $getOwnPropertyDescriptors,
         getPrototypeOf: $getPrototypeOf,
         keys: $keys,
     },
@@ -83,14 +89,76 @@ const {
     TypeError,
     window,
 } = globalThis;
+/** @type {Storage["getItem"]} */
+const $getItem = localStorage.getItem.bind(localStorage);
 /** @type {Clipboard["readText"]} */
 const $readText = $clipboard?.readText.bind($clipboard);
+/** @type {Storage["setItem"]} */
+const $setItem = localStorage.setItem.bind(localStorage);
+/** @type {Storage["removeItem"]} */
+const $removeItem = localStorage.removeItem.bind(localStorage);
 /** @type {Clipboard["writeText"]} */
 const $writeText = $clipboard?.writeText.bind($clipboard);
 
 //-----------------------------------------------------------------------------
 // Internal
 //-----------------------------------------------------------------------------
+
+/**
+ * Returns the constructor of the given value, and if it is "Object": tries to
+ * infer the actual constructor name from the string representation of the object.
+ *
+ * This is needed for cursed JavaScript objects such as "Arguments", which is an
+ * array-like object without a proper constructor.
+ *
+ * @param {any} value
+ */
+const getConstructor = (value) => {
+    const { constructor } = value;
+    if (constructor !== Object) {
+        return constructor;
+    }
+    const str = value.toString();
+    const match = str.match(R_OBJECT);
+    if (!match || match[1] === "Object") {
+        return constructor;
+    }
+
+    // Custom constructor
+    const className = match[1];
+    if (!objectConstructors.has(className)) {
+        objectConstructors.set(
+            className,
+            class {
+                static name = className;
+                constructor(...values) {
+                    Object.assign(this, ...values);
+                }
+            }
+        );
+    }
+    return objectConstructors.get(className);
+};
+
+/**
+ * @param {(...args: any[]) => any} fn
+ */
+const getFunctionString = (fn) => {
+    if (R_CLASS.test(fn.name)) {
+        return `${fn.name ? `class ${fn.name}` : "anonymous class"} { ${ELLIPSIS} }`;
+    }
+    const strFn = fn.toString();
+    const prefix = R_ASYNC_FUNCTION.test(strFn) ? "async " : "";
+
+    if (R_NAMED_FUNCTION.test(strFn)) {
+        return `${
+            fn.name ? `${prefix}function ${fn.name}` : `anonymous ${prefix}function`
+        }() { ${ELLIPSIS} }`;
+    }
+
+    const args = fn.length ? "...args" : "";
+    return `${prefix}(${args}) => { ${ELLIPSIS} }`;
+};
 
 /**
  * @template {(...args: any[]) => T} T
@@ -109,12 +177,127 @@ const memoize = (instanceGetter) => {
     };
 };
 
+/**
+ * @param {string} value
+ * @param {number} [length=MAX_HUMAN_READABLE_SIZE]
+ */
+const truncate = (value, length = MAX_HUMAN_READABLE_SIZE) => {
+    const strValue = String(value);
+    return strValue.length <= length ? strValue : strValue.slice(0, length) + ELLIPSIS;
+};
+
+/**
+ * @param {unknown} value
+ * @param {number} length
+ * @returns {[string, number]}
+ */
+const _formatHumanReadable = (value, length) => {
+    let humanReadableValue = "";
+    if (typeof value === "string") {
+        humanReadableValue = stringify(truncate(value));
+    } else if (typeof value === "number") {
+        if (value << 0 === value) {
+            humanReadableValue = truncate(value);
+        } else {
+            let fixed = value.toFixed(3);
+            while (fixed.endsWith("0")) {
+                fixed = fixed.slice(0, -1);
+            }
+            humanReadableValue = truncate(fixed);
+        }
+    } else if (typeof value === "function") {
+        humanReadableValue = getFunctionString(value);
+    } else if (value && typeof value === "object") {
+        if (value instanceof RegExp) {
+            humanReadableValue = truncate(value);
+        } else if (value instanceof Date) {
+            humanReadableValue = value.toISOString();
+        } else if (isNode(value)) {
+            const name = value.nodeName.toLowerCase();
+            humanReadableValue = value.nodeType === Node.ELEMENT_NODE ? `<${name}>` : name;
+        } else if (isIterable(value)) {
+            const values = [...value];
+            if (values.length === 1 && isNode(values[0])) {
+                // Special case for single-element nodes arrays
+                const hValue = _formatHumanReadable(values[0], length);
+                humanReadableValue = hValue;
+                length += hValue.length;
+            } else {
+                const constructor = getConstructor(value);
+                const constructorPrefix =
+                    constructor.name === "Array" ? "" : `${constructor.name} `;
+                const content = [];
+                if (values.length) {
+                    const bitSize = $max(
+                        MIN_HUMAN_READABLE_SIZE,
+                        $floor(MAX_HUMAN_READABLE_SIZE / values.length)
+                    );
+                    for (const val of values) {
+                        const hVal = truncate(_formatHumanReadable(val, length), bitSize);
+                        content.push(hVal);
+                        length += hVal.length;
+                        if (length > MAX_HUMAN_READABLE_SIZE) {
+                            content.push(ELLIPSIS);
+                            break;
+                        }
+                    }
+                }
+                humanReadableValue = `${constructorPrefix}[${truncate(content.join(", "))}]`;
+            }
+        } else {
+            const keys = $keys(value);
+            const constructor = getConstructor(value);
+            const constructorPrefix = constructor.name === "Object" ? "" : `${constructor.name} `;
+            const content = [];
+            if (constructor.name !== "Window" && keys.length) {
+                const bitSize = $max(
+                    MIN_HUMAN_READABLE_SIZE,
+                    $floor(MAX_HUMAN_READABLE_SIZE / keys.length)
+                );
+                const descriptors = $getOwnPropertyDescriptors(value);
+                for (const key of keys) {
+                    if (!("value" in descriptors[key])) {
+                        continue;
+                    }
+                    const hVal = truncate(
+                        _formatHumanReadable(descriptors[key].value, length),
+                        bitSize
+                    );
+                    content.push(`${key}: ${hVal}`);
+                    length += hVal.length;
+                    if (length > MAX_HUMAN_READABLE_SIZE) {
+                        content.push(ELLIPSIS);
+                        break;
+                    }
+                }
+            }
+            humanReadableValue = `${constructorPrefix}{ ${truncate(content.join(", "))} }`;
+        }
+    } else {
+        humanReadableValue = String(value);
+    }
+
+    return humanReadableValue;
+};
+
+const BACK_TICK = "`";
+const DOUBLE_QUOTES = '"';
+const SINGLE_QUOTE = "'";
+
+const ELLIPSIS = "…";
+const MAX_HUMAN_READABLE_SIZE = 80;
+const MIN_HUMAN_READABLE_SIZE = 8;
+
+const R_ASYNC_FUNCTION = /^\s*async/;
+const R_CLASS = /^[A-Z][a-z]/;
+const R_NAMED_FUNCTION = /^\s*(async\s+)?function/;
 const R_INVISIBLE_CHARACTERS = /[\u00a0\u200b-\u200d\ufeff]/g;
-const R_OBJECT = /^\[object \w+\]$/;
+const R_OBJECT = /^\[object ([\w-]+)\]$/;
 
 const dmp = new DiffMatchPatch();
 const { DIFF_INSERT, DIFF_DELETE } = DiffMatchPatch;
 
+const objectConstructors = new Map();
 const windowTarget = {
     addEventListener: window.addEventListener.bind(window),
     removeEventListener: window.removeEventListener.bind(window),
@@ -145,7 +328,7 @@ export function consumeCallbackList(callbacks, method, ...args) {
 export async function copy(text) {
     try {
         await $writeText(text);
-        $debug(`Copied to clipboard: "${text}"`);
+        $debug(`Copied to clipboard: ${stringify(text)}`);
     } catch (error) {
         console.warn("Could not copy to clipboard:", error);
     }
@@ -278,24 +461,24 @@ export function deepCopy(value) {
             return "<anonymous function>";
         }
     }
+
     if (typeof value === "object" && !Markup.isMarkup(value)) {
+        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+            return value;
+        }
         if (isNode(value)) {
             // Nodes
             return value.cloneNode(true);
-        } else if (isIterable(value)) {
-            // Iterables
-            const copy = [...value].map(deepCopy);
-            if (value instanceof Set || value instanceof Map) {
-                return new value.constructor(copy);
-            } else {
-                return copy;
-            }
         } else if (value instanceof Date) {
             // Dates
-            return new value.constructor(value);
+            return new (getConstructor(value))(value);
+        } else if (isIterable(value)) {
+            // Iterables
+            const values = [...value].map(deepCopy);
+            return $isArray(value) ? values : new (getConstructor(value))(values);
         } else {
             // Other objects
-            return $fromEntries($entries(value).map(([key, value]) => [key, deepCopy(value)]));
+            return $fromEntries($ownKeys(value).map((key) => [key, deepCopy(value[key])]));
         }
     }
     return value;
@@ -463,71 +646,10 @@ export function ensureError(value) {
 
 /**
  * @param {unknown} value
- * @param {{ depth?: number }} [options]
  * @returns {string}
  */
-export function formatHumanReadable(value, options) {
-    if (value instanceof RawString) {
-        return value;
-    }
-    if (typeof value === "string") {
-        if (value.length > 255) {
-            value = value.slice(0, 255) + "...";
-        }
-        return `"${value}"`;
-    } else if (typeof value === "number") {
-        if (value << 0 === value) {
-            return String(value);
-        }
-        let fixed = value.toFixed(3);
-        while (fixed.endsWith("0")) {
-            fixed = fixed.slice(0, -1);
-        }
-        return fixed;
-    } else if (typeof value === "function") {
-        const name = value.name || "anonymous";
-        const prefix = /^[A-Z][a-z]/.test(name) ? `class ${name}` : `Function ${name}()`;
-        return `${prefix} { ... }`;
-    } else if (value && typeof value === "object") {
-        if (value instanceof RegExp) {
-            return value.toString();
-        } else if (value instanceof Date) {
-            return value.toISOString();
-        } else if (isNode(value)) {
-            return `<${value.nodeName.toLowerCase()}>`;
-        } else if (isIterable(value)) {
-            const values = [...value];
-            if (values.length === 1 && isNode(values[0])) {
-                // Special case for single-element nodes arrays
-                return `<${values[0].nodeName.toLowerCase()}>`;
-            }
-            const depth = options?.depth || 0;
-            const constructorPrefix =
-                value.constructor.name === "Array" ? "" : `${value.constructor.name} `;
-            let content = "";
-            if (values.length > 1 || depth > 0) {
-                content = "...";
-            } else if (values.length) {
-                content = formatHumanReadable(values[0], { depth: depth + 1 });
-            }
-            return `${constructorPrefix}[${content}]`;
-        } else {
-            const depth = options?.depth || 0;
-            const keys = $keys(value);
-            const constructorPrefix =
-                value.constructor.name === "Object" ? "" : `${value.constructor.name} `;
-            let content = "";
-            if (keys.length > 1 || depth > 0) {
-                content = "...";
-            } else if (keys.length) {
-                content = `${keys[0]}: ${formatHumanReadable(value[keys[0]], {
-                    depth: depth + 1,
-                })}`;
-            }
-            return `${constructorPrefix}{ ${content} }`;
-        }
-    }
-    return String(value);
+export function formatHumanReadable(value) {
+    return _formatHumanReadable(value, 0);
 }
 
 /**
@@ -542,20 +664,19 @@ export function formatTechnical(
 ) {
     const baseIndent = isObjectValue ? "" : " ".repeat(depth * 2);
     if (typeof value === "string") {
-        return `${baseIndent}"${value}"`;
+        return `${baseIndent}${stringify(value)}`;
     } else if (typeof value === "number") {
         return `${baseIndent}${value << 0 === value ? String(value) : value.toFixed(3)}`;
     } else if (typeof value === "function") {
-        const name = value.name || "anonymous";
-        const prefix = /^[A-Z][a-z]/.test(name) ? `class ${name}` : `Function ${name}()`;
-        return `${baseIndent}${prefix} { ... }`;
+        return `${baseIndent}${getFunctionString(value)}`;
     } else if (value && typeof value === "object") {
         if (cache.has(value)) {
-            return `${baseIndent}${$isArray(value) ? "[...]" : "{ ... }"}`;
+            return `${baseIndent}${$isArray(value) ? `[${ELLIPSIS}]` : `{ ${ELLIPSIS} }`}`;
         } else {
             cache.add(value);
             const startIndent = " ".repeat((depth + 1) * 2);
             const endIndent = " ".repeat(depth * 2);
+            const constructor = getConstructor(value);
             if (value instanceof RegExp || value instanceof Error) {
                 return `${baseIndent}${value.toString()}`;
             } else if (value instanceof Date) {
@@ -563,8 +684,7 @@ export function formatTechnical(
             } else if (isNode(value)) {
                 return `<${toSelector(value)} />`;
             } else if (isIterable(value)) {
-                const proto =
-                    value.constructor.name === "Array" ? "" : `${value.constructor.name} `;
+                const proto = constructor.name === "Array" ? "" : `${constructor.name} `;
                 const content = [...value].map(
                     (val) =>
                         `${startIndent}${formatTechnical(val, {
@@ -577,13 +697,12 @@ export function formatTechnical(
                     content.length ? `\n${content.join("")}${endIndent}` : ""
                 }]`;
             } else {
-                const proto =
-                    value.constructor.name === "Object" ? "" : `${value.constructor.name} `;
-                const content = $entries(value)
-                    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+                const proto = constructor.name === "Object" ? "" : `${constructor.name} `;
+                const content = $ownKeys(value)
+                    .sort()
                     .map(
-                        ([k, v]) =>
-                            `${startIndent}${k}: ${formatTechnical(v, {
+                        (key) =>
+                            `${startIndent}${key}: ${formatTechnical(value[key], {
                                 cache,
                                 depth: depth + 1,
                                 isObjectValue: true,
@@ -615,13 +734,13 @@ export function formatTime(value, unit) {
         } else if (value < 1_000) {
             value = $parseFloat(value.toFixed(1));
         } else {
-            const str = String(floor(value));
+            const str = String($floor(value));
             return `${str.slice(0, -3) + "," + str.slice(-3)}${unit}`;
         }
         return value + unit;
     }
 
-    value = floor(value / 1_000);
+    value = $floor(value / 1_000);
 
     const seconds = value % 60;
     value -= seconds;
@@ -689,6 +808,49 @@ export function getFuzzyScore(pattern, string) {
     return patternIndex === pattern.length ? totalScore : 0;
 }
 
+/**
+ * @param {unknown} value
+ * @returns {ArgumentType}
+ */
+export function getTypeOf(value) {
+    const type = typeof value;
+    switch (type) {
+        case "number": {
+            return $isInteger(value) ? "integer" : "number";
+        }
+        case "object": {
+            if (value === null) {
+                return "null";
+            }
+            if (value instanceof Date) {
+                return "date";
+            }
+            if (value instanceof Error) {
+                return "error";
+            }
+            if (isNode(value)) {
+                return "node";
+            }
+            if (value instanceof RegExp) {
+                return "regex";
+            }
+            if ($isArray(value)) {
+                const types = [...value].map(getTypeOf);
+                const arrayType = new Set(types).size === 1 ? types[0] : "any";
+                if (arrayType.endsWith("[]")) {
+                    return "object[]";
+                } else {
+                    return `${arrayType}[]`;
+                }
+            }
+            /** fallsthrough */
+        }
+        default: {
+            return type;
+        }
+    }
+}
+
 export function hasClipboard() {
     return Boolean($clipboard);
 }
@@ -715,11 +877,14 @@ export function isOfType(value, type) {
         return isIterable(value) && [...value].every((v) => isOfType(v, itemType));
     }
     switch (type) {
+        case "null":
         case null:
         case undefined:
             return value === null || value === undefined;
         case "any":
             return true;
+        case "date":
+            return value instanceof Date;
         case "error":
             return value instanceof Error;
         case "integer":
@@ -731,6 +896,44 @@ export function isOfType(value, type) {
         default:
             return typeof value === type;
     }
+}
+
+/**
+ * Returns the edit distance between 2 strings
+ *
+ * @param {string} a
+ * @param {string} b
+ * @param {{ normalize?: boolean }} [options]
+ * @returns {number}
+ * @example
+ *  levenshtein("abc", "àbc"); // => 0
+ * @example
+ *  levenshtein("abc", "def"); // => 3
+ * @example
+ *  levenshtein("abc", "adc"); // => 1
+ */
+export function levenshtein(a, b, options) {
+    if (!a.length) {
+        return b.length;
+    }
+    if (!b.length) {
+        return a.length;
+    }
+    if (options?.normalize) {
+        a = normalize(a);
+        b = normalize(b);
+    }
+    const dp = $from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+        let prev = dp[0];
+        dp[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+            const temp = dp[j];
+            dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + $min(dp[j - 1], dp[j], prev);
+            prev = temp;
+        }
+    }
+    return dp[b.length];
 }
 
 /**
@@ -785,10 +988,15 @@ export function makePublicListeners(target, types) {
                 return listener;
             },
             set(value) {
+                if (listener) {
+                    target.removeEventListener(type, listener);
+                }
                 listener = value;
+                if (listener) {
+                    target.addEventListener(type, listener);
+                }
             },
         });
-        target.addEventListener(type, (...args) => listener?.(...args));
     }
 }
 
@@ -838,7 +1046,7 @@ export function match(value, ...matchers) {
         }
         let strValue = String(value);
         if (R_OBJECT.test(strValue)) {
-            strValue = value.constructor.name;
+            strValue = getConstructor(value).name;
         }
         if (matcher instanceof RegExp) {
             return matcher.test(strValue);
@@ -893,12 +1101,50 @@ export async function paste() {
 }
 
 /**
+ * @param {string} key
+ */
+export function storageGet(key) {
+    const value = $getItem(key);
+    if (value) {
+        try {
+            const parsed = $parse(value);
+            return parsed;
+        } catch (err) {
+            console.warn(`Couldn't parse value for storage key "${key}":`, err);
+            $removeItem(key);
+        }
+    }
+    return null;
+}
+
+/**
+ * @param {string} key
+ * @param {any} value
+ */
+export function storageSet(key, value) {
+    return $setItem(key, $stringify(value));
+}
+
+/**
  * @param {unknown} a
  * @param {unknown} b
  * @returns {boolean}
  */
 export function strictEqual(a, b) {
     return $isNaN(a) ? $isNaN(b) : a === b;
+}
+
+/**
+ * @param {unknown} value
+ */
+export function stringify(value) {
+    const strValue = String(value);
+    const quotes = strValue.includes(DOUBLE_QUOTES)
+        ? strValue.includes(SINGLE_QUOTE)
+            ? BACK_TICK
+            : SINGLE_QUOTE
+        : DOUBLE_QUOTES;
+    return quotes + strValue + quotes;
 }
 
 /**
@@ -938,6 +1184,30 @@ export function toExplicitString(value) {
         R_INVISIBLE_CHARACTERS,
         (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`
     );
+}
+
+/**
+ * @param {{ el?: HTMLElement }} ref
+ */
+export function useAutofocus(ref) {
+    let displayed = new Set();
+    useEffect(() => {
+        if (!ref.el) {
+            return;
+        }
+        const nextDisplayed = new Set();
+        for (const element of ref.el.querySelectorAll("[autofocus]")) {
+            if (!displayed.has(element)) {
+                element.focus();
+                if (["INPUT", "TEXTAREA"].includes(element.tagName)) {
+                    element.selectionStart = 0;
+                    element.selectionEnd = element.value;
+                }
+            }
+            nextDisplayed.add(element);
+        }
+        displayed = nextDisplayed;
+    });
 }
 
 /** @type {EventTarget["addEventListener"]} */
@@ -1060,6 +1330,54 @@ export class Callbacks {
     }
 }
 
+/**
+ * @template T
+ * @extends {Map<Element, T>}
+ */
+export class ElementMap extends Map {
+    /** @type {string | null} */
+    selector = null;
+
+    /**
+     * @param {Target} target
+     * @param {(element: Element) => T} [mapFn]
+     */
+    constructor(target, mapFn) {
+        const mapValues = [];
+        for (const element of queryAll(target)) {
+            mapValues.push([element, mapFn ? mapFn(element) : element]);
+        }
+
+        super(mapValues);
+
+        this.selector = target;
+    }
+
+    get first() {
+        return this.values().next().value;
+    }
+
+    getElements() {
+        return [...this.keys()];
+    }
+
+    /**
+     * @template [N=T]
+     * @param {(value: T) => N[]} [flatMapFn]
+     * @returns {N[]}
+     */
+    getValues(flatMapFn) {
+        if (!flatMapFn) {
+            return [...this.values()];
+        }
+        const result = [];
+        for (const value of this.values()) {
+            result.push(...flatMapFn(value));
+        }
+        return result;
+    }
+}
+
 export class HootError extends Error {
     name = "HootError";
 }
@@ -1149,10 +1467,49 @@ export class Markup {
     }
 }
 
-export class RawString extends String {}
+export class FormattedString extends String {
+    static RAW = "raw";
+
+    /** @type {string} */
+    type;
+
+    /**
+     * @param {unknown} value
+     * @param {string} [type]
+     */
+    constructor(value, type) {
+        if (!type) {
+            if (value instanceof FormattedString) {
+                type = value.type;
+            } else {
+                type = getTypeOf(value);
+            }
+        }
+
+        if (type !== FormattedString.RAW) {
+            value = formatHumanReadable(value);
+        }
+
+        super(value);
+
+        this.type = type;
+    }
+}
 
 export const INCLUDE_LEVEL = {
     url: 1,
     tag: 2,
     preset: 3,
+};
+
+export const MIME_TYPE = {
+    blob: "application/octet-stream",
+    json: "application/json",
+    text: "text/plain",
+};
+
+export const STORAGE = {
+    failed: "hoot-failed-tests",
+    scheme: "hoot-color-scheme",
+    searches: "hoot-latest-searches",
 };

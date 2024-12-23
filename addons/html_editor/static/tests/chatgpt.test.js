@@ -10,6 +10,7 @@ import { loadLanguages } from "@web/core/l10n/translation";
 
 import { MAIN_PLUGINS } from "@html_editor/plugin_sets";
 import { DEFAULT_ALTERNATIVES_MODES } from "../src/main/chatgpt/chatgpt_alternatives_dialog";
+import { execCommand } from "./_helpers/userCommands";
 
 const PROMPT_DIALOG_TITLE = "Generate Text with AI";
 const ALTERNATIVES_DIALOG_TITLE = "AI Copywriter";
@@ -231,9 +232,9 @@ test("insert the response from ChatGPT translate dialog", async () => {
     loadLanguages.installedLanguages = false;
 
     // Expect to undo and redo the inserted text.
-    editor.dispatch("HISTORY_UNDO");
+    execCommand(editor, "historyUndo");
     expect(getContent(el)).toBe(`<p>[Hello]</p>`);
-    editor.dispatch("HISTORY_REDO");
+    execCommand(editor, "historyRedo");
     expect(getContent(el)).toBe(`<p>Bonjour[]</p>`);
 });
 
@@ -317,4 +318,22 @@ test("AI is an alias to ChatGPT command in the Powerbox", async () => {
     insertText(editor, "ai");
     await animationFrame();
     expect(".active .o-we-command-name").toHaveText("ChatGPT");
+});
+
+test("pressing control + enter should send the prompt only once", async () => {
+    const { editor } = await setupEditor("<p>[]<br></p>", {
+        config: { Plugins: [...MAIN_PLUGINS, ChatGPTPlugin] },
+    });
+
+    onRpc("/html_editor/generate_text", () => `Hey there!`);
+
+    // Select ChatGPT in the Powerbox.
+    await openFromPowerbox(editor);
+    contains(".o_dialog textarea").edit("Write something");
+    await animationFrame();
+
+    // Pressing control + enter.
+    contains(".o_dialog textarea").press(["control", "Enter"]);
+    await waitFor(".o-chatgpt-message");
+    expect(".o-chatgpt-message").toHaveCount(2); // user message + response.
 });

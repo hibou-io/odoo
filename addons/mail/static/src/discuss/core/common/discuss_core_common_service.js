@@ -68,7 +68,13 @@ export class DiscussCoreCommon {
             if (thread) {
                 thread.is_pinned = false;
                 this.notificationService.add(
-                    _t("You unpinned your conversation with %s", thread.displayName),
+                    thread.parent_channel_id
+                        ? _t(`You unpinned %(conversation_name)s`, {
+                              conversation_name: thread.displayName,
+                          })
+                        : _t(`You unpinned your conversation with %(user_name)s`, {
+                              user_name: thread.displayName,
+                          }),
                     { type: "info" }
                 );
             }
@@ -135,7 +141,7 @@ export class DiscussCoreCommon {
     }
 
     async _handleNotificationNewMessage(payload, { id: notifId }) {
-        const { data, id: channelId, temporary_id } = payload;
+        const { data, id: channelId, silent, temporary_id } = payload;
         const channel = await this.store.Thread.getOrFetch({
             model: "discuss.channel",
             id: channelId,
@@ -166,7 +172,8 @@ export class DiscussCoreCommon {
         if (
             !channel.isCorrespondentOdooBot &&
             channel.channel_type !== "channel" &&
-            this.store.self.type === "partner"
+            this.store.self.type === "partner" &&
+            channel.selfMember
         ) {
             // disabled on non-channel threads and
             // on "channel" channels for performance reasons
@@ -181,7 +188,7 @@ export class DiscussCoreCommon {
         ) {
             channel.markAsRead();
         }
-        this.env.bus.trigger("discuss.channel/new_message", { channel, message });
+        this.env.bus.trigger("discuss.channel/new_message", { channel, message, silent });
         const authorMember = channel.channelMembers.find(({ persona }) =>
             persona?.eq(message.author)
         );

@@ -4,13 +4,14 @@ import { Deferred, on, setFrameRate } from "@odoo/hoot-dom";
 import { markRaw, reactive, toRaw } from "@odoo/owl";
 import { cleanupDOM } from "@web/../lib/hoot-dom/helpers/dom";
 import { enableEventLogs } from "@web/../lib/hoot-dom/helpers/events";
-import { cleanupTime } from "@web/../lib/hoot-dom/helpers/time";
+import { cleanupTime, setupTime } from "@web/../lib/hoot-dom/helpers/time";
 import { isIterable, parseRegExp } from "@web/../lib/hoot-dom/hoot_dom_utils";
 import {
     Callbacks,
     HootError,
     INCLUDE_LEVEL,
     Markup,
+    STORAGE,
     batch,
     createReporting,
     deepEqual,
@@ -20,6 +21,9 @@ import {
     formatTime,
     getFuzzyScore,
     normalize,
+    storageGet,
+    storageSet,
+    stringify,
 } from "../hoot_utils";
 import { cleanupDate } from "../mock/date";
 import { internalRandom } from "../mock/math";
@@ -31,9 +35,9 @@ import { makeExpect } from "./expect";
 import { makeFixtureManager } from "./fixture";
 import { logLevels, logger } from "./logger";
 import { Suite, suiteError } from "./suite";
-import { Tag } from "./tag";
+import { Tag, getTagSimilarities } from "./tag";
 import { Test, testError } from "./test";
-import { EXCLUDE_PREFIX, setParams, urlParams } from "./url";
+import { EXCLUDE_PREFIX, createUrlFromId, setParams, urlParams } from "./url";
 
 /**
  * @typedef {{
@@ -186,8 +190,6 @@ const getDefaultPresets = () =>
         ],
     ]);
 
-const noop = () => {};
-
 /**
  * @param {Event} ev
  */
@@ -273,6 +275,11 @@ const warnUserEvent = (ev) => {
     removeEventListener(ev.type, warnUserEvent);
 };
 
+const WARNINGS = {
+    viewport: "Viewport size does not match the expected size for the current preset",
+    tagNames:
+        "The following tag names are very similar to each other and may be confusing for other developers:",
+};
 const RESIZE_OBSERVER_MESSAGE = "ResizeObserver loop completed with undelivered notifications";
 const handledErrors = new WeakSet();
 /** @type {string | null} */
@@ -308,6 +315,10 @@ export class Runner {
          * @type {Set<Test>}
          */
         done: new Set(),
+        /**
+         * List of IDs of tests that have failed (previously AND during this run).
+         */
+        failedIds: new Set(storageGet(STORAGE.failed)),
         /**
          * @type {Record<string, GlobalIssueReport>}
          */
@@ -384,10 +395,8 @@ export class Runner {
     _started = false;
     _startTime = 0;
 
-    /** @type {(reason?: any) => any} */
-    _rejectCurrent = noop;
-    /** @type {(value?: any) => any} */
-    _resolveCurrent = noop;
+    /** @type {null | (value?: any) => any} */
+    _resolveCurrent = null;
 
     /**
      * @param {typeof DEFAULT_CONFIG} [config]
@@ -546,21 +555,24 @@ export class Runner {
             );
         }
         const runFn = this.dry ? null : fn;
-        let test = markRaw(new Test(parentSuite, name, config, runFn));
+        let test = markRaw(new Test(parentSuite, name, config));
         const originalTest = this.tests.get(test.id);
         if (originalTest) {
             if (this.dry || originalTest.run) {
                 throw testError(
                     { name, parent: parentSuite },
-                    `a test with that name already exists in the suite "${parentSuite.name}"`
+                    `a test with that name already exists in the suite ${stringify(
+                        parentSuite.name
+                    )}`
                 );
             }
             test = originalTest;
-            test.setRunFn(runFn);
         } else {
             parentSuite.addJob(test);
             this.tests.set(test.id, test);
         }
+
+        test.setRunFn(runFn);
 
         this._applyTagModifiers(test);
 
@@ -703,13 +715,14 @@ export class Runner {
         const innerWidth = getViewPortWidth();
         const innerHeight = getViewPortHeight();
         const [width, height] = preset.size;
-        if (width !== innerWidth || height !== innerHeight) {
+        if (width === innerWidth && height === innerHeight) {
+            lastPresetWarn = null;
+            delete this.state.globalWarnings[WARNINGS.viewport];
+        } else {
             if (lastPresetWarn !== presetId) {
-                this._handleGlobalWarning(
-                    "viewport size does not match the expected size for the current preset"
-                );
+                this._handleGlobalWarning(WARNINGS.viewport);
                 logger.warn(
-                    `viewport size does not match the expected size for the "${preset.label}" preset`,
+                    WARNINGS.viewport,
                     `\n> expected:`,
                     width,
                     "x",
@@ -938,7 +951,6 @@ export class Runner {
             const timeout = $floor(test.config.timeout || this.config.timeout);
             const timeoutPromise = new Promise((resolve, reject) => {
                 // Set abort signal
-                this._rejectCurrent = reject;
                 this._resolveCurrent = resolve;
 
                 if (timeout && !this.debug) {
@@ -956,8 +968,6 @@ export class Runner {
             // Run test
             await Promise.race([testPromise, timeoutPromise])
                 .catch((error) => {
-                    this._rejectCurrent = noop; // prevents loop
-
                     if (handleError) {
                         return handleError(error);
                     } else {
@@ -965,8 +975,7 @@ export class Runner {
                     }
                 })
                 .finally(() => {
-                    this._rejectCurrent = noop;
-                    this._resolveCurrent = noop;
+                    this._resolveCurrent = null;
 
                     if (timeoutId) {
                         clearTimeout(timeoutId);
@@ -988,7 +997,14 @@ export class Runner {
             test.runCount++;
             if (lastResults.pass) {
                 logger.logTest(test);
+
+                if (this.state.failedIds.has(test.id)) {
+                    this.state.failedIds.delete(test.id);
+                    storageSet(STORAGE.failed, [...this.state.failedIds]);
+                }
             } else {
+                this._failed++;
+
                 const failReasons = [];
                 const failedAssertions = lastResults.assertions.filter(
                     (assertion) => !assertion.pass
@@ -1007,20 +1023,28 @@ export class Runner {
                         ...lastResults.errors.map((e) => `\n${e.message}`)
                     );
                 }
-                logger.error([`Test "${test.fullName}" failed:`, ...failReasons].join("\n"));
+                logger.error(
+                    [`Test ${stringify(test.fullName)} failed:`, ...failReasons].join("\n")
+                );
+
+                if (!this.aborted) {
+                    if (this._failed === 1) {
+                        // On first failed test: reset the "failed IDs" list
+                        this.state.failedIds.clear();
+                    }
+                    this.state.failedIds.add(test.id);
+                    storageSet(STORAGE.failed, [...this.state.failedIds]);
+                }
             }
 
             await this._callbacks.call("after-post-test", test, handleError);
 
-            if (this.config.bail) {
-                if (!test.config.skip && !lastResults.pass) {
-                    this._failed++;
-                }
-                if (this._failed >= this.config.bail) {
-                    return this.stop();
-                }
-            }
             this._pushTest(test);
+            this.totalTime = formatTime($now() - this._startTime);
+
+            if (this.config.bail && this._failed >= this.config.bail) {
+                return this.stop();
+            }
             if (test.willRunAgain()) {
                 test.run = test.run.bind(test);
             } else {
@@ -1052,10 +1076,11 @@ export class Runner {
     async stop() {
         this._currentJobs = [];
         this.state.status = "done";
-        this.totalTime = formatTime($now() - this._startTime);
 
-        if (this._resolveCurrent !== noop) {
+        if (this._resolveCurrent) {
             this._resolveCurrent();
+
+            // `stop` will be called again after test has been resolved.
             return false;
         }
 
@@ -1067,11 +1092,13 @@ export class Runner {
 
         const { passed, failed, assertions } = this.reporting;
         if (failed > 0) {
+            const link = createUrlFromId(this.state.failedIds, "test");
             // Use console.dir for this log to appear on runbot sub-builds page
             logger.logGlobal(
                 `failed ${failed} tests (${passed} passed, total time: ${this.totalTime})`
             );
             logger.error("test failed (see above for details)");
+            logger.error("failed tests link:", link.toString());
         } else {
             // Use console.dir for this log to appear on runbot sub-builds page
             logger.logGlobal(
@@ -1191,8 +1218,8 @@ export class Runner {
      * @param {Job} job
      */
     _applyTagModifiers(job) {
-        let skip = false;
-        let ignoreSkip = false;
+        let shouldSkip = false;
+        let [ignoreSkip] = this._getExplicitIncludeStatus(job);
         for (const tag of job.tags) {
             this.tags.set(tag.name, tag);
             switch (tag.name) {
@@ -1207,7 +1234,9 @@ export class Runner {
                 case Tag.ONLY:
                     if (!this.dry) {
                         logger.warn(
-                            `"${job.fullName}" is marked as "${tag.name}". This is not suitable for CI`
+                            `${stringify(job.fullName)} is marked as ${stringify(
+                                tag.name
+                            )}. This is not suitable for CI`
                         );
                     }
                     this._include(
@@ -1218,7 +1247,7 @@ export class Runner {
                     ignoreSkip = true;
                     break;
                 case Tag.SKIP:
-                    skip = true;
+                    shouldSkip = true;
                     break;
                 case Tag.TODO:
                     job.config.todo = true;
@@ -1226,10 +1255,12 @@ export class Runner {
             }
         }
 
-        if (skip) {
+        if (shouldSkip) {
             if (ignoreSkip) {
                 logger.warn(
-                    `test "${job.fullName}" is explicitly included but marked as skipped: "skip" modifier has been ignored`
+                    `${stringify(
+                        job.fullName
+                    )} is marked as skipped but explicitly included: "skip" modifier has been ignored`
                 );
             } else {
                 job.config.skip = true;
@@ -1505,6 +1536,23 @@ export class Runner {
             this._checkUrlValidity("test", "tests", this.tests);
         }
 
+        // Cleanup invalid tests from storage
+        const failedIds = [...this.state.failedIds];
+        const existingFailed = failedIds.filter((id) => this.tests.has(id));
+        if (existingFailed.length !== failedIds.length) {
+            this.state.failedIds = new Set(existingFailed);
+            storageSet(STORAGE.failed, existingFailed);
+        }
+
+        // Check tags similarities
+        const similarities = getTagSimilarities();
+        if (similarities.length) {
+            this._handleGlobalWarning(
+                WARNINGS.tagNames + similarities.map((s) => `\n- ${s.map(stringify).join(" / ")}`)
+            );
+            logger.warn(WARNINGS.tagNames, similarities);
+        }
+
         this._populateState = true;
         this._currentJobs = this._prepareJobs(this.rootSuites);
         this._populateState = false;
@@ -1573,13 +1621,11 @@ export class Runner {
             return false;
         }
 
-        lastResults.errors.push(error);
-        lastResults.caughtErrors++;
+        lastResults.registerError(error);
         if (lastResults.expectedErrors >= lastResults.caughtErrors) {
             return true;
         }
 
-        this._rejectCurrent(error);
         return false;
     }
 
@@ -1657,7 +1703,7 @@ export class Runner {
             !this.debug && on(window, "pointerdown", warnUserEvent),
             !this.debug && on(window, "keydown", warnUserEvent)
         );
-        this.beforeEach(this.fixture.setup);
+        this.beforeEach(this.fixture.setup, setupTime);
         this.afterEach(
             cleanupWindow,
             cleanupNetwork,

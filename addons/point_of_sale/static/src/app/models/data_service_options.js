@@ -23,14 +23,6 @@ export class DataServiceOptions {
                     record.pos_order_line_id?.order_id?.finalized &&
                     typeof record.pos_order_line_id.order_id.id === "number",
             },
-            "product.product": {
-                key: "id",
-                condition: (record) => {
-                    return record["<-pos.order.line.product_id"].find(
-                        (l) => !(l.order_id?.finalized && typeof l.order_id.id === "number")
-                    );
-                },
-            },
             "product.attribute.custom.value": {
                 key: "id",
                 condition: (record) => {
@@ -51,6 +43,7 @@ export class DataServiceOptions {
             "product.product": ["barcode", "pos_categ_ids", "write_date"],
             "account.fiscal.position": ["tax_ids"],
             "product.packaging": ["barcode"],
+            "pos.payment": ["uuid"],
             "loyalty.program": ["trigger_product_ids"],
             "calendar.event": ["appointment_resource_ids"],
             "res.partner": ["barcode"],

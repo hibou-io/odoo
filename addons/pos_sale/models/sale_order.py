@@ -49,6 +49,17 @@ class SaleOrder(models.Model):
             total_pos_paid = sum(sale_order.order_line.filtered(lambda l: not l.display_type).mapped('pos_order_line_ids.price_subtotal_incl'))
             sale_order.amount_unpaid = sale_order.amount_total - (total_invoice_paid + total_pos_paid)
 
+    @api.depends('order_line.pos_order_line_ids')
+    def _compute_amount_to_invoice(self):
+        super()._compute_amount_to_invoice()
+        for order in self:
+            if order.invoice_status == 'invoiced':
+                continue
+            # We need to account for the downpayment paid in POS with and without invoice
+            order_amount = sum(order.sudo().pos_order_line_ids.filtered(lambda pol: pol.sale_order_line_id.is_downpayment).mapped('price_subtotal_incl'))
+            order.amount_to_invoice -= order_amount
+
+
 class SaleOrderLine(models.Model):
     _name = 'sale.order.line'
     _inherit = ['sale.order.line', 'pos.load.mixin']
@@ -64,12 +75,12 @@ class SaleOrderLine(models.Model):
         return ['discount', 'display_name', 'price_total', 'price_unit', 'product_id', 'product_uom_qty', 'qty_delivered',
             'qty_invoiced', 'qty_to_invoice', 'display_type', 'name', 'tax_id', 'is_downpayment']
 
-    @api.depends('pos_order_line_ids.qty')
+    @api.depends('pos_order_line_ids.qty', 'pos_order_line_ids.order_id.picking_ids', 'pos_order_line_ids.order_id.picking_ids.state')
     def _compute_qty_delivered(self):
         super()._compute_qty_delivered()
         for sale_line in self:
-            sale_line.qty_delivered += sum([self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in sale_line.pos_order_line_ids if sale_line.product_id.type != 'service'], 0)
-
+            if all(picking.state == 'done' for picking in sale_line.pos_order_line_ids.order_id.picking_ids):
+                sale_line.qty_delivered += sum((self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in sale_line.pos_order_line_ids if sale_line.product_id.type != 'service'), 0)
     @api.depends('pos_order_line_ids.qty')
     def _compute_qty_invoiced(self):
         super()._compute_qty_invoiced()
@@ -133,3 +144,8 @@ class SaleOrderLine(models.Model):
         super()._compute_untaxed_amount_invoiced()
         for line in self:
             line.untaxed_amount_invoiced += sum(line.pos_order_line_ids.mapped('price_subtotal'))
+
+    def _get_downpayment_line_price_unit(self, invoices):
+        return super()._get_downpayment_line_price_unit(invoices) + sum(
+            pol.price_unit for pol in self.sudo().pos_order_line_ids
+        )

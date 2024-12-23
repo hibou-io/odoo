@@ -4,6 +4,7 @@
 # 
 # Translators:
 # Wil Odoo, 2024
+# Manon Rondou, 2024
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2024
 # 
 msgid ""
@@ -367,7 +368,7 @@ msgstr "<i class=\"fa fa-fw fa-thumbs-up\"/> Duimen"
 #. module: mass_mailing
 #: model_terms:ir.actions.act_window,help:mass_mailing.mailing_subscription_action_report_optout
 msgid "<i class=\"oi oi-arrow-right\"></i> Configure Opt-out Reasons"
-msgstr ""
+msgstr "<i class=\"oi oi-arrow-right\"></i> Opt-out redenen configureren"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_blockquote
@@ -387,7 +388,7 @@ msgid ""
 msgstr ""
 "<small class=\"oe_edit_only text-muted mb-2\" style=\"font-size:74%\" "
 "invisible=\"reply_to_mode == 'update' or mailing_model_name in "
-"['mailing.contact', 'res.partner', 'mailing.list']\">Om antwoorden bij te "
+"['mailing.contact', 'res.contact', 'mailing.list']\">Om antwoorden bij te "
 "houden, moet dit adres tot deze database behoren.</small>"
 
 #. module: mass_mailing
@@ -405,6 +406,8 @@ msgid ""
 "<span class=\"fa fa-hourglass-o me-2 small my-auto\" aria-label=\"Scheduled date\"/>\n"
 "                                        <span>Next Batch</span>"
 msgstr ""
+"<span class=\"fa fa-hourglass-o me-2 small my-auto\" aria-label=\"Scheduled date\"/>\n"
+"                                        <span>Volgende batch</span>"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.view_mail_mass_mailing_kanban
@@ -865,7 +868,7 @@ msgstr "Onder uitlijnen"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.snippet_options
 msgid "Align Center"
-msgstr "Tekst in het midden uitlijnen"
+msgstr "Centreren"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.snippet_options
@@ -955,7 +958,7 @@ msgstr ""
 "Laat de ontvanger toe om zelf zijn status op de zwarte lijst te beheren via "
 "de afmeldpagina. Als de optie actief is, is de knop 'Me blacklisten' "
 "verborgen op de afmeldpagina. De knop 'Kom terug' is altijd zichtbaar zodat "
-"leads en relaties zich opnieuw kunnen abonneren."
+"leads en contacten zich opnieuw kunnen abonneren."
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_masonry_block_options
@@ -1546,6 +1549,8 @@ msgstr "Kom terug"
 #: model_terms:ir.actions.act_window,help:mass_mailing.mailing_subscription_action_report_optout
 msgid "Come back later to discover why contacts unsubscribe.<br>"
 msgstr ""
+"Kom later terug om te ontdekken waarom contactpersonen zich "
+"uitschrijven.<br>"
 
 #. module: mass_mailing
 #. odoo-python
@@ -1652,6 +1657,8 @@ msgid ""
 "Contacts successfully imported. Number of contacts imported: "
 "%(imported_count)s"
 msgstr ""
+"Contactpersonen succesvol geïmporteerd. Aantal geïmporteerde "
+"contactpersonen: %(imported_count)s"
 
 #. module: mass_mailing
 #. odoo-python
@@ -1660,6 +1667,9 @@ msgid ""
 "Contacts successfully imported. Number of contacts imported: "
 "%(imported_count)s. Number of duplicates ignored: %(duplicate_count)s"
 msgstr ""
+"Contactpersonen succesvol geïmporteerd. Aantal geïmporteerde "
+"contactpersonen: %(imported_count)s. Aantal duplicaten genegeerd: "
+"%(duplicate_count)s"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.snippet_options
@@ -2278,7 +2288,7 @@ msgstr "Volgers"
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_contact__message_partner_ids
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_mailing__message_partner_ids
 msgid "Followers (Partners)"
-msgstr "Volgers (Relaties)"
+msgstr "Volgers (Contacten)"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.snippet_options
@@ -2343,6 +2353,9 @@ msgid ""
 "Get your inside sales (CRM) fully integrated with online sales (eCommerce), "
 "in-store sales (Point of Sale) and marketplaces like Amazon."
 msgstr ""
+"Integreer je verkoopbinnendienst (CRM) volledig met online verkoop "
+"(eCommerce), verkoop in winkels (Point of Sale) en marktplaatsen zoals "
+"Amazon."
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_features_grid
@@ -2898,7 +2911,7 @@ msgstr "Mailing"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.snippet_options
 msgid "Mailing Background"
-msgstr "Achtergrond Mailing"
+msgstr "Achtergrond mailing"
 
 #. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mailing_trace_report__campaign
@@ -2927,7 +2940,7 @@ msgstr "Mailingcontact importeren"
 #. odoo-python
 #: code:addons/mass_mailing/models/mailing_subscription.py:0
 msgid "Mailing Contacts"
-msgstr ""
+msgstr "Mailing Contacten"
 
 #. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_ir_model__is_mailing_enabled
@@ -3265,8 +3278,8 @@ msgid ""
 " get where it is today. Mich is among the best minds."
 msgstr ""
 "Mich gaat graag uitdagingen aan. Met zijn meerjarige ervaring als "
-"commercieel directeur in de software-industrie heeft Mich het bedrijf "
-"geholpen om te komen waar het nu is. Mich is een van de knapste koppen."
+"commercieel directeur in de software-branche heeft Mich het bedrijf geholpen"
+" om te komen waar het nu is. Mich is een van de knapste koppen."
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.theme_default_template
@@ -3698,7 +3711,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:mass_mailing.mailing_subscription_action_report_optout
 #: model:ir.ui.menu,name:mass_mailing.mailing_menu_report_subscribe_reason
 msgid "Opt-Out Report"
-msgstr ""
+msgstr "Opt-Out-rapport"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.mailing_list_view_tree
@@ -3737,7 +3750,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:mass_mailing.mailing_subscription_optout_action
 #: model:ir.ui.menu,name:mass_mailing.mailing_subscription_optout_menu
 msgid "Optout Reasons"
-msgstr "Redenen voor afmelding"
+msgstr "Afmeldredenen"
 
 #. module: mass_mailing
 #: model:mailing.subscription.optout,name:mass_mailing.mailing_subscription_optout_data_4
@@ -5118,7 +5131,7 @@ msgstr ""
 "Wie blijven groeien en we willen niet dat je hier geen deel van uitmaakt! We"
 " hebben onze winkeluren verlengd en hebben veel nieuwe merken beschikbaar. "
 "Door op de onderstaande knop te klikken krijg je een korting van 20% op je "
-"volgende aankoop om je terug welkom te heten."
+"volgende bestelling om je terug welkom te heten."
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_references

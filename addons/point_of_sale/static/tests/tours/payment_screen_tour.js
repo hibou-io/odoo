@@ -2,16 +2,13 @@ import * as Chrome from "@point_of_sale/../tests/tours/utils/chrome_util";
 import * as Dialog from "@point_of_sale/../tests/tours/utils/dialog_util";
 import * as ProductScreen from "@point_of_sale/../tests/tours/utils/product_screen_util";
 import * as PaymentScreen from "@point_of_sale/../tests/tours/utils/payment_screen_util";
-import * as ReceiptScreen from "@point_of_sale/../tests/tours/utils/receipt_screen_util";
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add("PaymentScreenTour", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
             ProductScreen.addOrderline("Letter Tray", "10"),
-            ProductScreen.selectedOrderlineHas("Letter Tray", "10.0"),
             ProductScreen.clickPayButton(),
             PaymentScreen.emptyPaymentlines("52.8"),
 
@@ -63,10 +60,10 @@ registry.category("web_tour.tours").add("PaymentScreenTour", {
 });
 
 registry.category("web_tour.tours").add("PaymentScreenTour2", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
             ProductScreen.addOrderline("Letter Tray", "1", "10"),
             ProductScreen.clickPayButton(),
 
@@ -81,7 +78,6 @@ registry.category("web_tour.tours").add("PaymentScreenTour2", {
 });
 
 registry.category("web_tour.tours").add("PaymentScreenRoundingUp", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -104,7 +100,6 @@ registry.category("web_tour.tours").add("PaymentScreenRoundingUp", {
 });
 
 registry.category("web_tour.tours").add("PaymentScreenRoundingDown", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -127,7 +122,6 @@ registry.category("web_tour.tours").add("PaymentScreenRoundingDown", {
 });
 
 registry.category("web_tour.tours").add("PaymentScreenRoundingHalfUp", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -171,49 +165,7 @@ registry.category("web_tour.tours").add("PaymentScreenRoundingHalfUp", {
         ].flat(),
 });
 
-registry.category("web_tour.tours").add("PaymentScreenRoundingHalfUpCashAndBank", {
-    test: true,
-    steps: () =>
-        [
-            Chrome.startPoS(),
-            Dialog.confirm("Open Register"),
-            ProductScreen.addOrderline("Product Test 40", "1"),
-            ProductScreen.clickPartnerButton(),
-            ProductScreen.clickCustomer("Partner Test 1"),
-            ProductScreen.clickPayButton(),
-
-            PaymentScreen.totalIs("40.00"),
-            PaymentScreen.clickPaymentMethod("Bank"),
-            PaymentScreen.clickNumpad("3 8"),
-            PaymentScreen.fillPaymentLineAmountMobile("Bank", "38"),
-            PaymentScreen.remainingIs("2.0"),
-            PaymentScreen.clickPaymentMethod("Cash", true, { remaining: "0.0" }),
-
-            PaymentScreen.clickInvoiceButton(),
-            PaymentScreen.clickValidate(),
-            ReceiptScreen.receiptIsThere(),
-            ReceiptScreen.clickNextOrder(),
-
-            ProductScreen.addOrderline("Product Test 41", "1"),
-            ProductScreen.clickPartnerButton(),
-            ProductScreen.clickCustomer("Partner Test 1"),
-            ProductScreen.clickPayButton(),
-
-            PaymentScreen.totalIs("41.00"),
-            PaymentScreen.clickPaymentMethod("Bank"),
-            PaymentScreen.clickNumpad("3 8"),
-            PaymentScreen.fillPaymentLineAmountMobile("Bank", "38"),
-            PaymentScreen.remainingIs("3.0"),
-            PaymentScreen.clickPaymentMethod("Cash", true, { remaining: "0.0" }),
-
-            PaymentScreen.clickInvoiceButton(),
-            PaymentScreen.clickValidate(),
-            ReceiptScreen.receiptIsThere(),
-        ].flat(),
-});
-
 registry.category("web_tour.tours").add("PaymentScreenTotalDueWithOverPayment", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -230,7 +182,6 @@ registry.category("web_tour.tours").add("PaymentScreenTotalDueWithOverPayment", 
 });
 
 registry.category("web_tour.tours").add("InvoiceShipLaterAccessRight", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),
@@ -248,7 +199,6 @@ registry.category("web_tour.tours").add("InvoiceShipLaterAccessRight", {
 });
 
 registry.category("web_tour.tours").add("CashRoundingPayment", {
-    test: true,
     steps: () =>
         [
             Chrome.startPoS(),

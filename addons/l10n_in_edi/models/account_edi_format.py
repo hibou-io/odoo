@@ -28,6 +28,13 @@ class AccountEdiFormat(models.Model):
             return False
         return super()._is_enabled_by_default_on_journal(journal)
 
+    def _is_compatible_with_journal(self, journal):
+        # OVERRIDE
+        self.ensure_one()
+        if self.code != 'in_einvoice_1_03':
+            return super()._is_compatible_with_journal(journal)
+        return journal.country_code == 'IN' and journal.type == 'sale'
+
     def _get_l10n_in_gst_tags(self):
         return (
            self.env.ref('l10n_in.tax_tag_base_sgst')
@@ -488,7 +495,7 @@ class AccountEdiFormat(models.Model):
                 "TaxSch": "GST",
                 "SupTyp": self._l10n_in_get_supply_type(invoice, tax_details_by_code),
                 "RegRev": tax_details_by_code.get("is_reverse_charge") and "Y" or "N",
-                "IgstOnIntra": is_intra_state and tax_details_by_code.get("igst") and "Y" or "N"},
+                "IgstOnIntra": is_intra_state and tax_details_by_code.get("igst_amount") and "Y" or "N"},
             "DocDtls": {
                 "Typ": (invoice.move_type == "out_refund" and "CRN") or (invoice.debit_origin_id and "DBN") or "INV",
                 "No": invoice.name,
@@ -537,7 +544,7 @@ class AccountEdiFormat(models.Model):
         if is_overseas:
             json_payload.update({
                 "ExpDtls": {
-                    "RefClm": tax_details_by_code.get("igst") and "Y" or "N",
+                    "RefClm": tax_details_by_code.get("igst_amount") and "Y" or "N",
                     "ForCur": invoice.currency_id.name,
                     "CntCode": saler_buyer.get("buyer_details").country_id.code or "",
                 }

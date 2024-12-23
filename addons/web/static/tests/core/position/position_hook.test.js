@@ -1,5 +1,5 @@
 import { before, destroy, expect, getFixture, test } from "@odoo/hoot";
-import { queryOne, scroll } from "@odoo/hoot-dom";
+import { manuallyDispatchProgrammaticEvent, queryOne, scroll } from "@odoo/hoot-dom";
 import { Deferred, animationFrame } from "@odoo/hoot-mock";
 import { Component, xml, useRef, onMounted } from "@odoo/owl";
 import { defineParams, mountWithCleanup } from "@web/../tests/web_test_helpers";
@@ -317,7 +317,7 @@ test("reposition popper when a load event occurs", async () => {
     await mountWithCleanup(TestComp);
     // onPositioned called when component mounted
     expect.verifySteps(["onPositioned called"]);
-    queryOne("#popper").dispatchEvent(new Event("load"));
+    manuallyDispatchProgrammaticEvent(queryOne("#popper"), "load");
     await animationFrame();
     // onPositioned called when load event is triggered
     expect.verifySteps(["onPositioned called"]);
@@ -746,6 +746,37 @@ test("batch update call", async () => {
     position.unlock();
     await animationFrame();
     expect.verifySteps(["positioned"]);
+});
+
+test("not positioned if target not connected", async () => {
+    const target = document.createElement("div");
+    class TestComponent extends Component {
+        static template = xml`
+            <div t-ref="container"><div t-ref="popper"/></div>
+        `;
+        static props = ["*"];
+        setup() {
+            this.container = useRef("container");
+            this.position = usePosition("popper", () => target, {
+                onPositioned: () => {
+                    expect.step("positioned");
+                },
+            });
+        }
+    }
+
+    const comp = await mountWithCleanup(TestComponent);
+    expect.verifySteps([]);
+
+    comp.container.el.appendChild(target);
+    comp.position.unlock();
+    await animationFrame();
+    expect.verifySteps(["positioned"]);
+
+    comp.container.el.removeChild(target);
+    comp.position.unlock();
+    await animationFrame();
+    expect.verifySteps([]);
 });
 
 function getPositionTest(position, positionToCheck) {

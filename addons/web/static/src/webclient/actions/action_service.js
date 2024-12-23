@@ -25,6 +25,7 @@ import {
     useChildSubEnv,
     xml,
     reactive,
+    status,
 } from "@odoo/owl";
 import { downloadReport, getReportUrl } from "./reports/utils";
 import { omit, pick, shallowEqual } from "@web/core/utils/objects";
@@ -122,6 +123,13 @@ export class InvalidButtonParamsError extends Error {}
 // regex that matches context keys not to forward from an action to another
 const CTX_KEY_REGEX =
     /^(?:(?:default_|search_default_|show_).+|.+_view_ref|group_by|active_id|active_ids|orderedBy)$/;
+// keys added to the context for the embedded actions feature
+const EMBEDDED_ACTIONS_CTX_KEYS = [
+    "current_embedded_action_id",
+    "parent_action_embedded_actions",
+    "parent_action_id",
+    "from_embedded_action",
+];
 
 // only register this template once for all dynamic classes ControllerComponent
 const ControllerComponentTemplate = xml`<t t-component="Component" t-props="componentProps"/>`;
@@ -622,11 +630,11 @@ export function makeActionManager(env, router = _router) {
         if (typeof groupBy === "string") {
             groupBy = [groupBy];
         }
-        const openFormView = (resId, { activeIds, mode } = {}) => {
+        const openFormView = (resId, { activeIds, mode, force } = {}) => {
             if (target !== "new") {
                 if (_getView("form")) {
                     return switchView("form", { mode, resId, resIds: activeIds });
-                } else {
+                } else if (force || !resId) {
                     return doAction(
                         {
                             type: "ir.actions.act_window",
@@ -650,18 +658,6 @@ export function makeActionManager(env, router = _router) {
             selectRecord: openFormView,
             createRecord: () => openFormView(false),
         });
-        const currentState = {
-            resId: viewProps.resId,
-            active_id: action.context.active_id || false,
-        };
-        viewProps.updateActionState = (controller, patchState) => {
-            const oldState = { ...currentState };
-            Object.assign(currentState, patchState);
-            const changed = !shallowEqual(currentState, oldState);
-            if (changed && target !== "new" && controller.isMounted) {
-                pushState();
-            }
-        };
         if (view.type === "form") {
             if (target === "new") {
                 viewProps.mode = "edit";
@@ -701,6 +697,19 @@ export function makeActionManager(env, router = _router) {
         if (!viewProps.resId) {
             viewProps.resId = action.res_id || false;
         }
+
+        const currentState = {
+            resId: viewProps.resId,
+            active_id: action.context.active_id || false,
+        };
+        viewProps.updateActionState = (controller, patchState) => {
+            const oldState = { ...currentState };
+            Object.assign(currentState, patchState);
+            const changed = !shallowEqual(currentState, oldState);
+            if (changed && target !== "new" && controller.isMounted) {
+                pushState();
+            }
+        };
 
         viewProps.noBreadcrumbs =
             "no_breadcrumbs" in action.context ? action.context.no_breadcrumbs : target === "new";
@@ -835,6 +844,12 @@ export function makeActionManager(env, router = _router) {
                 useDebugCategory("action", { action });
                 useChildSubEnv({
                     config: controller.config,
+                    pushStateBeforeReload: () => {
+                        if (this.isMounted) {
+                            return;
+                        }
+                        pushState(nextStack);
+                    },
                 });
                 if (action.target !== "new") {
                     this.__beforeLeave__ = new CallbackRecorder();
@@ -863,6 +878,19 @@ export function makeActionManager(env, router = _router) {
                 if (this.isMounted) {
                     // the error occurred on the controller which is
                     // already in the DOM, so simply show the error
+                    Promise.reject(error);
+                    return;
+                }
+                if (!this.isMounted && status(this) === "mounted") {
+                    // The error occured during an onMounted hook of one of the components.
+                    env.bus.trigger("ACTION_MANAGER:UPDATE", {
+                        id: ++id,
+                        Component: BlankComponent,
+                        componentProps: {
+                            onMounted: () => {},
+                            withControlPanel: action.type === "ir.actions.act_window",
+                        },
+                    });
                     Promise.reject(error);
                     return;
                 }
@@ -1387,11 +1415,20 @@ export function makeActionManager(env, router = _router) {
      * 'ir.actions.act_window_close' is executed.
      *
      * @param {DoActionButtonParams} params
+     * @params {Object} [options={}]
+     * @params {boolean} [options.isEmbeddedAction] set to true if the action request is an
+     *  embedded action. This allows to do the necessary context cleanup and avoid infinite
+     *  recursion.
      * @returns {Promise<void>}
      */
-    async function doActionButton(params) {
+    async function doActionButton(params, { isEmbeddedAction } = {}) {
         // determine the action to execute according to the params
         let action;
+        if (!isEmbeddedAction) {
+            for (const key of EMBEDDED_ACTIONS_CTX_KEYS) {
+                delete params.context?.[key];
+            }
+        }
         const context = makeContext([params.context, params.buttonContext]);
         const blockUi = exprToBoolean(params["block-ui"]);
         if (blockUi) {
@@ -1439,7 +1476,7 @@ export function makeActionManager(env, router = _router) {
             }
             throw new InvalidButtonParamsError("Missing type for doActionButton request");
         }
-        if (action.embedded_action_ids && !this.currentController?.config.currentEmbeddedActionId) {
+        if (!isEmbeddedAction && action.embedded_action_ids?.length) {
             const embeddedActionsOrder = JSON.parse(
                 browser.localStorage.getItem(
                     `orderEmbedded${action.id}+${params.resId || ""}+${user.userId}`
@@ -1464,23 +1501,27 @@ export function makeActionManager(env, router = _router) {
                 ];
                 const context = {
                     ...action.context,
+                    ...(embeddedAction.context ? makeContext([embeddedAction.context]) : {}),
                     active_id: params.resId,
                     active_model: params.resModel,
                     current_embedded_action_id: embeddedActionId,
                     parent_action_embedded_actions: embeddedActions,
                     parent_action_id: action.id,
                 };
-                await this.doActionButton({
-                    name:
-                        embeddedAction.python_method ||
-                        embeddedAction.action_id[0] ||
-                        embeddedAction.action_id,
-                    resId: params.resId,
-                    context,
-                    type: embeddedAction.python_method ? "object" : "action",
-                    resModel: embeddedAction.parent_res_model,
-                    viewType: embeddedAction.default_view_mode,
-                });
+                await this.doActionButton(
+                    {
+                        name:
+                            embeddedAction.python_method ||
+                            embeddedAction.action_id[0] ||
+                            embeddedAction.action_id,
+                        resId: params.resId,
+                        context,
+                        type: embeddedAction.python_method ? "object" : "action",
+                        resModel: embeddedAction.parent_res_model,
+                        viewType: embeddedAction.default_view_mode,
+                    },
+                    { isEmbeddedAction: true }
+                );
                 return;
             }
         }
@@ -1640,11 +1681,11 @@ export function makeActionManager(env, router = _router) {
         }
     }
 
-    function pushState() {
-        if (!controllerStack.length) {
+    function pushState(cStack = controllerStack) {
+        if (!cStack.length) {
             return;
         }
-        const actions = controllerStack.map((controller) => {
+        const actions = cStack.map((controller) => {
             const { action, props, displayName } = controller;
             const actionState = { displayName };
             if (action.path || action.id) {
@@ -1677,7 +1718,7 @@ export function makeActionManager(env, router = _router) {
             actionStack: actions,
         };
         const stateKeys = [...PATH_KEYS];
-        const { action, props, currentState } = controllerStack.at(-1);
+        const { action, props, currentState } = cStack.at(-1);
         if (props.type !== "form" && props.type !== action.views?.[0][1]) {
             // add view_type only when it's not already known implicitly
             stateKeys.push("view_type");
@@ -1687,7 +1728,7 @@ export function makeActionManager(env, router = _router) {
         }
         Object.assign(newState, pick(newState.actionStack.at(-1), ...stateKeys));
 
-        controllerStack.at(-1).state = newState;
+        cStack.at(-1).state = newState;
         router.pushState(newState, { replace: true });
     }
     return {

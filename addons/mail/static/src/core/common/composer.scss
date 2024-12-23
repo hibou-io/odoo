@@ -37,10 +37,6 @@
 }
 
 .o-mail-Composer-actions {
-    &.o-extended {
-        margin-left: map-get($spacers, 2) + map-get($spacers, 1);
-        margin-right: map-get($spacers, 2) + map-get($spacers, 1);
-    }
 
     button {
         opacity: 75%;
@@ -48,6 +44,10 @@
             &:hover {
                 background-color: $gray-200;
                 opacity: 100%;
+
+                .o-mail-Message.o-editing & {
+                    background-color: rgba(0, 0, 0, 0.05);
+                }
             }
         }
         &:disabled {
@@ -58,8 +58,13 @@
     }
 }
 
+.o-mail-Composer-quickActions .o-mail-Composer-mainActions {
+    margin-top: map-get($spacers, 2) - map-get($spacers, 1) / 2;
+}
+
 .o-mail-Composer-bg {
     background-color: var(--mail-Composer-bg, $o-view-background-color);
+    --border-opacity: .5;
 }
 
 .o-mail-Composer-inputStyle {
@@ -87,11 +92,6 @@
     resize: none;
 
     .o-mail-Composer.o-chatWindow & {
-        @media (min-height: 325px) {
-            max-height: Min(350px, 70vh);
-        }
-    }
-    .o-mail-Composer.o-chatWindowBig & {
         @media (min-height: 325px) {
             max-height: Min(550px, 70vh);
         }
@@ -123,9 +123,8 @@
 }
 
 .o-mail-Composer-compactContainer {
-    --border-opacity: 0.75;
 
-    &.o-mobile:not(:focus-within) {
+    &.o-iosPwa:not(:focus-within) {
         margin-bottom: map-get($spacers, 5) !important;
     }
 

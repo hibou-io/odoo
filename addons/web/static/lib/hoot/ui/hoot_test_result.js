@@ -4,7 +4,7 @@ import { Component, useState, xml } from "@odoo/owl";
 import { Tag } from "../core/tag";
 import { Test } from "../core/test";
 import { subscribeToURLParams } from "../core/url";
-import { formatTime, ordinal } from "../hoot_utils";
+import { formatHumanReadable, formatTime, getTypeOf, ordinal } from "../hoot_utils";
 import { HootLink } from "./hoot_link";
 import { HootTechnicalValue } from "./hoot_technical_value";
 
@@ -15,8 +15,6 @@ import { HootTechnicalValue } from "./hoot_technical_value";
  *  test: Test;
  * }} TestResultProps
  */
-
-const MATCHERS_DOC_URL = `https://github.com/odoo/odoo/blob/master/addons/web/static/lib/hoot/README.md`;
 
 /** @extends {Component<TestResultProps, import("../hoot").Environment>} */
 export class HootTestResult extends Component {
@@ -34,22 +32,25 @@ export class HootTestResult extends Component {
     };
 
     static template = xml`
-        <details
+        <div
             class="${HootTestResult.name} flex flex-col border-b border-gray-300 dark:border-gray-600"
             t-att-class="getClassName()"
-            t-att-open="props.open"
         >
-            <summary class="px-3 flex items-center justify-between">
+            <button
+                type="button"
+                class="px-3 flex items-center justify-between"
+                t-on-click.stop="toggleDetails"
+            >
                 <t t-slot="default" />
-            </summary>
-            <t t-if="!props.test.config.skip">
+            </button>
+            <t t-if="state.showDetails and !props.test.config.skip">
                 <t t-foreach="results" t-as="result" t-key="result_index">
                     <t t-if="results.length > 1">
                         <div t-attf-class="text-{{ result.pass ? 'pass' : 'fail' }} mx-2 mb-1" >
                             <t t-esc="ordinal(result_index + 1)" /> run:
                         </div>
                     </t>
-                    <div class="hoot-result-detail grid gap-1 rounded overflow-x-auto p-1 mx-2 mb-1">
+                    <div class="hoot-result-detail grid gap-1 rounded overflow-x-auto p-1 mx-2 mb-1 animate-slide-down">
                         <t t-foreach="result.assertions || []" t-as="assertion" t-key="assertion.id">
                             <div
                                 t-attf-class="text-{{ assertion.pass ? 'pass' : 'fail' }} flex items-center gap-1 px-2 truncate"
@@ -59,15 +60,33 @@ export class HootTestResult extends Component {
                                     <i t-if="assertion.modifiers.rejects" class="fa fa-times text-skip" />
                                     <i t-elif="assertion.modifiers.resolves" class="fa fa-arrow-right text-skip" />
                                     <i t-if="assertion.modifiers.not" class="fa fa-exclamation text-skip" />
-                                    <a t-att-href="getLinkHref(assertion.label)" target="_blank" class="hoot-link text-skip">
+                                    <!-- TODO: add documentation links once they exist -->
+                                    <a href="#" class="hoot-link text-skip">
                                         <strong t-esc="assertion.label" />
                                     </a>
                                 </t>
                                 <span
-                                    class="truncate"
+                                    class="flex gap-1 truncate items-center"
                                     t-att-title="assertion.message"
-                                    t-esc="assertion.message"
-                                />
+                                >
+                                    <t t-foreach="assertion.messageParts" t-as="part" t-key="part_index">
+                                        <t t-if="part.type and part.type !== 'raw'">
+                                            <t t-if="part.type.endsWith('[]')">
+                                                <strong class="hoot-array">
+                                                    <t>[</t>
+                                                    <span t-attf-class="hoot-{{ part.type.slice(0, -2) }}" t-esc="part.slice(1, -1)" />
+                                                    <t>]</t>
+                                                </strong>
+                                            </t>
+                                            <t t-else="">
+                                                <strong t-attf-class="hoot-{{ part.type }}" t-esc="part" />
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <span t-esc="part" />
+                                        </t>
+                                    </t>
+                                </span>
                             </div>
                             <t t-set="timestamp" t-value="formatTime(assertion.ts - (result.ts || 0), 'ms')" />
                             <small class="text-muted flex items-center" t-att-title="timestamp">
@@ -110,7 +129,11 @@ export class HootTestResult extends Component {
                     </div>
                 </t>
                 <div class="m-2 mt-0 flex flex-col">
-                    <button class="hoot-link text-muted text-sm px-1" t-on-click="() => state.showCode = !state.showCode">
+                    <button
+                        type="button"
+                        class="hoot-link text-muted text-sm px-1"
+                        t-on-click.stop="toggleCode"
+                    >
                         <t t-if="state.showCode">
                             Hide source code
                         </t>
@@ -120,17 +143,18 @@ export class HootTestResult extends Component {
                     </button>
                     <t t-if="state.showCode">
                         <pre
-                            class="px-2 py-1 rounded bg-white text-black dark:bg-black dark:text-white animate-slide-down overflow-auto"
-                            t-esc="props.test.code"
-                        />
+                            class="p-2 rounded bg-white text-black dark:bg-black dark:text-white animate-slide-down overflow-auto"
+                        ><code class="language-javascript" t-out="props.test.code" /></pre>
                     </t>
                 </div>
             </t>
-        </details>
+        </div>
     `;
 
     Tag = Tag;
+    formatHumanReadable = formatHumanReadable;
     formatTime = formatTime;
+    getTypeOf = getTypeOf;
     ordinal = ordinal;
 
     setup() {
@@ -140,6 +164,7 @@ export class HootTestResult extends Component {
         this.results = useState(this.props.test.results);
         this.state = useState({
             showCode: false,
+            showDetails: this.props.open,
         });
     }
 
@@ -173,10 +198,11 @@ export class HootTestResult extends Component {
         }
     }
 
-    /**
-     * @param {string} label
-     */
-    getLinkHref(label) {
-        return `${MATCHERS_DOC_URL}#${label}`;
+    toggleCode() {
+        this.state.showCode = !this.state.showCode;
+    }
+
+    toggleDetails() {
+        this.state.showDetails = !this.state.showDetails;
     }
 }

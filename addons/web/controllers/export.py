@@ -61,18 +61,16 @@ class GroupsTreeNode:
     build a leaf. The entire tree is built by inserting all leaves.
     """
 
-    def __init__(self, model, fields, groupby, groupby_type, root=None):
+    def __init__(self, model, fields, groupby, groupby_type, read_context):
         self._model = model
         self._export_field_names = fields  # exported field names (e.g. 'journal_id', 'account_id/name', ...)
         self._groupby = groupby
         self._groupby_type = groupby_type
+        self._read_context = read_context
 
         self.count = 0  # Total number of records in the subtree
         self.children = OrderedDict()
         self.data = []  # Only leaf nodes have data
-
-        if root:
-            self.insert_leaf(root)
 
     def _get_aggregate(self, field_name, data, aggregator):
         # When exporting one2many fields, multiple data lines might be exported for one record.
@@ -140,7 +138,7 @@ class GroupsTreeNode:
         :return: the child node
         """
         if key not in self.children:
-            self.children[key] = GroupsTreeNode(self._model, self._export_field_names, self._groupby, self._groupby_type)
+            self.children[key] = GroupsTreeNode(self._model, self._export_field_names, self._groupby, self._groupby_type, self._read_context)
         return self.children[key]
 
     def insert_leaf(self, group):
@@ -164,6 +162,7 @@ class GroupsTreeNode:
             # Update count value and aggregated value.
             node.count += count
 
+        records = records.with_context(self._read_context)
         node.data = records.export_data(self._export_field_names).get('datas', [])
 
 
@@ -338,7 +337,7 @@ class Export(http.Controller):
                         definition['type'] == 'separator' or
                         (
                             definition['type'] in ('many2one', 'many2many')
-                            and definition['comodel'] not in Model.env
+                            and definition.get('comodel') not in Model.env
                         )
                     ):
                         continue
@@ -493,7 +492,8 @@ class Export(http.Controller):
                     'field_type': field_dict['type'],
                 })
 
-        return field_info
+        indexes_dict = {fname: i for i, fname in enumerate(export_fields)}
+        return sorted(field_info, key=lambda field_dict: indexes_dict[field_dict['id']])
 
     def graft_subfields(self, model, prefix, prefix_string, fields):
         export_fields = [field.split('/', 1)[1] for field in fields]
@@ -561,11 +561,14 @@ class ExportFormat(object):
         if not import_compat and groupby:
             groupby_type = [Model._fields[x.split(':')[0]].type for x in groupby]
             domain = [('id', 'in', ids)] if ids else domain
-            groups_data = Model.with_context(active_test=False).read_group(domain, ['__count'], groupby, lazy=False)
+            read_context = Model.env.context
+            if ids:
+                Model = Model.with_context(active_test=False)
+            groups_data = Model.read_group(domain, ['__count'], groupby, lazy=False)
 
             # read_group(lazy=False) returns a dict only for final groups (with actual data),
             # not for intermediary groups. The full group tree must be re-constructed.
-            tree = GroupsTreeNode(Model, field_names, groupby, groupby_type)
+            tree = GroupsTreeNode(Model, field_names, groupby, groupby_type, read_context)
             for leaf in groups_data:
                 tree.insert_leaf(leaf)
 

@@ -4,14 +4,15 @@
 # 
 # Translators:
 # Wil Odoo, 2024
+# Rasareeyar Lappiam, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 08:39+0000\n"
+"POT-Creation-Date: 2024-12-16 13:39+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"Last-Translator: Rasareeyar Lappiam, 2024\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -105,12 +106,12 @@ msgstr "2023-08-11"
 #. odoo-javascript
 #: code:addons/hr_expense/static/src/js/tours/hr_expense.js:0
 msgid "<b>Wasting time recording your receipts?</b> Let’s try a better way."
-msgstr ""
+msgstr "<b>เสียเวลาบันทึกใบเสร็จรับเงินของคุณ?</b> ลองวิธีที่ดีกว่านี้ดู"
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.res_config_settings_view_form
 msgid "<i class=\"oi oi-arrow-right\"/> Setup your alias domain"
-msgstr ""
+msgstr "<i class=\"oi oi-arrow-right\"/> ตั้งค่าโดเมนชื่อของคุณ"
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.view_move_form_inherit_expense
@@ -151,7 +152,18 @@ msgstr "<span>ชำระโดย:</span>"
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_split
 msgid "<span>The total amount doesn't match the original amount.</span>"
+msgstr "<span>ยอดรวมไม่ตรงกับยอดเดิม</span>"
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense_sheet.py:0
+msgid ""
+"A default outstanding account must be defined in the settings for company-"
+"paid expenses. Or specify one in the Journal for the %(method)s payment "
+"method."
 msgstr ""
+"บัญชีค้างชำระเริ่มต้นจะต้องกำหนดไว้ในการตั้งค่าสำหรับค่าใช้จ่ายที่บริษัทชำระ"
+" หรือระบุในสมุดรายวันสำหรับวิธีการชำระเงิน %(method)s"
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__account_id
@@ -591,8 +603,8 @@ msgstr "สมุดรายวันการบัญชีเริ่มต
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.res_config_settings_view_form
-msgid "Default outstanding account for expenses paid by employees."
-msgstr ""
+msgid "Default outstanding account for expenses paid by company."
+msgstr "บัญชีค้างชำระค่าเริ่มต้นสำหรับค่าใช้จ่ายที่บริษัทชำระ"
 
 #. module: hr_expense
 #: model:ir.model,name:hr_expense.model_hr_department
@@ -626,7 +638,7 @@ msgstr "แสดงชื่อ"
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense__distribution_analytic_account_ids
 #: model:ir.model.fields,field_description:hr_expense.field_hr_expense_split__distribution_analytic_account_ids
 msgid "Distribution Analytic Account"
-msgstr ""
+msgstr "บัญชีวิเคราะห์การจัดจำหน่าย"
 
 #. module: hr_expense
 #: model_terms:digest.tip,tip_description:hr_expense.digest_tip_hr_expense_0
@@ -645,6 +657,9 @@ msgid ""
 "from the partner to fix the configuration. Cancel this invoice and start "
 "again."
 msgstr ""
+"คุณต้องการออกใบแจ้งหนี้บริษัทของคุณเอง? ให้ทำการลบ \"ชื่อบริษัท\" "
+"ออกจากพาร์ทเนอร์เพื่อแก้ไขการกำหนดค่า "
+"ยกเลิกใบแจ้งหนี้นี้แล้วเริ่มใหม่อีกครั้ง"
 
 #. module: hr_expense
 #: model:ir.model.fields,field_description:hr_expense.field_account_analytic_applicability__business_domain
@@ -694,11 +709,6 @@ msgstr "พนักงาน (การชดเชย)"
 #: model_terms:ir.ui.view,arch_db:hr_expense.res_config_settings_view_form
 msgid "Employee Expense Journal"
 msgstr "สมุดรายวันค่าใช้จ่ายพนักงาน"
-
-#. module: hr_expense
-#: model_terms:ir.ui.view,arch_db:hr_expense.res_config_settings_view_form
-msgid "Employee Expense Oustanding Account"
-msgstr ""
 
 #. module: hr_expense
 #: model:ir.actions.act_window,name:hr_expense.action_hr_expense_account
@@ -782,6 +792,11 @@ msgstr "บรรทัดค่าใช้จ่ายสามารถแก
 #: model:ir.model.fields,field_description:hr_expense.field_hr_employee_public__expense_manager_id
 msgid "Expense Manager"
 msgstr "รายจ่ายผู้จัดการ"
+
+#. module: hr_expense
+#: model_terms:ir.ui.view,arch_db:hr_expense.res_config_settings_view_form
+msgid "Expense Outstanding Account"
+msgstr "บัญชีค่าใช้จ่ายค้างชำระ"
 
 #. module: hr_expense
 #: model:ir.model,name:hr_expense.model_hr_expense_refuse_wizard
@@ -1018,6 +1033,12 @@ msgstr "ของขวัญ"
 #: model_terms:product.template,description:hr_expense.expense_product_gift_product_template
 msgid "Gifts to customers or vendors"
 msgstr "ของขวัญให้กับลูกค้าหรือผู้ขาย"
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense_sheet.py:0
+msgid "Go to settings"
+msgstr "ไปที่การตั้งค่า"
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_sheet_view_search
@@ -1582,9 +1603,16 @@ msgstr "ค่าโทรศัพท์ ค่าไปรษณีย์ ฯ�
 #. odoo-python
 #: code:addons/hr_expense/models/hr_expense_sheet.py:0
 msgid ""
+"Please specify an expense journal in order to generate accounting entries."
+msgstr "โปรดระบุสมุดรายวันค่าใช้จ่ายเพื่อสร้างรายการบัญชี"
+
+#. module: hr_expense
+#. odoo-python
+#: code:addons/hr_expense/models/hr_expense_sheet.py:0
+msgid ""
 "Please specify if the expenses for this report were paid by the company, or "
 "the employee"
-msgstr ""
+msgstr "โปรดระบุว่าค่าใช้จ่ายสำหรับรายงานนี้ชำระโดยบริษัทหรือโดยพนักงาน"
 
 #. module: hr_expense
 #. odoo-javascript
@@ -1691,7 +1719,7 @@ msgstr "การอ้างอิง"
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.res_config_settings_view_form
 msgid "Refund employees via their payslips."
-msgstr ""
+msgstr "คืนเงินให้กับพนักงานโดยผ่านทางสลิปเงินเดือน"
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_approve_duplicate_view_form
@@ -1840,7 +1868,7 @@ msgstr "ชีต"
 #: model:ir.model.fields,field_description:hr_expense.field_account_bank_statement_line__show_commercial_partner_warning
 #: model:ir.model.fields,field_description:hr_expense.field_account_move__show_commercial_partner_warning
 msgid "Show Commercial Partner Warning"
-msgstr ""
+msgstr "แสดงคำเตือนสำหรับพาร์ทเนอร์ทางการค้า"
 
 #. module: hr_expense
 #: model_terms:ir.ui.view,arch_db:hr_expense.hr_expense_sheet_view_search
@@ -1853,12 +1881,6 @@ msgstr "แสดงระเบียนทั้งหมดที่มีว
 #: code:addons/hr_expense/models/hr_expense_sheet.py:0
 msgid "Show missing work email employees"
 msgstr "แสดงอีเมลพนักงานที่ขาดหายไป"
-
-#. module: hr_expense
-#. odoo-python
-#: code:addons/hr_expense/models/hr_expense_sheet.py:0
-msgid "Specify expense journal to generate accounting entries."
-msgstr "ระบุสมุดรายวันค่าใช้จ่ายเพื่อสร้างรายการทางบัญชี"
 
 #. module: hr_expense
 #: model:ir.model.fields,help:hr_expense.field_hr_expense__accounting_date
@@ -2002,8 +2024,8 @@ msgstr "ผู้อนุมัติทีม"
 #: model:ir.model.fields,help:hr_expense.field_res_company__expense_outstanding_account_id
 #: model:ir.model.fields,help:hr_expense.field_res_config_settings__expense_outstanding_account_id
 msgid ""
-"The account used to record the outstanding amount of the employee expenses."
-msgstr ""
+"The account used to record the outstanding amount of the company expenses."
+msgstr "บัญชีที่ใช้บันทึกยอดคงค้างค่าใช้จ่ายของบริษัท"
 
 #. module: hr_expense
 #: model:ir.model.fields,help:hr_expense.field_res_company__expense_journal_id
@@ -2047,14 +2069,6 @@ msgstr "สมุดรายวันจะต้องตั้งค่าเ
 #: model:ir.model.fields,help:hr_expense.field_hr_expense_sheet__employee_journal_id
 msgid "The journal used when the expense is paid by employee."
 msgstr "สมุดรายวันที่ใช้เมื่อมีการชำระค่าใช้จ่ายโดยพนักงาน"
-
-#. module: hr_expense
-#. odoo-python
-#: code:addons/hr_expense/models/hr_expense_sheet.py:0
-msgid ""
-"The payment method %(method)s needs an account, or a default outstanding "
-"account must be defined in the settings."
-msgstr ""
 
 #. module: hr_expense
 #: model:ir.model.fields,help:hr_expense.field_hr_expense_sheet__payment_method_line_id
@@ -2486,6 +2500,7 @@ msgid ""
 "You do not have the rights to add or remove any expenses on an approved or "
 "paid expense report."
 msgstr ""
+"คุณไม่มีสิทธิ์ในการเพิ่มหรือลบค่าใช้จ่ายในรายงานค่าใช้จ่ายที่ได้รับอนุมัติหรือชำระแล้ว"
 
 #. module: hr_expense
 #. odoo-python

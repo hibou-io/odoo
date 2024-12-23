@@ -174,8 +174,8 @@ export class Wysiwyg extends Component {
                 // Deselect tables so the applied color can be seen
                 // without using `!important` (otherwise the selection
                 // hides it).
-                if (this.odooEditor.deselectTable() && hasValidSelection(this.odooEditor.editable)) {
-                    this.odooEditor.document.getSelection().collapseToStart();
+                if (hasValidSelection(this.odooEditor.editable)) {
+                    this.odooEditor.deselectTable();
                 }
                 this._updateEditorUI(this.lastMediaClicked && { target: this.lastMediaClicked });
             };
@@ -1319,6 +1319,15 @@ export class Wysiwyg extends Component {
                             .filter('[data-oe-field="name"]'));
                     }
 
+                    // TODO adapt in master: remove this and only use the
+                    //  `_pauseOdooFieldObservers(field)` call.
+                    this.__odooFieldObserversToPause = this.odooFieldObservers.filter(
+                        // Exclude inner translation fields observers. They
+                        // still handle translation synchronization inside the
+                        // targeted field.
+                        observerData => !observerData.field.dataset.oeTranslationSourceSha ||
+                            !field.contains(observerData.field)
+                    );
                     this._pauseOdooFieldObservers();
                     // Tag the date fields to only replace the value
                     // with the original date value once (see mouseDown event)
@@ -1360,7 +1369,11 @@ export class Wysiwyg extends Component {
      * Stop the field changes mutation observers.
      */
     _pauseOdooFieldObservers() {
-        for (let observerData of this.odooFieldObservers) {
+        // TODO adapt in master: remove this and directly exclude observers with
+        // targets inside the current field (we use `this.odooFieldObservers`
+        // as fallback for compatibility here).
+        const fieldObserversData = this.__odooFieldObserversToPause || this.odooFieldObservers;
+        for (let observerData of fieldObserversData) {
             observerData.observer.disconnect();
         }
     }
@@ -1774,11 +1787,29 @@ export class Wysiwyg extends Component {
                 params.node.replaceWith(element);
             }
             this.odooEditor.unbreakableStepUnactive();
-            this.odooEditor.historyStep();
+
+            if (params.node.matches(".oe_unremovable")) {
+                // The "oe_unremovable" class prevents element deletion and must
+                // be removed during the "historyStep" to allow media
+                // replacement. If the class remains, the "sanitize" function in
+                // "historyStep" will block the replacement.
+                params.node.classList.remove("oe_unremovable");
+                element.classList.remove("oe_unremovable");
+                this.odooEditor.historyStep();
+                this.odooEditor.observerUnactive("unremovable");
+                element.classList.add("oe_unremovable");
+                this.odooEditor.observerActive("unremovable");
+            } else {
+                this.odooEditor.historyStep();
+            }
+
             // Refocus again to save updates when calling `_onWysiwygBlur`
             this.odooEditor.editable.focus();
         } else {
-            return this.odooEditor.execCommand('insert', element);
+            const result = this.odooEditor.execCommand('insert', element);
+            // Refocus again to save updates when calling `_onWysiwygBlur`
+            this.odooEditor.editable.focus();
+            return result;
         }
 
         if (this.state.showSnippetsMenu) {
@@ -1976,8 +2007,6 @@ export class Wysiwyg extends Component {
         });
         $toolbar.find('#image-crop').click(() => this._showImageCrop());
         $toolbar.find('#image-transform').click(e => {
-            const sel = document.getSelection();
-            sel.removeAllRanges();
             if (!this.lastMediaClicked) {
                 return;
             }
@@ -2205,6 +2234,9 @@ export class Wysiwyg extends Component {
         if (isProtected(anchorNode)) {
             return;
         }
+        if (this.odooEditor.document.querySelector(".transfo-container")) {
+            return;
+        }
 
         this.odooEditor.automaticStepSkipStack();
         // We need to use the editor's window so the tooltip displays in its
@@ -2255,6 +2287,7 @@ export class Wysiwyg extends Component {
             '#colorInputButtonGroup',
             '#media-insert', // "Insert media" should be replaced with "Replace media".
             '#chatgpt', // Chatgpt should be removed when media is in selection.
+            '#translate' // Translate button should be removed when media is in selection.
         ].join(','))){
             el.classList.toggle('d-none', isInMedia);
         }
@@ -3607,7 +3640,7 @@ export class Wysiwyg extends Component {
         // command is being applied. Note that this needs to be done *before*
         // the command and not after because some commands (e.g. font-size)
         // rely on some elements not to have the class to fully work.
-        for (const node of OdooEditorLib.getSelectedNodes(this.$editable[0])) {
+        for (const node of OdooEditorLib.getTraversedNodes(this.$editable[0])) {
             const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
             const defaultTextEl = el.closest('.o_default_snippet_text');
             if (defaultTextEl) {

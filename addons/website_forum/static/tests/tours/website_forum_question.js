@@ -3,7 +3,6 @@
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add('forum_question', {
-    test: true,
     url: '/forum/help-1',
     steps: () => [
     {
@@ -53,7 +52,7 @@ registry.category("web_tour.tours").add('forum_question', {
     },
     {
         content: "Check that the code still exists as it was written.",
-        trigger: 'div[data-oe-field="content"]:contains("First Question <p>code here</p>")',
+        trigger: 'div.o_wforum_post_content:contains("First Question <p>code here</p>")',
     },
     {
         content: "Open dropdown to edit the post",

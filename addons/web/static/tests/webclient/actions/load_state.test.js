@@ -22,7 +22,7 @@ import {
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { WebClient } from "@web/webclient/webclient";
-import { router, routerBus, startRouter } from "@web/core/browser/router";
+import { router, routerBus } from "@web/core/browser/router";
 import { redirect } from "@web/core/utils/urls";
 import { ControlPanel } from "@web/search/control_panel/control_panel";
 import { _t } from "@web/core/l10n/translation";
@@ -53,10 +53,6 @@ function logHistoryInteractions() {
         },
     });
 }
-
-/**
- * @param {{ env: import("@web/env").OdooEnv }} [options]
- */
 
 defineActions([
     {
@@ -208,7 +204,6 @@ beforeEach(() => {
         origin: "http://example.com",
     });
     redirect("/odoo");
-    startRouter();
 });
 
 describe(`new urls`, () => {
@@ -1291,7 +1286,7 @@ describe(`new urls`, () => {
         ]);
         expect(`.o-overlay-container .dropdown-menu a`).toHaveAttribute(
             "data-tooltip",
-            'Back to "Partners Action 27"'
+            "Back to “Partners Action 27”"
         );
         expect(queryAllAttributes(".o_breadcrumb li.breadcrumb-item a", "data-tooltip")).toEqual([
             'Back to "Second record" form',
