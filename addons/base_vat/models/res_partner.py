@@ -122,6 +122,7 @@ class ResPartner(models.Model):
     def _check_vies(self, vat):
         # Store the VIES result in the cache. In case an exception is raised during the request
         # (e.g. service unavailable), the fallback on simple_vat_check is not kept in cache.
+        _logger.info('Calling VIES service to check VAT for validation: %s', vat)
         return check_vies(vat)
 
     @api.model
@@ -250,7 +251,8 @@ class ResPartner(models.Model):
         return False
 
     __check_tin_hu_individual_re = re.compile(r'^8\d{9}$')
-    __check_tin_hu_companies_re = re.compile(r'^\d{8}-[1-5]-\d{2}$')
+    __check_tin_hu_companies_re = re.compile(r'^\d{8}-?[1-5]-?\d{2}$')
+    __check_tin_hu_european_re = re.compile(r'^\d{8}$')
 
     def check_vat_hu(self, vat):
         """
@@ -258,12 +260,16 @@ class ResPartner(models.Model):
             - For xxxxxxxx-y-zz, 'x' can be any number, 'y' is a number between 1 and 5 depending on the person and the 'zz'
               is used for region code.
             - 8xxxxxxxxy, Tin number for individual, it has to start with an 8 and finish with the check digit
+            - In case of EU format it will be the first 8 digits of the full VAT
         """
         companies = self.__check_tin_hu_companies_re.match(vat)
         if companies:
             return True
         individual = self.__check_tin_hu_individual_re.match(vat)
         if individual:
+            return True
+        european = self.__check_tin_hu_european_re.match(vat)
+        if european:
             return True
         # Check the vat number
         return stdnum.util.get_cc_module('hu', 'vat').is_valid(vat)
@@ -327,22 +333,9 @@ class ResPartner(models.Model):
         checksum = extra + sum((8-i) * int(x) for i, x in enumerate(vat[:7]))
         return 'WABCDEFGHIJKLMNOPQRSTUV'[checksum % 23]
 
+    # TODO: remove in master
     def check_vat_ie(self, vat):
-        """ Temporary Ireland VAT validation to support the new format
-        introduced in January 2013 in Ireland, until upstream is fixed.
-        TODO: remove when fixed upstream"""
-        if len(vat) not in (8, 9) or not vat[2:7].isdigit():
-            return False
-        if len(vat) == 8:
-            # Normalize pre-2013 numbers: final space or 'W' not significant
-            vat += ' '
-        if vat[:7].isdigit():
-            return vat[7] == self._ie_check_char(vat[:7] + vat[8])
-        elif vat[1] in (string.ascii_uppercase + '+*'):
-            # Deprecated format
-            # See http://www.revenue.ie/en/online/third-party-reporting/reporting-payment-details/faqs.html#section3
-            return vat[7] == self._ie_check_char(vat[2:7] + vat[0] + vat[8])
-        return False
+        return stdnum.util.get_cc_module('ie', 'vat').is_valid(vat)
 
     # Mexican VAT verification, contributed by Vauxoo
     # and Panos Christeas <p_christ@hol.gr>
