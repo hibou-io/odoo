@@ -11,24 +11,28 @@ import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
 const baseDescriptionContent = "Test project task history version";
-const descriptionField = "div.note-editable.odoo-editor-editable p";
+const descriptionField = `div.note-editable.odoo-editor-editable div.o-paragraph`;
 function changeDescriptionContentAndSave(newContent) {
     const newText = `${baseDescriptionContent} ${newContent}`;
-    return [ {
-        // force focus on editable so editor will create initial p (if not yet done)
-        trigger: "div.note-editable.odoo-editor-editable",
-        run: "click",
-    }, {
-        trigger: descriptionField,
-        run: async function(actions) {
-            const textTriggerElement = this.anchor.querySelector(descriptionField);
-            await actions.editor(newText, textTriggerElement);
-            await new Promise((r) => setTimeout(r, 300));
+    return [
+        {
+            // force focus on editable so editor will create initial p (if not yet done)
+            trigger: "div.note-editable.odoo-editor-editable",
+            run: "click",
         },
-    }, {
-        trigger: "button.o_form_button_save",
-        run: "click",
-    }];
+        {
+            trigger: descriptionField,
+            run: `editor ${newText}`,
+        },
+        {
+            trigger: "button.o_form_button_save",
+            run: "click",
+        },
+        {
+            content: "Wait the form is saved",
+            trigger: ".o_form_saved",
+        },
+    ];
 }
 
 registry.category("web_tour.tours").add("project_task_history_tour", {

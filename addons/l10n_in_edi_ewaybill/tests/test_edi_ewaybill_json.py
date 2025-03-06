@@ -7,7 +7,11 @@ from odoo.tests import tagged
 class TestEdiEwaybillJson(TestEdiJson):
 
     def test_edi_json(self):
-        (self.invoice + self.invoice_full_discount + self.invoice_zero_qty).write({
+        self.env['account.move'].browse((
+            self.invoice.id,
+            self.invoice_full_discount.id,
+            self.invoice_zero_qty.id,
+        )).write({
             "l10n_in_type_id": self.env.ref("l10n_in_edi_ewaybill.type_tax_invoice_sub_type_supply"),
             "l10n_in_distance": 20,
             "l10n_in_mode": "1",
@@ -66,13 +70,13 @@ class TestEdiEwaybillJson(TestEdiJson):
             }
             ],
             "totalValue": 1800.0,
-            "cgstValue": 79.3,
-            "sgstValue": 79.3,
+            "cgstValue": 76.5,
+            "sgstValue": 76.5,
             "igstValue": 0.0,
             "cessValue": 45.0,
             "cessNonAdvolValue": 1.59,
             "otherValue": 0.0,
-            "totInvValue": 2005.19
+            "totInvValue": 1999.59
         }
         self.assertDictEqual(json_value, expected, "Indian EDI send json value is not matched")
 

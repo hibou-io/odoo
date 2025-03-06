@@ -98,6 +98,18 @@ test("rendering with chat push notification default permissions", async () => {
     await contains(".o-mail-NotificationItem", { text: "Turn on notifications" });
 });
 
+test("can quickly dismiss 'Turn on notification' suggestion", async () => {
+    patchBrowserNotification("default");
+    await start();
+    await contains(".o-mail-MessagingMenu-counter", { text: "1" });
+    await click(".o_menu_systray i[aria-label='Messages']");
+    await contains(".o-mail-NotificationItem");
+    await contains(".o-mail-NotificationItem", { text: "Turn on notifications" });
+    await click(".o-mail-NotificationItem:contains(Turn on notifications) [title='Dismiss']");
+    await contains(".o-mail-NotificationItem", { text: "Turn on notifications", count: 0 });
+    await contains(".o-mail-MessagingMenu-counter", { count: 0 });
+});
+
 test("rendering with chat push notification permissions denied", async () => {
     patchBrowserNotification("denied");
     await start();
@@ -727,7 +739,7 @@ test("channel preview: basic rendering", async () => {
     });
     pyEnv["mail.message"].create({
         author_id: partnerId,
-        body: "<p>test</p>",
+        body: "<p>test<br/>hi</p>",
         model: "discuss.channel",
         res_id: channelId,
     });
@@ -736,7 +748,7 @@ test("channel preview: basic rendering", async () => {
     await contains(".o-mail-NotificationItem");
     await contains(".o-mail-NotificationItem img");
     await contains(".o-mail-NotificationItem-name", { text: "General" });
-    await contains(".o-mail-NotificationItem-text", { text: "Demo: test" });
+    await contains(".o-mail-NotificationItem-text", { text: "Demo: test hi" });
 });
 
 test("chat preview should not display correspondent name in body", async () => {

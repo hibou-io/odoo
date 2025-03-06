@@ -17,6 +17,7 @@ from odoo.osv.expression import AND, OR
 from odoo.tools.float_utils import float_is_zero
 from odoo.exceptions import AccessError
 from odoo.tools import convert, format_duration, format_time, format_datetime
+from odoo.tools.float_utils import float_compare
 
 def get_google_maps_url(latitude, longitude):
     return "https://maps.google.com?q=%s,%s" % (latitude, longitude)
@@ -46,6 +47,7 @@ class HrAttendance(models.Model):
                                                   ('approved', "Approved"),
                                                   ('refused', "Refused")], compute="_compute_overtime_status", store=True, tracking=True)
     validated_overtime_hours = fields.Float(string="Extra Hours", compute='_compute_validated_overtime_hours', store=True, readonly=False, tracking=True)
+    no_validated_overtime_hours = fields.Boolean(compute='_compute_no_validated_overtime_hours')
     in_latitude = fields.Float(string="Latitude", digits=(10, 7), readonly=True, aggregator=None)
     in_longitude = fields.Float(string="Longitude", digits=(10, 7), readonly=True, aggregator=None)
     in_country_name = fields.Char(string="Country", help="Based on IP Address", readonly=True)
@@ -165,6 +167,10 @@ class HrAttendance(models.Model):
 
         for attendance in no_validation:
             attendance.validated_overtime_hours = attendance.overtime_hours
+
+    @api.depends('validated_overtime_hours')
+    def _compute_no_validated_overtime_hours(self):
+        self.no_validated_overtime_hours = not float_compare(self.validated_overtime_hours, 0.0, precision_digits=5)
 
     @api.depends('employee_id')
     def _compute_overtime_status(self):
@@ -354,7 +360,7 @@ class HrAttendance(models.Model):
                             local_check_out = pytz.utc.localize(attendance.check_out)
                             work_duration += (local_check_out - local_check_in).total_seconds() / 3600.0
                         # In case of fully flexible employee, no overtime is computed
-                        if not emp.is_fully_flexible and work_duration > emp.resource_id.calendar_id.hours_per_day:
+                        if not emp.is_fully_flexible:
                             overtime_duration = work_duration - emp.resource_id.calendar_id.hours_per_day
                             overtime_duration_real = overtime_duration
 
@@ -707,7 +713,7 @@ class HrAttendance(models.Model):
             to_verify_company = to_verify.filtered(lambda a: a.employee_id.company_id.id == company.id)
 
             # Attendances where Last open attendance worked time + previously worked time on that day + tolerance greater than the planned worked hours in his calendar
-            to_check_out = to_verify_company.filtered(lambda a: (fields.Datetime.now() - a.check_in).seconds + mapped_previous_duration[a.employee_id][a.check_in.date()] - max_tol > (sum(a.employee_id.resource_calendar_id.attendance_ids.filtered(lambda att: att.dayofweek == str(a.check_in.weekday())).mapped('duration_hours'))))
+            to_check_out = to_verify_company.filtered(lambda a: (fields.Datetime.now() - a.check_in).seconds / 3600 + mapped_previous_duration[a.employee_id][a.check_in.date()] - max_tol > (sum(a.employee_id.resource_calendar_id.attendance_ids.filtered(lambda att: att.dayofweek == str(a.check_in.weekday())).mapped('duration_hours'))))
             body = _('This attendance was automatically checked out because the employee exceeded the allowed time for their scheduled work hours.')
 
             for att in to_check_out:

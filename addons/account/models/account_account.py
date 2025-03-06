@@ -143,12 +143,14 @@ class AccountAccount(models.Model):
 
     def _field_to_sql(self, alias: str, fname: str, query: (Query | None) = None, flush: bool = True) -> SQL:
         if fname == 'internal_group':
-            return SQL("split_part(account_account.account_type, '_', 1)", to_flush=self._fields['account_type'])
+            return SQL("split_part(%s, '_', 1)", self._field_to_sql(alias, 'account_type', query, flush))
         if fname == 'code':
             return self.with_company(self.env.company.root_id).sudo()._field_to_sql(alias, 'code_store', query, flush)
         if fname == 'placeholder_code':
+            # The placeholder_code is defined as the account's code in the first active company to
+            # which the account belongs.
             query.add_join(
-                'JOIN',
+                'LEFT JOIN',
                 'account_first_company',
                 SQL(
                     """(
@@ -164,21 +166,23 @@ class AccountAccount(models.Model):
                       ORDER BY rel.account_account_id, company_id
                     )""",
                     authorized_company_ids=self.env.user._get_company_ids(),
+                    to_flush=self._fields['company_ids'],
                 ),
                 SQL('account_first_company.account_id = %(account_id)s', account_id=SQL.identifier(alias, 'id')),
             )
 
-            # Can't have spaces because of how stupidly the `Model._read_group_orderby` method is written
-            # see https://github.com/odoo/odoo/blob/2a3466e8f86bc08594391658e08ba3416fb8307b/odoo/models.py#L2222
             return SQL(
-                "COALESCE("
-                "%(code_store)s->>%(active_company_root_id)s,"
-                "%(code_store)s->>%(account_first_company_root_id)s||'('||%(account_first_company_name)s||')'"
-                ")",
+                """
+                    COALESCE(
+                        %(code_store)s->>%(active_company_root_id)s,
+                        %(code_store)s->>%(account_first_company_root_id)s || ' (' || %(account_first_company_name)s || ')'
+                    )
+                """,
                 code_store=SQL.identifier(alias, 'code_store'),
-                active_company_root_id=self.env.company.root_id.id,
+                active_company_root_id=str(self.env.company.root_id.id),
                 account_first_company_name=SQL.identifier('account_first_company', 'company_name'),
                 account_first_company_root_id=SQL.identifier('account_first_company', 'root_company_id'),
+                to_flush=self._fields['code_store'],
             )
 
         return super()._field_to_sql(alias, fname, query, flush)
@@ -387,6 +391,12 @@ class AccountAccount(models.Model):
             # Need to set record.code with `company = self.env.company`, not `self.env.company.root_id`
             record_root.code_store = record.code
 
+        # Changing the code for one company should also change it for all the companies which share the same root_id.
+        # The simplest way of achieving this is invalidating it for all companies here.
+        # We re-compute it right away for the active company, as it is used by constraints while `code` is still protected.
+        self.invalidate_recordset(fnames=['code'], flush=False)
+        self._compute_code()
+
     @api.depends_context('company')
     @api.depends('code')
     def _compute_placeholder_code(self):
@@ -400,11 +410,11 @@ class AccountAccount(models.Model):
                     record.placeholder_code = f'{code} ({company.name})'
 
     def _search_placeholder_code(self, operator, value):
-        if operator != '=like':
+        if operator != '=ilike':
             raise NotImplementedError
         query = Query(self.env, 'account_account')
         placeholder_code_sql = self.env['account.account']._field_to_sql('account_account', 'placeholder_code', query)
-        query.add_where(SQL("%s LIKE %s", placeholder_code_sql, value))
+        query.add_where(SQL("%s ILIKE %s", placeholder_code_sql, value))
         return [('id', 'in', query)]
 
     @api.depends_context('company')
@@ -416,7 +426,7 @@ class AccountAccount(models.Model):
     def _search_account_root(self, operator, value):
         if operator in ['=', 'child_of']:
             root = self.env['account.root'].browse(value)
-            return [('placeholder_code', '=like', root.name + ('' if operator == '=' and not root.parent_id else '%'))]
+            return [('placeholder_code', '=ilike', root.name + ('' if operator == '=' and not root.parent_id else '%'))]
         raise NotImplementedError
 
     def _search_panel_domain_image(self, field_name, domain, set_count=False, limit=False):
@@ -684,6 +694,8 @@ class AccountAccount(models.Model):
                 account.reconcile = False
             elif account.account_type in ('asset_receivable', 'liability_payable'):
                 account.reconcile = True
+            elif account.account_type == 'asset_cash':
+                account.reconcile = False
             # For other asset/liability accounts, don't do any change to account.reconcile.
 
     def _set_opening_debit(self):
@@ -801,10 +813,9 @@ class AccountAccount(models.Model):
             not name
             and (partner := self.env.context.get('partner_id'))
             and (move_type := self._context.get('move_type'))
+            and (ordered_accounts := self._order_accounts_by_frequency_for_partner(self.env.company.id, partner, move_type))
         ):
-            ids = self._order_accounts_by_frequency_for_partner(
-                self.env.company.id, partner, move_type)
-            records = self.sudo().browse(ids)
+            records = self.sudo().browse(ordered_accounts)
             records.fetch(['display_name'])
             return [(record.id, record.display_name) for record in records]
         return super().name_search(name, args, operator, limit)

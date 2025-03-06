@@ -582,6 +582,7 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'pos_basic_order_01_multi_payment_and_change', login="pos_user")
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'pos_basic_order_02_decimal_order_quantity', login="pos_user")
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'pos_basic_order_03_tax_position', login="pos_user")
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'FloatingOrderTour', login="pos_user")
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'ProductScreenTour', login="pos_user")
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'PaymentScreenTour', login="pos_user")
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'ReceiptScreenTour', login="pos_user")
@@ -719,7 +720,7 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.env['product.product'].create({
             'name': 'Product Test',
             'available_in_pos': True,
-            'list_price': 1.98,
+            'list_price': 1.96,
             'taxes_id': False,
         })
 
@@ -1227,6 +1228,33 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.main_pos_config.with_user(self.pos_user).open_ui()
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'limitedProductPricelistLoading', login="pos_user")
 
+    def test_multi_product_pricelist_rules(self):
+        product_1 = self.env['product.product'].create({
+            'name': 'Test Product 1',
+            'list_price': 1,
+            'taxes_id': False,
+            'available_in_pos': True,
+        })
+
+        pricelist_item = self.env['product.pricelist.item'].create([{
+            'applied_on': '3_global',
+            'fixed_price': 200,
+            'min_quantity': 0,
+        }, {
+            'applied_on': '1_product',
+            'product_tmpl_id': product_1.product_tmpl_id.id,
+            'fixed_price': 100,
+             'min_quantity': 2,
+        }, {
+            'applied_on': '0_product_variant',
+            'product_id': product_1.id,
+            'fixed_price': 50,
+            'min_quantity': 3,
+        }])
+        self.main_pos_config.pricelist_id.write({'item_ids': [(6, 0, pricelist_item.ids)]})
+        self.main_pos_config.with_user(self.pos_user).open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'multiPricelistRulesTour', login="pos_user")
+
     def test_multi_product_options(self):
         self.pos_user.write({
             'groups_id': [
@@ -1402,7 +1430,7 @@ class TestUi(TestPointOfSaleHttpCommon):
             "state_id": self.env.ref("base.state_us_30").id,  # Ohio
             "country_id": self.env.ref("base.us").id,
             "zip": "26432685463",
-            "phone": "1234567890",
+            "phone": "9898989899",
             "mobile": "0987654321",
             "email": "john@doe.com"
         })
@@ -1475,17 +1503,21 @@ class TestUi(TestPointOfSaleHttpCommon):
 
     def test_product_categories_order(self):
         """ Verify that the order of categories doesnt change in the frontend """
+        self.env['pos.category'].search([]).write({'sequence': 100})
         self.env['pos.category'].create({
             'name': 'AAA',
             'parent_id': False,
+            'sequence': 1,
         })
         self.env['pos.category'].create({
             'name': 'AAC',
             'parent_id': False,
+            'sequence': 3,
         })
         parentA = self.env['pos.category'].create({
             'name': 'AAB',
             'parent_id': False,
+            'sequence': 2,
         })
         parentB = self.env['pos.category'].create({
             'name': 'AAX',
@@ -1520,6 +1552,27 @@ class TestUi(TestPointOfSaleHttpCommon):
         )
         self.main_pos_config.with_user(self.pos_user).open_ui()
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, "AutofillCashCount", login="pos_user")
+
+    def test_product_search_2(self):
+        self.env['product.product'].create({
+            'name': 'Test chair 1',
+            'available_in_pos': True,
+        })
+        self.env['product.product'].create({
+            'name': 'Test CHAIR 2',
+            'available_in_pos': True,
+        })
+        self.env['product.product'].create({
+            'name': 'Test sofa',
+            'available_in_pos': True,
+            "default_code": "CHAIR_01",
+        })
+        self.env['product.product'].create({
+            'name': 'clémentine',
+            'available_in_pos': True,
+        })
+        self.main_pos_config.open_ui()
+        self.start_tour(f"/pos/ui?config_id={self.main_pos_config.id}", 'SearchProducts', login="pos_user")
 
     def test_lot(self):
         self.product1 = self.env['product.product'].create({

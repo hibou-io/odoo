@@ -317,7 +317,8 @@ class Export(http.Controller):
             # Depends of the records selected to avoid showing useless Properties
             if domain:
                 self_subquery = Model.with_context(active_test=False)._search(domain)
-                domain_definition.append(('id', 'in', self_subquery.subselect(definition_record)))
+                field_to_get = Model._field_to_sql(Model._table, definition_record, self_subquery)
+                domain_definition.append(('id', 'in', self_subquery.subselect(field_to_get)))
 
             definition_records = target_model.search_fetch(
                 domain_definition, [definition_record_field, 'display_name'],
@@ -364,7 +365,7 @@ class Export(http.Controller):
         fields = Model.fields_get(
             attributes=[
                 'type', 'string', 'required', 'relation_field', 'default_export_compatible',
-                'relation', 'definition_record', 'definition_record_field',
+                'relation', 'definition_record', 'definition_record_field', 'exportable', 'readonly',
             ],
         )
 
@@ -377,7 +378,9 @@ class Export(http.Controller):
 
         fields['id']['string'] = request.env._('External ID')
 
-        if parent_field:
+        if not Model._is_an_ordinary_table():
+            fields.pop("id", None)
+        elif parent_field:
             parent_field['string'] = request.env._('External ID')
             fields['id'] = parent_field
 

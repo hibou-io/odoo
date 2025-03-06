@@ -45,17 +45,17 @@ EAS_MAPPING = {
     'AT': {'9915': 'vat'},
     'AU': {'0151': 'vat'},
     'BA': {'9924': 'vat'},
-    'BE': {'0208': 'company_registry'},
+    'BE': {'0208': 'company_registry', '9925': 'vat'},
     'BG': {'9926': 'vat'},
-    'CH': {'9927': 'vat'},
+    'CH': {'9927': 'vat', '0183': None},
     'CY': {'9928': 'vat'},
     'CZ': {'9929': 'vat'},
     'DE': {'9930': 'vat'},
-    'DK': {'0184': 'company_registry', '0198': 'vat'},
+    'DK': {'0184': 'vat', '0198': 'vat'},
     'EE': {'9931': 'vat'},
     'ES': {'9920': 'vat'},
-    'FI': {'0216': None},
-    'FR': {'0009': 'siret', '9957': 'vat'},
+    'FI': {'0216': None, '0213': 'vat'},
+    'FR': {'0009': 'siret', '9957': 'vat', '0002': None},
     'SG': {'0195': 'l10n_sg_unique_entity_number'},
     'GB': {'9932': 'vat'},
     'GR': {'9933': 'vat'},
@@ -73,6 +73,7 @@ EAS_MAPPING = {
     'ME': {'9941': 'vat'},
     'MK': {'9942': 'vat'},
     'MT': {'9943': 'vat'},
+    'MY': {'0230': None},
     # Do not add the vat for NL, since: "[NL-R-003] For suppliers in the Netherlands, the legal entity identifier
     # MUST be either a KVK or OIN number (schemeID 0106 or 0190)" in the Bis 3 rules (in PartyLegalEntity/CompanyID).
     'NL': {'0106': None, '0190': None},
@@ -82,7 +83,7 @@ EAS_MAPPING = {
     'PT': {'9946': 'vat'},
     'RO': {'9947': 'vat'},
     'RS': {'9948': 'vat'},
-    'SE': {'0007': 'company_registry'},
+    'SE': {'0007': 'company_registry', '9955': 'vat'},
     'SI': {'9949': 'vat'},
     'SK': {'9950': 'vat'},
     'SM': {'9951': 'vat'},
@@ -458,7 +459,7 @@ class AccountEdiCommon(models.AbstractModel):
     def _import_currency(self, tree, xpath):
         logs = []
         currency_name = tree.findtext(xpath)
-        currency = self.env['res.currency']
+        currency = self.env.company.currency_id
         if currency_name is not None:
             currency = currency.with_context(active_test=False).search([
                 ('name', '=', currency_name),
@@ -492,7 +493,7 @@ class AccountEdiCommon(models.AbstractModel):
         logs = []
         lines_values = []
         for line_tree in tree.iterfind(xpath):
-            line_values = self._retrieve_line_vals(line_tree, invoice.move_type, qty_factor)
+            line_values = self.with_company(invoice.company_id)._retrieve_invoice_line_vals(line_tree, invoice.move_type, qty_factor)
             line_values['tax_ids'], tax_logs = self._retrieve_taxes(
                 invoice, line_values, invoice.journal_id.type,
             )
@@ -502,6 +503,26 @@ class AccountEdiCommon(models.AbstractModel):
             lines_values.append(line_values)
             lines_values += self._retrieve_line_charges(invoice, line_values, line_values['tax_ids'])
         return lines_values, logs
+
+    def _retrieve_invoice_line_vals(self, tree, document_type=False, qty_factor=1):
+        # Start and End date (enterprise fields)
+        deferred_values = {}
+        start_date = end_date = None
+        if self.env['account.move.line']._fields.get('deferred_start_date'):
+            start_date_node = tree.find('./{*}InvoicePeriod/{*}StartDate')
+            end_date_node = tree.find('./{*}InvoicePeriod/{*}EndDate')
+            if start_date_node is not None and end_date_node is not None:  # there is a constraint forcing none or the two to be set
+                start_date = start_date_node.text
+                end_date = end_date_node.text
+            deferred_values = {
+                'deferred_start_date': start_date,
+                'deferred_end_date': end_date,
+            }
+
+        return {
+            **self._retrieve_line_vals(tree, document_type, qty_factor),
+            **deferred_values,
+        }
 
     def _retrieve_line_vals(self, tree, document_type=False, qty_factor=1):
         """
@@ -647,15 +668,6 @@ class AccountEdiCommon(models.AbstractModel):
             elif delivered_qty == 0:
                 quantity = price_subtotal / price_unit
 
-        # Start and End date (enterprise fields)
-        start_date = end_date = None
-        if self.env['account.move.line']._fields.get('deferred_start_date'):
-            start_date_node = tree.find('./{*}InvoicePeriod/{*}StartDate')
-            end_date_node = tree.find('./{*}InvoicePeriod/{*}EndDate')
-            if start_date_node is not None and end_date_node is not None:  # there is a constraint forcing none or the two to be set
-                start_date = start_date_node.text
-                end_date = end_date_node.text
-
         return {
             # vals to be written on the document line
             'name': self._find_value(xpath_dict['name'], tree),
@@ -666,8 +678,6 @@ class AccountEdiCommon(models.AbstractModel):
             'discount': discount,
             'tax_nodes': self._get_tax_nodes(tree),  # see `_retrieve_taxes`
             'charges': charges,  # see `_retrieve_line_charges`
-            'deferred_start_date': start_date,
-            'deferred_end_date': end_date,
         }
 
     def _import_product(self, **product_vals):

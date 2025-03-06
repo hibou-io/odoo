@@ -336,7 +336,7 @@ class MailThread(models.AbstractModel):
         return result
 
     def unlink(self):
-        """ Override unlink to delete messages and followers. This cannot be
+        """ Override unlink to delete (scheduled) messages and followers. This cannot be
         cascaded, because link is done through (res_model, res_id). """
         if not self:
             return True
@@ -347,6 +347,7 @@ class MailThread(models.AbstractModel):
         self.env['mail.followers'].sudo().search(
             [('res_model', '=', self._name), ('res_id', 'in', self.ids)]
         ).unlink()
+        self.env['mail.scheduled.message'].sudo().search([('model', '=', self._name), ('res_id', 'in', self.ids)]).unlink()
         return res
 
     def copy_data(self, default=None):
@@ -3529,12 +3530,13 @@ class MailThread(models.AbstractModel):
 
         # compute send user and its related signature; try to use self.env.user instead of browsing
         # user_ids if they are the author will give a sudo user, improving access performances and cache usage.
-        signature = ''
-        email_add_signature = msg_vals.get('email_add_signature') if msg_vals and 'email_add_signature' in msg_vals else message.email_add_signature
-        if email_add_signature:
-            author = message.env['res.partner'].browse(msg_vals.get('author_id')) if 'author_id' in msg_vals else message.author_id
-            author_user = self.env.user if self.env.user.partner_id == author else author.user_ids[0] if author and author.user_ids else False
-            if author_user:
+        author = message.env['res.partner'].browse(msg_vals.get('author_id')) if 'author_id' in msg_vals else message.author_id
+        author_user = self.env.user if self.env.user.partner_id == author else author.user_ids[0] if author and author.user_ids else False
+        signature, email_add_signature = '', False
+
+        if author_user:
+            email_add_signature = msg_vals.get('email_add_signature', message.email_add_signature)
+            if email_add_signature:
                 signature = author_user.signature
 
         if force_email_company:
@@ -3587,6 +3589,7 @@ class MailThread(models.AbstractModel):
             'record_name': record_name,
             'subtitles': [record_name],
             # user / environment
+            'author_user': author_user,  # User who sends the message
             'company': company,
             'email_add_signature': email_add_signature,
             'lang': lang,
@@ -3594,6 +3597,11 @@ class MailThread(models.AbstractModel):
             'website_url': website_url,
             # tools
             'is_html_empty': is_html_empty,
+            # display
+            'email_notification_force_header': self.env.context.get('email_notification_force_header', False),  # force displaying the email header
+            'email_notification_force_footer': self.env.context.get('email_notification_force_footer', False),  # force displaying the email footer
+            'email_notification_allow_header': self.env.context.get('email_notification_allow_header', True),
+            'email_notification_allow_footer': self.env.context.get('email_notification_allow_footer', False),
         }
 
     def _notify_by_email_render_layout(self, message, recipients_group,
@@ -3657,14 +3665,24 @@ class MailThread(models.AbstractModel):
             # replace new lines by spaces to conform to email headers requirements
             mail_subject = ' '.join(mail_subject.splitlines())
 
-        # compute references: set references to the parent and add current message just to
+        # compute references: set references to parents likely to be sent and add current message just to
         # have a fallback in case replies mess with Messsage-Id in the In-Reply-To (e.g. amazon
         # SES SMTP may replace Message-Id and In-Reply-To refers an internal ID not stored in Odoo)
         message_sudo = message.sudo()
-        if message_sudo.parent_id:
-            references = f'{message_sudo.parent_id.message_id} {message_sudo.message_id}'
-        else:
-            references = message_sudo.message_id
+        outgoing_types = ('comment', 'auto_comment', 'email', 'email_outgoing')
+        note_type = self.env.ref('mail.mt_note')
+        ancestors = self.env['mail.message'].sudo().search(
+            [
+                ('model', '=', message_sudo.model), ('res_id', '=', message_sudo.res_id),
+                ('message_type', 'in', outgoing_types),
+                ('id', '!=', message_sudo.id),
+                ('subtype_id', '!=', note_type.id),  # filters out notes, using subtype which is indexed
+            ], limit=16, order='id DESC',
+        )
+        # filter out internal messages that are not notes, manually because of indexes
+        ancestors = ancestors.filtered(lambda m: not m.is_internal and m.subtype_id and not m.subtype_id.internal)[:3]
+        # order frrom oldest to newest
+        references = ' '.join(m.message_id for m in (ancestors[::-1] + message_sudo))
         # prepare notification mail values
         base_mail_values = {
             'mail_message_id': message.id,
@@ -3819,7 +3837,7 @@ class MailThread(models.AbstractModel):
                 }
             }
         }
-        payload['options']['body'] = html2plaintext(body)
+        payload['options']['body'] = html2plaintext(body, include_references=False)
         payload['options']['body'] += self._generate_tracking_message(message)
 
         return payload
@@ -4598,7 +4616,7 @@ class MailThread(models.AbstractModel):
             "attachment_ids": Store.many(message.attachment_ids.sorted("id")),
             "body": message.body,
             "pinned_at": message.pinned_at,
-            "recipients": Store.many(message.partner_ids, fields=["name", "write_date"]),
+            "recipients": Store.many(message.partner_ids, fields=["avatar_128", "name"]),
             "write_date": message.write_date,
         }
         if body is not None:

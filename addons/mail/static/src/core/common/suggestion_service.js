@@ -165,7 +165,8 @@ export class SuggestionService {
             thread &&
             (thread.channel_type === "group" ||
                 thread.channel_type === "chat" ||
-                (thread.channel_type === "channel" && thread.authorizedGroupFullName));
+                (thread.channel_type === "channel" &&
+                    (thread.parent_channel_id || thread).group_public_id));
         if (isNonPublicChannel) {
             // Only return the channel members when in the context of a
             // group restricted channel. Indeed, the message with the mention
@@ -175,6 +176,10 @@ export class SuggestionService {
             partners = thread.channelMembers
                 .map((member) => member.persona)
                 .filter((persona) => persona.type === "partner");
+            if (thread.channel_type === "channel") {
+                const group = (thread.parent_channel_id || thread).group_public_id;
+                partners = new Set([...partners, ...(group?.personas ?? [])]);
+            }
         } else {
             partners = Object.values(this.store.Persona.records).filter((persona) => {
                 if (thread?.model !== "discuss.channel" && persona.eq(this.store.odoobot)) {
@@ -243,7 +248,7 @@ export class SuggestionService {
                 const result = fn(p1, p2, {
                     env: this.env,
                     memberPartnerIds,
-                    searchTerms: cleanedSearchTerm,
+                    searchTerm: cleanedSearchTerm,
                     thread,
                     context,
                 });

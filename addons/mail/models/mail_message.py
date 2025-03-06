@@ -822,6 +822,7 @@ class Message(models.Model):
         """ Toggle messages as (un)starred. Technically, the notifications related
             to uid are set to (un)starred.
         """
+        self.ensure_one()
         # a user should always be able to star a message they can read
         self.check_access('read')
         starred = not self.starred
@@ -833,6 +834,7 @@ class Message(models.Model):
         self.env.user._bus_send(
             "mail.message/toggle_star", {"message_ids": [self.id], "starred": starred}
         )
+        return Store(self, {"starred": self.starred}).get_result()
 
     def _message_reaction(self, content, action, partner, guest, store: Store = None):
         self.ensure_one()
@@ -1028,7 +1030,7 @@ class Message(models.Model):
                 # sudo: mail.message.subtype - reading description on accessible message is allowed
                 "subtype_description": message.subtype_id.sudo().description,
                 # sudo: res.partner: reading limited data of recipients is acceptable
-                "recipients": Store.many(message.sudo().partner_ids, fields=["name", "write_date"]),
+                "recipients": Store.many(message.sudo().partner_ids, fields=["avatar_128", "name"]),
                 "scheduledDatetime": scheduled_dt_by_msg_id.get(message.id, False),
                 "thread": Store.one(record, as_thread=True, only_id=True),
             }
@@ -1070,11 +1072,11 @@ class Message(models.Model):
             }
             # sudo: mail.message: access to author is allowed
             if guest_author := message.sudo().author_guest_id:
-                data["author"] = Store.one(guest_author, fields=["name", "write_date"])
+                data["author"] = Store.one(guest_author, fields=["avatar_128", "name"])
             # sudo: mail.message: access to author is allowed
             elif author := message.sudo().author_id:
                 data["author"] = Store.one(
-                    author, fields=["name", "is_company", "user", "write_date"]
+                    author, fields=["avatar_128", "is_company", "name", "user"]
                 )
             store.add(message, data)
 

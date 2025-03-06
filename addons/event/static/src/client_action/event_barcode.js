@@ -13,7 +13,7 @@ import { scanBarcode } from "@web/core/barcode/barcode_dialog";
 import { standardActionServiceProps } from "@web/webclient/actions/action_service";
 
 export class EventScanView extends Component {
-    static template = "event.EventScanView";
+    static template = "event.EventScanViewNoKiosk";
     static components = { BarcodeScanner };
     static props = { ...standardActionServiceProps };
 
@@ -137,8 +137,6 @@ export class EventScanView extends Component {
 
     onClickBackToEvents() {
         if (this.isMultiEvent) {
-            // define action from scratch instead of using existing 'action_event_view' to avoid
-            // messing with menu bar
             this.actionService.doAction("event.action_event_view", { clearBreadcrumbs: true });
         } else {
             this.actionService.restore();

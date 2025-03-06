@@ -139,7 +139,10 @@ export class PaymentScreen extends Component {
         }
         if (result) {
             this.numberBuffer.reset();
-            if (paymentMethod.use_payment_terminal) {
+            if (
+                paymentMethod.use_payment_terminal &&
+                (paymentMethod.payment_terminal?.fast_payments ?? true)
+            ) {
                 const newPaymentLine = this.paymentLines.at(-1);
                 this.sendPaymentRequest(newPaymentLine);
             }
@@ -237,7 +240,10 @@ export class PaymentScreen extends Component {
         // If a paymentline with a payment terminal linked to
         // it is removed, the terminal should get a cancel
         // request.
-        if (["waiting", "waitingCard", "timeout"].includes(line.get_payment_status())) {
+        if (
+            ["waiting", "waitingCard", "timeout"].includes(line.get_payment_status()) &&
+            line.payment_method_id.payment_terminal
+        ) {
             line.set_payment_status("waitingCancel");
             line.payment_method_id.payment_terminal
                 .send_payment_cancel(this.currentOrder, uuid)
@@ -260,12 +266,25 @@ export class PaymentScreen extends Component {
         if (!this.check_cash_rounding_has_been_well_applied()) {
             return;
         }
+        const linesToRemove = this.currentOrder.lines.filter((line) => {
+            const rounding = line.product_id.uom_id.rounding;
+            const decimals = Math.max(0, Math.ceil(-Math.log10(rounding)));
+            return floatIsZero(line.qty, decimals);
+        });
+        for (const line of linesToRemove) {
+            this.currentOrder.removeOrderline(line);
+        }
         if (await this._isOrderValid(isForceValidate)) {
             // remove pending payments before finalizing the validation
+            const toRemove = [];
             for (const line of this.paymentLines) {
-                if (!line.is_done()) {
-                    this.currentOrder.remove_paymentline(line);
+                if (!line.is_done() || line.amount === 0) {
+                    toRemove.push(line);
                 }
+            }
+
+            for (const line of toRemove) {
+                this.currentOrder.remove_paymentline(line);
             }
             await this._finalizeValidation();
         }
@@ -322,12 +341,9 @@ export class PaymentScreen extends Component {
         }
 
         // 3. Post process.
-        if (
-            syncOrderResult &&
-            syncOrderResult.length > 0 &&
-            this.currentOrder.wait_for_push_order()
-        ) {
-            await this.postPushOrderResolve(syncOrderResult.map((res) => res.id));
+        const postPushOrders = syncOrderResult.filter((order) => order.wait_for_push_order());
+        if (postPushOrders.length > 0) {
+            await this.postPushOrderResolve(postPushOrders.map((order) => order.id));
         }
 
         await this.afterOrderValidation(!!syncOrderResult && syncOrderResult.length > 0);
@@ -467,7 +483,10 @@ export class PaymentScreen extends Component {
         }
 
         if (
-            this.currentOrder.get_total_with_tax() != 0 &&
+            !floatIsZero(
+                this.currentOrder.get_total_with_tax(),
+                this.pos.currency.decimal_places
+            ) &&
             this.currentOrder.payment_ids.length === 0
         ) {
             this.notification.add(_t("Select a payment method to validate the order."));
@@ -569,6 +588,7 @@ export class PaymentScreen extends Component {
         );
         if (isCancelSuccessful) {
             line.set_payment_status("retry");
+            this.pos.paymentTerminalInProgress = false;
         } else {
             line.set_payment_status("waitingCard");
         }

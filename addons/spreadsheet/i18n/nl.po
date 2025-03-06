@@ -5,19 +5,19 @@
 # Translators:
 # Gunther Clauwaert <gclauwae@hotmail.com>, 2024
 # Tiffany Chang, 2024
-# Martin Trigaux, 2024
 # Jolien De Paepe, 2024
-# Manon Rondou, 2024
+# Martin Trigaux, 2024
 # Wil Odoo, 2024
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2024
+# Erwin van der Ploeg <erwin@odooexperts.nl>, 2025
+# Manon Rondou, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-16 13:40+0000\n"
+"POT-Creation-Date: 2025-01-27 13:04+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2024\n"
+"Last-Translator: Manon Rondou, 2025\n"
 "Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -353,8 +353,8 @@ msgid ""
 "A boolean indicating whether to use A1 style notation (TRUE) or R1C1 style "
 "notation (FALSE)."
 msgstr ""
-"Een boolean dat bepaalt of het verwijzingstype A1 (WAAR) of het "
-"verwijzingstype R1C1 (ONWAAR) gebruikt wordt."
+"Een boolean dat bepaalt of het verwijzingstype A1 (TRUE) of het "
+"verwijzingstype R1C1 (FALSE) gebruikt wordt."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -664,7 +664,7 @@ msgstr "Een ander item toevoegen"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "Add any characters or symbol"
-msgstr "Voeg eender welk karakter of symbool toe"
+msgstr "Voeg tekens of symbolen toe"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -702,8 +702,7 @@ msgstr "Extra kolom of rij die waar of onwaar waarden bevat."
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Additional conditions to be evaluated if the previous ones are FALSE."
 msgstr ""
-"Extra voorwaarden die moeten worden geëvalueerd indien de vorige ONWAAR "
-"zijn."
+"Extra voorwaarden die moeten worden geëvalueerd indien de vorige FALSE zijn."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -850,7 +849,7 @@ msgstr "Extra waarden voor het gemiddelde."
 msgid ""
 "Additional values to be returned if their corresponding conditions are TRUE."
 msgstr ""
-"Extra waarden om te retourneren indien de overeenkomstige voorwaarden WAAR "
+"Extra waarden om te retourneren indien de overeenkomstige voorwaarden TRUE "
 "zijn."
 
 #. module: spreadsheet
@@ -952,8 +951,8 @@ msgid ""
 " be coerced to a logical value."
 msgstr ""
 "Een expressie of verwijzing naar een cel die een expressie bevat die een "
-"logische waarde vertegenwoordigd, d.w.z. WAAR of ONWAAR, of een expressie "
-"die kan worden afgedwongen tot een logische waarde."
+"logische waarde vertegenwoordigd, d.w.z. TRUE of FALSE, of een expressie die"
+" kan worden afgedwongen tot een logische waarde."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -963,7 +962,7 @@ msgid ""
 "represents some logical value, i.e. TRUE or FALSE."
 msgstr ""
 "Een expressie of verwijzing naar een cel die een expressie bevat die een "
-"logische waarde vertegenwoordigt, d.w.z. WAAR of ONWAAR."
+"logische waarde vertegenwoordigt, d.w.z. TRUE of FALSE."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1448,7 +1447,7 @@ msgstr "Referentie"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Baseline colors"
-msgstr "Kleur van de referentie"
+msgstr "Referentiekleuren"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1678,6 +1677,12 @@ msgstr "Annuleren"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot do a special paste of a figure."
 msgstr "Kan geen speciale plak van een figuur doen."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid "Cannot duplicate a pivot in error."
+msgstr "Kan een draaitabel niet dupliceren bij een fout."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1946,7 +1951,7 @@ msgstr "Kleur van subtotalen"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "Color on value decrease"
-msgstr "Kleur bij waardevermindering"
+msgstr "Kleur bij waardedaling"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2150,13 +2155,13 @@ msgstr "Bevat"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Convert a decimal fraction to decimal value."
-msgstr "Converteer een decimale breuk naar een decimale waarde."
+msgstr "Zet een decimale breuk om naar een decimale waarde."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Convert a decimal value to decimal fraction."
-msgstr "Converteer een decimale waarde naar een decimale breuk."
+msgstr "Zet een decimale waarde om naar een decimale breuk."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2168,49 +2173,55 @@ msgstr "Converteren naar individuele formules"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts a date string to a date value."
-msgstr "Converteert een datumtekenreeks naar een datumwaarde."
+msgstr "Zet een datumtekenreeks om naar een datumwaarde."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts a number to text according to a specified format."
-msgstr "Converteert een getal naar tekst volgens een opgegeven formaat."
+msgstr "Zet een getal naar tekst om volgens een opgegeven formaat."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts a numeric value to a different unit of measure."
-msgstr "Converteert een numerieke waarde naar een andere maateenheid."
+msgstr "Zet een numerieke waarde om naar een andere maateenheid."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts a specified string to lowercase."
-msgstr "Converteert een opgegeven tekenreeks naar kleine letters."
+msgstr "Zet een opgegeven om tekenreeks naar kleine letters."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts a specified string to uppercase."
-msgstr "Converteert een opgegeven tekenreeks naar hoofdletters."
+msgstr "Zet een opgegeven tekenreeks om naar hoofdletters."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid "Converts a string to a numeric value."
+msgstr "Zet een string om naar een numerieke waarde."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts a time string into its serial number representation."
-msgstr "Converteert een tijdreeks naar de weergave van het serienummer."
+msgstr "Zet een tijdreeks om naar de weergave van het serienummer."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts an angle value in radians to degrees."
-msgstr "Converteert een hoekwaarde in radialen naar graden."
+msgstr "Zet een hoekwaarde om in radialen naar graden."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts from another base to decimal."
-msgstr "Converteert van een ander grondtal naar decimaal."
+msgstr "Zet van een ander grondtal om naar decimaal."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2222,7 +2233,7 @@ msgstr "Zet uur/minuut/seconde om in een tijd."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Converts year/month/day into a date."
-msgstr "Converteert jaar/maand/dag naar een datum."
+msgstr "Zet jaar/maand/dag om naar een datum."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2234,7 +2245,7 @@ msgstr "Gekopieerd"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Copy"
-msgstr "Kopieer"
+msgstr "Kopiëren"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2725,7 +2736,7 @@ msgstr "Dag van de week van de opgegeven datum (als nummer)."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Days from settlement until next coupon."
-msgstr "Dagen vanaf afrekening tot de volgende kortingsbon."
+msgstr "Dagen vanaf afrekening t/m de volgende kortingsbon."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2769,13 +2780,13 @@ msgstr "Verwijderen"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Delete cell and shift left"
-msgstr "Verwijderen cel en naar links schuiven"
+msgstr "Verwijderen cel en naar links verplaatsen"
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Delete cell and shift up"
-msgstr "Verwijderen cel en omhoog schuiven"
+msgstr "Verwijderen cel en omhoog verplaatsen"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3839,8 +3850,8 @@ msgid ""
 "if TRUE or forces b to be 1 and only calculates the m values if FALSE."
 msgstr ""
 "Uitgaande van een algemene exponentiële vorm van y = b*m^x, wordt b berekend"
-" indien WAAR of wordt de waarde 1 afgedwongen voor b en worden de waarden "
-"voor m alleen berekend indien ONWAAR."
+" indien TRUE of wordt de waarde 1 afgedwongen voor b en worden de waarden "
+"voor m alleen berekend indien FALSE."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3851,9 +3862,9 @@ msgid ""
 "forces the curve fit to pass through the origin."
 msgstr ""
 "Uitgaande van een algemene lineaire vorm van y = m*x+b, wordt b berekend "
-"indien WAAR of wordt voor b de waarde 0 afgedwongen en worden de waarden "
-"voor m alleen berekend indien ONWAAR, i.e. de kromme loopt gedwongen door de"
-" oorsprong."
+"indien TRUE of wordt voor b de waarde 0 afgedwongen en worden de waarden "
+"voor m alleen berekend indien FALSE, i.e. de kromme loopt gedwongen door de "
+"oorsprong."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4270,7 +4281,7 @@ msgstr "%s rijen hierboven invoegen"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Insert %s rows below"
-msgstr "Voeg %s rijen hieronder in"
+msgstr "%s rijen hieronder invoegen"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4282,13 +4293,13 @@ msgstr "Cellen invoegen"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Insert cells and shift down"
-msgstr "Cellen invoegen en omlaag schuiven"
+msgstr "Cellen invoegen en omlaag verplaatsen"
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Insert cells and shift right"
-msgstr "Cellen invoegen en naar rechts schuiven"
+msgstr "Cellen invoegen en naar rechts verplaatsen"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4924,7 +4935,7 @@ msgstr "Maart"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "Match case"
-msgstr "Match geval"
+msgstr "Hoofdlettergevoelig"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5731,8 +5742,8 @@ msgstr "Draaitabel gedupliceerd."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Pivot duplication failed"
-msgstr "Dupliceren van de draaitabel is mislukt"
+msgid "Pivot duplication failed."
+msgstr "Dupliceren van draaitabel mislukt."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5991,13 +6002,13 @@ msgstr "Rangschikken van klein naar groot"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Re-insert dynamic pivot"
-msgstr "Opnieuw invoegen draaitabel dynamisch"
+msgstr "Dynamisch draaitabel opnieuw invoegen "
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Re-insert static pivot"
-msgstr "Opnieuw invoegen draaitabel statisch"
+msgstr "Statische draaitabel opnieuw invoegen "
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6210,7 +6221,7 @@ msgid ""
 "from a starting cell reference."
 msgstr ""
 "Geeft als resultaat een bereikverwijzing die met een opgegeven aantal rijen "
-"en kolommen is verschoven vanaf een initiële celverwijzing."
+"en kolommen is verplaatst vanaf een initiële celverwijzing."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6613,7 +6624,7 @@ msgstr "Verplaats omlaag"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Shift left"
-msgstr "Shift naar links"
+msgstr "Verplaats naar links"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6625,7 +6636,7 @@ msgstr "Verplaats naar rechts"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Shift up"
-msgstr "Opschakelen"
+msgstr "Verplaats omhoog"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6722,7 +6733,7 @@ msgstr "Enkele waarde uit een tabelachtig bereik."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/pivot/pivot_model.js:0
 msgid "Some measures are not available: %s"
-msgstr ""
+msgstr "Sommige meetwaarden zijn niet beschikbaar: %s"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -7067,8 +7078,8 @@ msgid ""
 "TRUE or FALSE indicating whether to sort sort_column in ascending order. "
 "FALSE sorts in descending order."
 msgstr ""
-"WAAR of ONWAAR die aangeeft of sort_column in oplopende volgorde moet worden"
-" gesorteerd. ONWAAR sorteert in aflopende volgorde."
+"TRUE of FALSE die aangeeft of sort_column in oplopende volgorde moet worden "
+"gesorteerd. FALSE sorteert in aflopende volgorde."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8562,7 +8573,7 @@ msgid ""
 "TRUE."
 msgstr ""
 "Het maximum (%s) en het minimum (%s) moeten gehele getallen zijn als "
-"whole_number WAAR is."
+"whole_number TRUE is."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8659,7 +8670,7 @@ msgstr "De minuutcomponent van de tijd."
 #: code:addons/spreadsheet/static/src/data_sources/data_source.js:0
 #: code:addons/spreadsheet/static/src/pivot/odoo_pivot_loader.js:0
 msgid "The model \"%(model)s\" does not exist."
-msgstr ""
+msgstr "Het model %(model)s bestaat niet."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8668,6 +8679,8 @@ msgid ""
 "The model (%(model)s) of this global filter is not valid (it may have been "
 "renamed/deleted)."
 msgstr ""
+"Het model (%(model)s) van dit globale filter is niet geldig (het is mogelijk"
+" hernoemd/verwijderd)."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8776,7 +8789,7 @@ msgstr "Het aantal te retourneren kolommen."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The number of columns to offset by."
-msgstr "Het aantal kolommen voor de offset."
+msgstr "Het aantal kolommen om mee te verschuiven."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8904,8 +8917,8 @@ msgstr "Het aantal rijen moet positief zijn."
 msgid ""
 "The number of rows of the range to return starting at the offset target."
 msgstr ""
-"Het aantal rijen van het bereik dat geretourneerd moet worden vanaf het "
-"offsetdoel."
+"Het aantal rijen van het bereik dat moet worden geretourneerd, beginnend bij"
+" het verschoven doel."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8917,7 +8930,7 @@ msgstr "Het aantal te retourneren rijen."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The number of rows to offset by."
-msgstr "Het aantal rijen voor de offset."
+msgstr "Het aantal rijen om mee te verschuiven."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -9139,7 +9152,7 @@ msgid ""
 "evaluates to TRUE will be included in the filtered set."
 msgstr ""
 "Het patroon of de test die moet worden toegepast op criteria_range1, zodat "
-"elke cel die op WAAR uitkomt, wordt opgenomen in het gefilterde set."
+"elke cel die op TRUE uitkomt, wordt opgenomen in het gefilterde set."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -9617,7 +9630,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The returned value if condition1 is TRUE."
-msgstr "De geretourneerde waarde indien condition1 WAAR is."
+msgstr "De geretourneerde waarde indien condition1 TRUE is."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -9877,7 +9890,7 @@ msgstr ""
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The starting point from which to count the offset rows and columns."
 msgstr ""
-"Het startpunt vanwaar de offset van de rijen en kolommen wordt geteld."
+"Het startpunt waarvandaan de verschoven rijen en kolommen worden geteld."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -9931,13 +9944,13 @@ msgstr "De tekenreeks die search_for vervangt."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The string to convert to lowercase."
-msgstr "De tekenreeks die moet worden geconverteerd naar kleine letters."
+msgstr "De tekenreeks die moet worden omgezet naar kleine letters."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The string to convert to uppercase."
-msgstr "De tekenreeks die moet worden geconverteerd naar hoofdletters."
+msgstr "De tekenreeks die moet worden omgezet naar hoofdletters."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -10457,14 +10470,14 @@ msgstr "De waarde moet een scalar of een 1x1 matrix zijn"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The value the function returns if logical_expression is FALSE."
 msgstr ""
-"De waarde die de functie teruggeeft indien logical_expression ONWAAR is."
+"De waarde die de functie teruggeeft indien logical_expression FALSE is."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The value the function returns if logical_expression is TRUE."
 msgstr ""
-"De waarde die de functie teruggeeft indien logical_expression WAAR is."
+"De waarde die de functie teruggeeft indien logical_expression TRUE is."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -10502,7 +10515,7 @@ msgstr "De af te kappen waarde."
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The value to be verified as a logical TRUE or FALSE."
 msgstr ""
-"De waarde die moet worden gecontroleerd als een logische WAAR of ONWAAR."
+"De waarde die moet worden gecontroleerd als een logische TRUE of FALSE."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -10932,7 +10945,7 @@ msgstr "Totaal"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Total row"
-msgstr "Totaal aantal rijen"
+msgstr "Totaalrij"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11054,7 +11067,7 @@ msgstr "Onverwacht token: %s"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Unfreeze"
-msgstr "Ontvriezen"
+msgstr "Ontgrendelen"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11567,7 +11580,7 @@ msgid ""
 "        consecutive delimiters as one (if TRUE). If FALSE, empty cells values are added between consecutive delimiters."
 msgstr ""
 "Of lege berichten wel of niet uit de splitsingsresultaten moeten worden verwijderd. Het standaardgedrag is om \n"
-"        opeenvolgende scheidingstekens als één (indien WAAR). Indien ONWAAR, worden lege celwaarden toegevoegd tussen opeenvolgende scheidingstekens."
+"        opeenvolgende scheidingstekens als één (indien TRUE). Indien FALSE, worden lege celwaarden toegevoegd tussen opeenvolgende scheidingstekens."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11958,7 +11971,7 @@ msgstr "exponentieel"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "false"
-msgstr "onwaar"
+msgstr "false"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -12179,6 +12192,12 @@ msgid ""
 msgstr ""
 "de combinatie van de zoek- en matchmodus wordt niet ondersteund door de "
 "XLOOKUP-functie."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid "the string to be converted"
+msgstr "de string die moet worden omgezet"
 
 #. module: spreadsheet
 #. odoo-javascript

@@ -4,7 +4,7 @@
 # 
 # Translators:
 # Wil Odoo, 2024
-# Manon Rondou, 2024
+# Manon Rondou, 2025
 # 
 msgid ""
 msgstr ""
@@ -12,7 +12,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-16 13:39+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Manon Rondou, 2024\n"
+"Last-Translator: Manon Rondou, 2025\n"
 "Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -36,6 +36,11 @@ msgstr "%(product)s : Quantité insuffisante pour effectuer la réparation"
 #: model:ir.actions.report,print_report_name:repair.action_report_repair_order
 msgid "('Repair Order - %s' % (object.name))"
 msgstr "('Ordre de réparation - %s' % (object.name))"
+
+#. module: repair
+#: model_terms:ir.ui.view,arch_db:repair.report_repairorder
+msgid "(<i>Recycle</i>)"
+msgstr "(<i>Recycler</i>)"
 
 #. module: repair
 #: model_terms:ir.ui.view,arch_db:repair.report_repairorder
@@ -90,7 +95,7 @@ msgstr "<span class=\"o_stat_text\">Pièces de rechange :</span>"
 #. module: repair
 #: model_terms:ir.ui.view,arch_db:repair.view_repair_order_form
 msgid "<span class=\"o_stat_text\">Sale Order</span>"
-msgstr "<span class=\"o_stat_text\">Bon de commande</span>"
+msgstr "<span class=\"o_stat_text\">Commande client</span>"
 
 #. module: repair
 #: model_terms:ir.ui.view,arch_db:repair.stock_production_lot_view_form
@@ -374,8 +379,8 @@ msgstr "Créer des ordres de réparation à partir des retours"
 msgid ""
 "Create a linked Repair Order on Sale Order confirmation of this product."
 msgstr ""
-"Créer un ordre de réparation associé lors de la confirmation d'un bon de "
-"commande de ce produit."
+"Créer un ordre de réparation associé lors de la confirmation d'une commande "
+"client de ce produit."
 
 #. module: repair
 #: model_terms:ir.actions.act_window,help:repair.action_repair_order_tag
@@ -819,7 +824,7 @@ msgstr "Opérations"
 #. module: repair
 #: model:ir.ui.menu,name:repair.repair_order_menu
 msgid "Orders"
-msgstr "Ordres"
+msgstr "Commandes"
 
 #. module: repair
 #: model:ir.ui.menu,name:repair.repair_picking_type_menu
@@ -1220,7 +1225,7 @@ msgstr "Ligne de commande de laquelle provient l'ordre de réparation."
 #. module: repair
 #: model:ir.model.fields,help:repair.field_repair_order__sale_order_id
 msgid "Sale Order from which the Repair Order comes from."
-msgstr "Bon de commande duquel provient l'ordre de réparation."
+msgstr "Commande client de laquelle provient l'ordre de réparation."
 
 #. module: repair
 #: model:ir.model,name:repair.model_sale_order

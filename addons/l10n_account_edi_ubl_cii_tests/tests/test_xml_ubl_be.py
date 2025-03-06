@@ -27,6 +27,7 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
             'country_id': cls.env.ref('base.be').id,
             'bank_ids': [(0, 0, {'acc_number': 'BE15001559627230'})],
             'ref': 'ref_partner_1',
+            'invoice_edi_format': 'ubl_bis3',
         })
 
         # buyer
@@ -39,6 +40,7 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
             'country_id': cls.env.ref('base.be').id,
             'bank_ids': [(0, 0, {'acc_number': 'BE90735788866632'})],
             'ref': 'ref_partner_2',
+            'invoice_edi_format': 'ubl_bis3',
         })
 
         cls.tax_25 = cls.env['account.tax'].create({
@@ -734,7 +736,7 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
         ]
 
         invoice.action_post()
-        invoice._generate_and_send(mail_template_id=self.move_template.id)
+        invoice._generate_and_send(mail_template_id=self.move_template.id, sending_methods=['manual'])
 
         self.assertRecordValues(invoice, [{
             'amount_untaxed': 600.00,

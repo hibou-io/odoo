@@ -183,7 +183,7 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
         move = self.create_move(self.valid_partner)
         move.action_post()
 
-        wizard = self.create_send_and_print(move, sending_methods=['email'])
+        wizard = self.create_send_and_print(move, sending_methods=['email', 'peppol'])
         self.assertEqual(wizard.invoice_edi_format, 'ubl_bis3')
 
         # the ubl xml placeholder should be generated
@@ -193,14 +193,8 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
                 'name': 'INV_2023_00001.pdf',
                 'placeholder': True,
             },
-            {
-                'mimetype': 'application/xml',
-                'name': 'INV_2023_00001_ubl_bis3.xml',
-                'placeholder': True,
-            },
         ])
 
-        # we don't want to email the xml file in addition to sending via peppol
         wizard.sending_methods = ['peppol']
         wizard.action_send_and_print()
         self.assertEqual(self._get_mail_message(move).preview, 'The document has been sent to the Peppol Access Point for processing')
@@ -208,11 +202,11 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
     def test_send_peppol_alerts_not_valid_partner(self):
         move = self.create_move(self.invalid_partner)
         move.action_post()
-        wizard = self.create_send_and_print(move)
-
-        self.assertEqual(wizard.invoice_edi_format, 'ubl_bis3')
+        wizard = self.env['account.move.send.wizard'].create({
+            'move_id': move.id,
+        })
         self.assertEqual(self.invalid_partner.peppol_verification_state, 'not_valid')  # not on peppol at all
-        self.assertFalse('peppol' in wizard.sending_methods)  # peppol is not checked
+        self.assertFalse('peppol' in wizard.sending_methods)  # peppol is not checked by default
         self.assertTrue(wizard.sending_method_checkboxes['peppol']['readonly'])  # peppol is not possible to select
         self.assertFalse(wizard.alerts)  # there is no alerts
 
@@ -220,15 +214,11 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
     def test_send_peppol_alerts_not_valid_format_partner(self, mocked_check):
         move = self.create_move(self.valid_partner)
         move.action_post()
-        wizard = self.create_send_and_print(move)
+        wizard = self.create_send_and_print(move, sending_methods=['peppol'])  # partner can't receive BIS3 so Peppol not checked by default, force it
 
         self.assertEqual(wizard.invoice_edi_format, 'ubl_bis3')
-        self.assertTrue('peppol' in wizard.sending_methods)  # peppol is checked
         self.assertEqual(self.valid_partner.peppol_verification_state, 'not_valid_format')  # on peppol but can't receive bis3
-
-        self.assertTrue('peppol' in wizard.sending_methods)
         self.assertTrue('account_peppol_warning_partner' in wizard.alerts)
-        self.assertTrue('account_peppol_demo_test_mode' in wizard.alerts)
 
     def test_send_peppol_alerts_invalid_partner(self):
         """If there's already account_edi_ubl_cii_configure_partner, the warning should not appear."""
@@ -354,9 +344,6 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
                 'peppol_endpoint': '3141592654',
             }])
 
-        new_partner.invoice_edi_format = False
-        self.assertFalse(new_partner.peppol_verification_state)
-
         # the participant exists on the network but cannot receive XRechnung
         new_partner.write({
             'invoice_edi_format': 'xrechnung',
@@ -382,7 +369,7 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
             'peppol_endpoint': '0477472701',
             'invoice_edi_format': 'ubl_bis3',
         })
-        new_partner.with_company(company_2).invoice_edi_format = False
+
         # partner is valid for company 1
         self.assertRecordValues(new_partner, [{
             'peppol_verification_state': 'valid',
@@ -392,6 +379,7 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
             'invoice_sending_method': 'peppol',
         }])
         # but not valid for company 2
+        new_partner.with_company(company_2).peppol_verification_state = False
         self.assertRecordValues(new_partner.with_company(company_2), [{
             'peppol_verification_state': False,
             'peppol_eas': '0208',
@@ -410,7 +398,7 @@ class TestPeppolMessage(TestAccountMoveSendCommon):
         # the cron is ran asynchronously and should be agnostic from the current self.env.company
         self.env.ref('account.ir_cron_account_move_send').with_company(company_2).method_direct_trigger()
         # only move 1 & 2 should be processed, move_3 is related to an invalid partner (with regard to company_2) thus should fail to send
-        self.assertEqual((move_1 + move_2 + move_3).mapped('peppol_move_state'), ['processing', 'processing', 'to_send'])
+        self.assertEqual((move_1 + move_2 + move_3).mapped('peppol_move_state'), ['processing', 'processing', 'skipped'])
 
     def test_available_peppol_sending_methods(self):
         company_us = self.setup_other_company()['company']  # not a valid Peppol country

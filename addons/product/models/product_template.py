@@ -203,17 +203,13 @@ class ProductTemplate(models.Model):
 
     def _compute_product_document_count(self):
         for template in self:
-            template.product_document_count = template.env['product.document'].search_count([
-                '|',
-                    '&', ('res_model', '=', 'product.template'), ('res_id', '=', template.id),
-                    '&',
-                        ('res_model', '=', 'product.product'),
-                        ('res_id', 'in', template.product_variant_ids.ids),
-            ])
+            template.product_document_count = template.env['product.document'].search_count(
+                template._get_product_document_domain()
+            )
 
     @api.depends('image_1920', 'image_1024')
     def _compute_can_image_1024_be_zoomed(self):
-        for template in self:
+        for template in self.with_context(bin_size=False):
             template.can_image_1024_be_zoomed = template.image_1920 and is_image_size_above(template.image_1920, template.image_1024)
 
     @api.depends(
@@ -473,7 +469,14 @@ class ProductTemplate(models.Model):
     def _onchange_type(self):
         if self.type == 'combo':
             if self.attribute_line_ids:
-                raise UserError(_("Combo products can't have attributes"))
+                raise UserError(_("Combo products can't have attributes."))
+            combo_items = self.env['product.combo.item'].sudo().search([
+                ('product_id', 'in', self.product_variant_ids.ids)
+            ])
+            if combo_items:
+                raise UserError(_(
+                    "This product is part of a combo, so its type can't be changed to \"combo\"."
+                ))
             self.purchase_ok = False
         return {}
 
@@ -623,13 +626,7 @@ class ProductTemplate(models.Model):
                 'default_res_id': self.id,
                 'default_company_id': self.company_id.id,
             },
-            'domain': [
-                '|',
-                    '&', ('res_model', '=', 'product.template'), ('res_id', '=', self.id),
-                    '&',
-                        ('res_model', '=', 'product.product'),
-                        ('res_id', 'in', self.product_variant_ids.ids),
-            ],
+            'domain': self._get_product_document_domain(),
             'target': 'current',
             'help': """
                 <p class="o_view_nocontent_smiling_face">
@@ -1455,6 +1452,16 @@ class ProductTemplate(models.Model):
         This method is meant to be overriden in other standard modules.
         """
         return self.env['product.pricelist'].browse(self.env.context.get('pricelist'))
+
+    def _get_product_document_domain(self):
+        self.ensure_one()
+        return expression.OR([
+            expression.AND([[('res_model', '=', 'product.template')], [('res_id', '=', self.id)]]),
+            expression.AND([
+                [('res_model', '=', 'product.product')],
+                [('res_id', 'in', self.product_variant_ids.ids)],
+            ])
+        ])
 
     ###################
     # DEMO DATA SETUP #

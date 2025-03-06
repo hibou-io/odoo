@@ -1346,9 +1346,12 @@ $-transition-duration: 200ms;
             border-top: 1px solid map-get($grays, '200');
         }
         > a.dropdown-toggle {
-            background-color: map-get($grays, '200');
             color: inherit; // Useful when the toggle is active
             pointer-events: none; // hack to prevent clicking on it because dropdown always opened
+            
+            &:not(.active) {
+                background-color: map-get($grays, '200');
+            }
         }
         > ul, > .o_mega_menu { // remove dropdown-menu default style as it is nested in another one
             position: static;
@@ -1976,6 +1979,12 @@ $ribbon-padding: 100px;
     height: 0px;
 }
 
+// Search results
+.o_search_result_item_detail {
+    flex: 1;
+    word-break: normal !important;
+}
+
 .o_cookies_bar_toggle {
     inset-inline-end: 1rem;
     inset-block-end: var(--cookies-bar-toggle-inset-block-end, 1rem);
@@ -2081,10 +2090,19 @@ input[value*="data-oe-translation-source-sha"] {
     visibility: visible;
 }
 .o_wanim_overflow_xy_hidden {
-    // "overflow-x: hidden" is added to the "body" and not to "html" because if
+    // "overflow-x: clip" is added to the "body" and not to "html" because if
     // it's added to "html", when a popup opens, the page scrolls to the top.
     > body {
-        overflow-x: hidden !important;
+        // We use clip instead of hidden to prevent scroll animations to an
+        // anchor from stopping working.
+        overflow-x: clip !important;
+        // For supporting browsers not updated since around 2021-2022.
+        @supports not (overflow-x: clip) {
+            overflow-x: hidden !important;
+        }
+        // Create a new formatting context. Without this, elements inside <body>
+        // may still overflow (e.g. animated elements in Firefox).
+        display: flow-root;
     }
     &.o_rtl, .o_rtl {
         // Fix for Chrome and Edge bug: resolves slow/stuck scrolling during
@@ -2902,19 +2920,4 @@ input[value*="data-oe-translation-source-sha"] {
 .o_nav_link_btn {
     border-radius: $btn-border-radius;
     padding: $btn-padding-y $btn-padding-x;
-}
-
-// o_facebook_page (Facebook page plugin)
-
-// Since October 2024, the Facebook mobile site (m.facebook.com) uses an
-// 'X-Frame-Options' header set to 'deny', preventing iframe embedding across
-// different domains. This header enforces a security policy restricting
-// cross-origin access to the content.
-// Meta has not provided any communication regarding this change. Until it is
-// resolved, we have no choice but to hide the iframe on mobile to prevent users
-// from seeing a "unavailable content" icon.
-@include media-breakpoint-down(md) {
-    .o_facebook_page {
-        display: none;
-    }
 }

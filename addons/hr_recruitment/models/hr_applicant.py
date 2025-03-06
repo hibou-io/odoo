@@ -139,7 +139,7 @@ class Applicant(models.Model):
     @api.depends('candidate_id')
     def _compute_other_applications_count(self):
         for applicant in self:
-            same_candidate_applications = max(len(applicant.candidate_id.applicant_ids) - 1, 0)
+            same_candidate_applications = max(len(applicant.with_context(active_test=False).candidate_id.applicant_ids) - 1, 0)
             if applicant.candidate_id:
                 domain = applicant.candidate_id._get_similar_candidates_domain()
                 similar_candidates = self.env['hr.candidate'].with_context(active_test=False).search(domain) - applicant.candidate_id
@@ -347,7 +347,7 @@ class Applicant(models.Model):
         ], ['ids:array_agg(id)'], groupby=['res_id'])
         attachments_by_candidate = {e['res_id']: e['ids'] for e in attachments_result}
         for applicant in applicants:
-            if applicant.company_id != applicant.candidate_id.company_id:
+            if applicant.candidate_id.company_id and applicant.company_id != applicant.candidate_id.company_id:
                 raise ValidationError(_("You cannot create an applicant in a different company than the candidate"))
             candidate_id = applicant.candidate_id.id
             if candidate_id not in attachments_by_candidate:
@@ -381,20 +381,21 @@ class Applicant(models.Model):
 
             new_interviewers = self.interviewer_ids - old_interviewers - self.env.user
             if new_interviewers:
-                notification_subject = _("You have been assigned as an interviewer for %s", self.display_name)
-                notification_body = _("You have been assigned as an interviewer for the Applicant %s", self.partner_name)
-                self.message_notify(
-                    res_id=self.id,
-                    model=self._name,
-                    partner_ids=new_interviewers.partner_id.ids,
-                    author_id=self.env.user.partner_id.id,
-                    email_from=self.env.user.email_formatted,
-                    subject=notification_subject,
-                    body=notification_body,
-                    email_layout_xmlid="mail.mail_notification_layout",
-                    record_name=self.display_name,
-                    model_description="Applicant",
-                )
+                for applicant in self:
+                    notification_subject = _("You have been assigned as an interviewer for %s", applicant.display_name)
+                    notification_body = _("You have been assigned as an interviewer for the Applicant %s", applicant.partner_name)
+                    applicant.message_notify(
+                        res_id=applicant.id,
+                        model=applicant._name,
+                        partner_ids=new_interviewers.partner_id.ids,
+                        author_id=self.env.user.partner_id.id,
+                        email_from=self.env.user.email_formatted,
+                        subject=notification_subject,
+                        body=notification_body,
+                        email_layout_xmlid="mail.mail_notification_layout",
+                        record_name=applicant.display_name,
+                        model_description="Applicant",
+                    )
         if vals.get('date_closed'):
             for applicant in self:
                 if applicant.job_id.date_to:
@@ -518,7 +519,7 @@ class Applicant(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'hr.applicant',
             'view_mode': 'list,kanban,form,pivot,graph,calendar,activity',
-            'domain': [('id', 'in', (self.candidate_id.applicant_ids - self + similar_candidates.applicant_ids).ids)],
+            'domain': [('id', 'in', (self.candidate_id.applicant_ids + similar_candidates.applicant_ids).ids)],
             'context': {
                 'active_test': False,
                 'search_default_stage': 1,
@@ -591,23 +592,21 @@ class Applicant(models.Model):
         self = self.with_context(default_user_id=False, mail_notify_author=True)  # Allows sending stage updates to the author
         stage = False
         candidate_defaults = {}
+        partner_name, email_from_normalized = tools.parse_contact_from_email(msg.get('from'))
+        candidate_domain = [
+            ("email_from", "=", email_from_normalized),
+        ]
         if custom_values and 'job_id' in custom_values:
             job = self.env['hr.job'].browse(custom_values['job_id'])
             stage = job._get_first_stage()
             candidate_defaults['company_id'] = job.company_id.id
+            candidate_domain = expression.AND([candidate_domain, [("company_id", "in", [job.company_id.id, False])]])
 
-        partner_name, email_from_normalized = tools.parse_contact_from_email(msg.get('from'))
-        candidate = self.env["hr.candidate"].search(
-            [
-                ("email_from", "=", email_from_normalized),
-            ],
-            limit=1,
-        ) or self.env["hr.candidate"].create(
-            {
+        candidate = self.env["hr.candidate"].search(candidate_domain, limit=1)\
+            or self.env["hr.candidate"].create({
                 "partner_name": partner_name or email_from_normalized,
                 **candidate_defaults,
-            }
-        )
+            })
 
         defaults = {
             'candidate_id': candidate.id,

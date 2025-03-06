@@ -3,16 +3,16 @@
 # 	* sale_timesheet
 # 
 # Translators:
-# Malaz Abuidris <msea@odoo.com>, 2024
 # Wil Odoo, 2024
+# Malaz Abuidris <msea@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-16 13:40+0000\n"
+"POT-Creation-Date: 2025-01-27 13:04+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2025\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -73,6 +73,8 @@ msgid ""
 "distribution of the sale order item '%(so_line_name)s' linked to the "
 "timesheet."
 msgstr ""
+"الخطة (الخطط) التحليلية '%(missing_plan_names)s' مطلوبة في التوزيع التحليلي "
+"لبند أمر البيع '%(so_line_name)s' المرتبط بالجدول الزمني. "
 
 #. module: sale_timesheet
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.timesheet_sale_page
@@ -552,6 +554,11 @@ msgid ""
 "                    Several activities are often organized all over the year, such as weekly\n"
 "                    sports sessions, team building events, monthly drink, and much more"
 msgstr ""
+"لدى كل موظف الفرصة لرؤية البصمة التي يتركها عمله.\n"
+"                    بمقدورك أن تساهم بشكل كبير في نجاح الشركة.\n"
+"                    <br>\n"
+"                    يتم تنظيم العديد من الأنشطة على مدار العام، كالتجمعات\n"
+"                    الرياضية الأسبوعية وفعاليات بناء الفِرَق، والمشروبات الشهرية وغير ذلك الكثير "
 
 #. module: sale_timesheet
 #: model_terms:hr.job,website_description:sale_timesheet.job_engineer
@@ -1007,7 +1014,7 @@ msgstr "مارس أي رياضة مع زملائك، <br>وسوف نقوم بت�
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_project__pricing_type
 #: model:ir.model.fields,field_description:sale_timesheet.field_project_task__pricing_type
 msgid "Pricing"
-msgstr "التسعير"
+msgstr "الأسعار "
 
 #. module: sale_timesheet
 #: model:ir.model,name:sale_timesheet.model_product_template
@@ -1292,6 +1299,15 @@ msgstr "يتطلب تطبيق الجداول الزمنية وجود المنت�
 
 #. module: sale_timesheet
 #. odoo-python
+#: code:addons/sale_timesheet/models/product_template.py:0
+msgid ""
+"The %s product is required by the Timesheets app and cannot be linked to a "
+"company."
+msgstr ""
+"يتطلب تطبيق الجداول الزمنية وجود المنتج %s ولا يمكن أن يكون مرتبطاً بشركة. "
+
+#. module: sale_timesheet
+#. odoo-python
 #: code:addons/sale_timesheet/wizard/project_create_invoice.py:0
 msgid "The selected Sales Order should contain something to invoice."
 msgstr "ينبغي أن يحتوي أمر المبيعات المحدد على بنود لفوترتها."
@@ -1502,6 +1518,7 @@ msgstr "الجداول الزمنية التي يتم اعتبارها عند ف
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.project_project_view_form
 msgid "Timesheets without a sales order item are reported as"
 msgstr ""
+"يتم الإبلاغ عن الجداول الزمنية التي لا تحتوي على عنصر أمر مبيعات على أنها "
 
 #. module: sale_timesheet
 #: model_terms:ir.ui.view,arch_db:sale_timesheet.project_update_default_description

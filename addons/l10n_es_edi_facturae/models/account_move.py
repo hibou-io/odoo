@@ -114,6 +114,12 @@ class AccountMove(models.Model):
             ('19', "Payment by card"),
         ], string="Payment Means", default='04')
 
+    def _get_fields_to_detach(self):
+        # EXTENDS account
+        fields_list = super()._get_fields_to_detach()
+        fields_list.append("l10n_es_edi_facturae_xml_file")
+        return fields_list
+
     def _l10n_es_edi_facturae_get_default_enable(self):
         self.ensure_one()
         return not self.invoice_pdf_report_id \
@@ -356,6 +362,10 @@ class AccountMove(models.Model):
         if self.move_type == "entry":
             return False
 
+        operation_date = None
+        if self.delivery_date and self.delivery_date != self.invoice_date:
+            operation_date = self.delivery_date.isoformat()
+
         # Multi-currencies.
         eur_curr = self.env['res.currency'].search([('name', '=', 'EUR')])
         inv_curr = self.currency_id
@@ -372,6 +382,7 @@ class AccountMove(models.Model):
             'InvoiceClass': 'OO',
             'Corrective': self._l10n_es_edi_facturae_get_corrective_data(),
             'InvoiceIssueData': {
+                'OperationDate': operation_date,
                 'ExchangeRateDetails': conversion_needed,
                 'ExchangeRate': f"{round(self.invoice_currency_rate, 4):.4f}",
                 'LanguageName': self._context.get('lang', 'en_US').split('_')[0],

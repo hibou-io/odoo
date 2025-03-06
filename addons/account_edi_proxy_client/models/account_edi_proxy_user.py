@@ -152,7 +152,10 @@ class AccountEdiProxyClientUser(models.Model):
 
         :param company: the company of the user.
         '''
-        private_key_sudo = self.env['certificate.key'].sudo()._generate_rsa_private_key(company, name=f"{self.id_client}_{self.edi_identification}.key")
+        private_key_sudo = self.env['certificate.key'].sudo()._generate_rsa_private_key(
+            company,
+            name=f"{proxy_type}_{edi_mode}_{company.id}.key",
+        )
         edi_identification = self._get_proxy_identification(company, proxy_type)
         if edi_mode == 'demo':
             # simulate registration
@@ -170,6 +173,10 @@ class AccountEdiProxyClientUser(models.Model):
             except AccountEdiProxyError as e:
                 raise UserError(e.message)
             if 'error' in response:
+                if response['error'] == 'A user already exists with this identification.':
+                    # Note: Peppol IAP errors weren't made properly with error code that are then translated on
+                    # Odoo side. We are for now forced to check the error message.
+                    raise UserError(_('A user already exists with theses credentials on our server. Please check your information.'))
                 raise UserError(response['error'])
 
         return self.create({

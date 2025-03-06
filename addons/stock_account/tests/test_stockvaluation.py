@@ -105,7 +105,7 @@ class TestStockValuationBase(TransactionCase):
             ('account_id', '=', self.stock_valuation_account.id),
         ], order='date, id')
 
-    def _make_in_move(self, product, quantity, unit_cost=None):
+    def _make_in_move(self, product, quantity, unit_cost=None, location_dest_id=False, picking_type_id=False):
         """ Helper to create and validate a receipt move.
         """
         unit_cost = unit_cost or product.standard_price
@@ -113,11 +113,11 @@ class TestStockValuationBase(TransactionCase):
             'name': 'in %s units @ %s per unit' % (str(quantity), str(unit_cost)),
             'product_id': product.id,
             'location_id': self.env.ref('stock.stock_location_suppliers').id,
-            'location_dest_id': self.env.ref('stock.stock_location_stock').id,
+            'location_dest_id': location_dest_id or self.env.ref('stock.stock_location_stock').id,
             'product_uom': self.env.ref('uom.product_uom_unit').id,
             'product_uom_qty': quantity,
             'price_unit': unit_cost,
-            'picking_type_id': self.env.ref('stock.picking_type_in').id,
+            'picking_type_id': picking_type_id or self.env.ref('stock.picking_type_in').id,
         })
 
         in_move._action_confirm()
@@ -1549,9 +1549,8 @@ class TestStockValuation(TestStockValuationBase):
                 'quantity': 10.0,
             })]
         })
-        move2.picked = True
-        move2._action_done()
-
+        # Move is automatically set to Done as it is linked to a Done picking
+        self.assertEqual(move2.state, 'done')
         self.assertEqual(move2.stock_valuation_layer_ids.value, 200.0)
         self.assertEqual(move2.stock_valuation_layer_ids.remaining_qty, 10.0)
         self.assertEqual(move2.stock_valuation_layer_ids.unit_cost, 20.0)
@@ -4280,3 +4279,48 @@ class TestStockValuation(TestStockValuationBase):
 
         self.assertEqual(move.quantity, 24)
         self.assertRecordValues(move.stock_valuation_layer_ids, [{'quantity': 12}, {'quantity': 12}])
+
+    def test_stock_valuation_layer_revaluation_with_branch_company(self):
+        """
+        Test that the product price is updated in the branch company
+        by taking into account only the stock valuation layer of the branch company.
+        """
+        self.assertEqual(self.product1.standard_price, 0)
+        self.product1.categ_id.property_cost_method = 'average'
+        self._make_in_move(self.product1, 1, unit_cost=20)
+        self.assertEqual(self.product1.standard_price, 20)
+        # create a branch company
+        branch = self.env['res.company'].create({
+            'name': "Branch A",
+            'parent_id': self.env.company.id,
+        })
+        # Create a move in the branch company
+        self.env.company = branch
+        self.product1.with_company(branch).categ_id.property_cost_method = 'average'
+        warehouse = self.env['stock.warehouse'].search([('company_id', '=', branch.id)], limit=1)
+        self._make_in_move(self.product1, 1, unit_cost=30, location_dest_id=warehouse.lot_stock_id.id, picking_type_id=warehouse.in_type_id.id)
+        self.assertEqual(self.product1.with_company(branch).standard_price, 30)
+
+    def test_action_done_with_state_already_done(self):
+        """ This test ensure that calling _action_done on a move already done
+        has no effect on the valuation.
+        """
+        self.product1.standard_price = 10
+
+        in_move = self.env['stock.move'].create({
+            'name': 'IN 10 units',
+            'location_id': self.supplier_location.id,
+            'location_dest_id': self.stock_location.id,
+            'product_id': self.product1.id,
+            'product_uom_qty': 10.0,
+            'picked': True,
+            'quantity': 10,
+        })
+        # Call _action_done twice, only 1 layer should be created
+        in_move._action_done()
+        self.assertEqual(in_move.state, 'done')
+        in_move._action_done()
+
+        self.assertEqual(len(in_move.stock_valuation_layer_ids), 1)
+        self.assertEqual(in_move.stock_valuation_layer_ids.value, 100)
+        self.assertEqual(in_move.stock_valuation_layer_ids.quantity, 10)

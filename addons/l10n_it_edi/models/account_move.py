@@ -188,6 +188,12 @@ class AccountMove(models.Model):
                 result = super(AccountMove, self.with_context(disable_onchange_name_predictive=True))._extend_with_attachments(l10n_it_attachments, new)
         return result or super()._extend_with_attachments(attachments, new)
 
+    def _get_fields_to_detach(self):
+        # EXTENDS account
+        fields_list = super()._get_fields_to_detach()
+        fields_list.append('l10n_it_edi_attachment_file')
+        return fields_list
+
     # -------------------------------------------------------------------------
     # Business actions
     # -------------------------------------------------------------------------
@@ -246,6 +252,37 @@ class AccountMove(models.Model):
         for move in self:
             move.l10n_it_edi_state = False
         return super().button_draft()
+
+    def _get_invoice_legal_documents(self, filetype, allow_fallback=False):
+        # EXTENDS 'account'
+        if filetype == 'fatturapa':
+            if fatturapa_attachment := self.l10n_it_edi_attachment_id:
+                return {
+                    'filename': fatturapa_attachment.name,
+                    'filetype': 'xml',
+                    'content': fatturapa_attachment.raw,
+                }
+        return super()._get_invoice_legal_documents(filetype, allow_fallback=allow_fallback)
+
+    def get_extra_print_items(self):
+        # EXTENDS 'account' - add possibility to download all FatturaPA XML files
+        print_items = super().get_extra_print_items()
+        if self.l10n_it_edi_attachment_id:
+            print_items.append({
+                'key': 'download_xml_fatturapa',
+                'description': _('XML FatturaPA'),
+                **self.action_invoice_download_fatturapa(),
+            })
+        return print_items
+
+    def action_invoice_download_fatturapa(self):
+        if invoices_with_fatturapa := self.filtered('l10n_it_edi_attachment_id'):
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/account/download_invoice_documents/{",".join(map(str, invoices_with_fatturapa.ids))}/fatturapa',
+                'target': 'download',
+            }
+        return False
 
     # -------------------------------------------------------------------------
     # Helpers
@@ -476,7 +513,6 @@ class AccountMove(models.Model):
                 line = base_line['record']
                 if line.price_subtotal < 0 and line._get_downpayment_lines():
                     downpayment_lines.append(base_line)
-                    base_lines.remove(base_line)
 
             if float_compare(quantity, 0, 2) < 0:
                 # Negative quantity is refused by SDI, so we invert quantity and price_unit to keep the price_subtotal
@@ -484,9 +520,11 @@ class AccountMove(models.Model):
                     'quantity': -quantity,
                     'price_unit': -price_unit,
                 })
+        for downpayment_line in downpayment_lines:
+            base_lines.remove(downpayment_line)
 
         dispatched_results = self.env['account.tax']._dispatch_negative_lines(base_lines)
-        base_lines = dispatched_results['result_lines'] + dispatched_results['orphan_negative_lines'] + downpayment_lines
+        base_lines = dispatched_results['result_lines'] + dispatched_results['nulled_candidate_lines'] + dispatched_results['orphan_negative_lines'] + downpayment_lines
         AccountTax._round_base_lines_tax_details(base_lines, self.company_id, tax_lines=tax_lines)
         base_lines_aggregated_values = AccountTax._aggregate_base_lines_tax_details(base_lines, self._l10n_it_edi_grouping_function_base_lines)
         self._l10n_it_edi_add_base_lines_xml_values(base_lines_aggregated_values, is_downpayment)

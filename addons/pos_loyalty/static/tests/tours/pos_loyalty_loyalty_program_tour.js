@@ -204,6 +204,18 @@ registry.category("web_tour.tours").add("PosLoyaltyDontGrantPointsForRewardOrder
         ].flat(),
 });
 
+registry.category("web_tour.tours").add("PosLoyaltyNextOrderCouponExpirationDate", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+
+            ProductScreen.addOrderline("Desk Organizer", "3"),
+
+            PosLoyalty.finalizeOrder("Cash", "15.3"),
+        ].flat(),
+});
+
 registry.category("web_tour.tours").add("PosComboCheapestRewardProgram", {
     steps: () =>
         [
@@ -243,5 +255,17 @@ registry.category("web_tour.tours").add("PosComboSpecificProductProgram", {
             Order.hasLine({ productName: "10% on Office Combo" }),
             PosLoyalty.orderTotalIs("216.00"),
             PosLoyalty.finalizeOrder("Cash", "216.00"),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("PosCheapestProductTaxInclude", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.clickDisplayedProduct("Product"),
+            ProductScreen.addOrderline("Desk Organizer", "1"),
+            Order.hasLine({ productName: "10% on the cheapest product" }),
+            PosLoyalty.orderTotalIs("6.00"),
         ].flat(),
 });

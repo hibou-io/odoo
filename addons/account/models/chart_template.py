@@ -99,7 +99,7 @@ class AccountChartTemplate(models.AbstractModel):
         field = self.env['ir.module.module']._fields['account_templates']
         modules = (
             self.env.cache.get_records(self.env['ir.module.module'], field)
-            or self.env['ir.module.module'].search([])
+            or self.env['ir.module.module'].sudo().search([])
         )
 
         return {
@@ -264,6 +264,8 @@ class AccountChartTemplate(models.AbstractModel):
             if prop.startswith('property_'):
                 template_data.pop(prop)
         data.pop('account.reconcile.model', None)
+        if 'res.company' in data:
+            data['res.company'][company.id].setdefault('anglo_saxon_accounting', company.anglo_saxon_accounting)
 
         for xmlid, journal_data in list(data.get('account.journal', {}).items()):
             if self.ref(xmlid, raise_if_not_found=False):
@@ -525,16 +527,13 @@ class AccountChartTemplate(models.AbstractModel):
                     try:
                         values[fname] = self.ref(value).id if value not in ('', 'False', 'None') else False
                     except ValueError:
-                        if model != self.env['res.company']:
+                        if model._name == 'res.company':
+                            # Try a fallback on the company when reloading/loading on a branch
+                            values[fname] = self.env.company[fname] or self.env.company.root_id[fname] or False
+                        else:
                             _logger.warning("Failed when trying to recover %s for field=%s", value, field)
                             failed_fields.append(fname)
-
-                        # We can't find the record referenced in the chart template in our database.
-                        # This might happen when we're creating a branch and the parent company has deleted the
-                        # referenced record and replaced it with something else.
-                        #
-                        # In this case, we try looking for the record already set on the company or its root.
-                        values[fname] = self.env.company[fname] or self.env.company.parent_ids[0][fname] or False
+                            values[fname] = False
                 elif field.type in ('one2many', 'many2many') and isinstance(value[0], (list, tuple)):
                     for i, (command, _id, *last_part) in enumerate(value):
                         if last_part:
@@ -1158,7 +1157,15 @@ class AccountChartTemplate(models.AbstractModel):
                     format_tag = re.sub(r'\s+', ' ', tag.strip())
                     mapped_tag = tags.get(format_tag)
                     if not mapped_tag:
-                        raise UserError(self.env._('Error while loading the localization. You should probably update your localization app first.'))
+                        country = self.env['res.country'].browse(country_id)
+                        message = self.env._(
+                            'Error while loading the localization: missing tax tag %(tag_name)s for country %(country_name)s. You should probably update your localization app first.',
+                            tag_name=format_tag, country_name=country.name)
+                        if not self._context.get('ignore_missing_tags'):
+                            raise UserError(message)
+                        else:
+                            _logger.error(message)
+                            continue
                     res.append(mapped_tag)
             return res
         return mapping_getter
@@ -1368,9 +1375,11 @@ class AccountChartTemplate(models.AbstractModel):
 
         # Gather translations for records that are created from the chart_template data
         for chart_template, chart_companies in groupby(companies, lambda c: c.chart_template):
-            template_data = template_data or self.env['account.chart.template']._get_chart_template_data(chart_template)
-            template_data.pop('template_data', None)
-            for mname, data in template_data.items():
+            chart_template_data = template_data or self.env['account.chart.template'] \
+                .with_context(ignore_missing_tags=True) \
+                ._get_chart_template_data(chart_template)
+            chart_template_data.pop('template_data', None)
+            for mname, data in chart_template_data.items():
                 for _xml_id, record in data.items():
                     fnames = {fname.split('@')[0] for fname in record if fname != '__translation_module__'}
                     for lang in langs:

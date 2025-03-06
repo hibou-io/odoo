@@ -153,6 +153,26 @@ registry.category("web_tour.tours").add("ProductScreenTour", {
         ].flat(),
 });
 
+registry.category("web_tour.tours").add("FloatingOrderTour", {
+    checkDelay: 50,
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            ProductScreen.orderIsEmpty(),
+            ProductScreen.clickDisplayedProduct("Desk Organizer", true, "1.0", "5.10"),
+            ProductScreen.clickDisplayedProduct("Desk Organizer", true, "2.0", "10.20"),
+            ProductScreen.productCardQtyIs("Desk Organizer", "2.0"),
+            Chrome.createFloatingOrder(),
+            ProductScreen.clickDisplayedProduct("Letter Tray", true, "1.0", "5.28"),
+            ProductScreen.clickDisplayedProduct("Letter Tray", true, "2.0", "10.56"),
+            ProductScreen.selectFloatingOrder(0),
+            ProductScreen.productCardQtyIs("Desk Organizer", "2.0"),
+            ProductScreen.isShown(),
+            ProductScreen.selectFloatingOrder(1),
+            ProductScreen.productCardQtyIs("Letter Tray", "2.0"),
+        ].flat(),
+});
+
 registry.category("web_tour.tours").add("FiscalPositionNoTax", {
     checkDelay: 50,
     steps: () =>
@@ -268,6 +288,22 @@ registry.category("web_tour.tours").add("limitedProductPricelistLoading", {
         ].flat(),
 });
 
+registry.category("web_tour.tours").add("multiPricelistRulesTour", {
+    checkDelay: 50,
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.clickDisplayedProduct("Test Product 1"),
+            ProductScreen.selectedOrderlineHas("Test Product 1", "1.0", "200.0"),
+            ProductScreen.clickDisplayedProduct("Test Product 1"),
+            ProductScreen.selectedOrderlineHas("Test Product 1", "2.0", "200.0"), // 100.0 * 2
+            ProductScreen.clickDisplayedProduct("Test Product 1"),
+            ProductScreen.selectedOrderlineHas("Test Product 1", "3.0", "150.0"), // 50.0 * 3
+            Chrome.endTour(),
+        ].flat(),
+});
+
 registry.category("web_tour.tours").add("MultiProductOptionsTour", {
     checkDelay: 50,
     steps: () =>
@@ -310,6 +346,25 @@ registry.category("web_tour.tours").add("DecimalCommaOrderlinePrice", {
         ].flat(),
 });
 
+registry.category("web_tour.tours").add("SearchProducts", {
+    checkDelay: 50,
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.searchProduct("chair"),
+            ProductScreen.clickDisplayedProduct("Test chair 1"),
+            ProductScreen.clickDisplayedProduct("Test CHAIR 2"),
+            ProductScreen.clickDisplayedProduct("Test sofa"),
+            ProductScreen.searchProduct("CHAIR"),
+            ProductScreen.clickDisplayedProduct("Test chair 1"),
+            ProductScreen.clickDisplayedProduct("Test CHAIR 2"),
+            ProductScreen.clickDisplayedProduct("Test sofa"),
+            ProductScreen.searchProduct("clémentine"),
+            ProductScreen.clickDisplayedProduct("clémentine"),
+        ].flat(),
+});
+
 registry.category("web_tour.tours").add("CheckProductInformation", {
     checkDelay: 50,
     steps: () =>
@@ -344,7 +399,7 @@ registry.category("web_tour.tours").add("PosCustomerAllFieldsDisplayed", {
             PartnerList.checkContactValues(
                 "John Doe",
                 "1 street of astreet",
-                "1234567890",
+                "9898989899",
                 "0987654321",
                 "john@doe.com"
             ),
@@ -360,7 +415,7 @@ registry.category("web_tour.tours").add("PosCustomerAllFieldsDisplayed", {
             ProductScreenPartnerList.searchCustomerValueAndClear("26432685463"),
             ProductScreenPartnerList.searchCustomerValueAndClear("Acity"),
             ProductScreenPartnerList.searchCustomerValueAndClear("United States"),
-            ProductScreenPartnerList.searchCustomerValueAndClear("1234567890"),
+            ProductScreenPartnerList.searchCustomerValueAndClear("9898989899"),
             ProductScreenPartnerList.searchCustomerValueAndClear("0987654321"),
             ProductScreen.clickPartnerButton(),
             PartnerList.searchCustomerValue("john@doe.com"),
@@ -373,28 +428,28 @@ registry.category("web_tour.tours").add("PosCategoriesOrder", {
             Chrome.startPoS(),
             Dialog.confirm("Open Register"),
             {
-                trigger: '.category-button > span:contains("AAA")',
+                trigger: '.category-button:eq(0) > span:contains("AAA")',
             },
             {
-                trigger: '.category-button > span:contains("AAB")',
+                trigger: '.category-button:eq(1) > span:contains("AAB")',
             },
             {
-                trigger: '.category-button > span:contains("AAC")',
+                trigger: '.category-button:eq(2) > span:contains("AAC")',
             },
             {
-                trigger: '.category-button > span:contains("AAB")',
+                trigger: '.category-button:eq(1) > span:contains("AAB")',
                 run: "click",
             },
             ProductScreen.productIsDisplayed("Product in AAB and AAX", 0),
             {
-                trigger: '.category-button > span:contains("AAX")',
+                trigger: '.category-button:eq(2) > span:contains("AAX")',
             },
             {
-                trigger: '.category-button > span:contains("AAX")',
+                trigger: '.category-button:eq(2) > span:contains("AAX")',
                 run: "click",
             },
             {
-                trigger: '.category-button > span:contains("AAY")',
+                trigger: '.category-button:eq(3) > span:contains("AAY")',
             },
         ].flat(),
 });
@@ -434,8 +489,8 @@ registry.category("web_tour.tours").add("ProductSearchTour", {
             ProductScreen.productIsDisplayed("Test Product 1").map(negateStep),
             ProductScreen.productIsDisplayed("Test Product 2").map(negateStep),
             ProductScreen.searchProduct("Test Produt"), // typo to test the fuzzy search
-            ProductScreen.productIsDisplayed("Test Product 1"),
-            ProductScreen.productIsDisplayed("Test Product 2"),
+            ProductScreen.productIsDisplayed("Test Product 1").map(negateStep),
+            ProductScreen.productIsDisplayed("Test Product 2").map(negateStep),
             ProductScreen.searchProduct("1234567890123"),
             ProductScreen.productIsDisplayed("Test Product 2").map(negateStep),
             ProductScreen.productIsDisplayed("Test Product 1"),

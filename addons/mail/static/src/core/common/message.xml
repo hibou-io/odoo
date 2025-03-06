@@ -4,7 +4,7 @@
     <t t-name="mail.Message">
         <div t-if="message.isNotification" class="o-mail-NotificationMessage text-break mx-auto text-muted opacity-75 px-3 text-center smaller" t-on-click="onClickNotificationMessage"  t-att-class="props.className" t-ref="root">
             <i t-if="message.notificationIcon" t-attf-class="{{ message.notificationIcon }} me-1"/>
-            <span class="o-mail-NotificationMessage-author d-inline" t-if="message.author and !message.body.includes(escape(message.author.name))" t-esc="message.author.name"/> <t t-out="message.body"/>
+            <span class="o-mail-NotificationMessage-author d-inline" t-if="authorName and !message.body.includes(escape(authorName))" t-esc="authorName"/> <t t-out="message.body"/>
         </div>
         <ActionSwiper t-else="" onRightSwipe="hasTouch() and props.thread?.eq(store.inbox) ? { action: () => this.message.setDone(), bgColor: 'bg-success', icon: 'fa-check-circle' } : undefined">
             <div class="o-mail-Message position-relative rounded-0"
@@ -24,7 +24,7 @@
                         </div>
                         <t t-elif="message.isPending" t-call="mail.Message.pendingStatus"/>
                         <t t-elif="!message.is_transient">
-                            <small t-if="isActive and props.showDates" class="o-mail-Message-date o-xsmaller mt-2" t-att-title="message.datetimeShort">
+                            <small t-if="isActive and props.showDates" class="o-mail-Message-date o-xsmaller mt-2 text-center lh-1" t-att-title="message.datetimeShort">
                                 <t t-esc="message.dateSimple"/>
                             </small>
                         </t>
@@ -44,7 +44,7 @@
                                     on <a t-att-href="message.resUrl"><t t-esc="message.thread.displayName"/></a>
                                 </t>
                                 <t t-else="">
-                                    (from <a t-att-href="message.resUrl"><t t-esc="message.thread.prefix"/><t t-esc="message.thread.displayName"/></a>)
+                                    (from <a t-att-href="message.resUrl"><t t-esc="message.thread.prefix"/><t t-esc="message.thread.displayName or message.default_subject"/></a>)
                                 </t>
                             </small>
                             <div t-if="props.message.scheduledDatetime" t-att-class="{ 'ms-2': (props.isInChatWindow and isAlignedRight) or (isPersistentMessageFromAnotherThread) }" t-att-title="props.message.scheduledDateSimple">
@@ -161,13 +161,16 @@
                     </button>
                 </t>
                 <div t-if="messageActions.actions.length gt quickActionCount" class="d-flex rounded-0">
-                    <Dropdown state="optionsDropdown" position="props.message.threadAsNewest  ? 'top-start' : 'bottom-start'" menuClass="'d-flex flex-column py-0 o-mail-Message-moreMenu'" >
+                    <Dropdown state="optionsDropdown" position="props.message.threadAsNewest  ? 'top-start' : 'bottom-start'" menuClass="'d-flex flex-column py-0 o-mail-Message-moreMenu bg-100 border-secondary'" >
                         <t t-call="mail.Message.expandAction"/>
                         <t t-set-slot="content">
                             <t t-foreach="messageActions.actions.slice(quickActionCount - 1)" t-as="action" t-key="action.id">
-                                <DropdownItem class="'px-2 py-1 d-flex align-items-center rounded-0'" onSelected="action.onClick" attrs="{ title: action.title}">
-                                    <i class="fa-fw" t-att-class="action.icon"/>
-                                    <span class="mx-2" t-esc="action.title"/>
+                                <DropdownItem class="'px-2 py-1 d-flex align-items-center rounded-0 ' + action.btnClass" onSelected="action.onClick" attrs="{ title: action.title}">
+                                    <t t-if="action.callComponent" t-component="action.callComponent" t-props="action.props"/>
+                                    <t t-else="">
+                                        <i class="fa-fw" t-att-class="action.icon"/>
+                                        <span class="mx-2" t-esc="action.title"/>
+                                    </t>
                                 </DropdownItem>
                             </t>
                         </t>
@@ -194,14 +197,14 @@
 
 <t t-name="mail.Message.notification">
     <div t-if="message.thread?.eq(props.thread) and message.notifications.length > 0" class="mx-1">
-        <span class="o-mail-Message-notification cursor-pointer" t-att-class="message.failureNotifications.length > 0 ? 'text-danger' : text-600" role="button" tabindex="0" t-on-click="onClickNotification">
-            <i t-att-class="message.notifications[0].icon" role="img" aria-label="Delivery failure"/> <span t-if="message.notifications[0].label" t-out="message.notifications[0].label"/>
+        <span class="o-mail-Message-notification cursor-pointer opacity-100-hover" t-att-class="message.failureNotifications.length > 0 ? 'text-danger opacity-75' : 'opacity-50'" role="button" tabindex="0" t-on-click="onClickNotification">
+            <i t-att-class="message.notifications[0].icon" role="img" aria-label="Delivery failure"/> <span class="fw-bold small" t-if="message.notifications[0].label" t-out="message.notifications[0].label"/>
         </span>
     </div>
 </t>
 
 <t t-name="mail.Message.bodyAsNotification">
-    <div class="o-mail-Message-body text-break mb-0 w-100">
+    <div class="o-mail-Message-body text-break mb-0 w-100" t-att-class="{'o-note': message.message_type == 'notification'}">
         <t t-out="props.messageSearch?.highlight(message.body) ?? message.body"/>
     </div>
 </t>

@@ -8,11 +8,19 @@ registry.category("web_tour.tours").add("website_livechat_chatbot_flow_tour", {
     steps: () => [
         {
             trigger: messagesContain("Hello! I'm a bot!"),
-            run: () => {
-                // make chat bot faster for this tour
-                odoo.__WOWL_DEBUG__.root.env.services[
-                    "im_livechat.chatbot"
-                ].chatbot.script.isLivechatTourRunning = true;
+            async run() {
+                await new Promise((resolve) => {
+                    const interval = setInterval(() => {
+                        if (odoo.__WOWL_DEBUG__.root) {
+                            // make chat bot faster for this tour
+                            odoo.__WOWL_DEBUG__.root.env.services[
+                                "im_livechat.chatbot"
+                            ].chatbot.script.isLivechatTourRunning = true;
+                            clearInterval(interval);
+                            resolve();
+                        }
+                    }, 100);
+                });
             },
         },
         {
@@ -30,7 +38,7 @@ registry.category("web_tour.tours").add("website_livechat_chatbot_flow_tour", {
             },
         },
         {
-            trigger: '.o-livechat-root:shadow li:contains("I want to buy the software")',
+            trigger: '.o-livechat-root:shadow li:contains("I\'d like to buy the software")',
             run: "click",
         },
         {
@@ -40,7 +48,7 @@ registry.category("web_tour.tours").add("website_livechat_chatbot_flow_tour", {
             async run() {
                 await contains(".o-mail-Message-actions [title='Add a Reaction']", {
                     target: this.anchor.getRootNode(),
-                    parent: [".o-mail-Message", { text: "I want to buy the software" }],
+                    parent: [".o-mail-Message", { text: "I'd like to buy the software" }],
                 });
             },
         },

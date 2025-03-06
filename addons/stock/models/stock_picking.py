@@ -1053,8 +1053,20 @@ class Picking(models.Model):
                     'message': partner.picking_warn_msg
                 }}
 
+    @api.onchange('location_dest_id')
+    def _onchange_location_dest_id(self):
+        moves = self.move_ids_without_package
+        if any(not move._origin for move in moves):
+            # Because of an ORM limitation, the new SM defined in self.move_ids_without_package are not set in
+            # self.move_ids. Since the user edits the destination location, the ORM will check which SM must be
+            # recomputed (cf dependencies of SM._compute_location_dest_id). But, to do so, the ORM will look at
+            # self.move_ids, i.e.: it will not call the compute method for the new SM. We therefore have to
+            # manually trigger the compute method
+            self.env.add_to_compute(moves._fields['location_dest_id'], moves)
+
     @api.onchange('location_id')
     def _onchange_location_id(self):
+        (self.move_ids | self.move_ids_without_package).location_id =  self.location_id
         for move in self.move_ids.filtered(lambda m: m.move_orig_ids):
             for ml in move.move_line_ids:
                 parent_path = [int(loc_id) for loc_id in ml.location_id.parent_path.split('/')[:-1]]
@@ -1288,9 +1300,9 @@ class Picking(models.Model):
                             'move_line_ids': [(6, 0, move_lines_to_pack.ids)],
                             'company_id': pickings.company_id.id,
                         })
-                    # Propagate the result package in the next move for disposable packages only.
-                    if package.package_use == 'disposable':
-                        move_lines_to_pack.write({'result_package_id': package.id})
+                        # Propagate the result package in the next move for disposable packages only.
+                        if package.package_use == 'disposable':
+                            move_lines_to_pack.write({'result_package_id': package.id})
                 else:
                     move_lines_in_package_level = move_lines_to_pack.filtered(lambda ml: ml.move_id.package_level_id)
                     move_lines_without_package_level = move_lines_to_pack - move_lines_in_package_level
