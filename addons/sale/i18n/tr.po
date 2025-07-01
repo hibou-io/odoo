@@ -36,14 +36,16 @@
 # Tugay Hatıl <tugayh@projetgrup.com>, 2025
 # Melih Melik Sonmez, 2025
 # Hakan Türkün, 2025
+# Wil Odoo, 2025
+# Deniz Guvener_Odoo <degu@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:04+0000\n"
+"POT-Creation-Date: 2025-06-13 18:37+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Hakan Türkün, 2025\n"
+"Last-Translator: Deniz Guvener_Odoo <degu@odoo.com>, 2025\n"
 "Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -414,7 +416,7 @@ msgid ""
 "            amounting in <span style=\"font-weight: bold;\" t-out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ 10.00</span> is available.\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <t t-out=\"doc_name or ''\">quotation</t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\"/>\n"
+"            <t t-out=\"doc_name or ''\">quotation</t> <span style=\"font-weight: bold;\" t-out=\"object.name or ''\">S00052</span>\n"
 "            <t t-if=\"object.origin\">\n"
 "                (with reference: <t t-out=\"object.origin or ''\">S00052</t> )\n"
 "            </t>\n"
@@ -698,6 +700,11 @@ msgstr ""
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
+msgid "<strong class=\"d-block mt-3\">Shipping Address</strong>"
+msgstr "<strong class=\"d-block mt-3\">Teslimat Adresi</strong>"
+
+#. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
 msgid "<strong class=\"mr16\">Subtotal</strong>"
 msgstr "<strong class=\"mr16\">Ara Toplam</strong>"
@@ -716,11 +723,6 @@ msgstr "<strong>Mali Koşul Açıklaması:</strong>"
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "<strong>Salesperson</strong>"
 msgstr "<strong>Satış Temsilcisi</strong>"
-
-#. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
-msgid "<strong>Shipping Address</strong>"
-msgstr "<strong>Teslimat adresi</strong>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
@@ -1751,7 +1753,7 @@ msgstr "Varsayılan Teklif Geçerliliği"
 #: model:ir.model.fields,field_description:sale.field_sale_order__company_price_include
 #: model:ir.model.fields,field_description:sale.field_sale_order_line__company_price_include
 msgid "Default Sales Price Include"
-msgstr ""
+msgstr "Varsayılan Satış Fiyatı Dahil"
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_sale_order__company_price_include
@@ -1760,6 +1762,8 @@ msgid ""
 "Default on whether the sales price used on the product and invoices with "
 "this Company includes its taxes."
 msgstr ""
+"Bu Şirket ile ürün ve faturalarda kullanılan satış fiyatının vergilerini "
+"içerip içermediği konusunda varsayılan."
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
@@ -2084,6 +2088,11 @@ msgid "Email"
 msgstr "E-Posta"
 
 #. module: sale
+#: model:ir.model,name:sale.model_mail_compose_message
+msgid "Email composition wizard"
+msgstr "E-posta yazma sihirbazı"
+
+#. module: sale
 #: model:ir.model.fields,help:sale.field_res_config_settings__invoice_mail_template_id
 msgid "Email sent to the customer once the invoice is available."
 msgstr "Fatura hazır olduğunda müşteriye gönderilen e-posta."
@@ -2159,8 +2168,8 @@ msgid ""
 "customers or sales orders/invoices.The default value comes from the "
 "customer."
 msgstr ""
-"Mali pozisyonlar, belirli müşteriler veya müşteri siparişleri / faturalar "
-"için vergi ve hesapları uyarlamak için kullanılır. Varsayılan değer "
+"Mali pozisyonlar, belirli müşteriler veya satış siparişleri/faturaları için "
+"vergi ve hesapları uyarlamak amacıyla kullanılır ve varsayılan değer "
 "müşteriden gelir."
 
 #. module: sale
@@ -2409,7 +2418,7 @@ msgstr "Ürünler İçe Aktarma Şablonu"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.product_view_search_catalog
 msgid "In the Order"
-msgstr ""
+msgstr "Siparişte"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
@@ -2508,9 +2517,9 @@ msgid ""
 "has invoiced this month. It is used to compute the progression ratio of the "
 "current and target revenue on the kanban view."
 msgstr ""
-"Bu ay faturalandırıimış gelir miktarı. Bu, satış kanalının bu ay "
-"faturalandırdığı tutar. Mevcut ve hedef gelirin ilerleme oranını kanban "
-"görünümünde hesaplamak için kullanılır."
+"İçinde bulunulan aya ait fatura geliri. Bu, satış kanalının bu ay fatura "
+"ettiği tutardır. Kanban görünümünde mevcut ve hedef gelirin ilerleme oranını"
+" hesaplamak için kullanılır."
 
 #. module: sale
 #: model:ir.model.fields.selection,name:sale.selection__res_config_settings__default_invoice_policy__delivery
@@ -2540,7 +2549,7 @@ msgstr "Faturalanan Miktar"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_line__qty_invoiced_posted
 msgid "Invoiced Quantity (posted)"
-msgstr ""
+msgstr "Faturalandırılan Miktar (yayımlandı)"
 
 #. module: sale
 #. odoo-python
@@ -2887,7 +2896,7 @@ msgstr "Satış siparişi satırında zorunlu alanlar eksik."
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "Mitchell Admin"
-msgstr ""
+msgstr "Mitchell Admin"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__my_activity_date_deadline
@@ -3727,7 +3736,7 @@ msgstr ""
 #: model:mail.message.subtype,name:sale.mt_order_viewed
 #: model:mail.message.subtype,name:sale.mt_salesteam_order_viewed
 msgid "Quotation Viewed"
-msgstr ""
+msgstr "Fiyat Teklifi Görüntülendi"
 
 #. module: sale
 #: model:mail.message.subtype,description:sale.mt_order_confirmed
@@ -3895,7 +3904,7 @@ msgstr "Sorumlu Kullanıcı"
 #. module: sale
 #: model:ir.model.fields,help:sale.field_crm_team__invoiced_target
 msgid "Revenue Target for the current month (untaxed total of paid invoices)."
-msgstr ""
+msgstr "Bu ay için gelir hedefi (ödenmiş faturaların vergisiz toplamı)."
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.utm_campaign_view_form
@@ -4209,6 +4218,11 @@ msgstr "Satış Temsilcisi"
 #: model:ir.ui.menu,name:sale.menu_reporting_salespeople
 msgid "Salespersons"
 msgstr "Satış Temsilcileri"
+
+#. module: sale
+#: model:ir.model,name:sale.model_mail_scheduled_message
+msgid "Scheduled Message"
+msgstr "Planlanmış Mesaj"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_sales_order_filter
@@ -4532,6 +4546,11 @@ msgid ""
 msgstr ""
 
 #. module: sale
+#: model:ir.model,name:sale.model_ir_config_parameter
+msgid "System Parameter"
+msgstr "Sistem Parametresi"
+
+#. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__tag_ids
 #: model:ir.ui.menu,name:sale.menu_tag_config
 msgid "Tags"
@@ -4554,9 +4573,19 @@ msgid "Tax Country"
 msgstr "Vergi Ülkesi"
 
 #. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.view_order_form
+msgid "Tax Excl."
+msgstr "Vergi Hariç"
+
+#. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.report_saleorder_document
 msgid "Tax ID"
 msgstr "VKN/TCKN"
+
+#. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.view_order_form
+msgid "Tax Incl."
+msgstr "Vergi Dahil"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_tree
@@ -4593,6 +4622,8 @@ msgid ""
 "Team %(team_name)s has %(sale_order_count)s active sale orders. Consider "
 "cancelling them or archiving the team instead."
 msgstr ""
+"%(team_name)s ekibinin %(sale_order_count)s adet aktif satış siparişi var. "
+"Bunları iptal etmeyi veya ekibi arşivlemeyi düşünebilirsiniz."
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order_line__technical_price_unit
@@ -4864,8 +4895,8 @@ msgid ""
 "This is the delivery date promised to the customer. If set, the delivery "
 "order will be scheduled based on this date rather than product lead times."
 msgstr ""
-"Bu, müşteriye vaat edilen teslim tarihidir. Ayarlanırsa, teslimat siparişi "
-"ürün teslim süreleri yerine bu tarihe göre planlanır."
+"Bu, müşteriye vaat edilen teslim tarihidir. Ayarlandığında, teslimat "
+"siparişi ürün teslim süreleri yerine bu tarihe göre planlanacaktır."
 
 #. module: sale
 #: model:ir.model.fields,help:sale.field_account_bank_statement_line__medium_id
@@ -5053,6 +5084,11 @@ msgid "Transactions"
 msgstr "İşlemler"
 
 #. module: sale
+#: model:ir.model.fields,field_description:sale.field_sale_order_line__translated_product_name
+msgid "Translated Product Name"
+msgstr ""
+
+#. module: sale
 #: model:ir.model.fields,field_description:sale.field_sale_order__type_name
 msgid "Type Name"
 msgstr "Tür Adı"
@@ -5163,11 +5199,6 @@ msgid "Untaxed Total"
 msgstr "Vergi Hariç Toplam"
 
 #. module: sale
-#: model_terms:ir.ui.view,arch_db:sale.sale_order_line_wizard_form
-msgid "Untaxed discount"
-msgstr "Vergisiz İndirim"
-
-#. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
 msgid "UoM"
 msgstr "Ölçü Birimi"
@@ -5237,12 +5268,6 @@ msgstr "Varyant Tablo Girişi"
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_template
 msgid "View Details"
 msgstr "Detayları Görüntüle"
-
-#. module: sale
-#. odoo-python
-#: code:addons/sale/models/sale_order.py:0
-msgid "View Order"
-msgstr "Siparişi Görüntüle"
 
 #. module: sale
 #. odoo-python
@@ -5343,9 +5368,8 @@ msgid ""
 " communication will be given to the customer when they choose the payment "
 "method."
 msgstr ""
-"Burada satış siparişlerinde görünecek olan iletişim türünü "
-"belirleyebilirsiniz.Ödeme yöntemini seçtiklerinde müşteriye iletişim bilgisi"
-" verilecektir."
+"Burada satış siparişlerinde görünecek iletişim türünü ayarlayabilirsiniz. "
+"İletişim, müşteri ödeme yöntemini seçtiğinde müşteriye verilecektir."
 
 #. module: sale
 #. odoo-python
@@ -5377,8 +5401,14 @@ msgid ""
 "You cannot change the type of a sale order line. Instead you should delete "
 "the current line and create a new line of the proper type."
 msgstr ""
-"Bir satış siparişi satırının türünü değiştiremezsiniz. Bunun yerine, geçerli"
-" satırı silmeli ve uygun türde yeni bir satır oluşturmalısınız."
+"Satış siparişi satırının türünü değiştiremezsiniz. Bunun yerine, mevcut "
+"satırı silip uygun türde yeni bir satır oluşturmalısınız."
+
+#. module: sale
+#. odoo-python
+#: code:addons/sale/models/sale_order_line.py:0
+msgid "You cannot modify the product of this order line."
+msgstr ""
 
 #. module: sale
 #: model:ir.model.constraint,message:sale.constraint_res_company_check_quotation_validity_days

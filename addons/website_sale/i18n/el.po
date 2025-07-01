@@ -9,19 +9,21 @@
 # Martin Trigaux, 2024
 # Digiticed, 2024
 # Kostas Goutoudis <goutoudis@gmail.com>, 2025
-# Maria Chalepiadou, 2025
 # Gerasimos Kanelatos, 2025
 # Charalampos Loukas, 2025
 # Anastasia Mimou, 2025
 # Leonidas Chiotis, 2025
+# Maria Chalepiadou, 2025
+# Agapi Psyllou, 2025
+# Iasonas Polydoros <j.polydoros@dileanity.com>, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:02+0000\n"
+"POT-Creation-Date: 2025-03-19 20:36+0000\n"
 "PO-Revision-Date: 2024-09-25 09:42+0000\n"
-"Last-Translator: Leonidas Chiotis, 2025\n"
+"Last-Translator: Iasonas Polydoros <j.polydoros@dileanity.com>, 2025\n"
 "Language-Team: Greek (https://app.transifex.com/odoo/teams/41243/el/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -494,6 +496,12 @@ msgstr ""
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_custom_text
 msgid "<u>Terms and Conditions</u>"
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/combo_configurator.py:0
+msgid "A combo product can't be empty. Please select at least one option."
 msgstr ""
 
 #. module: website_sale
@@ -1169,14 +1177,14 @@ msgstr "Επιλέξτε έναν τρόπο αποστολής"
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/location_selector/location_selector_dialog/location_selector_dialog.js:0
 msgid "Choose a pick-up point"
-msgstr ""
+msgstr "Διαλέξτε ένα σημείο παραλαβής"
 
 #. module: website_sale
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/location_selector/location_selector_dialog/location_selector_dialog.js:0
 #: code:addons/website_sale/static/src/js/location_selector/map_container/map_container.js:0
 msgid "Choose this location"
-msgstr ""
+msgstr "Επιλέξτε αυτή την τοποθεσία"
 
 #. module: website_sale
 #: model:product.pricelist,name:website_sale.list_christmas
@@ -1267,7 +1275,7 @@ msgstr "Χρώμα"
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.snippet_options
 msgid "Columns"
-msgstr ""
+msgstr "Στήλες"
 
 #. module: website_sale
 #: model:ir.ui.menu,name:website_sale.menu_product_combos
@@ -1668,11 +1676,6 @@ msgstr ""
 #. module: website_sale
 #: model:product.public.category,name:website_sale.public_category_services_delivery_and_installation
 msgid "Delivery and Installation"
-msgstr ""
-
-#. module: website_sale
-#: model_terms:ir.ui.view,arch_db:website_sale.total
-msgid "Delivery will be updated after choosing a new delivery method"
 msgstr ""
 
 #. module: website_sale
@@ -2790,7 +2793,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/location_selector/location_selector_dialog/location_selector_dialog.js:0
 msgid "No result"
-msgstr ""
+msgstr "Κανένα αποτέλεσμα"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.products
@@ -2948,7 +2951,7 @@ msgstr "Ηλεκτρονικό Eμπόριο Ανοικτού Κώδικα"
 #: code:addons/website_sale/static/src/js/location_selector/location/location.js:0
 #: code:addons/website_sale/static/src/js/location_selector/map_container/map_container.js:0
 msgid "Opening hours"
-msgstr ""
+msgstr "Ώρες λειτουργίας"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.product_image_view_kanban
@@ -3067,6 +3070,12 @@ msgstr "Συναλλαγές Πληρωμής"
 
 #. module: website_sale
 #. odoo-python
+#: code:addons/website_sale/controllers/payment.py:0
+msgid "Payment is already being processed."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
 #: code:addons/website_sale/models/website_snippet_filter.py:0
 msgid "Pedal-based opening system"
 msgstr ""
@@ -3172,6 +3181,11 @@ msgid "Price list available for this Ecommerce/Website"
 msgstr "Τιμοκατάλογος διαθέσιμος για αυτό το eshop/ιστότοπο"
 
 #. module: website_sale
+#: model_terms:ir.ui.view,arch_db:website_sale.total
+msgid "Price will be updated after choosing a delivery method"
+msgstr ""
+
+#. module: website_sale
 #: model:ir.model,name:website_sale.model_product_pricelist
 msgid "Pricelist"
 msgstr "Τιμοκατάλογος"
@@ -3256,7 +3270,7 @@ msgstr "Εργαλείο Σύγκρισης Ειδών"
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_product_document
 msgid "Product Document"
-msgstr ""
+msgstr "Έγγραφο Προϊόντος"
 
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_product_image
@@ -3874,7 +3888,7 @@ msgstr "Έξοδα Αποστολής"
 #. module: website_sale
 #: model:ir.model,name:website_sale.model_delivery_carrier
 msgid "Shipping Methods"
-msgstr ""
+msgstr "Τρόποι Αποστολής"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.res_config_settings_view_form
@@ -4178,6 +4192,12 @@ msgstr "Ο κωδικός ασφαλείας πρόσβασης είναι άκ�
 #. module: website_sale
 #. odoo-python
 #: code:addons/website_sale/controllers/payment.py:0
+msgid "The cart has already been paid. Please refresh the page."
+msgstr ""
+
+#. module: website_sale
+#. odoo-python
+#: code:addons/website_sale/controllers/payment.py:0
 msgid "The cart has been updated. Please refresh the page."
 msgstr ""
 
@@ -4212,6 +4232,7 @@ msgstr ""
 
 #. module: website_sale
 #. odoo-python
+#: code:addons/website_sale/controllers/combo_configurator.py:0
 #: code:addons/website_sale/models/sale_order.py:0
 msgid ""
 "The given product does not have a price therefore it cannot be added to "
@@ -4863,7 +4884,7 @@ msgstr "Η πληρωμή σας έχει εγκριθεί."
 #. odoo-javascript
 #: code:addons/website_sale/static/src/js/location_selector/location_selector_dialog/location_selector_dialog.js:0
 msgid "Your postal code"
-msgstr ""
+msgstr "Ο ταχυδρομικός σας κώδικας"
 
 #. module: website_sale
 #: model_terms:ir.ui.view,arch_db:website_sale.cart

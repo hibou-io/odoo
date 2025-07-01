@@ -1,12 +1,13 @@
 import { Plugin } from "@html_editor/plugin";
 import { isBlock, closestBlock } from "@html_editor/utils/blocks";
-import { fillEmpty } from "@html_editor/utils/dom";
+import { fillEmpty, unwrapContents } from "@html_editor/utils/dom";
 import { leftLeafOnlyNotBlockPath } from "@html_editor/utils/dom_state";
-import { isVisibleTextNode } from "@html_editor/utils/dom_info";
+import { isRedundantElement, isVisibleTextNode } from "@html_editor/utils/dom_info";
 import {
     closestElement,
     createDOMPathGenerator,
     descendants,
+    selectElements,
 } from "@html_editor/utils/dom_traversal";
 import {
     convertNumericToUnit,
@@ -20,6 +21,7 @@ import { FontSelector } from "./font_selector";
 import { getBaseContainerSelector } from "@html_editor/utils/base_container";
 import { withSequence } from "@html_editor/utils/resource";
 import { reactive } from "@odoo/owl";
+import { FontSizeSelector } from "./font_size_selector";
 
 export const fontItems = [
     {
@@ -179,7 +181,7 @@ export class FontPlugin extends Plugin {
                             tagName: item.tagName,
                             extraClass: item.extraClass,
                         });
-                        this.updateFontParams();
+                        this.updateFontSelectorParams();
                     },
                 },
             },
@@ -187,16 +189,23 @@ export class FontPlugin extends Plugin {
                 id: "font-size",
                 groupId: "font-size",
                 title: _t("Font size"),
-                Component: FontSelector,
+                Component: FontSizeSelector,
                 props: {
                     getItems: () => this.fontSizeItems,
                     getDisplay: () => this.fontSize,
+                    onFontSizeInput: (size) => {
+                        this.dependencies.format.formatSelection("fontSize", {
+                            formatProps: { size },
+                            applyStyle: true,
+                        });
+                        this.updateFontSizeSelectorParams();
+                    },
                     onSelected: (item) => {
                         this.dependencies.format.formatSelection("setFontSizeClassName", {
                             formatProps: { className: item.className },
                             applyStyle: true,
                         });
-                        this.updateFontParams();
+                        this.updateFontSizeSelectorParams();
                     },
                 },
             },
@@ -241,9 +250,19 @@ export class FontPlugin extends Plugin {
 
         /** Handlers */
         input_handlers: this.onInput.bind(this),
-        selectionchange_handlers: this.updateFontParams.bind(this),
-        post_undo_handlers: this.updateFontParams.bind(this),
-        post_redo_handlers: this.updateFontParams.bind(this),
+        selectionchange_handlers: [
+            this.updateFontSelectorParams.bind(this),
+            this.updateFontSizeSelectorParams.bind(this),
+        ],
+        post_undo_handlers: [
+            this.updateFontSelectorParams.bind(this),
+            this.updateFontSizeSelectorParams.bind(this),
+        ],
+        post_redo_handlers: [
+            this.updateFontSelectorParams.bind(this),
+            this.updateFontSizeSelectorParams.bind(this),
+        ],
+        normalize_handlers: this.normalize.bind(this),
 
         /** Overrides */
         split_element_block_overrides: [
@@ -258,6 +277,14 @@ export class FontPlugin extends Plugin {
     setup() {
         this.fontSize = reactive({ displayName: "" });
         this.font = reactive({ displayName: "" });
+    }
+
+    normalize(root) {
+        for (const el of selectElements(root, "strong, b, span[style*='font-weight: bolder']")) {
+            if (isRedundantElement(el)) {
+                unwrapContents(el);
+            }
+        }
     }
 
     get fontName() {
@@ -485,8 +512,12 @@ export class FontPlugin extends Plugin {
             this.dependencies.dom.setTag({ tagName: headingToBe });
         }
     }
-    updateFontParams() {
+
+    updateFontSelectorParams() {
         this.font.displayName = this.fontName;
+    }
+
+    updateFontSizeSelectorParams() {
         this.fontSize.displayName = this.fontSizeName;
     }
 }

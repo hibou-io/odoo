@@ -230,6 +230,9 @@ class StockRule(models.Model):
         else:
             new_move_vals = self._push_prepare_move_copy_values(move, new_date)
             new_move = move.sudo().copy(new_move_vals)
+            # when no more push we should reach final destination
+            if new_move._skip_push():
+                new_move.write({'location_dest_id': new_move.location_final_id.id})
             if new_move._should_bypass_reservation():
                 new_move.write({'procure_method': 'make_to_stock'})
             if not new_move.location_id.should_bypass_reservation():
@@ -239,6 +242,9 @@ class StockRule(models.Model):
     def _push_prepare_move_copy_values(self, move_to_copy, new_date):
         company_id = self.company_id.id
         copied_quantity = move_to_copy.quantity
+        final_location_id = False
+        if move_to_copy.location_final_id and not move_to_copy.location_dest_id._child_of(move_to_copy.location_final_id):
+            final_location_id = move_to_copy.location_final_id.id
         if float_compare(move_to_copy.product_uom_qty, 0, precision_rounding=move_to_copy.product_uom.rounding) < 0:
             copied_quantity = move_to_copy.product_uom_qty
         if not company_id:
@@ -248,7 +254,7 @@ class StockRule(models.Model):
             'origin': move_to_copy.origin or move_to_copy.picking_id.name or "/",
             'location_id': move_to_copy.location_dest_id.id,
             'location_dest_id': self.location_dest_id.id,
-            'location_final_id': move_to_copy.location_final_id.id,
+            'location_final_id': final_location_id,
             'rule_id': self.id,
             'date': new_date,
             'date_deadline': move_to_copy.date_deadline,
@@ -634,7 +640,7 @@ class ProcurementGroup(models.Model):
 
     @api.model
     def _check_intercomp_location(self, locations):
-        if self.env.user.has_group('base.group_multi_company') and locations.filtered(lambda location: location.usage == 'transit'):
+        if locations.filtered(lambda location: location.usage == 'transit'):
             inter_comp_location = self.env.ref('stock.stock_location_inter_company', raise_if_not_found=False)
             return inter_comp_location and inter_comp_location.id in locations.ids
 

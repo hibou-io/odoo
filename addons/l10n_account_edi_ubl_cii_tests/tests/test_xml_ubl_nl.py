@@ -38,8 +38,9 @@ class TestUBLNL(TestUBLCommon):
             'vat': 'NL41452B11',
             'country_id': cls.env.ref('base.nl').id,
             'bank_ids': [(0, 0, {'acc_number': 'NL93999574162167'})],
-            'peppol_eas': '0106',
-            'peppol_endpoint': '1234567',
+            'peppol_eas': '9944',
+            'peppol_endpoint': 'NL41452B11',
+            'company_registry': '123456789',
             'ref': 'ref_partner_2',
             'invoice_edi_format': 'nlcius',
         })
@@ -148,6 +149,10 @@ class TestUBLNL(TestUBLCommon):
         self.assertEqual(attachment.name[-10:], "nlcius.xml")
         self._assert_imported_invoice_from_etree(invoice, attachment)
 
+    def test_export_import_invoice_new(self):
+        self.env['ir.config_parameter'].sudo().set_param('account_edi_ubl_cii.use_new_dict_to_xml_helpers', True)
+        self.test_export_import_invoice()
+
     def test_export_import_refund(self):
         refund = self._generate_move(
             self.partner_1,
@@ -205,6 +210,10 @@ class TestUBLNL(TestUBLCommon):
         )
         self.assertEqual(attachment.name[-10:], "nlcius.xml")
         self._assert_imported_invoice_from_etree(refund, attachment)
+
+    def test_export_import_refund_new(self):
+        self.env['ir.config_parameter'].sudo().set_param('account_edi_ubl_cii.use_new_dict_to_xml_helpers', True)
+        self.test_export_import_refund()
 
     def test_export_fixed_tax(self):
         """

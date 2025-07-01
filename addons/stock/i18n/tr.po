@@ -33,21 +33,21 @@
 # Martin Trigaux, 2024
 # Ahmet Altinisik <aaltinisik@altinkaya.com.tr>, 2024
 # Murat Kaplan <muratk@projetgrup.com>, 2024
-# Deniz Guvener, 2025
 # Ozlem Cikrikci <ozlemc@eskayazilim.com.tr>, 2025
 # Umur Akın <umura@projetgrup.com>, 2025
 # Tugay Hatıl <tugayh@projetgrup.com>, 2025
 # Ediz Duman <neps1192@gmail.com>, 2025
 # Cengiz Cokay Global Nonwoven, 2025
 # Hakan Türkün, 2025
+# Deniz Guvener_Odoo <degu@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:02+0000\n"
+"POT-Creation-Date: 2025-03-19 20:36+0000\n"
 "PO-Revision-Date: 2024-09-25 09:42+0000\n"
-"Last-Translator: Hakan Türkün, 2025\n"
+"Last-Translator: Deniz Guvener_Odoo <degu@odoo.com>, 2025\n"
 "Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -103,16 +103,16 @@ msgid ""
 " * Done: The transfer has been processed.\n"
 " * Cancelled: The transfer has been cancelled."
 msgstr ""
-"* Taslak: Transfer henüz onaylanmadı. Rezervasyon geçerli değil.\n"
-"  * Başka bir işlem bekliyor: Bu aktarım hazır olmadan önce başka bir işlem bekliyor.\n"
-"  * Bekliyor: Transfer bazı ürünlerin kullanılabilirliğini bekliyor.\n"
-"(a) Nakliye politikası \"En kısa zamanda\": hiçbir ürün ayrılamaz.\n"
-"(b) Nakliye politikası \"Tüm ürünler hazır olduğunda\": tüm ürünler ayrılamaz.\n"
-"  * Hazır: Aktarım işlenmeye hazırdır.\n"
-"(a) Gönderim politikası \"En kısa sürede\": en az bir ürün rezervdir.\n"
-"(b) Nakliye politikası \"tüm ürünler hazır olduğunda\": tüm ürün rezervedir.\n"
-"  * Tamamlandı: Aktarım işleme koyuldu.\n"
-"  * İptal edildi: Aktarım iptal edildi."
+" * Taslak: Transfer henüz onaylanmadı. Rezervasyon geçerli değildir.\n"
+" * Başka bir işlem bekleniyor: Bu transfer, hazır hale gelmeden önce başka bir işlemi bekliyor.\n"
+" * Beklemede: Transfer, bazı ürünlerin hazır olmasını bekliyor.\n"
+"(a) Nakliye politikası “Mümkün olan en kısa sürede” ise: hiçbir ürün rezerve edilemez.\n"
+"(b) Nakliye politikası “Tüm ürünler hazır olduğunda” ise: tüm ürünler rezerve edilemez.\n"
+" * Hazır: Transfer işleme alınmaya hazırdır.\n"
+"(a) Nakliye politikası “Mümkün olan en kısa sürede” ise: en az bir ürün rezerve edilmiştir.\n"
+"(b) Nakliye politikası “Tüm ürünler hazır olduğunda” ise: tüm ürünler rezerve edilmiştir.\n"
+" * Tamamlandı: Transfer işleme alınmıştır.\n"
+" * İptal edildi: Transfer iptal edilmiştir."
 
 #. module: stock
 #. odoo-python
@@ -371,13 +371,13 @@ msgid ""
 "* Production: Virtual counterpart location for production operations: this location consumes the components and produces finished products\n"
 "* Transit Location: Counterpart location that should be used in inter-company or inter-warehouses operations"
 msgstr ""
-"* Satıcı Konumu: Tedarikçilerinizden gelen ürünler için kaynak konumu temsil eden sanal konum\n"
-"* Görünüm: Deponuz için hiyerarşik yapılar oluşturmak için kullanılan sanal konum, alt konumlarını bir araya getirir; doğrudan ürün içeremez\n"
-"* Dahili Konum: Kendi depolarınızdaki fiziksel yerleri,\n"
-"* Müşteri Konumu: Müşterilerinize gönderilen ürünler için hedef konumu temsil eden sanal konum\n"
-"* Envanter Kaybı: Stok seviyelerini düzeltmek için kullanılan envanter işlemleri için muadil olarak sunulan sanal konum (Fiziksel envanterler)\n"
-"* Üretim: Üretim operasyonları için sanal karşı konum: bu konum bileşenleri tüketir ve bitmiş ürünler üretir\n"
-"* Transit Konumu: Şirketler arası veya depolar arası operasyonlarda kullanılması gereken karşı taraf konumu"
+"* Tedarikçi Konumu: Tedarikçilerden gelen ürünler için kaynak konumu olarak kullanılan sanal konum\n"
+"* Görünüm: Depo için hiyerarşik yapılar oluşturmak amacıyla kullanılan sanal konum. Alt konumları gruplayarak yapıyı oluşturur; doğrudan ürün içeremez\n"
+"* Dahili Konum: Kendi depolarınız içerisindeki fiziksel konumlar,\n"
+"* Müşteri Konumu: Kendi depolarınız içerisindeki fiziksel konumlar\n"
+"* Envanter Kaybı: Stok seviyelerini düzeltmek için yapılan envanter işlemlerinde karşıt konum olarak kullanılan sanal konum (fiziksel envanter sayımı gibi) \n"
+"* Üretim: Üretim işlemleri için sanal karşıt konum: Bu konum bileşenleri tüketir ve bitmiş ürünleri üretir\n"
+"* Transfer Konumu: Şirket içi veya depo arası işlemlerde kullanılmak üzere tasarlanmış karşıt konum"
 
 #. module: stock
 #. odoo-python
@@ -916,7 +916,7 @@ msgstr "Bu ürün için bu konumda zaten bir stok yenileme kuralı var."
 #: model:ir.model.fields,help:stock.field_product_template__is_storable
 #: model:ir.model.fields,help:stock.field_stock_move__is_storable
 msgid "A storable product is a product for which you manage stock."
-msgstr ""
+msgstr "Depolanabilir bir ürün, stoklarını yönettiğiniz bir üründür."
 
 #. module: stock
 #: model:res.groups,name:stock.group_warning_stock
@@ -1714,12 +1714,12 @@ msgid ""
 "(Chicago) in its entirety and does not include any costs relating to the "
 "legislation of the country in which the client is located."
 msgstr ""
-"Bazı ülkeler yasalara uygun olarak kaynakta fatura tutarı üzerinden stopaj "
-"uygular. Bunlar müşteri tarafından vergi makamlarına ödenir. H,çb,r koşulda "
-"Şirketim (Şikago) bir ülkenin yasalarından doğan maliyetlerle "
-"ilişkilendirilemez. Dolayısıyla fatura bedelinin tamamı Şirketim (Şikago)'ya"
-" ödenecek olup müşterinin bulunduğu ülkedeki yasalardan kaynaklanan "
-"maliyetleri içermez."
+"Bazı ülkeler, iç mevzuatlarına uygun olarak fatura tutarları üzerinden "
+"kaynakta stopaj uygular. Kaynakta stopaj, müşteri tarafından vergi dairesine"
+" ödenir. Hiçbir koşulda My Company (Chicago), bir ülkenin mevzuatıyla ilgili"
+" masraflara dahil olamaz. Bu nedenle fatura tutarının tamamı My Company "
+"(Chicago) tarafından tahsil edilecek olup, müşterinin bulunduğu ülkenin "
+"mevzuatıyla ilgili masraflar dahil değildir."
 
 #. module: stock
 #: model:ir.actions.act_window,name:stock.action_change_product_quantity
@@ -2863,8 +2863,8 @@ msgid ""
 "of the product: whether it will be bought, manufactured, replenished on "
 "order, etc."
 msgstr ""
-"Kurulu modüllere dayalı olarak, bu, ürünün rotasını tanımlamanızı sağlar: "
-"satın alınacak, üretilecek, sipariş üzerine yenilenecek vb."
+"Yüklü modüllere bağlı olarak, bu, ürünün rotasını tanımlamanıza olanak "
+"tanır: satın mı alınacak, üretilecek mi, sipariş üzerine mi yenilenecek vs."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_lot__note
@@ -4073,9 +4073,9 @@ msgid ""
 " operations. If not, the picking lines will represent an aggregate of "
 "detailed stock operations."
 msgstr ""
-"Eğer kutucuk işaretli ise, seçim satırları detaylı stok operasyonlarını "
-"temsil eder. Eğer değilse, seçim satırları stok işlemlerinin bir toplamını "
-"temsil eder."
+"Bu onay kutusu işaretlenirse, toplama satırları ayrıntılı stok işlemlerini "
+"temsil eder. İşaretlenmezse, toplama satırları ayrıntılı stok işlemlerinin "
+"toplamını temsil eder."
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_move_line__picking_type_use_create_lots
@@ -4662,7 +4662,7 @@ msgstr "Yazdırılacak etiketler"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_inventory
 msgid "Laptop"
-msgstr ""
+msgstr "Dizüstü bilgisayar"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.stock_move_line_view_search
@@ -5305,7 +5305,7 @@ msgstr "Yöntem"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.view_warehouse_orderpoint_tree_editable
 msgid "Min"
-msgstr ""
+msgstr "Min"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_warehouse_orderpoint__product_min_qty
@@ -6823,7 +6823,7 @@ msgstr "Ürün İkmali"
 #. module: stock
 #: model:ir.model,name:stock.model_stock_replenish_mixin
 msgid "Product Replenish Mixin"
-msgstr ""
+msgstr "Ürün Yenileme Karışımı"
 
 #. module: stock
 #: model:ir.actions.report,name:stock.action_report_stock_rule
@@ -6869,7 +6869,7 @@ msgstr "Ürün Varyantları"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.report_package_barcode
 msgid "Product barcode"
-msgstr ""
+msgstr "Ürün barkodu"
 
 #. module: stock
 #. odoo-python
@@ -8236,9 +8236,6 @@ msgid ""
 "\n"
 "Source location for this move will be changed to %(recommended_location)s"
 msgstr ""
-"Seri numarası (%(serial_number)s) %(source_location)s konumunda bulunmuyor ama şu konumlarda bulunur: %(other_locations)s.\n"
-"\n"
-"Bu hareket için kaynak konumu %(recommended_location)s olarak değiştirilecek."
 
 #. module: stock
 #. odoo-javascript
@@ -8986,14 +8983,22 @@ msgid ""
 " With 'Automatic No Step Added', the location is replaced in the original "
 "move."
 msgstr ""
-"'Manuel Operasyon' değeri,mevcut adımdan sonra bir stok hareketi "
-"oluşturacaktır. 'Otomatik Adım Ekleme Yok' ile, konum orijinal harekette "
+"“Manuel İşlem” değeri, mevcut işlemden sonra bir stok hareketi oluşturur. "
+"“Otomatik Adım Eklenmedi” seçeneğinde, konum orijinal hareketle "
 "değiştirilir."
 
 #. module: stock
 #. odoo-python
 #: code:addons/stock/models/stock_quant.py:0
 msgid "The Lot/Serial number (%s) is linked to another product."
+msgstr ""
+
+#. module: stock
+#. odoo-python
+#: code:addons/stock/models/stock_picking.py:0
+msgid ""
+"The Picking Operations report has been deleted so you cannot print at this "
+"time unless the report is restored."
 msgstr ""
 
 #. module: stock
@@ -9280,9 +9285,9 @@ msgid ""
 "different of the warehouse this rule is for (e.g for resupplying rules from "
 "another warehouse)"
 msgstr ""
-"Oluşturulan hareket / tedarik üzerine yayılması için depo, bu kuralın "
-"bulunduğu depodan farklı olabilir (örneğin, kuralları başka bir depodan "
-"tekrar sağlamak için)"
+"Oluşturulan taşıma/tedarik işlemini yaygınlaştırmak için kullanılan depo, bu"
+" kuralın geçerli olduğu depodan farklı olabilir (örneğin, başka bir depodan "
+"yeniden tedarik kuralları için)"
 
 #. module: stock
 #. odoo-python
@@ -9501,6 +9506,10 @@ msgid ""
 "reference values or assign the existing reference sequence to this operation"
 " type."
 msgstr ""
+"Bu sıra önek, başka bir işlem türü tarafından zaten kullanılmaktadır. "
+"Sorunların ve/veya tekrarlanan referans değerlerinin önlenmesi için "
+"benzersiz bir önek seçmeniz veya mevcut referans sırasını bu işlem türüne "
+"atamanız önerilir."
 
 #. module: stock
 #: model:ir.model.fields,help:stock.field_product_product__property_stock_production
@@ -11430,7 +11439,7 @@ msgstr "report_stock_quantity_graph"
 #. odoo-javascript
 #: code:addons/stock/static/src/stock_forecasted/forecasted_details.xml:0
 msgid "reserved"
-msgstr ""
+msgstr "rezerve"
 
 #. module: stock
 #. odoo-javascript

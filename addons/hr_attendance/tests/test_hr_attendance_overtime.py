@@ -389,11 +389,17 @@ class TestHrAttendanceOvertime(TransactionCase):
             'auto_check_out': True,
             'auto_check_out_tolerance': 1
         })
-        self.env['hr.attendance'].create({
+        self.env['hr.attendance'].create([{
             'employee_id': self.employee.id,
             'check_in': datetime(2024, 2, 1, 8, 0),
+            'check_out': datetime(2024, 2, 1, 11, 0)
+        },
+        {
+            'employee_id': self.employee.id,
+            'check_in': datetime(2024, 2, 1, 11, 0),
             'check_out': datetime(2024, 2, 1, 13, 0)
-        })
+        }
+        ])
 
         attendance_utc_pending = self.env['hr.attendance'].create({
             'employee_id': self.employee.id,
@@ -417,10 +423,16 @@ class TestHrAttendanceOvertime(TransactionCase):
             'check_in': datetime(2024, 2, 1, 12, 0)
         })
 
+        attendance_flexible_pending = self.env['hr.attendance'].create({
+            'employee_id': self.flexible_employee.id,
+            'check_in': datetime(2024, 2, 1, 12, 0)
+        })
+
         self.assertEqual(attendance_utc_pending.check_out, False)
         self.assertEqual(attendance_utc_pending_within_allotted_hours.check_out, False)
         self.assertEqual(attendance_utc_done.check_out, datetime(2024, 2, 1, 17, 0))
         self.assertEqual(attendance_jpn_pending.check_out, False)
+        self.assertEqual(attendance_flexible_pending.check_out, False)
 
         self.env['hr.attendance']._cron_auto_check_out()
 
@@ -428,6 +440,59 @@ class TestHrAttendanceOvertime(TransactionCase):
         self.assertEqual(attendance_utc_pending_within_allotted_hours.check_out, False)
         self.assertEqual(attendance_utc_done.check_out, datetime(2024, 2, 1, 17, 0))
         self.assertEqual(attendance_jpn_pending.check_out, datetime(2024, 2, 1, 21, 0))
+
+        # Employee with flexible working schedule should not be checked out
+        self.assertEqual(attendance_flexible_pending.check_out, False)
+
+    def test_auto_check_out_lunch_period(self):
+        Attendance = self.env['hr.attendance']
+        self.company.write({
+            'auto_check_out': True,
+            'auto_check_out_tolerance': 1
+        })
+        morning, afternoon = Attendance.create([{
+            'employee_id': self.employee.id,
+            'check_in': datetime(2024, 1, 1, 8, 0),
+            'check_out': datetime(2024, 1, 1, 12, 0)
+        },
+        {
+            'employee_id': self.employee.id,
+            'check_in': datetime(2024, 1, 1, 13, 0)
+        }])
+
+        with freeze_time("2024-01-01 22:00:00"):
+            Attendance._cron_auto_check_out()
+            self.assertEqual(morning.worked_hours + afternoon.worked_hours, 9)  # 8 hours from calendar's attendances + 1 hour of tolerance
+            self.assertEqual(afternoon.check_out, datetime(2024, 1, 1, 18, 0))
+
+    def test_auto_check_out_two_weeks_calendar(self):
+        """Test case: two weeks calendar with different attendances depending on the week. No morning attendance on
+        wednesday of the first week."""
+        Attendance = self.env['hr.attendance']
+        self.company.write({
+            'auto_check_out': True,
+            'auto_check_out_tolerance': 0
+        })
+        self.employee.resource_calendar_id.switch_calendar_type()
+        self.employee.resource_calendar_id.attendance_ids.search([("dayofweek", "=", "2"), ("week_type", '=', '0'), ("day_period", "in", ["morning", "lunch"])]).unlink()
+
+        with freeze_time("2025-03-05 22:00:00"):
+            att = Attendance.create({
+                'employee_id': self.employee.id,
+                'check_in': datetime(2025, 3, 5, 8, 0)
+            })
+            Attendance._cron_auto_check_out()
+            self.assertEqual(att.worked_hours, 4)
+            self.assertEqual(att.check_out, datetime(2025, 3, 5, 12, 0))
+
+        with freeze_time("2025-03-12 22:00:00"):
+            att = Attendance.create({
+                'employee_id': self.employee.id,
+                'check_in': datetime(2025, 3, 12, 8, 0),
+            })
+            Attendance._cron_auto_check_out()
+            self.assertEqual(att.worked_hours, 8)
+            self.assertEqual(att.check_out, datetime(2025, 3, 12, 17, 0))
 
     @freeze_time("2024-02-1 14:00:00")
     def test_absence_management(self):
@@ -472,11 +537,18 @@ class TestHrAttendanceOvertime(TransactionCase):
             'check_out': datetime(2024, 2, 1, 17, 0)
         })
 
+        self.env['hr.attendance'].create({
+            'employee_id': self.flexible_employee.id,
+            'check_in': datetime(2024, 2, 1, 8, 0),
+            'check_out': datetime(2024, 2, 1, 16, 0)
+        })
+
         self.assertAlmostEqual(self.employee.total_overtime, 0, 2)
         self.assertAlmostEqual(self.other_employee.total_overtime, 0, 2)
         self.assertAlmostEqual(self.jpn_employee.total_overtime, 0, 2)
         self.assertAlmostEqual(self.honolulu_employee.total_overtime, 0, 2)
         self.assertAlmostEqual(self.europe_employee.total_overtime, 0, 2)
+        self.assertAlmostEqual(self.flexible_employee.total_overtime, 0, 2)
 
         self.env['hr.attendance']._cron_absence_detection()
 
@@ -487,6 +559,9 @@ class TestHrAttendanceOvertime(TransactionCase):
 
         # Employee Checked in yesterday, no absence found
         self.assertAlmostEqual(self.employee.total_overtime, 0, 2)
+
+        # Flexible schedule employee, no absence found
+        self.assertAlmostEqual(self.flexible_employee.total_overtime, 0, 2)
 
         # Other company with setting disabled
         self.assertAlmostEqual(self.europe_employee.total_overtime, 0, 2)
@@ -581,3 +656,20 @@ class TestHrAttendanceOvertime(TransactionCase):
             'check_out': datetime(2023, 1, 4, 9, 0)
         })
         self.assertEqual(attendance.overtime_hours, 0, 'There should be no overtime for the fully flexible resource.')
+
+    def test_refuse_timeoff(self):
+        self.company.write({
+            "attendance_overtime_validation": "by_manager"
+        })
+
+        attendance = self.env['hr.attendance'].create({
+            'employee_id': self.employee.id,
+            'check_in': datetime(2023, 1, 2, 8, 0),
+            'check_out': datetime(2023, 1, 3, 16, 0)
+        })
+
+        self.assertEqual(attendance.validated_overtime_hours, 23)
+        self.assertEqual(attendance.overtime_hours, attendance.validated_overtime_hours)
+
+        attendance.action_refuse_overtime()
+        self.assertEqual(attendance.validated_overtime_hours, 0)
