@@ -284,13 +284,19 @@ class ProductProduct(models.Model):
 
     @api.depends_context('partner_id')
     def _compute_product_code(self):
+        read_access = self.env['ir.model.access'].check('product.supplierinfo', 'read', False)
         for product in self:
             product.code = product.default_code
-            if self.env['ir.model.access'].check('product.supplierinfo', 'read', False):
+            if read_access:
                 for supplier_info in product.seller_ids:
                     if supplier_info.partner_id.id == product._context.get('partner_id'):
+                        if supplier_info.product_id and supplier_info.product_id != product:
+                            # Supplier info specific for another variant.
+                            continue
                         product.code = supplier_info.product_code or product.default_code
-                        break
+                        if product == supplier_info.product_id:
+                            # Supplier info specific for this variant.
+                            break
 
     @api.depends_context('partner_id')
     def _compute_partner_ref(self):
@@ -392,7 +398,7 @@ class ProductProduct(models.Model):
             if product.image_variant_1920 and not product.product_tmpl_id.image_1920:
                 product.product_tmpl_id.image_1920 = product.image_variant_1920
             # Check if the product is last product of this template...
-            has_other_products = product_ids_by_template_id[product.product_tmpl_id.id] - {product.id}
+            has_other_products = product_ids_by_template_id.get(product.product_tmpl_id.id, set()) - {product.id}
             # ... and do not delete product template if it's configured to be created "on demand"
             if not has_other_products and not product.product_tmpl_id.has_dynamic_attributes():
                 unlink_templates_ids.add(product.product_tmpl_id.id)
@@ -548,11 +554,16 @@ class ProductProduct(models.Model):
                 # on a database with thousands of matching products, due to the huge merge+unique needed for the
                 # OR operator (and given the fact that the 'name' lookup results come from the ir.translation table
                 # Performing a quick memory merge of ids in Python will give much better performance
-                product_ids = list(self._search(domain + [('default_code', operator, name)], limit=limit, order=order))
+                product_query = self._search(domain + [('default_code', operator, name)], limit=limit, order=order)
+                product_ids = list(product_query)
                 if not limit or len(product_ids) < limit:
                     # we may underrun the limit because of dupes in the results, that's fine
                     limit2 = (limit - len(product_ids)) if limit else False
-                    product2_ids = self._search(domain + [('name', operator, name), ('id', 'not in', product_ids)], limit=limit2, order=order)
+                    if product_query.is_empty():
+                        product2_ids_domain = domain + [('name', operator, name)]
+                    else:
+                        product2_ids_domain = domain + [('name', operator, name), ('id', 'not in', product_query)]
+                    product2_ids = self._search(product2_ids_domain, limit=limit2, order=order)
                     product_ids.extend(product2_ids)
             elif not product_ids and operator in expression.NEGATIVE_TERM_OPERATORS:
                 domain2 = expression.OR([
@@ -638,7 +649,7 @@ class ProductProduct(models.Model):
     #=== BUSINESS METHODS ===#
 
     def _prepare_sellers(self, params=False):
-        sellers = self.seller_ids.filtered(lambda s: s.partner_id.active and (not s.product_id or s.product_id == self))
+        sellers = self.seller_ids._get_filtered_supplier(self.env.company, self, params)
         return sellers.sorted(lambda s: (s.sequence, -s.min_qty, s.price, s.id))
 
     def _get_filtered_sellers(self, partner_id=False, quantity=0.0, date=None, uom_id=False, params=False):
@@ -648,7 +659,6 @@ class ProductProduct(models.Model):
         precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
 
         sellers_filtered = self._prepare_sellers(params)
-        sellers_filtered = sellers_filtered.filtered(lambda s: not s.company_id or s.company_id.id == self.env.company.id)
         sellers = self.env['product.supplierinfo']
         for seller in sellers_filtered:
             # Set quantity in UoM of seller
@@ -671,16 +681,27 @@ class ProductProduct(models.Model):
 
     def _select_seller(self, partner_id=False, quantity=0.0, date=None, uom_id=False, ordered_by='price_discounted', params=False):
         # Always sort by discounted price but another field can take the primacy through the `ordered_by` param.
-        sort_key = itemgetter('price_discounted', 'sequence', 'id')
+        sort_key = ('price_discounted', 'sequence', 'id')
         if ordered_by != 'price_discounted':
-            sort_key = itemgetter(ordered_by, 'price_discounted', 'sequence', 'id')
+            sort_key = (ordered_by, 'price_discounted', 'sequence', 'id')
 
+        def sort_function(record):
+            vals = {
+                'price_discounted': record.currency_id._convert(
+                    record.price_discounted,
+                    record.env.company.currency_id,
+                    record.env.company,
+                    date or fields.Date.context_today(self),
+                    round=False,
+                ),
+            }
+            return [vals.get(key, record[key]) for key in sort_key]
         sellers = self._get_filtered_sellers(partner_id=partner_id, quantity=quantity, date=date, uom_id=uom_id, params=params)
         res = self.env['product.supplierinfo']
         for seller in sellers:
             if not res or res.partner_id == seller.partner_id:
                 res |= seller
-        return res and res.sorted(sort_key)[:1]
+        return res and res.sorted(sort_function)[:1]
 
     def _get_product_price_context(self, combination):
         self.ensure_one()

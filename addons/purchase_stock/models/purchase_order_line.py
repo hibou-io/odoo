@@ -44,6 +44,7 @@ class PurchaseOrderLine(models.Model):
         return moves
 
     def _get_po_line_invoice_lines_su(self):
+        #TODO remove in master: un-used
         return self.sudo().invoice_lines
 
     @api.depends('move_ids.state', 'move_ids.product_uom', 'move_ids.quantity')
@@ -303,6 +304,16 @@ class PurchaseOrderLine(models.Model):
             'sequence': self.sequence,
         }
 
+    def _prepare_account_move_line(self, move=False):
+        res = super()._prepare_account_move_line(move=move)
+        if 'balance' not in res:
+            res['balance'] = self.currency_id._convert(
+                self.price_unit_discounted * self.qty_to_invoice,
+                self.company_id.currency_id,
+                round=False,
+            )
+        return res
+
     @api.model
     def _prepare_purchase_order_line_from_procurement(self, product_id, product_qty, product_uom, company_id, values, po):
         line_description = ''
@@ -356,7 +367,7 @@ class PurchaseOrderLine(models.Model):
             name = product_lang.display_name
             if product_lang.description_purchase:
                 name += '\n' + product_lang.description_purchase
-            lines = lines.filtered(lambda l: l.name == name + '\n' + description_picking)
+            lines = lines.filtered(lambda l: (l.name == name + '\n' + description_picking) or (product_lang.name == values.get('product_description_variants') and l.name == name))
             if lines:
                 return lines[0]
 

@@ -182,7 +182,12 @@ class AccountEdiFormat(models.Model):
                     tax_info = {
                         'BaseImponible': round(base_amount, 2),
                     }
-                    if tax_values['applied_tax_amount'] > 0.0:
+                    if tax_values['l10n_es_type'] == 'sujeto_agricultura':
+                        tax_info.update({
+                            'PorcentCompensacionREAGYP': tax_values['applied_tax_amount'],
+                            'ImporteCompensacionREAGYP': round(math.copysign(tax_values['tax_amount'], base_amount), 2),
+                        })
+                    elif tax_values['applied_tax_amount'] > 0.0:
                         tax_info.update({
                             'TipoImpositivo': tax_values['applied_tax_amount'],
                             'CuotaSoportada': round(math.copysign(tax_values['tax_amount'], base_amount), 2),
@@ -285,7 +290,10 @@ class AccountEdiFormat(models.Model):
 
             # === Invoice ===
 
+            if invoice.delivery_date and invoice.delivery_date != invoice.invoice_date:
+                invoice_node['FechaOperacion'] = invoice.delivery_date.strftime('%d-%m-%Y')
             invoice_node['DescripcionOperacion'] = invoice.invoice_origin[:500] if invoice.invoice_origin else 'manual'
+            reagyp = invoice.invoice_line_ids.tax_ids.filtered(lambda t: t.l10n_es_type == 'sujeto_agricultura')
             if invoice.is_sale_document():
                 nif = invoice.company_id.vat[2:] if invoice.company_id.vat.startswith('ES') else invoice.company_id.vat
                 info['IDFactura']['IDEmisorFactura'] = {'NIF': nif}
@@ -309,6 +317,10 @@ class AccountEdiFormat(models.Model):
                 if invoice._l10n_es_is_dua():
                     partner_info = self._l10n_es_edi_get_partner_info(invoice.company_id.partner_id)
                 info['IDFactura']['IDEmisorFactura'] = partner_info
+                # In case of cancel
+                info["IDFactura"]["IDEmisorFactura"].update(
+                    {"NombreRazon": com_partner.name[0:120]}
+                )
                 info["IDFactura"]["NumSerieFacturaEmisor"] = (invoice.ref or "")[:60]
                 if not is_simplified:
                     invoice_node['Contraparte'] = {
@@ -325,7 +337,12 @@ class AccountEdiFormat(models.Model):
                 mod_303_11 = self.env.ref('l10n_es.mod_303_casilla_11_balance')._get_matching_tags()
                 tax_tags = invoice.invoice_line_ids.tax_ids.repartition_line_ids.tag_ids
                 intracom = bool(tax_tags & (mod_303_10 + mod_303_11))
-                invoice_node['ClaveRegimenEspecialOTrascendencia'] = '09' if intracom else '01'
+                if intracom:
+                    invoice_node['ClaveRegimenEspecialOTrascendencia'] = '09'
+                elif reagyp:
+                    invoice_node['ClaveRegimenEspecialOTrascendencia'] = '02'
+                else:
+                    invoice_node['ClaveRegimenEspecialOTrascendencia'] = '01'
 
             if invoice.move_type == 'out_invoice':
                 invoice_node['TipoFactura'] = 'F2' if is_simplified else 'F1'
@@ -333,9 +350,12 @@ class AccountEdiFormat(models.Model):
                 invoice_node['TipoFactura'] = 'R5' if is_simplified else 'R1'
                 invoice_node['TipoRectificativa'] = 'I'
             elif invoice.move_type == 'in_invoice':
-                invoice_node['TipoFactura'] = 'F1'
-                if invoice._l10n_es_is_dua():
+                if reagyp:
+                    invoice_node['TipoFactura'] = 'F6'
+                elif invoice._l10n_es_is_dua():
                     invoice_node['TipoFactura'] = 'F5'
+                else:
+                    invoice_node['TipoFactura'] = 'F1'
             elif invoice.move_type == 'in_refund':
                 invoice_node['TipoFactura'] = 'R4'
                 invoice_node['TipoRectificativa'] = 'I'
@@ -347,7 +367,7 @@ class AccountEdiFormat(models.Model):
             if invoice.is_sale_document():
                 # Customer invoices
 
-                if com_partner.country_id.code in ('ES', False) and not (com_partner.vat or '').startswith("ESN"):
+                if (com_partner.country_id.code in ('ES', False) and not (com_partner.vat or '').startswith("ESN")) or is_simplified:
                     tax_details_info_vals = self._l10n_es_edi_get_invoices_tax_details_info(invoice)
                     invoice_node['TipoDesglose'] = {'DesgloseFactura': tax_details_info_vals['tax_details_info']}
 
@@ -459,6 +479,9 @@ class AccountEdiFormat(models.Model):
             }
 
     def _l10n_es_edi_call_web_service_sign(self, invoices, info_list):
+        return self._l10n_es_edi_call_web_service_sign_common(invoices, info_list)
+
+    def _l10n_es_edi_call_web_service_sign_common(self, invoices, info_list, cancel=False):
         company = invoices.company_id
 
         # All are sharing the same value.
@@ -504,13 +527,19 @@ class AccountEdiFormat(models.Model):
 
         error_msg = None
         try:
-            if invoices[0].is_sale_document():
-                res = serv.SuministroLRFacturasEmitidas(header, info_list)
+            if cancel:
+                if invoices[0].is_sale_document():
+                    res = serv.AnulacionLRFacturasEmitidas(header, info_list)
+                else:
+                    res = serv.AnulacionLRFacturasRecibidas(header, info_list)
             else:
-                res = serv.SuministroLRFacturasRecibidas(header, info_list)
+                if invoices[0].is_sale_document():
+                    res = serv.SuministroLRFacturasEmitidas(header, info_list)
+                else:
+                    res = serv.SuministroLRFacturasRecibidas(header, info_list)
         except requests.exceptions.SSLError as error:
             error_msg = _("The SSL certificate could not be validated.")
-        except zeep.exceptions.Error as error:
+        except (zeep.exceptions.Error, requests.exceptions.ConnectionError) as error:
             error_msg = _("Networking error:\n%s", error)
         except Exception as error:
             error_msg = str(error)
@@ -578,12 +607,17 @@ class AccountEdiFormat(models.Model):
                     inv = candidates
 
             resp_line_state = respl.EstadoRegistro
+            respl_dict = dict(respl)
             if resp_line_state in ('Correcto', 'AceptadoConErrores'):
                 inv.l10n_es_edi_csv = l10n_es_edi_csv
                 results[inv] = {'success': True}
                 if resp_line_state == 'AceptadoConErrores':
                     inv.message_post(body=_("This was accepted with errors: ") + html_escape(respl.DescripcionErrorRegistro))
-            elif respl.RegistroDuplicado:
+            elif (
+                (respl_dict.get('RegistroDuplicado') and respl.RegistroDuplicado.EstadoRegistro == 'Correcta')
+                or
+                (cancel and respl_dict.get('CodigoErrorRegistro') == 3001)
+            ):
                 results[inv] = {'success': True}
                 inv.message_post(body=_("We saw that this invoice was sent correctly before, but we did not treat "
                                         "the response.  Make sure it is not because of a wrong configuration."))
@@ -601,12 +635,10 @@ class AccountEdiFormat(models.Model):
         return results
 
     def _has_oss_taxes(self, invoice):
-        if self.env['ir.module.module'].search([('name', '=', 'l10n_eu_oss'), ('state', '=', 'installed')]):
-            oss_tag = self.env.ref('l10n_eu_oss.tag_oss')
-            lines = invoice.invoice_line_ids.filtered(lambda line: line.display_type not in ('line_section', 'line_note'))
-            tax_tags = lines.mapped('tax_ids.invoice_repartition_line_ids.tag_ids')
-            return oss_tag in tax_tags
-        return False
+        oss_tag = self.env.ref('l10n_eu_oss.tag_oss', raise_if_not_found=False)
+        lines = invoice.invoice_line_ids.filtered(lambda line: line.display_type not in ('line_section', 'line_note'))
+        tags = lines.tax_ids.repartition_line_ids.tag_ids
+        return bool(oss_tag and oss_tag in tags)
 
     # -------------------------------------------------------------------------
     # EDI OVERRIDDEN METHODS
@@ -626,6 +658,7 @@ class AccountEdiFormat(models.Model):
                 'post': self._l10n_es_edi_sii_post_invoices,
                 'post_batching': lambda invoice: (invoice.move_type, invoice.l10n_es_edi_csv),
                 'edi_content': self._l10n_es_edi_sii_xml_invoice_content,
+                'cancel': self._l10n_es_edi_sii_cancel_invoices,
             }
 
     def _needs_web_services(self):
@@ -671,7 +704,7 @@ class AccountEdiFormat(models.Model):
 
         return journal.country_code == 'ES'
 
-    def _l10n_es_edi_sii_post_invoices(self, invoices):
+    def _l10n_es_edi_sii_send(self, invoices, cancel=False):
         # Ensure a certificate is available.
         certificate = invoices.company_id.l10n_es_edi_certificate_id
         if not certificate:
@@ -692,7 +725,10 @@ class AccountEdiFormat(models.Model):
         info_list = self._l10n_es_edi_get_invoices_info(invoices)
 
         # Call the web service.
-        res = self._l10n_es_edi_call_web_service_sign(invoices, info_list)
+        if not cancel: #retrocompatibility and mocks in tests
+            res = self._l10n_es_edi_call_web_service_sign(invoices, info_list)
+        else:
+            res = self._l10n_es_edi_call_web_service_sign_common(invoices, info_list, cancel=True)
 
         for inv in invoices:
             if res.get(inv, {}).get('success'):
@@ -705,4 +741,12 @@ class AccountEdiFormat(models.Model):
                     'res_id': inv.id,
                 })
                 res[inv]['attachment'] = attachment
+                if cancel:
+                    inv.l10n_es_edi_csv = False
         return res
+
+    def _l10n_es_edi_sii_post_invoices(self, invoices):
+        return self._l10n_es_edi_sii_send(invoices)
+
+    def _l10n_es_edi_sii_cancel_invoices(self, invoices):
+        return self._l10n_es_edi_sii_send(invoices, cancel=True)

@@ -140,6 +140,11 @@ class TestSaleProject(TestSaleProjectCommon):
         self.assertFalse(so_line_order_only_project.task_id, "Task should not be created")
         self.assertTrue(so_line_order_only_project.project_id, "Sales order line should be linked to newly created project")
 
+        self.assertEqual(self.env['sale.order'].search([('tasks_ids', 'in', so_line_order_new_task_new_project.task_id.ids)]), sale_order)
+        self.assertEqual(self.env['sale.order'].search([('tasks_ids', '=', so_line_order_new_task_new_project.task_id.id)]), sale_order)
+        self.assertEqual(self.env['sale.order'].search([('tasks_ids', 'any', [('project_id', '=', so_line_order_new_task_new_project.project_id.id)])]), sale_order)
+        self.assertEqual(self.env['sale.order'].search([('tasks_ids.project_id', '=', so_line_order_new_task_new_project.project_id.id)]), sale_order)
+
         self.assertEqual(self.project_global._get_sale_order_items(), self.project_global.sale_line_id | self.project_global.tasks.sale_line_id, 'The _get_sale_order_items should returns all the SOLs linked to the project and its active tasks.')
 
         sale_order_2 = SaleOrder.create({
@@ -873,3 +878,16 @@ class TestSaleProject(TestSaleProjectCommon):
             'sale_line_id': sale_order_line.id,
         })
         self.assertEqual(sale_order.state, 'sale')
+
+    def test_sale_order_milestone_with_no_project_rights(self):
+        milestone_user = new_test_user(
+            self.env, groups='project.group_project_milestone,sales_team.group_sale_salesman',
+            login='Milestone user', name='Milestone user',
+        )
+
+        group_project_user = self.env.ref('project.group_project_user').id
+        self.assertNotIn(group_project_user, milestone_user.groups_id.ids)
+
+        sale_order_form = Form(self.env['sale.order'].with_user(milestone_user), view='sale_project.view_order_form_inherit_sale_project')
+        project_ids = sale_order_form._view['fields'].get('project_ids')
+        self.assertTrue(project_ids, "'project_ids' field should be present for milestone users in the sale order form")

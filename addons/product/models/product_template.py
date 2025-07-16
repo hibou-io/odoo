@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from odoo import api, fields, models, tools, _, SUPERUSER_ID
 from odoo.exceptions import UserError, ValidationError
+from odoo.models import PREFETCH_MAX
 from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
@@ -184,7 +185,7 @@ class ProductTemplate(models.Model):
 
     @api.depends('image_1920', 'image_1024')
     def _compute_can_image_1024_be_zoomed(self):
-        for template in self:
+        for template in self.with_context(bin_size=False):
             template.can_image_1024_be_zoomed = template.image_1920 and tools.is_image_size_above(template.image_1920, template.image_1024)
 
     @api.depends(
@@ -556,9 +557,12 @@ class ProductTemplate(models.Model):
         templates = self.browse()
         while True:
             extra = templates and [('product_tmpl_id', 'not in', templates.ids)] or []
-            # Product._name_search has default value limit=100
-            # So, we either use that value or override it to None to fetch all products at once
-            products_ids = Product._name_search(name, domain + extra, operator, limit=None)
+            # Pathological case: there is no limit, so we'll need to search on all products.
+            # We iteratively _name_search with a larger bound, but not unbounded to avoid
+            # performance regressions or OOM errors while manipulating extremely large list of ids.
+            # For other cases, we use PREFETCH_MAX as an upper bound.
+            search_limit = PREFETCH_MAX * 10 if not limit else PREFETCH_MAX
+            products_ids = Product._name_search(name, domain + extra, operator, limit=search_limit)
             products = Product.browse(products_ids)
             new_templates = products.product_tmpl_id
             if new_templates & templates:
@@ -1257,6 +1261,8 @@ class ProductTemplate(models.Model):
         value_index_per_line = [-1] * len(product_template_attribute_values_per_line)
         # determines which line line we're working on
         line_index = 0
+        # determines which ptav we're working on
+        current_ptav = None
 
         while True:
             current_line_values = product_template_attribute_values_per_line[line_index]
@@ -1267,11 +1273,12 @@ class ProductTemplate(models.Model):
                 if line_index == len(product_template_attribute_values_per_line) - 1:
                     # submit combination if we're on the last line
                     yield partial_combination
+                    # will break or continue further down as current_ptav_index is always -1 here
                 else:
                     line_index += 1
                     continue
-
-            current_ptav = current_line_values[current_ptav_index]
+            else:
+                current_ptav = current_line_values[current_ptav_index]
 
             # removing exclusions from current_ptav as we're removing it from partial_combination
             if current_ptav_index >= 0:

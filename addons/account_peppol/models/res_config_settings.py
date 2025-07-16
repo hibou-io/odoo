@@ -159,8 +159,7 @@ class ResConfigSettings(models.TransientModel):
         ):
             error_msg = _(
                 "A participant with these details has already been registered on the network. "
-                "If you have previously registered to an alternative Peppol service, please deregister from that service, "
-                "or request a migration key before trying again. "
+                "If you have previously registered to a Peppol service, please deregister."
             )
 
             if isinstance(participant_info, str):
@@ -296,15 +295,7 @@ class ResConfigSettings(models.TransientModel):
         The migration key is then displayed in Peppol settings.
         Currently, reopening after migrating away is not supported.
         """
-        self.ensure_one()
-
-        if self.account_peppol_proxy_state != 'active':
-            raise UserError(_(
-                "Can't migrate registration with this status: %s", self.account_peppol_proxy_state
-            ))
-
-        response = self._call_peppol_proxy(endpoint='/api/peppol/1/migrate_peppol_registration')
-        self.account_peppol_migration_key = response['migration_key']
+        raise UserError(_("This feature is deprecated. Contact odoo support if you need a migration key."))
 
     @handle_demo
     def button_deregister_peppol_participant(self):

@@ -3,7 +3,7 @@
 from werkzeug.urls import url_encode, url_parse
 
 from odoo import http, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.http import request
 
 from odoo.addons.website_sale.controllers import main
@@ -12,7 +12,7 @@ from odoo.addons.website_sale.controllers import main
 class WebsiteSale(main.WebsiteSale):
 
     @http.route()
-    def pricelist(self, promo, **post):
+    def pricelist(self, promo, reward_id=None, **post):
         order = request.website.sale_get_order()
         if not order:
             return request.redirect('/shop')
@@ -25,6 +25,8 @@ class WebsiteSale(main.WebsiteSale):
             reward_successfully_applied = True
             if len(coupon_status) == 1:
                 coupon, rewards = next(iter(coupon_status.items()))
+                if reward_id in rewards.ids:
+                    rewards = rewards.browse(reward_id)
                 if request.env.context.get('product_id') or (len(rewards) == 1 and not rewards.multi_product):
                     reward_successfully_applied = self._apply_reward(order, rewards, coupon)
 
@@ -104,7 +106,7 @@ class WebsiteSale(main.WebsiteSale):
                     (program_sudo.trigger == 'with_code' and program_sudo.program_type != 'promo_code')
                     or (program_sudo.trigger == 'auto' and program_sudo.applies_on == 'future')
                 ):
-                    return self.pricelist(code, **post)
+                    return self.pricelist(code, reward_id=reward_id, **post)
         if coupon:
             self._apply_reward(order_sudo, reward_sudo, coupon)
         return request.redirect(redirect)
@@ -141,3 +143,27 @@ class WebsiteSale(main.WebsiteSale):
             # and does not follow the request's context
             request.website = request.website.with_context(website_sale_loyalty_delete=True)
         return super().cart_update_json(*args, set_qty=set_qty, **kwargs)
+
+
+class PaymentPortal(main.PaymentPortal):
+
+    def _validate_transaction_for_order(self, transaction, sale_order_id):
+        """Update programs & rewards before finalizing transaction.
+
+        :param payment.transaction transaction: The payment transaction
+        :param int order_id: The id of the sale order to pay
+        :raise: ValidationError if the order amount changed after updating rewards
+        """
+        super()._validate_transaction_for_order(transaction, sale_order_id)
+        order_sudo = request.env['sale.order'].sudo().browse(sale_order_id)
+        if order_sudo.exists():
+            initial_amount = order_sudo.amount_total
+            order_sudo._update_programs_and_rewards()
+            order_sudo.validate_taxes_on_sales_order()  # re-applies taxcloud taxes if necessary
+            if order_sudo.currency_id.compare_amounts(initial_amount, order_sudo.amount_total):
+                raise ValidationError(
+                    _(
+                        "Cannot process payment: applied reward was changed or has expired.\n"
+                        "Please refresh the page and try again."
+                    )
+                )
