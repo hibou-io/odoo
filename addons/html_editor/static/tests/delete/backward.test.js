@@ -1711,8 +1711,8 @@ describe("Selection not collapsed", () => {
             stepFunction: deleteBackward,
             contentAfter: unformat(
                 `<table><tbody>
-                        <tr><td>cd</td><td>[]<br></td><td>gh</td></tr>
-                        <tr><td>ij</td><td><br></td><td>mn</td></tr>
+                        <tr><td>cd</td><td><p>[]<br></p></td><td>gh</td></tr>
+                        <tr><td>ij</td><td><p><br></p></td><td>mn</td></tr>
                         <tr><td>op</td><td>qr</td><td>st</td></tr>
                     </tbody></table>`
             ),
@@ -1884,13 +1884,14 @@ describe("Selection not collapsed", () => {
                     <tr><td><br></td><td>]<br></td></tr>
                 </tbody></table>`
             ),
-            stepFunction: deleteBackward,
-            contentAfter: unformat(
-                `<table><tbody>
-                    <tr><td>[]<br></td><td><br></td></tr>
-                    <tr><td><br></td><td><br></td></tr>
+            contentBeforeEdit: unformat(
+                `[<table class="o_selected_table"><tbody>
+                    <tr><td class="o_selected_td"><br></td><td class="o_selected_td"><br></td></tr>
+                    <tr><td class="o_selected_td"><br></td><td class="o_selected_td">]<br></td></tr>
                 </tbody></table>`
             ),
+            stepFunction: deleteBackward,
+            contentAfter: unformat("<p>[]<br></p>"),
         });
     });
 
