@@ -322,7 +322,7 @@ describe("Selection collapsed", () => {
                 contentAfter: `<p>[]&nbsp;def</p>`,
             });
         });
-        test("should merge p elements inside conteneditbale=true inside contenteditable=false", async () => {
+        test("should merge p elements inside contenteditable=true inside contenteditable=false", async () => {
             await testEditor({
                 contentBefore: `<div contenteditable="false"><div contenteditable="true"><p>abc[]</p><p>def</p></div></div>`,
                 stepFunction: deleteForward,
@@ -1410,8 +1410,8 @@ describe("Selection not collapsed", () => {
             stepFunction: deleteForward,
             contentAfter: unformat(
                 `<table><tbody>
-                        <tr><td>cd</td><td>[]<br></td><td>gh</td></tr>
-                        <tr><td>ij</td><td><br></td><td>mn</td></tr>
+                        <tr><td>cd</td><td><p>[]<br></p></td><td>gh</td></tr>
+                        <tr><td>ij</td><td><p><br></p></td><td>mn</td></tr>
                         <tr><td>op</td><td>qr</td><td>st</td></tr>
                     </tbody></table>`
             ),

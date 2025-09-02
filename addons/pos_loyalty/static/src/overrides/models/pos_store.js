@@ -179,7 +179,7 @@ patch(PosStore.prototype, {
             ) {
                 Object.assign(oldChanges[idx], pointsAdded[idx]);
             }
-            if (pointsAdded.length < oldChanges.length) {
+            if (pointsAdded.length < oldChanges.length || !order._programIsApplicable(program)) {
                 const removedIds = oldChanges.map((pe) => pe.coupon_id);
                 order.uiState.couponPointChanges = Object.fromEntries(
                     Object.entries(order.uiState.couponPointChanges).filter(([k, pe]) => {
@@ -429,7 +429,9 @@ patch(PosStore.prototype, {
         await this.updatePrograms();
         if (rewardsToApply.length == 1) {
             const reward = rewardsToApply[0];
-            order._applyReward(reward.reward, reward.coupon_id, { product });
+            order._applyReward(reward.reward, reward.coupon_id, {
+                product: result.product_id,
+            });
         }
         this.updateRewards();
 
@@ -581,8 +583,15 @@ patch(PosStore.prototype, {
 
     computeDiscountProductIdsForAllRewards(data) {
         const products = this.models[data.model].readMany(data.ids);
+        const productsSerialized = products.map((p) => {
+            return {
+                product: p,
+                serialized: p.serialize(),
+            };
+        });
+
         for (const reward of this.models["loyalty.reward"].getAll()) {
-            this.compute_discount_product_ids(reward, products);
+            this.compute_discount_product_ids(reward, products, productsSerialized);
         }
     },
 
@@ -601,7 +610,8 @@ patch(PosStore.prototype, {
         }
     },
 
-    compute_discount_product_ids(reward, products) {
+    compute_discount_product_ids(reward, products, productsSerialized = []) {
+        // TODO: remove products parameter in master
         const reward_product_domain = JSON.parse(reward.reward_product_domain);
         if (!reward_product_domain) {
             return;
@@ -612,7 +622,12 @@ patch(PosStore.prototype, {
         try {
             reward.update({
                 all_discount_product_ids: [
-                    ["link", ...products.filter((p) => domain.contains(p.serialize()))],
+                    [
+                        "link",
+                        ...productsSerialized
+                            .filter((p) => domain.contains(p.serialized))
+                            .map((p) => p.product),
+                    ],
                 ],
             });
         } catch (error) {

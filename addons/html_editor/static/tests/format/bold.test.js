@@ -78,7 +78,10 @@ test("should make a whole heading bold after a triple click", async () => {
     await testEditor({
         styleContent: styleH1Bold,
         contentBefore: `<h1>${notStrong(`[ab`)}</h1><p>]cd</p>`,
-        stepFunction: bold,
+        stepFunction: async (editor) => {
+            await tripleClick(editor.editable.querySelector("h1"));
+            bold(editor);
+        },
         contentAfter: `<h1>[ab]</h1><p>cd</p>`,
     });
 });
@@ -143,6 +146,15 @@ test("should remove a bold tag that was redondant while performing the command",
             contentAfter: `<p>a${tag("b")}[c]${tag("d")}e</p>`,
         });
     }
+});
+
+test("should remove bold format when having newline character nodes in selection", async () => {
+    await testEditor({
+        contentBefore:
+            "<p><strong>[abc</strong></p>\n<p><strong>def</strong></p>\n<p><strong>ghi]</strong></p>",
+        stepFunction: bold,
+        contentAfter: "<p>[abc</p>\n<p>def</p>\n<p>ghi]</p>",
+    });
 });
 
 test("should remove a bold tag that was redondant with different tags while performing the command", async () => {
