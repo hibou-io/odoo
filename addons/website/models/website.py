@@ -8,6 +8,8 @@ import inspect
 import json
 import logging
 import re
+from itertools import zip_longest
+
 import requests
 import threading
 
@@ -15,7 +17,7 @@ from datetime import datetime
 from lxml import etree, html
 from psycopg2 import sql
 from werkzeug import urls
-from werkzeug.datastructures import OrderedMultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import NotFound
 
 from odoo import api, fields, models, tools, http, release, registry
@@ -673,9 +675,10 @@ class Website(models.Model):
                     'database_id': database_id,
                 })
                 name_replace_parser = re.compile(r"XXXX", re.MULTILINE)
+                website_name = re.escape(website.name)
                 for key in generated_content:
                     if response.get(key):
-                        generated_content[key] = (name_replace_parser.sub(website.name, response[key], 0))
+                        generated_content[key] = (name_replace_parser.sub(website_name, response[key], 0))
             except AccessError:
                 # If IAP is broken continue normally (without generating text)
                 pass
@@ -1227,7 +1230,7 @@ class Website(models.Model):
                 order = View._order
             views = View.with_context(active_test=False).search(domain, order=order)
             if views:
-                view = views.filter_duplicate()
+                view = views.filter_duplicate()[:1]
             else:
                 # we handle the raise below
                 view = self.env.ref(view_id, raise_if_not_found=False)
@@ -1543,11 +1546,11 @@ class Website(models.Model):
     def _is_canonical_url(self, canonical_params):
         """Returns whether the current request URL is canonical."""
         self.ensure_one()
-        # Compare OrderedMultiDict because the order is important, there must be
-        # only one canonical and not params permutations.
-        params = request.httprequest.args
-        canonical_params = canonical_params or OrderedMultiDict()
-        if params != canonical_params:
+        params = request.httprequest.args.items(multi=True)
+        canonical = iter([]) if not canonical_params\
+            else canonical_params.items(multi=True) if isinstance(canonical_params, MultiDict)\
+            else canonical_params.items()
+        if any(a != b for a, b in zip_longest(params, canonical)):
             return False
         # Compare URL at the first routing iteration because it's the one with
         # the language in the path. It is important to also test the domain of
