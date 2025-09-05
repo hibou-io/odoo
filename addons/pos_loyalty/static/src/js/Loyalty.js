@@ -395,9 +395,10 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
                     continue;
                 }
                 const newId = nextId--;
-                delete this.oldCouponMapping[pe.coupon_id];
+                this.oldCouponMapping[pe.coupon_id] = newId;
                 pe.coupon_id = newId;
                 this.couponPointChanges[newId] = pe;
+                delete this.couponPointChanges[key];
             }
         }
         super.init_from_JSON(...arguments);
@@ -645,7 +646,8 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
                 programsToCheck.add(program.id);
             }
         }
-        for (const pe of Object.values(this.couponPointChanges)) {
+        const newPointChanges = Object.assign({}, JSON.parse(JSON.stringify(this.couponPointChanges)));
+        for (const pe of Object.values(newPointChanges)) {
             if (!changesPerProgram[pe.program_id]) {
                 changesPerProgram[pe.program_id] = [];
                 programsToCheck.add(pe.program_id);
@@ -672,13 +674,11 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
             }
             if (pointsAdded.length < oldChanges.length) {
                 const removedIds = oldChanges.map((pe) => pe.coupon_id);
-                this.couponPointChanges = Object.fromEntries(Object.entries(this.couponPointChanges).filter(([k, pe]) => {
-                    return !removedIds.includes(pe.coupon_id);
-                }));
+                removedIds.forEach(id => delete newPointChanges[id]);
             } else if (pointsAdded.length > oldChanges.length) {
                 for (const pa of pointsAdded.splice(oldChanges.length)) {
                     const coupon = await this._couponForProgram(program);
-                    this.couponPointChanges[coupon.id] = {
+                    newPointChanges[coupon.id] = {
                         points: pa.points,
                         program_id: program.id,
                         coupon_id: coupon.id,
@@ -697,6 +697,7 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
             }
             return true;
         });
+        this.couponPointChanges = newPointChanges;
     }
     /**
      * @typedef {{ won: number, spend: number, total: number, balance: number, name: string}} LoyaltyPoints
@@ -1056,6 +1057,10 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
                 if (points < reward.required_points) {
                     continue;
                 }
+                // Skip if the reward program is of type 'coupons' and there is already an reward orderline linked to the current reward to avoid multiple reward apply
+                if ((reward.program_id.program_type === 'coupons' && this.orderlines.find(((rewardline) => rewardline.reward_id === reward.id)))) {
+                    continue;
+                }
                 if (auto && this.disabledRewards.has(reward.id)) {
                     continue;
                 }
@@ -1195,7 +1200,9 @@ const PosLoyaltyOrder = (Order) => class PosLoyaltyOrder extends Order {
             if (!line.get_quantity()) {
                 continue;
             }
-            const taxKey = line.get_taxes().map((t) => t.id);
+            const taxKey = ['ewallet', 'gift_card'].includes(reward.program_id.program_type)
+                ? line.get_taxes().map((t) => t.id)
+                : line.get_taxes().filter((t) => t.amount_type !== 'fixed').map((t) => t.id);
             discountable += line.get_price_with_tax();
             if (!discountablePerTax[taxKey]) {
                 discountablePerTax[taxKey] = 0;

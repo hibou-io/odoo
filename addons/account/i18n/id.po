@@ -10,16 +10,17 @@
 # Muftiara Syuhada <muftiara.syuhada@gmail.com>, 2023
 # Martin Trigaux, 2023
 # Edi Santoso <repopamor@gmail.com>, 2023
-# Wil Odoo, 2024
-# Abe Manyo, 2024
+# Stafirudin Suryadibrata, 2025
+# Abe Manyo, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-06 13:31+0000\n"
+"POT-Creation-Date: 2025-07-04 01:32+0000\n"
 "PO-Revision-Date: 2022-09-22 05:44+0000\n"
-"Last-Translator: Abe Manyo, 2024\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -92,6 +93,12 @@ msgid "# Reconciled Statement Lines"
 msgstr "# Barisan Laporan Rekonsiliasi"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_res_partner__supplier_invoice_count
+#: model:ir.model.fields,field_description:account.field_res_users__supplier_invoice_count
+msgid "# Vendor Bills"
+msgstr "# Tagihan Pemasok"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_chart_template__code_digits
 msgid "# of Digits"
 msgstr "# dari Digit"
@@ -148,6 +155,7 @@ msgstr "%s (Salinan)"
 #: code:addons/account/models/account_account.py:0
 #: code:addons/account/models/account_account.py:0
 #: code:addons/account/models/account_journal.py:0
+#: code:addons/account/models/account_payment_term.py:0
 #: code:addons/account/models/account_reconcile_model.py:0
 #: code:addons/account/models/account_reconcile_model.py:0
 #, python-format
@@ -258,12 +266,6 @@ msgstr "(termasuk)."
 #, python-format
 msgid "(including this document) "
 msgstr "(termasuk dokumen ini) "
-
-#. module: account
-#: model:ir.actions.report,print_report_name:account.account_invoices
-#: model:ir.actions.report,print_report_name:account.account_invoices_without_payment
-msgid "(object._get_report_base_filename())"
-msgstr "(object._get_report_base_filename())"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_payment_term_form
@@ -677,6 +679,9 @@ msgid ""
 "('name', '!=', '/'), ('posted_before', '=', True), ('quick_edit_mode', '=', "
 "True)]}\">Draft</span>"
 msgstr ""
+"<span attrs=\"{'invisible': ['|', '|', '|', ('state', '!=', 'draft'), "
+"('name', '!=', '/'), ('posted_before', '=', True), ('quick_edit_mode', '=', "
+"True)]}\">Draf</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_invoice_send_wizard_form
@@ -3009,6 +3014,7 @@ msgstr "Auto-validate"
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 #: code:addons/account/models/company.py:0
+#: code:addons/account/models/company.py:0
 #, python-format
 msgid "Automatic Balancing Line"
 msgstr "Baris Saldo Otomatis"
@@ -3620,6 +3626,15 @@ msgstr "Tidak dapat membuat dokumen pembelian dalam jurnal non pembelian"
 #, python-format
 msgid "Cannot create a sale document in a non sale journal"
 msgstr "Tidak dapat membuat dokumen penjualan dalam jurnal non penjualan"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/wizard/accrued_orders.py:0
+#, python-format
+msgid "Cannot create an accrual entry with orders in different currencies."
+msgstr ""
+"Tidak dapat membuat entri akrual dengan pesanan yang memiliki mata uang yang"
+" berbeda-beda."
 
 #. module: account
 #. odoo-python
@@ -5533,26 +5548,6 @@ msgid "Delivery address for current invoice."
 msgstr "Alamat pengiriman untuk faktur ini"
 
 #. module: account
-#: model:account.account.tag,name:account.demo_ceo_wages_account
-msgid "Demo CEO Wages Account"
-msgstr "Demo Akun Gaji CEO"
-
-#. module: account
-#: model:account.account.tag,name:account.demo_capital_account
-msgid "Demo Capital Account"
-msgstr "Demo Capital Account"
-
-#. module: account
-#: model:account.account.tag,name:account.demo_sale_of_land_account
-msgid "Demo Sale of Land Account"
-msgstr "Demo Sale of Land Account"
-
-#. module: account
-#: model:account.account.tag,name:account.demo_stock_account
-msgid "Demo Stock Account"
-msgstr "Demo Akun Stok"
-
-#. module: account
 #: model:ir.model.fields,field_description:account.field_account_account__deprecated
 msgid "Deprecated"
 msgstr "Usang"
@@ -6556,11 +6551,6 @@ msgid "Financial Tags"
 msgstr "Financial Tags"
 
 #. module: account
-#: model:account.account.tag,name:account.account_tag_financing
-msgid "Financing Activities"
-msgstr "Kegiatan-Kegiatan Keuangan"
-
-#. module: account
 #: model:ir.model.fields,field_description:account.field_account_reconcile_model_partner_mapping__payment_ref_regex
 msgid "Find Text in Label"
 msgstr "Temukan Teks dalam Label"
@@ -7292,6 +7282,7 @@ msgstr "ID"
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_move.py:0
 #: code:addons/account/models/chart_template.py:0
 #, python-format
 msgid "INV"
@@ -7946,11 +7937,6 @@ msgid "Invert Tags"
 msgstr "Invert Tag"
 
 #. module: account
-#: model:account.account.tag,name:account.account_tag_investing
-msgid "Investing & Extraordinary Activities"
-msgstr "Investasi & Kegiatan Luar Biasa"
-
-#. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 #: model:ir.model.fields,field_description:account.field_res_partner__invoice_warn
@@ -8164,13 +8150,11 @@ msgid "Invoice: Sending"
 msgstr "Faktur: Mengirim"
 
 #. module: account
-#: model:mail.template,report_name:account.email_template_edi_invoice
-msgid ""
-"Invoice_{{ (object.name or '').replace('/','_') }}{{ object.state == 'draft'"
-" and '_draft' or '' }}"
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+#, python-format
+msgid "Invoice_%(name)s%(post)s"
 msgstr ""
-"Faktur_{{ (object.name or '').replace('/','_') }}{{ object.state == 'draft' "
-"and '_draft' or '' }}"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_invoice_report_search
@@ -8275,6 +8259,12 @@ msgstr "Memfaktur Legacy App"
 #: model:ir.model.fields.selection,name:account.selection__account_reconcile_model_template__match_amount__between
 msgid "Is Between"
 msgstr "Is Between"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_res_partner__is_coa_installed
+#: model:ir.model.fields,field_description:account.field_res_users__is_coa_installed
+msgid "Is Coa Installed"
+msgstr "Apakah Coa Diinstal"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement__is_complete
@@ -8388,6 +8378,13 @@ msgstr "Ini mengindikasikan bahwa invoice/pembayaran telah terkirim"
 msgid "It was previously '%(previous)s' and it is now '%(current)s'."
 msgstr ""
 "Sebelumnya merupakan '%(previous)s' dan sekarang adalah '%(current)s'."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_line.py:0
+#, python-format
+msgid "Items With Missing Analytic Distribution"
+msgstr "Item Dengan yang Kurang Distribusi Analitik"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__1
@@ -9706,7 +9703,7 @@ msgstr "Navigasi laporan dengan mudah dan lihat makna di balik angka-angka"
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__half-up
 msgid "Nearest"
-msgstr ""
+msgstr "Terdekat"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__needed_terms
@@ -9770,6 +9767,16 @@ msgstr "Nilai Baru"
 #: model:ir.model.fields.selection,name:account.selection__account_reconcile_model_template__matching_order__new_first
 msgid "Newest first"
 msgstr "Paling baru terlebih dahulu"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__activity_calendar_event_id
+#: model:ir.model.fields,field_description:account.field_account_journal__activity_calendar_event_id
+#: model:ir.model.fields,field_description:account.field_account_move__activity_calendar_event_id
+#: model:ir.model.fields,field_description:account.field_account_payment__activity_calendar_event_id
+#: model:ir.model.fields,field_description:account.field_account_setup_bank_manual_config__activity_calendar_event_id
+#: model:ir.model.fields,field_description:account.field_res_partner_bank__activity_calendar_event_id
+msgid "Next Activity Calendar Event"
+msgstr "Kalender Acara Aktivitas Berikutnya"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__activity_date_deadline
@@ -10179,11 +10186,6 @@ msgid "Off-Balance Sheet"
 msgstr "Off-Balance Sheet"
 
 #. module: account
-#: model:account.account.tag,name:account.demo_office_furniture_account
-msgid "Office Furniture"
-msgstr "Perabotan Kantor"
-
-#. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_reconcile_model__matching_order__old_first
 #: model:ir.model.fields.selection,name:account.selection__account_reconcile_model_template__matching_order__old_first
 msgid "Oldest first"
@@ -10240,6 +10242,13 @@ msgid "One or more Bank Accounts set on this partner are also used by other"
 msgstr ""
 "Satu atau lebih Akun Bank yang ditetapkan pada mitra ini sudah digunakan "
 "oleh "
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_line.py:0
+#, python-format
+msgid "One or more lines require a 100% analytic distribution."
+msgstr "Satu atau lebih baris memerlukan distribusi analitik 100%."
 
 #. module: account
 #. odoo-python
@@ -10368,11 +10377,6 @@ msgstr "Pergerakan Pembukaan Terekam"
 #, python-format
 msgid "Opening balance"
 msgstr "Saldo pembukaan"
-
-#. module: account
-#: model:account.account.tag,name:account.account_tag_operating
-msgid "Operating Activities"
-msgstr "Kegiatan Operasi"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_reconcile_model_form
@@ -11782,6 +11786,11 @@ msgid "Reconciliation Parts"
 msgstr "Bagian Rekonsiliasi"
 
 #. module: account
+#: model_terms:ir.actions.act_window,help:account.res_partner_action_supplier_bills
+msgid "Record a new vendor bill"
+msgstr "Catat tagihan vendor baru"
+
+#. module: account
 #. odoo-python
 #: code:addons/account/models/account_tax.py:0
 #, python-format
@@ -12520,6 +12529,13 @@ msgid "See all activities"
 msgstr "See all activities"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_line.py:0
+#, python-format
+msgid "See items"
+msgstr "Lihat item"
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
 msgid ""
 "Select 'Sale' for customer invoices journals.\n"
@@ -12802,6 +12818,14 @@ msgstr "Jasa"
 #, python-format
 msgid "Set a price"
 msgstr "Atur harga"
+
+#. module: account
+#: model:ir.model.fields,help:account.field_res_partner__use_partner_credit_limit
+#: model:ir.model.fields,help:account.field_res_users__use_partner_credit_limit
+msgid "Set a value greater than 0.0 to activate a credit limit check"
+msgstr ""
+"Tetapkan nilai lebih besar dari 0.0 untuk mengaktifkan pemeriksaan batas "
+"kredit"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_account_tag__active
@@ -15206,7 +15230,7 @@ msgid ""
 "the planned amount on each analytic account."
 msgstr ""
 "Hal ini memungkinkan akuntan untuk mengelola anggaran analitik. Setelah "
-"anggaran master dan anggaran ditentukan, manajer proyek dapat mengatur "
+"anggaran master dan anggaran ditentukan, manajer project dapat mengatur "
 "jumlah yang direncanakan pada setiap akun analitik."
 
 #. module: account
@@ -15268,8 +15292,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 #, python-format
-msgid "This entry has been duplicated from %s%s"
-msgstr "Entri ini telah digandakan dari %s%s"
+msgid "This entry has been duplicated from %s"
+msgstr "Entri ini telah digandakan dari %s"
 
 #. module: account
 #. odoo-python
@@ -15315,15 +15339,6 @@ msgid ""
 msgstr ""
 "Jurnal ini sudah berisi artikel, oleh karena itu Anda tidak dapat mengubah "
 "perusahaannya."
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_journal.py:0
-#, python-format
-msgid ""
-"This journal is associated with a payment method. You cannot archive it"
-msgstr ""
-"Jurnal ini terkait dengan metode pembayaran. Anda tidak dapat mengarsipnya"
 
 #. module: account
 #. odoo-python
@@ -15722,11 +15737,9 @@ msgstr "Transfer ke %s"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid ""
-"Trigger alerts when creating Invoices and Sales Orders for Partners with a "
-"Total Receivable amount exceeding a limit."
+"Trigger alerts when creating Invoices and Sales Orders for Partners with a Total Receivable amount exceeding a limit.\n"
+"                                        <br/><small>Set a value greater than 0.0 to activate a credit limit check</small>"
 msgstr ""
-"Picu alarm saat membuat Faktur dan Sales Order untuk Mitra dengan jumlah "
-"Total Piutang yang melebihi limit tertentu."
 
 #. module: account
 #. odoo-python
@@ -16235,8 +16248,10 @@ msgstr "Tagihan Vendor Dibuat"
 #. odoo-python
 #: code:addons/account/models/account_analytic_account.py:0
 #: code:addons/account/models/chart_template.py:0
+#: model:ir.actions.act_window,name:account.res_partner_action_supplier_bills
 #: model:ir.model.fields.selection,name:account.selection__res_company__quick_edit_mode__in_invoices
 #: model_terms:ir.ui.view,arch_db:account.account_analytic_account_view_form_inherit
+#: model_terms:ir.ui.view,arch_db:account.partner_view_buttons
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 #: model_terms:ir.ui.view,arch_db:account.res_partner_view_search
 #, python-format
@@ -16296,6 +16311,19 @@ msgstr "Vendor:"
 #: model_terms:ir.ui.view,arch_db:account.view_account_invoice_report_search
 msgid "Vendors"
 msgstr "Pemasok"
+
+#. module: account
+#: model_terms:ir.actions.act_window,help:account.res_partner_action_supplier_bills
+msgid ""
+"Vendors bills can be pre-generated based on purchase\n"
+"                orders or receipts. This allows you to control bills\n"
+"                you receive from your vendor according to the draft\n"
+"                document in Odoo."
+msgstr ""
+"Tagihan pemasok dapat dibuat terlebih dahulu menurut order pembelian\n"
+"                atau penerimaan. Ini memungkinkan Anda untuk mengontrol tagihan\n"
+"                yang Anda terima dari pemasok Anda menurut rancangan\n"
+"                dokumen di Odoo."
 
 #. module: account
 #. odoo-javascript
@@ -16961,6 +16989,13 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_account.py:0
+#, python-format
+msgid "You cannot deprecate an account that is used in a tax distribution."
+msgstr "Anda tidak dapat menghapus akun yang digunakan di distribusi pajak."
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/res_config_settings.py:0
 #, python-format
 msgid ""
@@ -17213,8 +17248,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 #, python-format
-msgid "You cannot switch the type of a posted document."
-msgstr "Anda tidak dapat mengganti tipe dari dokumen yang sudah di-post."
+msgid "You cannot switch the type of a document which has been posted once."
+msgstr "Anda tidak dapat mengganti tipe dokumen yang telah diposting sekali."
 
 #. module: account
 #. odoo-python
@@ -17403,6 +17438,13 @@ msgstr "[FURN_8999] Sofa Tiga-Orang"
 #, python-format
 msgid "[Not set]"
 msgstr "[Not set]"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+#, python-format
+msgid "_draft"
+msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
@@ -17608,6 +17650,12 @@ msgid "name"
 msgstr "nama"
 
 #. module: account
+#: model:ir.actions.report,print_report_name:account.account_invoices
+#: model:ir.actions.report,print_report_name:account.account_invoices_without_payment
+msgid "object._get_report_base_filename()"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_tax_repartition_line__repartition_type__tax
 #: model:ir.model.fields.selection,name:account.selection__account_tax_repartition_line_template__repartition_type__tax
 msgid "of tax"
@@ -17747,6 +17795,11 @@ msgstr "{percent:0.2f}% untuk melakukan pengakuan pada {new_date}"
 #: model:mail.template,report_name:account.mail_template_data_payment_receipt
 msgid "{{ (object.name or '').replace('/','-') }}"
 msgstr "{{ (object.name or '').replace('/','-') }}"
+
+#. module: account
+#: model:mail.template,report_name:account.email_template_edi_invoice
+msgid "{{ object._get_report_mail_attachment_filename() }}"
+msgstr ""
 
 #. module: account
 #: model:mail.template,subject:account.email_template_edi_credit_note

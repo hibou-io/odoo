@@ -709,6 +709,14 @@ class HolidaysRequest(models.Model):
                 continue
             if holiday.employee_id:
                 leave_days = mapped_days[holiday.employee_id.id][holiday.holiday_status_id.id]
+                allocation_exists = self.env['hr.leave.allocation'].search_count([
+                    ('employee_id', '=', holiday.employee_id.id),
+                    ('holiday_status_id', '=', holiday.holiday_status_id.id),
+                    ('state', '=', 'validate')
+                ], limit=1)
+                if not allocation_exists:
+                    raise ValidationError(_('You do not have any allocation for this time off type.\n'
+                                            'Please request an allocation before submitting your time off request.'))
                 if float_compare(leave_days['remaining_leaves'], 0, precision_digits=2) == -1\
                         or float_compare(leave_days['virtual_remaining_leaves'], 0, precision_digits=2) == -1:
                     raise ValidationError(_('The number of remaining time off is not sufficient for this time off type.\n'
@@ -983,7 +991,8 @@ class HolidaysRequest(models.Model):
 
         is_officer = self.env.user.has_group('hr_holidays.group_hr_holidays_user') or self.env.is_superuser()
         if not is_officer and values.keys() - {'attachment_ids', 'supported_attachment_ids', 'message_main_attachment_id'}:
-            if any(hol.date_from.date() < fields.Date.today() and hol.employee_id.leave_manager_id != self.env.user for hol in self):
+            if any(hol.date_from.date() < fields.Date.today() and hol.employee_id.leave_manager_id != self.env.user
+                   and hol.state not in ('confirm', 'draft') for hol in self):
                 raise UserError(_('You must have manager rights to modify/validate a time off that already begun'))
 
         # Unlink existing resource.calendar.leaves for validated time off
