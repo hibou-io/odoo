@@ -17,6 +17,8 @@ RUN set -x; \
     && apt-get update \
     # downgrade setuptools to support 2to3 (mainly because of vatnumber and suds-jurko) \
     && pip install setuptools\<58.0.0 \
+    # installing this way works but from requirements.txt it doesn't
+    && pip install suds-jurko \
     && apt-get install -y --no-install-recommends \
         zip \
         vim \
