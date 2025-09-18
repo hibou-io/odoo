@@ -1,4 +1,4 @@
-FROM python:3.13-slim-trixie
+FROM python:3.13-slim-bookworm
 LABEL maintainer="Hibou Corp. <hello@hibou.io>"
 
 ENV NODE_MAJOR=20
@@ -38,7 +38,7 @@ RUN set -x; \
     && npm install yarn --global --force \
     #  install postgresql-client from postgres itself to support newer server versions
     && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ trixie-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bookworm-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
@@ -50,9 +50,9 @@ RUN set -x; \
     && pip3 install git+https://github.com/OCA/openupgradelib.git \
     #  install wkhtmltox
     && cd /tmp \
-    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
-    && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \
-    && dpkg --force-depends -i wkhtmltox.deb \
+    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && echo 'e9f95436298c77cc9406bd4bbd242f4771d0a4b2 wkhtmltox.deb' | sha1sum -c - \
+    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
     && rm -rf wkhtmltox.deb \
     # Clean Up
     && rm -rf /root/.cache \
