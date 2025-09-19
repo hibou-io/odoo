@@ -1,4 +1,4 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim-trixie
 LABEL maintainer="Hibou Corp. <hello@hibou.io>"
 
 ENV NODE_MAJOR=20
@@ -17,6 +17,7 @@ RUN set -x; \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
+        cmake \
         zip \
         vim \
         #  for openupgrade and Odoo upgrade script
@@ -25,7 +26,26 @@ RUN set -x; \
         rsync \
         #  for apt-key
         gnupg \
-        #  for pip install \
+        # not all in requirements
+        python3-magic \
+        python3-num2words \
+        python3-odf \
+        python3-pdfminer \
+        python3-pip \
+        python3-phonenumbers \
+        python3-pyldap \
+        python3-qrcode \
+        python3-renderpm \
+        python3-setuptools \
+        python3-slugify \
+        python3-vobject \
+        python3-watchdog \
+        python3-xlrd \
+        python3-xlwt \
+        # install this one from pip with libcairo
+        # python3-rlpycairo \
+        libcairo2-dev \
+        # for pip install \
         libxml2-dev libxslt-dev \
         gcc g++ \
         libcurl4-openssl-dev libsasl2-dev libldap2-dev libssl-dev libyaml-dev \
@@ -38,7 +58,7 @@ RUN set -x; \
     && npm install yarn --global --force \
     #  install postgresql-client from postgres itself to support newer server versions
     && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bookworm-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ trixie-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
