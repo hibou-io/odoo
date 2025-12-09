@@ -55,12 +55,12 @@ PROJECT_TASK_READABLE_FIELDS = {
     'recurring_count',
     'duration_tracking',
     'display_follow_button',
+    'partner_id',
 }
 
 PROJECT_TASK_WRITABLE_FIELDS = {
     'name',
     'description',
-    'partner_id',
     'date_deadline',
     'date_last_stage_update',
     'tag_ids',
@@ -980,7 +980,11 @@ class Task(models.Model):
 
         if defaults:
             vals = {
-                **{key[8:]: value for key, value in self.env.context.items() if key.startswith("default_")},
+                **{
+                    key[8:]: value
+                    for key, value in self.env.context.items()
+                    if key.startswith("default_") and key[8:] in self._fields
+                },
                 **vals
             }
 

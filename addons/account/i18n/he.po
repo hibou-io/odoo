@@ -1,6 +1,6 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* account
+# * account
 #
 # Translators:
 # yotam katzuni, 2024
@@ -38,21 +38,23 @@
 # Martin Trigaux, 2025
 # or balmas, 2025
 # Yoram Lavi, 2025
-#
+# or balmas <or@laylinetech.com>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-15 18:36+0000\n"
-"PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Yoram Lavi, 2025\n"
-"Language-Team: Hebrew (https://app.transifex.com/odoo/teams/41243/he/)\n"
+"POT-Creation-Date: 2025-12-05 18:36+0000\n"
+"PO-Revision-Date: 2025-11-21 06:39+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"Language-Team: Hebrew <https://translate.odoo.com/projects/odoo-18/account/"
+"he/>\n"
 "Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % "
-"1 == 0) ? 1: 2;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n == 2) ? 1 : 2);\n"
+"X-Generator: Weblate 5.12.2\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -66,10 +68,11 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"בחר 'מכירה' עבור יומנים של חשבוניות לקוח.\n"
+"        בחר 'מכירה' עבור יומנים של חשבוניות לקוח.\n"
 "בחר 'רכש' עבור יומנים של חשבוניות ספק.\n"
 "בחר 'מזומן' או 'בנק' עבור יומנים המשמשים לתשלומי לקוח או ספק.\n"
-"בחר 'כללי' עבור יומנים של פעולות שונות."
+"בחר 'כללי' עבור יומנים של פעולות שונות.\n"
+"        "
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax__amount_type
@@ -86,31 +89,32 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"-קבוצת מסים: המס הוא אוסף של תתי-מסים.\n"
+"    -קבוצת מסים: המס הוא אוסף של תתי-מסים.\n"
 "-קבוע: סכום המס נשאר זהה ללא קשר למחיר.\n"
 "-אחוז: סכום המס הוא אחוז מהמחיר:\n"
 "לדוגמה: 100 * (1 + 10%) = 110 (לא כולל מס במחיר)\n"
 "לדוגמה: 110 / (1 + 10%) = 100 (כולל מס במחיר)\n"
 "-אחוז (כולל מס): סכום המס הוא חלוקה מתוך המחיר:\n"
 "לדוגמה: 180 / (1 - 10%) = 200 (לא כולל מס במחיר)\n"
-"לדוגמה: 200 * (1 - 10%) = 180 (כולל מס במחיר)"
+"לדוגמה: 200 * (1 - 10%) = 180 (כולל מס במחיר)\n"
+"        "
 
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_lock_exception.py:0
 msgid " for '%s'"
-msgstr "עבור '%s'"
+msgstr " עבור '%s'"
 
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_lock_exception.py:0
 msgid " valid until %s"
-msgstr "בתוקף עד %s"
+msgstr " בתוקף עד %s"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_bills_count
 msgid "# Reconciled Bills"
-msgstr "# חשבוניות ספק מותאמים"
+msgstr "# חשבוניות ספק מותאמות"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_invoices_count
@@ -120,13 +124,13 @@ msgstr "# חשבוניות לקוח מותאמות"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_statement_lines_count
 msgid "# Reconciled Statement Lines"
-msgstr "מספר שורות שהותאמו"
+msgstr "#מספר שורות שהותאמו"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_partner__supplier_invoice_count
 #: model:ir.model.fields,field_description:account.field_res_users__supplier_invoice_count
 msgid "# Vendor Bills"
-msgstr "מס' חשבונית ספק "
+msgstr "מס' חשבונית ספק"
 
 #. module: account
 #. odoo-python
@@ -167,6 +171,8 @@ msgid ""
 "%(attachment_name)s (detached by %(user)s on %(date)s)%"
 "(attachment_extension)s"
 msgstr ""
+"%(attachment_name)s (נותק ע\"י  %(user)s בתאריך %(date)s)%"
+"(attachment_extension)s"
 
 #. module: account
 #. odoo-python
@@ -226,18 +232,6 @@ msgstr "%(ref)s(%(currency_amount)s)"
 #: code:addons/account/models/account_account_tag.py:0
 msgid "%(tag)s (%(country_code)s)"
 msgstr "%(tag)s (%(country_code)s)"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_tax.py:0
-msgid ""
-"%(tax_account)s (%(account_name)s) should be an account of type \"%"
-"(receivable)s\" or \"%(payable)s\" with both options \"%"
-"(allow_reconciliation)s\" and \"%(non_trade)s\" enabled."
-msgstr ""
-"%(tax_account)s(%(account_name)s) צריך להיות מסוג חשבון\"%(receivable)s\" או "
-"\"%(payable)s\" עם שתי האופציות \"%(allow_reconciliation)s\" \"%"
-"(non_trade)s\" מופעלות."
 
 #. module: account
 #. odoo-python
@@ -886,14 +880,10 @@ msgstr "הגדר דומיין Alias"
 #: model_terms:ir.ui.view,arch_db:account.portal_my_details_fields
 msgid ""
 "<small class=\"form-text text-muted\">\n"
-"                    You can choose how you want us to send your invoices, "
-"and with which electronic format.\n"
-"                </small>"
+"                        You can choose how you want us to send your "
+"invoices, and with which electronic format.\n"
+"                    </small>"
 msgstr ""
-"<small class=\"form-text text-muted\">\n"
-"                    אתה יכול לבחור איך ובאיזה פורמט נשלח עבורך את החשבוניות "
-"שלך.\n"
-"                </small>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.portal_my_invoices
@@ -2272,11 +2262,9 @@ msgstr "תנועות צבירה"
 #. odoo-python
 #: code:addons/account/wizard/accrued_orders.py:0
 msgid ""
-"Accrual entry created on %(date)s: %(accrual_entry)s.                    And "
-"its reverse entry: %(reverse_entry)s."
+"Accrual entry created on %(date)s: %(accrual_entry)s.                And its "
+"reverse entry: %(reverse_entry)s."
 msgstr ""
-"ערך צבירה נוצר ב %(date)s: %(accrual_entry)s.                    והפעולה "
-"הנגדית: %(reverse_entry)s."
 
 #. module: account
 #. odoo-python
@@ -3209,6 +3197,11 @@ msgid "Attachments"
 msgstr "קבצים מצורפים"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_send_wizard__attachments_not_supported
+msgid "Attachments Not Supported"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_mail_mail__account_audit_log_activated
 #: model:ir.model.fields,field_description:account.field_mail_message__account_audit_log_activated
 msgid "Audit Log Activated"
@@ -3736,6 +3729,22 @@ msgstr "רצף תשלומי אצווה "
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Batch Payments"
 msgstr "תשלומי אצווה"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_move_send_batch_wizard.py:0
+msgid ""
+"Batch invoice sending is unavailable. Please, activate the cron to enable "
+"batch sending of invoices."
+msgstr ""
+
+#. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_move_send_batch_wizard.py:0
+msgid ""
+"Batch invoice sending is unavailable. Please, contact your system "
+"administrator to activate the cron to enable batch sending of invoices."
+msgstr ""
 
 #. module: account
 #. odoo-javascript
@@ -4482,6 +4491,7 @@ msgstr "סגור"
 #: model:ir.model.fields,field_description:account.field_account_payment__payment_method_code
 #: model:ir.model.fields,field_description:account.field_account_payment_method__code
 #: model:ir.model.fields,field_description:account.field_account_payment_method_line__code
+#: model:ir.model.fields,field_description:account.field_account_payment_register__payment_method_code
 #: model:ir.model.fields,field_description:account.field_account_report_line__code
 #: model_terms:ir.ui.view,arch_db:account.view_account_form
 #: model_terms:ir.ui.view,arch_db:account.view_account_list
@@ -5994,6 +6004,12 @@ msgid "Default taxes used when selling the product"
 msgstr "מיסים ברירת מחדל המשמשים בעת מכירת המוצר."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Default value for 'company_id' for %(record)s is not an integer"
+msgstr ""
+
+#. module: account
 #: model:account.account,name:account.1_deferred_revenue
 msgid "Deferred Revenue"
 msgstr "הכנסות נדחות"
@@ -6302,6 +6318,11 @@ msgstr "הצגת שדות כינויים"
 #: model:ir.model.fields,field_description:account.field_account_accrued_orders_wizard__display_amount
 msgid "Display Amount"
 msgstr "הצג כמות"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_send_wizard__display_attachments_widget
+msgid "Display Attachments Widget"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment_term_line__display_days_next_month
@@ -7774,6 +7795,12 @@ msgid "Global Lock Date"
 msgstr "תאריך נעילה עולמי "
 
 #. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_move_send_batch_wizard.py:0
+msgid "Go to cron configuration"
+msgstr ""
+
+#. module: account
 #: model_terms:ir.actions.act_window,help:account.action_account_audit_trail_report
 msgid "Go to the accounting settings"
 msgstr "עבור להגדרות הנהלת חשבונות"
@@ -8015,6 +8042,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "How total tax amount is computed in orders and invoices"
 msgstr "כיצד מחושב סכום המס הכולל בהזמנות ובחשבוניות"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid "ICE:"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account__id
@@ -9539,6 +9571,11 @@ msgstr "יולי"
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__6
 msgid "June"
 msgstr "יוני"
+
+#. module: account
+#: model:ir.model,name:account.model_kpi_provider
+msgid "KPI Provider"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_journal__kanban_dashboard
@@ -12074,6 +12111,12 @@ msgid ""
 msgstr "תשלומים הקשורים לשותפים ללא חשבון בנק מוגדר ידולגו."
 
 #. module: account
+#: model:ir.model.fields,help:account.field_account_bank_statement_line__reconciled_payment_ids
+#: model:ir.model.fields,help:account.field_account_move__reconciled_payment_ids
+msgid "Payments that have been reconciled with this invoice."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_payment_term_line__value__percent
 msgid "Percent"
 msgstr "אחוז"
@@ -12732,6 +12775,12 @@ msgstr "חשבוניות שהותאמו"
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_invoices_type
 msgid "Reconciled Invoices Type"
 msgstr "סוג חשבוניות מותאמות"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__reconciled_payment_ids
+#: model:ir.model.fields,field_description:account.field_account_move__reconciled_payment_ids
+msgid "Reconciled Payments"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_statement_line_ids
@@ -15210,6 +15259,12 @@ msgid "The country to use the tax reports from for this company"
 msgstr "המדינה המוגדרת לצורך להפקת דוחות מסים עבור ארגון זה."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "The currency rate must be strictly positive."
+msgstr "שער המטבע חייב להיות חיובי לחלוטין."
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_journal__currency_id
 msgid "The currency used to enter statement"
 msgstr "המטבע המשמש להזנת תדפיס הבנק"
@@ -16379,8 +16434,8 @@ msgstr "הפרסום האוטומטי החוזר הזה יפורסם עד וכו
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
-msgid "This setting cannot be changed after an invoice is created."
-msgstr "הגדרה זו אינה ניתנת לשינוי לאחר שחשבונית נוצרה."
+msgid "This setting locks once a journal entry is created."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -18896,7 +18951,7 @@ msgstr ""
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.autopost_bills_wizard
 msgid "without making any corrections."
-msgstr ""
+msgstr "ללא ביצוע תיקונים."
 
 #. module: account
 #. odoo-python
@@ -18930,3 +18985,33 @@ msgid ""
 "{{ object.company_id.name }} Payment Receipt (Ref {{ object.name or 'n/a' }})"
 msgstr ""
 "{{ object.company_id.name }} קבלה על תשלום (Ref {{ object.name or 'n/a' }})"
+
+#~ msgid "This setting cannot be changed after an invoice is created."
+#~ msgstr "הגדרה זו אינה ניתנת לשינוי לאחר שחשבונית נוצרה."
+
+#~ msgid ""
+#~ "%(tax_account)s (%(account_name)s) should be an account of type \"%"
+#~ "(receivable)s\" or \"%(payable)s\" with both options \"%"
+#~ "(allow_reconciliation)s\" and \"%(non_trade)s\" enabled."
+#~ msgstr ""
+#~ "%(tax_account)s(%(account_name)s) צריך להיות מסוג חשבון\"%(receivable)s\" "
+#~ "או \"%(payable)s\" עם שתי האופציות \"%(allow_reconciliation)s\" \"%"
+#~ "(non_trade)s\" מופעלות."
+
+#~ msgid ""
+#~ "Accrual entry created on %(date)s: %(accrual_entry)s.                    "
+#~ "And its reverse entry: %(reverse_entry)s."
+#~ msgstr ""
+#~ "ערך צבירה נוצר ב %(date)s: %(accrual_entry)s.                    והפעולה "
+#~ "הנגדית: %(reverse_entry)s."
+
+#~ msgid ""
+#~ "<small class=\"form-text text-muted\">\n"
+#~ "                    You can choose how you want us to send your invoices, "
+#~ "and with which electronic format.\n"
+#~ "                </small>"
+#~ msgstr ""
+#~ "<small class=\"form-text text-muted\">\n"
+#~ "                    אתה יכול לבחור איך ובאיזה פורמט נשלח עבורך את "
+#~ "החשבוניות שלך.\n"
+#~ "                </small>"

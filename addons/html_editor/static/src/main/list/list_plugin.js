@@ -126,6 +126,7 @@ export class ListPlugin extends Plugin {
         tab_overrides: this.handleTab.bind(this),
         shift_tab_overrides: this.handleShiftTab.bind(this),
         split_element_block_overrides: this.handleSplitBlock.bind(this),
+        triple_click_overrides: this.handleTripleClick.bind(this),
         node_to_insert_processors: this.processNodeToInsert.bind(this),
         before_insert_within_pre_processors: this.insertListWithinPre.bind(this),
     };
@@ -247,6 +248,10 @@ export class ListPlugin extends Plugin {
         // Apply changes.
         if (listsToSwitch.size || nonListBlocks.size) {
             for (const list of listsToSwitch) {
+                // Clean before preserving cursors otherwise the saved cursors
+                // might reference a node that will be removed when setTagName
+                // eventually calls clean of its own.
+                this.dispatchTo("clean_handlers", list);
                 const cursors = this.dependencies.selection.preserveSelection();
                 const newList = this.switchListMode(list, mode);
                 cursors.remapNode(list, newList).restore();
@@ -931,5 +936,15 @@ export class ListPlugin extends Plugin {
             pointerOffsetY >= checkboxPosition.top &&
             pointerOffsetY <= checkboxPosition.bottom
         );
+    }
+
+    handleTripleClick(ev) {
+        const node = ev.target;
+        const isChecklistItem =
+            node.tagName === "LI" && this.getListMode(node.parentElement) === "CL";
+        if (isChecklistItem && this.isPointerInsideCheckbox(node, ev.offsetX, ev.offsetY)) {
+            // If pointer is inside checkbox, prevent tripleclick selection.
+            return true;
+        }
     }
 }

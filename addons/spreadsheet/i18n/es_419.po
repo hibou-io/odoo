@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-22 18:39+0000\n"
-"PO-Revision-Date: 2025-08-27 18:12+0000\n"
+"POT-Creation-Date: 2025-10-16 18:39+0000\n"
+"PO-Revision-Date: 2025-12-03 17:27+0000\n"
 "Last-Translator: \"Fernanda Alvarez (mfar)\" <mfar@odoo.com>\n"
 "Language-Team: Spanish (Latin America) <https://translate.odoo.com/projects/"
 "odoo-18/spreadsheet/es_419/>\n"
@@ -23,7 +23,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n != 0 && n % 1000000 == 0)"
 " ? 1 : 2);\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1696,12 +1696,6 @@ msgstr "No puede ocultar todas las filas de una hoja."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Cannot multiply matrices : incompatible matrices size."
-msgstr "No es posible multiplicar matrices, su tamaño no es compatible."
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot open the link because the linked sheet is hidden."
 msgstr "No es posible abrir el enlace porque la hoja vinculada está oculta."
 
@@ -2020,6 +2014,12 @@ msgstr "Coma"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Compare two numeric values, returning 1 if they're equal."
 msgstr "Compara dos valores numéricos, devuelve 1 si son iguales."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
+msgid "Compute from totals"
+msgstr "Calcular a partir de los totales"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3728,19 +3728,30 @@ msgstr ""
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Function [[FUNCTION_NAME]] expects number values for %s, but got a %s."
+msgid ""
+"Function [[FUNCTION_NAME]] expects number values for %s, but got a boolean."
 msgstr ""
-"La función [[FUNCTION_NAME]] espera valores numéricos para%s pero recibió %s."
+"La función [[FUNCTION_NAME]] espera valores numéricos para %s, pero obtuvo "
+"un booleano."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid ""
-"Function [[FUNCTION_NAME]] invert matrix error, only square matrices are "
-"invertible"
+"Function [[FUNCTION_NAME]] expects number values for %s, but got a string."
 msgstr ""
-"Error en la función [[FUNCTION_NAME]] al invertir la matriz. Solo las "
-"matrices cuadradas se pueden invertir."
+"La función [[FUNCTION_NAME]] espera valores numéricos para %s, pero obtuvo "
+"una cadena."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"Function [[FUNCTION_NAME]] expects number values for %s, but got an empty "
+"value."
+msgstr ""
+"La función [[FUNCTION_NAME]] espera valores numéricos para %s, pero obtuvo "
+"un valor vacío."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6323,7 +6334,7 @@ msgstr "Devuelve un valor en función de la expresión lógica."
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "Reverse icons"
-msgstr "Iconos invertidos"
+msgstr "Invertir iconos"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6512,13 +6523,13 @@ msgstr "Seleccionar todos"
 #: code:addons/spreadsheet/static/src/global_filters/components/filter_date_value/filter_date_value.xml:0
 #: code:addons/spreadsheet/static/src/global_filters/components/filter_value/filter_value.xml:0
 msgid "Select period..."
-msgstr "Seleccionar periodo..."
+msgstr "Selecciona un periodo..."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/global_filters/components/filter_date_value/filter_date_value.xml:0
 msgid "Select year..."
-msgstr "Seleccione un año..."
+msgstr "Selecciona un año..."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6579,7 +6590,7 @@ msgstr "Compartir"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/components/share_button/share_button.xml:0
 msgid "Share to web"
-msgstr "Compartir en la web "
+msgstr "Compartir en la web"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8036,6 +8047,16 @@ msgstr "El primer añadido."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"The first and second arguments of [[FUNCTION_NAME]] must be non-empty "
+"matrices."
+msgstr ""
+"El primer y segundo argumento de [[FUNCTION_NAME]] deben ser matrices que no "
+"estén vacías."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The first column index of the columns to be returned."
 msgstr "El índice de la primera columna de las columnas a devolver."
 
@@ -8592,7 +8613,7 @@ msgstr "El punto máximo debe ser un número"
 
 #. module: spreadsheet
 #. odoo-javascript
-#: code:addons/spreadsheet/static/src/chart/odoo_menu/figure_component.js:0
+#: code:addons/spreadsheet/static/src/helpers/helpers.js:0
 msgid ""
 "The menu linked to this chart doesn't have an corresponding action. Please "
 "link the chart to another menu."
@@ -10414,12 +10435,6 @@ msgstr "El valor o valores que se deben agregar usando el delimitador."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "The value should be a scalar or a 1x1 matrix"
-msgstr "El valor debe ser un escalar o una matriz de 1x1."
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The value the function returns if logical_expression is FALSE."
 msgstr "El valor que devuelve la función si logical_expression es FALSE."
 
@@ -11150,12 +11165,8 @@ msgstr "Valor a cambiar desde el valor clave"
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid ""
-"Value for parameter %d is missing, while the function [[FUNCTION_NAME]] "
-"expect a number or a range."
-msgstr ""
-"Hace falta el valor para el parámetro %d. La función [[FUNCTION_NAME]] "
-"espera un número o un rango."
+msgid "Value for parameter %s is missing in [[FUNCTION_NAME]]."
+msgstr "Falta el valor para el parámetro %s en [[FUNCTION_NAME]]."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11744,15 +11755,18 @@ msgstr "[[FUNCTION_NAME]] evalúa un valor de fila fuera de rango %s."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] expects non-empty ranges for both parameters."
-msgstr ""
-"[[FUNCTION_NAME]] espera rangos que no estén vacíos para ambos parámetros."
+msgid "[[FUNCTION_NAME]] expects number values."
+msgstr "[[FUNCTION_NAME]] espera valores numéricos."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] expects number values."
-msgstr "[[FUNCTION_NAME]] espera valores numéricos."
+msgid ""
+"[[FUNCTION_NAME]] expects the provided values of %(argName)s to be a non-"
+"empty matrix."
+msgstr ""
+"[[FUNCTION_NAME]] espera que los valores proporcionados de %(argName)s sean "
+"una matriz que no está vacía."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11785,14 +11799,6 @@ msgstr "[[FUNCTION_NAME]] tiene tamaños de rango que no coinciden."
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "[[FUNCTION_NAME]] has no valid input data."
 msgstr "[[FUNCTION_NAME]] no tiene datos de entrada válidos."
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] needs at least two values for both parameters."
-msgstr ""
-"La función [[FUNCTION_NAME]] necesita al menos dos valores para ambos "
-"parámetros."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -12014,3 +12020,38 @@ msgstr "ayer"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "zero"
 msgstr "cero"
+
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] expects number values for %s, but got a %s."
+#~ msgstr ""
+#~ "La función [[FUNCTION_NAME]] espera valores numéricos para%s pero recibió "
+#~ "%s."
+
+#~ msgid ""
+#~ "Value for parameter %d is missing, while the function [[FUNCTION_NAME]] "
+#~ "expect a number or a range."
+#~ msgstr ""
+#~ "Hace falta el valor para el parámetro %d. La función [[FUNCTION_NAME]] "
+#~ "espera un número o un rango."
+
+#~ msgid "Cannot multiply matrices : incompatible matrices size."
+#~ msgstr "No es posible multiplicar matrices, su tamaño no es compatible."
+
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] invert matrix error, only square matrices are "
+#~ "invertible"
+#~ msgstr ""
+#~ "Error en la función [[FUNCTION_NAME]] al invertir la matriz. Solo las "
+#~ "matrices cuadradas se pueden invertir."
+
+#~ msgid "The value should be a scalar or a 1x1 matrix"
+#~ msgstr "El valor debe ser un escalar o una matriz de 1x1."
+
+#~ msgid "[[FUNCTION_NAME]] expects non-empty ranges for both parameters."
+#~ msgstr ""
+#~ "[[FUNCTION_NAME]] espera rangos que no estén vacíos para ambos parámetros."
+
+#~ msgid "[[FUNCTION_NAME]] needs at least two values for both parameters."
+#~ msgstr ""
+#~ "La función [[FUNCTION_NAME]] necesita al menos dos valores para ambos "
+#~ "parámetros."

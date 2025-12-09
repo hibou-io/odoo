@@ -1,5 +1,9 @@
+from lxml import etree
+
 from odoo import Command
+
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+from odoo.addons.test_mimetypes.tests.test_guess_mimetypes import contents
 from odoo.tests import tagged
 from odoo.tools import misc
 
@@ -482,3 +486,89 @@ class TestUblBis3(AccountTestInvoicingCommon):
         invoice.action_post()
         self.env['account.move.send']._generate_and_send_invoices(invoice, sending_methods=['manual'])
         self._assert_invoice_ubl_file(invoice, 'bis3/test_dispatch_base_lines_delta')
+
+    def test_unit_price_precision(self):
+        """ Check that with large quantities, the precision of the rounding on the unit price
+            is adapted in order to pass the Peppol schematron's requirement that the line's
+            subtotal must be equal to unit price * quantity, to a tolerance of less than 0.02.
+
+            In this case, the line's tax-excluded subtotal is 85.62, there are 8 units, so the raw unit
+            price is 85.62 / 8 = 10.7025.
+            If we round the unit price to 2 decimals, we get 10.70, but 10.70 * 8 = 85.60 which has
+            a difference of 0.02 with the subtotal, so this would not pass the schematron.
+            So we need to round the unit price to 3 decimals, which gives 10.703.
+        """
+        self.setup_partner_as_be1(self.env.company.partner_id)
+        self.setup_partner_as_be2(self.partner_a)
+        tax_21 = self.percent_tax(21.0, price_include_override='tax_included')
+
+        invoice = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.partner_a.id,
+            'invoice_date': '2017-01-01',
+            'invoice_line_ids': [
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'quantity': 8,
+                    'price_unit': 12.95,
+                    'tax_ids': [Command.set(tax_21.ids)],
+                }),
+            ],
+        })
+        invoice.action_post()
+        self.env['account.move.send']._generate_and_send_invoices(invoice, sending_methods=['manual'])
+        self._assert_invoice_ubl_file(invoice, 'bis3/test_unit_price_precision')
+
+    def test_send_and_print_extra_attachments(self):
+        self.setup_partner_as_be1(self.env.company.partner_id)
+        self.setup_partner_as_be2(self.partner_a)
+
+        tax_21 = self.percent_tax(21.0)
+        product = self._create_product(lst_price=100.0, taxes_id=tax_21)
+        invoice = self._create_invoice_one_line(
+            product_id=product,
+            partner_id=self.partner_a,
+            post=True,
+        )
+
+        # Supported
+        xlsx_attachment = self.env['ir.attachment'].create({
+            'name': 'xlsx attachment',
+            'raw': contents('xlsx'),
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        })
+        # Not supported
+        docx_attachment = self.env['ir.attachment'].create({
+            'name': 'docx attachment',
+            'raw': contents('docx'),
+            'mimetype': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        })
+        xml_attachment = self.env['ir.attachment'].create({
+            'name': 'xml attachment',
+            'raw': "<?xml version='1.0' encoding='UTF-8'?><test/>",
+            'mimetype': 'application/xml',
+        })
+        txt_attachment = self.env['ir.attachment'].create({
+            'name': 'txt attachment',
+            'raw': b'txt attachment'
+        })
+
+        wizard = self._create_account_move_send_wizard_single(invoice, sending_methods=['manual'])
+        wizard.mail_attachments_widget = wizard.mail_attachments_widget + [{
+            'id': attachment.id,
+            'name': attachment.name,
+            'mimetype': attachment.mimetype,
+            'placeholder': False,
+            'manual': True,
+        } for attachment in [xlsx_attachment, docx_attachment, xml_attachment, txt_attachment]]
+
+        wizard.action_send_and_print()
+
+        self.assertTrue(invoice.ubl_cii_xml_id)
+        tree = etree.fromstring(invoice.ubl_cii_xml_id.raw)
+
+        attachments_elements = tree.findall('./{*}AdditionalDocumentReference')
+
+        self.assertEqual(len(attachments_elements), 2)
+        self.assertEqual(attachments_elements[0].find('{*}ID').text, invoice.invoice_pdf_report_id.name)
+        self.assertEqual(attachments_elements[1].find('{*}ID').text, xlsx_attachment.name)

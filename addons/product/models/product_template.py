@@ -9,6 +9,7 @@ from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
 from odoo.tools.image import is_image_size_above
+from odoo.tools.sql import SQL
 
 _logger = logging.getLogger(__name__)
 PRICE_CONTEXT_KEYS = ['pricelist', 'quantity', 'uom', 'date']
@@ -511,11 +512,12 @@ class ProductTemplate(models.Model):
         if self._context.get("create_product_product", True):
             templates._create_variant_ids()
 
+        # TODO remove in master: this is not needed anymore
         # This is needed to set given values to first variant after creation
         for template, vals in zip(templates, vals_list):
             related_vals = {}
             for field_name in self._get_related_fields_variant_template():
-                if vals.get(field_name):
+                if vals.get(field_name) and not template[field_name]:
                     related_vals[field_name] = vals[field_name]
             if related_vals:
                 template.write(related_vals)
@@ -574,8 +576,15 @@ class ProductTemplate(models.Model):
     def _search_display_name(self, operator, value):
         domain = super()._search_display_name(operator, value)
         if self.env.context.get('search_product_product', bool(value)):
-            combine = expression.OR if operator not in expression.NEGATIVE_TERM_OPERATORS else expression.AND
-            domain = combine([domain, [('product_variant_ids', operator, value)]])
+            if operator in expression.NEGATIVE_TERM_OPERATORS:
+                domain = expression.AND([domain, [('product_variant_ids', operator, value)]])
+            else:
+                query = SQL(
+                    """((%s) UNION ALL (%s))""",
+                    self._search(domain).select(),
+                    self._search([("product_variant_ids", operator, value)]).select(),
+                )
+                domain = [('id', 'in', query)]
         return domain
 
     @api.model
@@ -736,8 +745,10 @@ class ProductTemplate(models.Model):
                     # Do not add single value if the resulting combination would
                     # be invalid anyway.
                     if (
-                        len(combination) == len(lines_without_no_variants) and
-                        combination.attribute_line_id == lines_without_no_variants
+                        len(combination) == len(lines_without_no_variants)
+                        and combination.attribute_line_id == lines_without_no_variants
+                        # Update only if necessary to prevent a cache invalidation
+                        and variant.product_template_attribute_value_ids != combination
                     ):
                         variant.product_template_attribute_value_ids = combination
 

@@ -52,13 +52,14 @@ class ResCompany(models.Model):
     account_peppol_contact_email = fields.Char(
         string='Primary contact email',
         compute='_compute_account_peppol_contact_email', store=True, readonly=False,
-        help='Primary contact email for Peppol-related communication',
+        help='Primary contact email for Peppol connection related communications and notifications.\n'
+             'In particular, this email is used by Odoo to reconnect your Peppol account in case of database change.',
     )
     account_peppol_migration_key = fields.Char(string="Migration Key")
     account_peppol_phone_number = fields.Char(
         string='Mobile number',
         compute='_compute_account_peppol_phone_number', store=True, readonly=False,
-        help='You will receive a verification code to this mobile number',
+        help='This number is used for identification purposes only.',
     )
     account_peppol_proxy_state = fields.Selection(
         selection=[
@@ -255,18 +256,10 @@ class ResCompany(models.Model):
                     "SI-UBL 2.0 Invoice",
                 "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2::CreditNote##urn:cen.eu:en16931:2017#compliant#urn:fdc:nen.nl:nlcius:v1.0::2.1":
                     "SI-UBL 2.0 CreditNote",
-                "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2::Invoice##urn:cen.eu:en16931:2017#conformant#urn:fdc:peppol.eu:2017:poacc:billing:international:sg:3.0::2.1":
-                    "SG Peppol BIS Billing 3.0 Invoice",
-                "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2::CreditNote##urn:cen.eu:en16931:2017#conformant#urn:fdc:peppol.eu:2017:poacc:billing:international:sg:3.0::2.1":
-                    "SG Peppol BIS Billing 3.0 Credit Note",
                 "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2::Invoice##urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0::2.1":
                     "XRechnung UBL Invoice V2.0",
                 "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2::CreditNote##urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0::2.1":
                     "XRechnung UBL CreditNote V2.0",
-                "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2::Invoice##urn:cen.eu:en16931:2017#conformant#urn:fdc:peppol.eu:2017:poacc:billing:international:aunz:3.0::2.1":
-                    "AU-NZ Peppol BIS Billing 3.0 Invoice",
-                "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2::CreditNote##urn:cen.eu:en16931:2017#conformant#urn:fdc:peppol.eu:2017:poacc:billing:international:aunz:3.0::2.1":
-                    "AU-NZ Peppol BIS Billing 3.0 CreditNote",
             }
         }
 

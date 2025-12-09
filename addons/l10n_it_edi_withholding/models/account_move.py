@@ -7,7 +7,7 @@ from markupsafe import Markup
 
 from odoo import _, api, fields, models
 from odoo.addons.l10n_it_edi.models.account_move import get_float
-from odoo.tools import float_compare, html2plaintext
+from odoo.tools import float_compare, float_round, html2plaintext
 
 _logger = logging.getLogger(__name__)
 
@@ -23,11 +23,16 @@ class AccountMove(models.Model):
     @api.depends('amount_total_signed')
     def _compute_amount_extended(self):
         for move in self:
-            totals = {None: 0.0, 'vat':0.0, 'withholding': 0.0, 'pension_fund': 0.0}
+            totals = {None: 0.0, 'vat': 0.0, 'withholding': 0.0, 'pension_fund': 0.0}
             if move.is_invoice(True):
                 for line in [line for line in move.line_ids if line.tax_line_id]:
-                    kind = line.tax_line_id._l10n_it_get_tax_kind()
-                    totals[kind] -= line.balance
+                    tax = line.tax_line_id
+                    if tax.l10n_it_pension_fund_type:
+                        totals['pension_fund'] -= line.balance
+                    elif tax.l10n_it_withholding_type:
+                        totals['withholding'] -= line.balance
+                    else:
+                        totals['vat'] -= line.balance
             move.l10n_it_amount_vat_signed = totals['vat']
             move.l10n_it_amount_withholding_signed = totals['withholding']
             move.l10n_it_amount_pension_fund_signed = totals['pension_fund']
@@ -74,7 +79,7 @@ class AccountMove(models.Model):
                 return None
             tax = tax_data['tax']
             return {
-                'tax_amount_field': -23.0 if tax.amount == -11.5 else tax.amount,
+                'tax_amount_field': -23.0 if tax.amount in (-11.5, -4.6) else tax.amount,
                 'l10n_it_withholding_type': tax.l10n_it_withholding_type,
                 'l10n_it_withholding_reason': tax.l10n_it_withholding_reason,
                 'skip': not tax._l10n_it_filter_kind('withholding'),
@@ -106,8 +111,8 @@ class AccountMove(models.Model):
             vat_tax = flatten_taxes.filtered(lambda t: t._l10n_it_filter_kind('vat') and t.amount >= 0)[:1]
             withholding_tax = flatten_taxes.filtered(lambda t: t._l10n_it_filter_kind('withholding') and t.sequence > tax.sequence)[:1]
             return {
-                'tax_amount_field': -23.0 if tax.amount == -11.5 else tax.amount,
-                'vat_tax_amount_field': -23.0 if vat_tax.amount == -11.5 else vat_tax.amount,
+                'tax_amount_field': -23.0 if tax.amount in (-11.5, -4.6) else tax.amount,
+                'vat_tax_amount_field': -23.0 if vat_tax.amount in (-11.5, -4.6) else vat_tax.amount,
                 'has_withholding': bool(withholding_tax),
                 'l10n_it_pension_fund_type': tax.l10n_it_pension_fund_type,
                 'l10n_it_exempt_reason': vat_tax.l10n_it_exempt_reason,
@@ -175,20 +180,11 @@ class AccountMove(models.Model):
         })
         return template_values
 
-    def _l10n_it_edi_export_taxes_data_check(self):
-        """
-            Override to also allow pension_fund, withholding taxes.
-            Needs not to call super, because super checks for one tax only per line.
-        """
-        errors = []
-        for invoice_line in self.invoice_line_ids.filtered(lambda x: x.display_type == 'product'):
-            all_taxes = invoice_line.tax_ids.flatten_taxes_hierarchy()
-            vat_taxes, withholding_taxes, pension_fund_taxes = (all_taxes._l10n_it_filter_kind(kind) for kind in
-                                                                ('vat', 'withholding', 'pension_fund'))
-            if len(vat_taxes.filtered(lambda x: x.amount >= 0)) != 1:
-                errors.append(_("Bad tax configuration for line %s, there must be one and only one VAT tax per line", invoice_line.name))
-            if len(pension_fund_taxes) > 1 or len(withholding_taxes) > 1:
-                errors.append(_("Bad tax configuration for line %s, there must be one Withholding tax and one Pension Fund tax at max.", invoice_line.name))
+    def _l10n_it_edi_export_taxes_check(self):
+        # EXTENDS l10n_it_edi
+        errors = super()._l10n_it_edi_export_taxes_check()
+        for kind_code, kind_desc in (('withholding_no_enasarco', _('Withholding')), ('pension_fund', _('Pension Fund'))):
+            errors.update(self._l10n_it_edi_check_lines_for_tax_kind(kind_code, kind_desc, min_len=0))
         return errors
 
     # -------------------------------------------------------------------------
@@ -217,6 +213,14 @@ class AccountMove(models.Model):
             withholding_type = tipo_ritenuta.text if tipo_ritenuta is not None else "RT02"
             withholding_reason = reason.text if reason is not None else "A"
             withholding_percentage = -float(percentage.text if percentage is not None else "0.0")
+
+            if withholding_percentage == -23.0:
+                prezzo_totale = 0.0
+                for line in body_tree.xpath('.//DettaglioLinee'):
+                    prezzo_totale += get_float(line, './/PrezzoTotale')
+                importo_ritenuta = get_float(withholding, './/ImportoRitenuta')
+                withholding_percentage = -float_round((importo_ritenuta / prezzo_totale) * 100, 1)
+
             withholding_tax = self._l10n_it_edi_search_tax_for_import(
                 company,
                 withholding_percentage,

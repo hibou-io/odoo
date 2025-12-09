@@ -23,6 +23,7 @@ _logger = logging.getLogger(__name__)
 
 _ref_company_registry = {
     'jp': '7000012050002',
+    'fi': '8763054-9',
 }
 
 
@@ -95,7 +96,7 @@ class AccountFiscalPosition(models.Model):
         for position in self:
             tax_map = defaultdict(list)
             for tl in position.tax_ids:
-                if tl.tax_dest_id:
+                if tl.tax_dest_active:
                     tax_map[tl.tax_src_id.id].append(tl.tax_dest_id.id)
                 else:
                     tax_map[tl.tax_src_id.id]  # map to an empty list
@@ -355,7 +356,10 @@ class ResPartner(models.Model):
     def _compute_fiscal_country_codes(self):
         for record in self:
             allowed_companies = record.company_id or self.env.companies
-            record.fiscal_country_codes = ",".join(allowed_companies.mapped('account_fiscal_country_id.code'))
+            country_codes = allowed_companies.mapped('account_fiscal_country_id.code')
+            if record.country_code:
+                country_codes.append(record.country_code)
+            record.fiscal_country_codes = ",".join(set(country_codes))
 
     @property
     def _order(self):
@@ -1057,3 +1061,20 @@ class ResPartner(models.Model):
 
     def action_open_business_doc(self):
         return self._get_records_action()
+
+    @api.model
+    def _clear_removed_edi_formats(self, *formats):
+        """Helper to clear outdated EDI formats.
+
+        Usually called as an uninstall hook of modules that add these formats.
+        It avoids the form view to become unusable after module uninstallation.
+        """
+        self.env.cr.execute(
+            """
+            UPDATE res_partner
+            SET invoice_edi_format_store = invoice_edi_format_store - res_company.id::char
+            FROM res_company
+            WHERE res_partner.invoice_edi_format_store ->> res_company.id::char IN %s
+            """,
+            (formats,),
+        )

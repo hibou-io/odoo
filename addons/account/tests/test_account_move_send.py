@@ -512,10 +512,10 @@ class TestAccountMoveSendCommon(AccountTestInvoicingCommon):
             )
 
     def create_send_and_print(self, invoices, **kwargs):
-        wizard_model = 'account.move.send.wizard' if len(invoices) == 1 else 'account.move.send.batch.wizard'
-        return self.env[wizard_model]\
-            .with_context(active_model='account.move', active_ids=invoices.ids)\
-            .create(kwargs)
+        if len(invoices) == 1:
+            return self._create_account_move_send_wizard_single(invoices, **kwargs)
+        else:
+            return self._create_account_move_send_wizard_multi(invoices, **kwargs)
 
     def _get_mail_message(self, move):
         return self.env['mail.message'].search([('model', '=', move._name), ('res_id', '=', move.id)], limit=1)
@@ -722,6 +722,21 @@ class TestAccountMoveSend(TestAccountMoveSendCommon):
                 'manual': {'count': 1, 'label': 'Manually'},
                 'email': {'count': 1, 'label': 'by Email'},
             })
+
+    def test_invoice_multi_child_contact(self):
+        """ Test bulk invoice sending will retrieve info from the main partner. """
+        self.partner_a.write({'invoice_sending_method': 'manual'})
+        partner = self.env['res.partner'].create({
+            'type': 'invoice',
+            'email': 'child@example.com',
+            'parent_id': self.partner_a.id
+        })
+        invoice1 = self.init_invoice("out_invoice", amounts=[1000], partner=partner, post=True)
+        invoice2 = self.init_invoice("out_invoice", amounts=[1000], partner=partner, post=True)
+        wizard = self.create_send_and_print(invoice1 + invoice2)
+        self.assertEqual(wizard.summary_data, {
+            'manual': {'count': 2, 'label': 'Manually'}
+        })
 
     def test_invoice_mail_attachments_widget(self):
         invoice = self.init_invoice("out_invoice", amounts=[1000], post=True)
@@ -1094,7 +1109,7 @@ class TestAccountMoveSend(TestAccountMoveSendCommon):
         expected_results = {
             'sending_methods': {'email'},
             'invoice_edi_format': False,
-            'extra_edis': {},
+            'extra_edis': set(),
             'pdf_report': self.env.ref('account.account_invoices'),
             'author_user_id': self.env.user.id,
             'author_partner_id': self.env.user.partner_id.id,

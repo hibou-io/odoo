@@ -757,7 +757,11 @@ class ProductTemplate(models.Model):
         if tags:
             if isinstance(tags, str):
                 tags = tags.split(',')
-            domains.append([('product_variant_ids.all_product_tag_ids', 'in', tags)])
+            domains.append([
+                '|',
+                ('product_tag_ids', 'in', tags),
+                ('product_variant_ids.additional_product_tag_ids', 'in', tags),
+            ])
         if min_price:
             domains.append([('list_price', '>=', min_price)])
         if max_price:
@@ -932,7 +936,7 @@ class ProductTemplate(models.Model):
     def _get_access_action(self, access_uid=None, force_website=False):
         """ Instead of the classic form view, redirect to website if it is published. """
         self.ensure_one()
-        if force_website or self.website_published:
+        if force_website or (self.website_published and self.env.user.share):
             return {
                 "type": "ir.actions.act_url",
                 "url": self.website_url,

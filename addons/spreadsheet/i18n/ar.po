@@ -1,6 +1,6 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* spreadsheet
+# * spreadsheet
 #
 # Translators:
 # Mustafa Rawi <mustafa@mrawi.com>, 2024
@@ -8,21 +8,23 @@
 # Martin Trigaux, 2024
 # Wil Odoo, 2025
 # Malaz Abuidris <msea@odoo.com>, 2025
-#
+# Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-22 18:39+0000\n"
-"PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2025\n"
-"Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
+"POT-Creation-Date: 2025-10-16 18:39+0000\n"
+"PO-Revision-Date: 2025-11-10 09:43+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"Language-Team: Arabic <https://translate.odoo.com/projects/odoo-18/"
+"spreadsheet/ar/>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+"X-Generator: Weblate 5.12.2\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1641,12 +1643,6 @@ msgstr "لا يمكن إخفاء كافة صفوف الورقة. "
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Cannot multiply matrices : incompatible matrices size."
-msgstr "لا يمكن مضاعفة المصفوفات: أحجام المصفوفات غير متوافقة. "
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot open the link because the linked sheet is hidden."
 msgstr "لا يمكن فتح الرابط لأن الورقة المرتبطة مخفية. "
 
@@ -1963,6 +1959,12 @@ msgstr "فاصلة"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Compare two numeric values, returning 1 if they're equal."
 msgstr "مقارنة قيمتين عدديتين ببعضهما، تكون النتيجة 1 إذا كانتا متساويتين. "
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
+msgid "Compute from totals"
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3625,17 +3627,24 @@ msgstr "تتوقع الدالة [[FUNCTION_NAME]] أن يكون لـ criteria_ra
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Function [[FUNCTION_NAME]] expects number values for %s, but got a %s."
-msgstr "تتوقع الدالة [[FUNCTION_NAME]] قيماً رقمية لـ %s، ولكنها حصلت على %s. "
+msgid ""
+"Function [[FUNCTION_NAME]] expects number values for %s, but got a boolean."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid ""
-"Function [[FUNCTION_NAME]] invert matrix error, only square matrices are "
-"invertible"
+"Function [[FUNCTION_NAME]] expects number values for %s, but got a string."
 msgstr ""
-"خطأ في عكس مصفوفة الدالة [[FUNCTION_NAME]]. يمكن عكس المصفوفات المربعة فقط "
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"Function [[FUNCTION_NAME]] expects number values for %s, but got an empty "
+"value."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4943,6 +4952,8 @@ msgid ""
 "Merged cells found in the spill zone. Please unmerge cells before using "
 "array formulas."
 msgstr ""
+"تم العثور على خلايا مدمجة في منطقة التسرب. يرجى فصل الخلايا قبل استخدام صيغ "
+"المصفوفة."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5515,7 +5526,7 @@ msgstr "تنسيق الألوان "
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Parser"
-msgstr ""
+msgstr "Parser"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -7871,6 +7882,14 @@ msgstr "الإضافة الأولى. "
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"The first and second arguments of [[FUNCTION_NAME]] must be non-empty "
+"matrices."
+msgstr ""
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The first column index of the columns to be returned."
 msgstr "مؤشر العمود الأول من الأعمدة التي يجب أن يتم إرجاعها. "
 
@@ -8413,7 +8432,7 @@ msgstr "يجب أن تكون النقطة القصوى رقماً "
 
 #. module: spreadsheet
 #. odoo-javascript
-#: code:addons/spreadsheet/static/src/chart/odoo_menu/figure_component.js:0
+#: code:addons/spreadsheet/static/src/helpers/helpers.js:0
 msgid ""
 "The menu linked to this chart doesn't have an corresponding action. Please "
 "link the chart to another menu."
@@ -10193,12 +10212,6 @@ msgstr "القيمة أو القيم لإلحاقها باستخدام المح�
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "The value should be a scalar or a 1x1 matrix"
-msgstr "يجب أن تكون القيمة عبارة عن مجموعة أو مصفوفة 1x1 "
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The value the function returns if logical_expression is FALSE."
 msgstr "القيمة التي تُظهرها الوظيفة، إذا كانت قيمة logical_expression خاطئة. "
 
@@ -10910,11 +10923,8 @@ msgstr "تغير القيمة من القيمة الأساسية "
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid ""
-"Value for parameter %d is missing, while the function [[FUNCTION_NAME]] "
-"expect a number or a range."
+msgid "Value for parameter %s is missing in [[FUNCTION_NAME]]."
 msgstr ""
-"قيمة المعيار %d مفقودة، بينما تتوقع الدالة [[FUNCTION_NAME]] رقماً أو نطاقاً. "
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11493,14 +11503,16 @@ msgstr "يقوم [[FUNCTION_NAME]] بالتقييم لقيمة صف خارج ا�
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] expects non-empty ranges for both parameters."
-msgstr "يتوقع [[FUNCTION_NAME]] نطاقات غير فارغة لكلا المعيارين. "
+msgid "[[FUNCTION_NAME]] expects number values."
+msgstr "يتوقع [[FUNCTION_NAME]] قيماً عددية. "
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] expects number values."
-msgstr "يتوقع [[FUNCTION_NAME]] قيماً عددية. "
+msgid ""
+"[[FUNCTION_NAME]] expects the provided values of %(argName)s to be a non-"
+"empty matrix."
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11531,12 +11543,6 @@ msgstr "يحتوي [[FUNCTION_NAME]] على أحجام مجالات غير مت�
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "[[FUNCTION_NAME]] has no valid input data."
 msgstr "لا يحتوي [[FUNCTION_NAME]] على بيانات إدخال صالحة. "
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] needs at least two values for both parameters."
-msgstr "يحتاج [[FUNCTION_NAME]] إلى قيمتين على الأقل لكلا المعيارين. "
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11755,3 +11761,34 @@ msgstr "بالأمس "
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "zero"
 msgstr "صفر "
+
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] expects number values for %s, but got a %s."
+#~ msgstr ""
+#~ "تتوقع الدالة [[FUNCTION_NAME]] قيماً رقمية لـ %s، ولكنها حصلت على %s. "
+
+#~ msgid ""
+#~ "Value for parameter %d is missing, while the function [[FUNCTION_NAME]] "
+#~ "expect a number or a range."
+#~ msgstr ""
+#~ "قيمة المعيار %d مفقودة، بينما تتوقع الدالة [[FUNCTION_NAME]] رقماً أو "
+#~ "نطاقاً. "
+
+#~ msgid "Cannot multiply matrices : incompatible matrices size."
+#~ msgstr "لا يمكن مضاعفة المصفوفات: أحجام المصفوفات غير متوافقة. "
+
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] invert matrix error, only square matrices are "
+#~ "invertible"
+#~ msgstr ""
+#~ "خطأ في عكس مصفوفة الدالة [[FUNCTION_NAME]]. يمكن عكس المصفوفات المربعة "
+#~ "فقط "
+
+#~ msgid "The value should be a scalar or a 1x1 matrix"
+#~ msgstr "يجب أن تكون القيمة عبارة عن مجموعة أو مصفوفة 1x1 "
+
+#~ msgid "[[FUNCTION_NAME]] expects non-empty ranges for both parameters."
+#~ msgstr "يتوقع [[FUNCTION_NAME]] نطاقات غير فارغة لكلا المعيارين. "
+
+#~ msgid "[[FUNCTION_NAME]] needs at least two values for both parameters."
+#~ msgstr "يحتاج [[FUNCTION_NAME]] إلى قيمتين على الأقل لكلا المعيارين. "

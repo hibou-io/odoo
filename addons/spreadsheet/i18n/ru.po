@@ -1,6 +1,6 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* spreadsheet
+# * spreadsheet
 #
 # Translators:
 # Martin Trigaux, 2024
@@ -10,22 +10,24 @@
 # Ilya Rozhkov, 2025
 # Wil Odoo, 2025
 # Anastasiia Koroleva, 2025
-#
+# "Anastasiia Koroleva (koan)" <koan@odoo.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-22 18:39+0000\n"
-"PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Anastasiia Koroleva, 2025\n"
-"Language-Team: Russian (https://app.transifex.com/odoo/teams/41243/ru/)\n"
+"POT-Creation-Date: 2025-10-16 18:39+0000\n"
+"PO-Revision-Date: 2025-10-22 09:10+0000\n"
+"Last-Translator: \"Anastasiia Koroleva (koan)\" <koan@odoo.com>\n"
+"Language-Team: Russian <https://translate.odoo.com/projects/odoo-18/"
+"spreadsheet/ru/>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
-"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || ("
+"n%100>=11 && n%100<=14)? 2 : 3);\n"
+"X-Generator: Weblate 5.12.2\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -1702,12 +1704,6 @@ msgstr "Невозможно скрыть все строки листа."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Cannot multiply matrices : incompatible matrices size."
-msgstr "Невозможно перемножить матрицы: размер матриц несовместим."
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Cannot open the link because the linked sheet is hidden."
 msgstr "Невозможно открыть ссылку, так как связанный лист скрыт."
 
@@ -2026,6 +2022,12 @@ msgstr "Запятая"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "Compare two numeric values, returning 1 if they're equal."
 msgstr "Сравнивает два числовых значения, возвращая 1, если они равны."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
+msgid "Compute from totals"
+msgstr "Вычислить по итоговым значениям"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3707,19 +3709,30 @@ msgstr ""
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "Function [[FUNCTION_NAME]] expects number values for %s, but got a %s."
+msgid ""
+"Function [[FUNCTION_NAME]] expects number values for %s, but got a boolean."
 msgstr ""
-"Функция [[FUNCTION_NAME]] ожидает числовые значения для %s, но получила %s."
+"Ожидается числовое значение для %s, а получено логическое в функции "
+"[[FUNCTION_NAME]]."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid ""
-"Function [[FUNCTION_NAME]] invert matrix error, only square matrices are "
-"invertible"
+"Function [[FUNCTION_NAME]] expects number values for %s, but got a string."
 msgstr ""
-"Ошибка обращения функции [[FUNCTION_NAME]]: обратное преобразование возможно "
-"только для квадратных матриц"
+"Ожидается числовое значение для %s, а получена строка в функции "
+"[[FUNCTION_NAME]]."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"Function [[FUNCTION_NAME]] expects number values for %s, but got an empty "
+"value."
+msgstr ""
+"Ожидается числовое значение для %s, а получено пустое значение в функции "
+"[[FUNCTION_NAME]]."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8014,6 +8027,16 @@ msgstr "Первое слагаемое."
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
+msgid ""
+"The first and second arguments of [[FUNCTION_NAME]] must be non-empty "
+"matrices."
+msgstr ""
+"Первый и второй аргументы функции [[FUNCTION_NAME]] должны быть непустыми "
+"матрицами."
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The first column index of the columns to be returned."
 msgstr "Индекс первого столбца возвращаемых столбцов."
 
@@ -8309,7 +8332,7 @@ msgstr "Значение future_value (%s) должно быть строго п
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The header row of a table can't be moved."
-msgstr ""
+msgstr "Строку заголовков таблицы нельзя перемещать."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -8579,7 +8602,7 @@ msgstr "Максимальная точка должна быть числом"
 
 #. module: spreadsheet
 #. odoo-javascript
-#: code:addons/spreadsheet/static/src/chart/odoo_menu/figure_component.js:0
+#: code:addons/spreadsheet/static/src/helpers/helpers.js:0
 msgid ""
 "The menu linked to this chart doesn't have an corresponding action. Please "
 "link the chart to another menu."
@@ -10400,12 +10423,6 @@ msgstr "Значение или значения, которые будут до
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "The value should be a scalar or a 1x1 matrix"
-msgstr "Значение должно быть скалярным или матрицей 1x1"
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "The value the function returns if logical_expression is FALSE."
 msgstr ""
 "Значение, которое возвращает функция, если логическое_выражение равно FALSE."
@@ -11145,12 +11162,8 @@ msgstr "Изменение значения по сравнению с ключ�
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid ""
-"Value for parameter %d is missing, while the function [[FUNCTION_NAME]] "
-"expect a number or a range."
-msgstr ""
-"Значение для параметра %d отсутствует, в то время как функция [[ИМЯ "
-"ФУНКЦИИ]] ожидает число или диапазон."
+msgid "Value for parameter %s is missing in [[FUNCTION_NAME]]."
+msgstr "В функции [[FUNCTION_NAME]] отсутствует значение параметра %s."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11739,14 +11752,18 @@ msgstr ""
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] expects non-empty ranges for both parameters."
-msgstr "[[FUNCTION_NAME]] ожидает непустые диапазоны для обоих параметров."
+msgid "[[FUNCTION_NAME]] expects number values."
+msgstr "[[FUNCTION_NAME]] ожидает числовые значения."
 
 #. module: spreadsheet
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] expects number values."
-msgstr "[[FUNCTION_NAME]] ожидает числовые значения."
+msgid ""
+"[[FUNCTION_NAME]] expects the provided values of %(argName)s to be a non-"
+"empty matrix."
+msgstr ""
+"Функция [[FUNCTION_NAME]] ожидает, что предоставленные значения %(argName)s "
+"будут непустой матрицей."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11779,14 +11796,6 @@ msgstr "[[FUNCTION_NAME]] не совпадают размеры диапазо�
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "[[FUNCTION_NAME]] has no valid input data."
 msgstr "[[FUNCTION_NAME]] нет корректных входных данных."
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-msgid "[[FUNCTION_NAME]] needs at least two values for both parameters."
-msgstr ""
-"Функции [[FUNCTION_NAME]] нужно как минимум два значения для каждого из "
-"параметров."
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -12011,3 +12020,37 @@ msgstr "вчера"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 msgid "zero"
 msgstr "ноль"
+
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] expects number values for %s, but got a %s."
+#~ msgstr ""
+#~ "Функция [[FUNCTION_NAME]] ожидает числовые значения для %s, но получила "
+#~ "%s."
+
+#~ msgid ""
+#~ "Value for parameter %d is missing, while the function [[FUNCTION_NAME]] "
+#~ "expect a number or a range."
+#~ msgstr ""
+#~ "Значение для параметра %d отсутствует, в то время как функция [[ИМЯ "
+#~ "ФУНКЦИИ]] ожидает число или диапазон."
+
+#~ msgid "Cannot multiply matrices : incompatible matrices size."
+#~ msgstr "Невозможно перемножить матрицы: размер матриц несовместим."
+
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] invert matrix error, only square matrices are "
+#~ "invertible"
+#~ msgstr ""
+#~ "Ошибка обращения функции [[FUNCTION_NAME]]: обратное преобразование "
+#~ "возможно только для квадратных матриц"
+
+#~ msgid "The value should be a scalar or a 1x1 matrix"
+#~ msgstr "Значение должно быть скалярным или матрицей 1x1"
+
+#~ msgid "[[FUNCTION_NAME]] expects non-empty ranges for both parameters."
+#~ msgstr "[[FUNCTION_NAME]] ожидает непустые диапазоны для обоих параметров."
+
+#~ msgid "[[FUNCTION_NAME]] needs at least two values for both parameters."
+#~ msgstr ""
+#~ "Функции [[FUNCTION_NAME]] нужно как минимум два значения для каждого из "
+#~ "параметров."
