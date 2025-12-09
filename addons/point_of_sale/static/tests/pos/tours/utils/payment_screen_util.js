@@ -118,15 +118,8 @@ export function clickInvoiceButton() {
 export function clickValidate() {
     return [
         {
-            isActive: ["desktop"],
             content: "validate payment",
-            trigger: `.payment-screen .button.next.highlight`,
-            run: "click",
-        },
-        {
-            isActive: ["mobile"],
-            content: "validate payment",
-            trigger: `.payment-screen .btn-switchpane:contains('Validate')`,
+            trigger: `.payment-screen button.validation-button.next`,
             run: "click",
         },
     ];
@@ -256,7 +249,7 @@ export function changeIs(amount) {
     return [
         {
             content: `change is ${amount}`,
-            trigger: `.payment-status-change .amount:contains("${amount}")`,
+            trigger: `.payment-status-amount .amount:contains("${amount}")`,
         },
     ];
 }
@@ -276,7 +269,7 @@ export function remainingIs(amount) {
     return [
         {
             content: `remaining amount is ${amount}`,
-            trigger: `.payment-status-remaining .amount:contains("${amount}")`,
+            trigger: `.payment-status-amount .amount:contains("${amount}")`,
         },
     ];
 }
@@ -288,17 +281,10 @@ export function validateButtonIsHighlighted(isHighlighted = true) {
     return [
         {
             isActive: ["desktop"],
-            content: `validate button is ${isHighlighted ? "highlighted" : "not highligted"}`,
+            content: `validate button is ${isHighlighted ? "highlighted" : "not highlighted"}`,
             trigger: isHighlighted
-                ? `.payment-screen .button.next.highlight`
-                : `.payment-screen .button.next:not(:has(.highlight))`,
-        },
-        {
-            isActive: ["mobile"],
-            content: `validate button is ${isHighlighted ? "highlighted" : "not highligted"}`,
-            trigger: isHighlighted
-                ? `.payment-screen .btn-switchpane:not(.secondary):contains('Validate')`
-                : `.payment-screen .btn-switchpane.secondary:contains('Validate')`,
+                ? `.payment-screen button.validation-button.next.highlight`
+                : `.payment-screen button.validation-button.next:not(:has(.highlight))`,
         },
     ];
 }
@@ -387,7 +373,7 @@ export function clickPartnerButton() {
         },
         {
             content: "partner screen is shown",
-            trigger: `.modal ${PartnerList.clickPartner().trigger}`,
+            trigger: `${PartnerList.clickPartner().trigger}`,
         },
     ];
 }
@@ -414,7 +400,7 @@ export function syncCurrentOrder() {
                 const currentOrder = posmodel.getOrder();
                 const order = await posmodel.syncAllOrders({ orders: [currentOrder] });
 
-                if (typeof order[0].id !== "number") {
+                if (!order[0].isSynced) {
                     throw new Error("Order ID is not a number after sync.");
                 }
             },

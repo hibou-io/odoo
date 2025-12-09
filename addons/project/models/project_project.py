@@ -178,6 +178,7 @@ class ProjectProject(models.Model):
     can_mark_milestone_as_done = fields.Boolean(compute='_compute_next_milestone_id', groups="project.group_project_milestone", export_string_translation=False)
     is_milestone_deadline_exceeded = fields.Boolean(compute='_compute_next_milestone_id', groups="project.group_project_milestone", export_string_translation=False)
     is_template = fields.Boolean(copy=False, export_string_translation=False)
+    show_ratings = fields.Boolean(compute='_compute_show_ratings', export_string_translation=False)
 
     _project_date_greater = models.Constraint(
         'check(date >= date_start)',
@@ -388,6 +389,18 @@ class ProjectProject(models.Model):
         )
         for project in self:
             project.update_count = update_count_per_project.get(project, 0)
+
+    @api.depends('type_ids.rating_active')
+    def _compute_show_ratings(self):
+        projects_with_rating_active = self.env['project.task.type'].search_fetch(
+            domain=[
+                ('project_ids', 'in', self.ids),
+                ('rating_active', '=', True),
+            ],
+            field_names=['project_ids'],
+        ).project_ids
+        for project in self:
+            project.show_ratings = project in projects_with_rating_active
 
     def _inverse_allow_task_dependencies(self):
         """ Reset state for waiting tasks in the project if the feature is disabled
@@ -1085,6 +1098,7 @@ class ProjectProject(models.Model):
                 'number': f'{int(self.rating_avg) if self.rating_avg.is_integer() else round(self.rating_avg, 1)} / 5',
                 'action_type': 'object',
                 'action': 'action_view_all_rating',
+                'show': self.show_ratings,
                 'sequence': 15,
             })
         if self.env.user.has_group('project.group_project_user'):
@@ -1419,10 +1433,11 @@ class ProjectProject(models.Model):
         project.message_post(body=self.env._("Project created from template %(name)s.", name=self.name))
 
         # Tasks dispatching using project roles
-        project.task_ids.role_ids = False
         if role_to_users_mapping and (mapping := role_to_users_mapping.filtered(lambda entry: entry.user_ids)):
-            for template_task, new_task in zip(self.task_ids, project.task_ids):
+            for new_task in project.task_ids:
                 for entry in mapping:
-                    if entry.role_id in template_task.role_ids:
+                    if entry.role_id in new_task.role_ids:
                         new_task.user_ids |= entry.user_ids
+
+        project.task_ids.role_ids = False
         return project

@@ -11,6 +11,7 @@ import { READONLY_MAIN_EMBEDDINGS } from "@html_editor/others/embedded_component
 import { browser } from "@web/core/browser/browser";
 import { cookie } from "@web/core/browser/cookie";
 import { loadBundle } from "@web/core/assets";
+import { htmlReplaceAll } from "@web/core/utils/html";
 
 const { DateTime } = luxon;
 
@@ -44,7 +45,7 @@ export class HistoryDialog extends Component {
         revisionContent: null,
         revisionComparison: null,
         revisionId: null,
-        revisionLoading: false,
+        revisionLoading: true,
         cssMaxHeight: 400,
     });
 
@@ -133,7 +134,7 @@ export class HistoryDialog extends Component {
                 "html_field_history_get_comparison_at_revision",
                 [this.props.recordId, this.props.versionedFieldName, revisionId]
             );
-            return markup(this._removeExternalBlockHtml(comparison));
+            return this._removeExternalBlockHtml(markup(comparison));
         }.bind(this)
     );
 
@@ -172,8 +173,8 @@ export class HistoryDialog extends Component {
                 if (!curentContent || !curentContent.length) {
                     return this.props.noContentHelper;
                 }
-                return markup(
-                    this._removeExternalBlockHtml(curentContent[0][this.props.versionedFieldName])
+                return this._removeExternalBlockHtml(
+                    markup(curentContent[0][this.props.versionedFieldName])
                 );
             }
             const content = await this.orm.call(
@@ -181,7 +182,7 @@ export class HistoryDialog extends Component {
                 "html_field_history_get_content_at_revision",
                 [this.props.recordId, this.props.versionedFieldName, revisionId]
             );
-            return markup(this._removeExternalBlockHtml(content));
+            return this._removeExternalBlockHtml(markup(content));
         }.bind(this)
     );
 
@@ -192,12 +193,12 @@ export class HistoryDialog extends Component {
         this.env.services.ui.unblock();
     }
 
-    _removeExternalBlockHtml(str) {
+    _removeExternalBlockHtml(baseHtml) {
         const filteringRegex = /<[a-z ]+data-embedded="(?:(?!<).)+<\/[a-z]+>/gim;
-        return str.replace(
-            filteringRegex,
-            `<div class="embedded-history-dialog-placeholder">${_t("Dynamic element")}</div>`
-        );
+        const placeholderHtml = markup`<div class="embedded-history-dialog-placeholder">${_t(
+            "Dynamic element"
+        )}</div>`;
+        return htmlReplaceAll(baseHtml, filteringRegex, () => placeholderHtml);
     }
 
     /**
@@ -207,8 +208,9 @@ export class HistoryDialog extends Component {
         if (!revision || !revision["create_date"]) {
             return "--";
         }
+        const userTZ = user.tz || "local";
         return formatDateTime(
-            DateTime.fromISO(revision["create_date"], { zone: "utc" }).setZone(user.tz),
+            DateTime.fromISO(revision["create_date"], { zone: "utc" }).setZone(userTZ),
             { showSeconds: false }
         );
     }

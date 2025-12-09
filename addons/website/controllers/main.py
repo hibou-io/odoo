@@ -5,6 +5,7 @@ import os
 import logging
 import re
 import requests
+import urllib.parse
 import werkzeug.urls
 import werkzeug.utils
 import werkzeug.wrappers
@@ -68,11 +69,9 @@ class QueryURL:
                     paths[key] = "%s" % value
             elif value:
                 if isinstance(value, (list, set)):
-                    fragments.append(
-                        werkzeug.urls.url_encode([(key, item) for item in value if item])
-                    )
+                    fragments.append(urllib.parse.urlencode([(key, item) for item in value if item]))
                 else:
-                    fragments.append(werkzeug.urls.url_encode([(key, value)]))
+                    fragments.append(urllib.parse.urlencode([(key, value)]))
         for key in path_args:
             value = paths.get(key)
             if value is not None:
@@ -103,9 +102,6 @@ class Website(Home):
         Most DBs will just have a website.page with '/' as URL and keep the
         homepage_url setting empty.
         """
-        # prefetch all menus (it will prefetch website.page too)
-        top_menu = request.website.menu_id
-
         homepage_url = request.website._get_cached('homepage_url')
         if homepage_url and homepage_url != '/':
             request.reroute(homepage_url)
@@ -126,6 +122,9 @@ class Website(Home):
         # Fallback on first accessible menu
         def is_reachable(menu):
             return menu.is_visible and menu.url not in ('/', '', '#') and not menu.url.startswith(('/?', '/#', ' '))
+
+        # prefetch all menus (it will prefetch website.page too)
+        top_menu = request.website.menu_id
 
         reachable_menus = top_menu.child_id.filtered(is_reachable)
         if reachable_menus:
@@ -421,7 +420,9 @@ class Website(Home):
             dynamic_filter_sudo = dynamic_filter_sudo.search(
                 Domain('id', '=', filter_id) & request.website.website_domain()
             )
-        return dynamic_filter_sudo._render(**kwargs) or []
+        single_record_filter = kwargs.get('limit') == 1 and kwargs.get('res_model') and kwargs.get('res_id')
+        dynamic_filter_found = single_record_filter or dynamic_filter_sudo
+        return dynamic_filter_sudo._render(**kwargs) if dynamic_filter_found else []
 
     @http.route('/website/snippet/options_filters', type='jsonrpc', auth='user', website=True, readonly=True)
     def get_dynamic_snippet_filters(self, model_name=None, search_domain=None):
@@ -842,7 +843,9 @@ class Website(Home):
             record = request.env[model['model']].browse(model['id'])
             model['field'] = 'arch_db' if model['field'] == 'arch' else model['field']
             tree = html.fromstring(str(record[model['field']]))
-            for index, el in enumerate(tree.xpath('//img')):
+            # Only process static img elements (with src) - skip dynamic
+            # template images (t-att*)
+            for index, el in enumerate(tree.xpath('//img[@src]')):
                 role = el.get('role')
                 decorative = role == "presentation"
                 alt = el.get('alt')

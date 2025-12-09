@@ -120,7 +120,7 @@ class StockWarehouseOrderpoint(models.Model):
         for orderpoint in self:
             orderpoint.show_supply_warning = not orderpoint.rule_ids
 
-    @api.depends('location_id', 'product_min_qty', 'route_id', 'product_id.route_ids', 'product_id.stock_move_ids',
+    @api.depends('location_id', 'product_min_qty', 'route_id', 'product_id.route_ids', 'product_id.stock_move_ids.date',
                  'product_id.stock_move_ids.state', 'product_id.seller_ids', 'product_id.seller_ids.delay', 'company_id.horizon_days')
     def _compute_deadline_date(self):
         """ This function first checks if the qty_on_hand is less than the product_min_qty. If it is the case,
@@ -175,7 +175,7 @@ class StockWarehouseOrderpoint(models.Model):
                     if qty_on_hand_at_date < orderpoint.product_min_qty:
                         tentative_deadline = move_date - relativedelta.relativedelta(days=orderpoint.lead_days)
                         break
-                orderpoint.deadline_date = max(tentative_deadline, fields.Date.today()) if tentative_deadline < horizon_date else False
+                orderpoint.deadline_date = tentative_deadline if tentative_deadline < horizon_date else False
 
     @api.depends('rule_ids', 'product_id.seller_ids', 'product_id.seller_ids.delay', 'company_id.horizon_days')
     def _compute_lead_days(self):
@@ -191,11 +191,12 @@ class StockWarehouseOrderpoint(models.Model):
     @api.depends('route_id', 'product_id', 'location_id', 'company_id', 'warehouse_id', 'product_id.route_ids')
     def _compute_rules(self):
         orderpoints_to_compute = self.filtered(lambda orderpoint: orderpoint.product_id and orderpoint.location_id)
-        # Small cache mapping (location_id, route_id, product_id.route_ids | product_id.categ_id.total_route_ids) -> stock.rule.
+        # Small cache mapping (location_id, route_id, {all product routes}) -> stock.rule.
         # This reduces calls to _get_rules_from_location for products without routes and products with the same routes.
         rules_cache = {}
         for orderpoint in orderpoints_to_compute:
-            cache_key = (orderpoint.location_id, orderpoint.route_id, orderpoint.product_id.route_ids | orderpoint.product_id.categ_id.total_route_ids)
+            all_product_routes = orderpoint.product_id.route_ids | orderpoint.product_id.categ_id.total_route_ids | orderpoint.product_id.get_total_routes()
+            cache_key = (orderpoint.location_id, orderpoint.route_id, all_product_routes)
             rule_ids = rules_cache.get(cache_key) or orderpoint.product_id._get_rules_from_location(
                 orderpoint.location_id, route_ids=orderpoint.route_id
             )
@@ -407,7 +408,7 @@ class StockWarehouseOrderpoint(models.Model):
         records = self.search_fetch([('qty_to_order_manual', 'in', [0, False])], ['qty_to_order_computed'])
         matched_ids = records.filtered_domain([('qty_to_order_computed', operator, value)]).ids
         return ['|',
-                    ('qty_to_order_manual', operator, value),
+                    '&', ('qty_to_order_manual', operator, value), ('qty_to_order_manual', 'not in', [0, False]),
                     ('id', 'in', matched_ids)
                 ]
 
@@ -765,10 +766,10 @@ class StockWarehouseOrderpoint(models.Model):
 
                 # Log an activity on product template for failed orderpoints.
                 for orderpoint, error_msg in all_orderpoints_exceptions:
-                    existing_activity = self.env['mail.activity'].search([
+                    existing_activity = self.env['mail.activity'].search_count([
                         ('res_id', '=', orderpoint.product_id.product_tmpl_id.id),
                         ('res_model_id', '=', self.env.ref('product.model_product_template').id),
-                        ('note', '=', error_msg)])
+                        ('note', 'like', error_msg)], limit=1)
                     if not existing_activity:
                         orderpoint.product_id.product_tmpl_id.sudo().activity_schedule(
                             'mail.mail_activity_data_warning',

@@ -156,10 +156,12 @@ class StockRule(models.Model):
                     po_line_values.append(self.env['purchase.order.line']._prepare_purchase_order_line_from_procurement(
                         *procurement, po))
                     # Check if we need to advance the order date for the new line
-                    order_date_planned = procurement.values['date_planned'] - relativedelta(
+                    date_planned = po.date_planned or min(v['date_planned'] for v in po_line_values)
+                    order_date_planned = date_planned - relativedelta(
                         days=procurement.values['supplier'].delay)
                     if fields.Date.to_date(order_date_planned) < fields.Date.to_date(po.date_order):
                         po.date_order = order_date_planned
+
             self.env['purchase.order.line'].sudo().create(po_line_values)
 
     def _filter_warehouse_routes(self, product, warehouses, route):
@@ -214,6 +216,12 @@ class StockRule(models.Model):
         buy_rule = self.filtered(lambda r: r.action == 'buy')
         seller = 'supplierinfo' in values and values['supplierinfo'] or product.with_company(buy_rule.company_id)._select_seller(quantity=None)
         if not buy_rule:
+            return delays, delay_description
+        if not seller:
+            delays['total_delay'] += 365
+            delays['no_vendor_found_delay'] += 365
+            if not bypass_delay_description:
+                delay_description.append((_('No Vendor Found'), _('+ %s day(s)', 365)))
             return delays, delay_description
         buy_rule.ensure_one()
         if not self.env.context.get('ignore_vendor_lead_time'):
@@ -362,17 +370,23 @@ class StockRule(models.Model):
         if partner.group_rfq == 'default':
             if values.get('reference_ids'):
                 domain += (('reference_ids', 'in', tuple(values['reference_ids'].ids)),)
-            else:
-                domain += (('reference_ids', '=', False),)
-        date_planned = fields.Datetime.from_string(values['date_planned']) - relativedelta(days=int(values['supplier'].delay))
+        date_planned = fields.Datetime.from_string(values['date_planned'])
         if partner.group_rfq == 'day':
             start_dt = datetime.combine(date_planned, datetime.min.time())
             end_dt = datetime.combine(date_planned, datetime.max.time())
             domain += (('date_planned', '>=', start_dt), ('date_planned', '<=', end_dt))
         if partner.group_rfq == 'week':
-            start_dt = datetime.combine(date_planned - relativedelta(days=date_planned.weekday()), datetime.min.time())
-            end_dt = datetime.combine(date_planned + relativedelta(days=6 - date_planned.weekday()), datetime.max.time())
-            domain += (('date_planned', '>=', start_dt), ('date_planned', '<=', end_dt))
+            if partner.group_on == 'default':
+                start_dt = datetime.combine(date_planned - relativedelta(days=date_planned.isoweekday()), datetime.min.time())
+                end_dt = datetime.combine(date_planned + relativedelta(days=6 - date_planned.isoweekday()), datetime.max.time())
+                domain += (('date_planned', '>=', start_dt), ('date_planned', '<=', end_dt))
+            else:
+                delta_days = (7 + int(partner.group_on) - date_planned.isoweekday()) % 7
+                date = date_planned + relativedelta(days=delta_days)
+                start_dt = datetime.combine(date, datetime.min.time())
+                end_dt = datetime.combine(date, datetime.max.time())
+                domain += (('date_planned', '>=', start_dt), ('date_planned', '<=', end_dt))
+
         return domain
 
     def _push_prepare_move_copy_values(self, move_to_copy, new_date):

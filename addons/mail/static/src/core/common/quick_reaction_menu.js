@@ -26,6 +26,7 @@ export class QuickReactionMenu extends Component {
     setup() {
         this.toggle = useRef("toggle");
         this.store = useService("mail.store");
+        this.ui = useService("ui");
         this.picker = useEmojiPicker(
             null,
             { onSelect: this.toggleReaction.bind(this), class: "overflow-hidden rounded-2" },
@@ -37,7 +38,7 @@ export class QuickReactionMenu extends Component {
         this.dropdown = useState(
             useDropdownState({
                 onClose: () => {
-                    const currentThread = this.env.getCurrentThread();
+                    const currentThread = this.env.getCurrentThread?.();
                     if (!currentThread || currentThread.notEq(this.props.message.thread)) {
                         return;
                     }
@@ -79,11 +80,15 @@ export class QuickReactionMenu extends Component {
         if (!this.store.emojiLoader.isLoaded) {
             loadEmoji();
         }
-        this.picker.close();
-        if (this.dropdown.isOpen) {
-            this.dropdown.close();
+        if (this.ui.isSmall) {
+            this.props.action.onSelected();
         } else {
-            this.dropdown.open();
+            this.picker.close();
+            if (this.dropdown.isOpen) {
+                this.dropdown.close();
+            } else {
+                this.dropdown.open();
+            }
         }
     }
 
@@ -102,9 +107,14 @@ export class QuickReactionMenu extends Component {
     }
 
     get attClass() {
-        const invisible = !this.props.messageActive && !this.dropdown.isOpen && !this.picker.isOpen;
+        const invisible =
+            typeof this.props.messageActive === "boolean" &&
+            !this.props.messageActive &&
+            !this.dropdown.isOpen &&
+            !this.picker.isOpen;
         return {
             ...this.props.classNames,
+            "o-open": this.dropdown.isOpen,
             invisible,
             visible: !invisible,
         };

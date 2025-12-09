@@ -1,5 +1,6 @@
 import {
     insertText as htmlInsertText,
+    pasteText,
     tripleClick,
 } from "@html_editor/../tests/_helpers/user_actions";
 
@@ -735,23 +736,34 @@ test.tags("focus required");
 test("[text composer] quick edit last self-message from UP arrow", async () => {
     const pyEnv = await startServer();
     const channelId = pyEnv["discuss.channel"].create({ name: "general" });
-    pyEnv["mail.message"].create({
-        author_id: serverState.partnerId,
-        body: "Test",
-        attachment_ids: [],
-        message_type: "comment",
-        model: "discuss.channel",
-        res_id: channelId,
-    });
+    pyEnv["mail.message"].create([
+        {
+            author_id: serverState.partnerId,
+            body: "Test-1",
+            attachment_ids: [],
+            message_type: "comment",
+            model: "discuss.channel",
+            res_id: channelId,
+        },
+        {
+            author_id: serverState.partnerId,
+            body: "Test-2",
+            attachment_ids: [],
+            message_type: "comment",
+            model: "discuss.channel",
+            res_id: channelId,
+        },
+    ]);
     await start();
     await openDiscuss(channelId);
-    await contains(".o-mail-Message-content", { text: "Test" });
+    await contains(".o-mail-Message-content", { text: "Test-1" });
+    await contains(".o-mail-Message-content", { text: "Test-2" });
     await contains(".o-mail-Message .o-mail-Composer", { count: 0 });
     triggerHotkey("ArrowUp");
-    await contains(".o-mail-Message .o-mail-Composer");
+    await contains(".o-mail-Message .o-mail-Composer-input", { value: "Test-2" });
     triggerHotkey("Escape");
     await contains(".o-mail-Message .o-mail-Composer", { count: 0 });
-    await contains(".o-mail-Composer-input:focus");
+    await contains(".o-mail-Composer.o-focused");
     // non-empty composer should not trigger quick edit
     await insertText(".o-mail-Composer-input", "Shrek");
     triggerHotkey("ArrowUp");
@@ -760,6 +772,15 @@ test("[text composer] quick edit last self-message from UP arrow", async () => {
     await tick();
     await tick();
     await contains(".o-mail-Message .o-mail-Composer", { count: 0 });
+    // ArrowUp for quick edit last stays on last edit message, does not jump to older messages.
+    await insertText(".o-mail-Composer-input", "", { replace: true });
+    triggerHotkey("ArrowUp");
+    await insertText(".o-mail-Message .o-mail-Composer-input", "", { replace: true });
+    triggerHotkey("ArrowUp");
+    await contains(".o-mail-Message .o-mail-Composer-input", { value: "" });
+    await insertText(".o-mail-Message .o-mail-Composer-input", "edited message", { replace: true });
+    triggerHotkey("Enter");
+    await contains(".o-mail-Message-content", { text: "edited message (edited)" });
 });
 
 test.tags("focus required", "html composer");
@@ -1436,7 +1457,7 @@ test("can quickly add emoji with ':' keyword", async () => {
     await click(".o-mail-NavigableList-item", { text: "😅:sweat_smile:" });
     await contains(".o-mail-Composer-html.odoo-editor-editable", { text: "😅" });
     await contains(".o-mail-Composer-suggestionList .o-open", { count: 0 });
-    await htmlInsertText(editor, ":sw");
+    await htmlInsertText(editor, " :sw");
     await contains(".o-mail-Composer-suggestionList .o-open");
     await contains(".o-mail-NavigableList-item", { text: "😅:sweat_smile:" });
     await htmlInsertText(editor, ":s", { replace: true });
@@ -1619,4 +1640,118 @@ test("send a message end with a space clears the composer", async () => {
     await contains(editor.editable, { text: "Hello", count: 1 });
     await press("Enter");
     await contains(editor.editable, { text: "Hello", count: 0 });
+});
+
+test.tags("html composer");
+test("parse link correctly in html composer", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        channel_type: "channel",
+        name: "General",
+    });
+    await start();
+    await openDiscuss(channelId);
+    const composerService = getService("mail.composer");
+    composerService.setHtmlComposer();
+    await focus(".o-mail-Composer-html.odoo-editor-editable");
+    const editor = {
+        document,
+        editable: document.querySelector(".o-mail-Composer-html.odoo-editor-editable"),
+    };
+    await htmlInsertText(editor, "www.google.com");
+    await contains(editor.editable, { text: "www.google.com", count: 1 });
+    await contains(editor.editable.querySelector("a"), { text: "www.google.com", count: 0 });
+    await htmlInsertText(editor, " ");
+    await contains(editor.editable.querySelector("a[target='_blank']"), { text: "www.google.com" });
+    await press("Enter");
+    await contains(editor.editable, { text: "www.google.com", count: 0 });
+    await pasteText(editor, "www.baidu.com");
+    await contains(editor.editable.querySelector("a[target='_blank']"), { text: "www.baidu.com" });
+});
+
+test.tags("html composer");
+test("mentions can be correctly selected with ctrl+A and deleted", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        channel_type: "channel",
+        name: "General",
+    });
+    await start();
+    await openDiscuss(channelId);
+    const composerService = getService("mail.composer");
+    composerService.setHtmlComposer();
+    await focus(".o-mail-Composer-html.odoo-editor-editable");
+    const editor = {
+        document,
+        editable: document.querySelector(".o-mail-Composer-html.odoo-editor-editable"),
+    };
+    // partner beginning of the message
+    await htmlInsertText(editor, "@admin");
+    await click(".o-mail-NavigableList-item", { text: "Mitchell Admin" });
+    await contains(editor.editable, { text: "@Mitchell Admin" });
+    await htmlInsertText(editor, "Hello");
+    await contains(editor.editable, { textContent: "@Mitchell Admin\u00A0Hello" });
+    await focus(editor.editable);
+    await press("Control+a");
+    await press("Backspace");
+    await contains(editor.editable, { textContent: "" });
+
+    // thread with an icon beginning of the message
+    await htmlInsertText(editor, "#general");
+    await click(".o-mail-NavigableList-item", { text: "General" });
+    await contains(editor.editable, { text: "General" });
+    await contains(editor.editable.querySelector("i.fa-hashtag"));
+    await htmlInsertText(editor, "Hello");
+    await contains(editor.editable, { textContent: "General\u00A0Hello" });
+    await focus(editor.editable);
+    await press("Control+a");
+    await press("Backspace");
+    await contains(editor.editable.querySelector("i.fa-hashtag"), { count: 0 });
+    await contains(editor.editable, { textContent: "" });
+
+    //partner in the middle of the message
+    await htmlInsertText(editor, "Hello @admin");
+    await click(".o-mail-NavigableList-item", { text: "Mitchell Admin" });
+    await contains(editor.editable, { text: "@Mitchell Admin" });
+    await htmlInsertText(editor, "nice to meet you!");
+    await contains(editor.editable, {
+        textContent: "Hello\u00A0@Mitchell Admin\u00A0nice to meet you!",
+    });
+    await focus(editor.editable);
+    await press("Control+a");
+    await press("Backspace");
+    await contains(editor.editable, { textContent: "" });
+
+    // thread with an icon in the middle of the message
+    await htmlInsertText(editor, "Hello #general");
+    await click(".o-mail-NavigableList-item", { text: "General" });
+    await contains(editor.editable, { text: "General" });
+    await contains(editor.editable.querySelector("i.fa-hashtag"));
+    await htmlInsertText(editor, "nice to meet you!");
+    await contains(editor.editable, { textContent: "Hello\u00A0 General\u00A0nice to meet you!" });
+    await focus(editor.editable);
+    await press("Control+a");
+    await press("Backspace");
+    await contains(editor.editable.querySelector("i.fa-hashtag"), { count: 0 });
+    await contains(editor.editable, { textContent: "" });
+
+    //partner at the end of the message
+    await htmlInsertText(editor, "Hello @admin");
+    await click(".o-mail-NavigableList-item", { text: "Mitchell Admin" });
+    await contains(editor.editable, { text: "@Mitchell Admin" });
+    await focus(editor.editable);
+    await press("Control+a");
+    await press("Backspace");
+    await contains(editor.editable, { textContent: "" });
+
+    // thread with an icon at the end of the message
+    await htmlInsertText(editor, "Hello #general");
+    await click(".o-mail-NavigableList-item", { text: "General" });
+    await contains(editor.editable, { text: "General" });
+    await contains(editor.editable.querySelector("i.fa-hashtag"));
+    await focus(editor.editable);
+    await press("Control+a");
+    await press("Backspace");
+    await contains(editor.editable.querySelector("i.fa-hashtag"), { count: 0 });
+    await contains(editor.editable, { textContent: "" });
 });

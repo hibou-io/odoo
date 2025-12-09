@@ -1,6 +1,6 @@
-import { expect, test } from "@odoo/hoot";
+import { expect, queryFirst, test } from "@odoo/hoot";
 import { click, edit, press, queryAllTexts, queryOne, scroll } from "@odoo/hoot-dom";
-import { animationFrame, mockDate, mockTimeZone } from "@odoo/hoot-mock";
+import { Deferred, animationFrame, mockDate, mockTimeZone } from "@odoo/hoot-mock";
 import {
     assertDateTimePicker,
     getPickerCell,
@@ -59,6 +59,45 @@ test("toggle datepicker", async () => {
 
     await fieldInput("char_field").click();
     expect(".o_datetime_picker").toHaveCount(0);
+});
+
+test("datepicker is automatically closed after selecting a value", async () => {
+    Partner._onChanges.date = () => {};
+    const def = new Deferred();
+    onRpc("onchange", () => def);
+
+    await mountView({ type: "form", resModel: "res.partner", resId: 1 });
+
+    expect(".o_datetime_picker").toHaveCount(0);
+    await contains(".o_field_date button").click();
+    await animationFrame();
+    expect(".o_datetime_picker").toHaveCount(1);
+
+    await contains(getPickerCell(22)).click();
+    await animationFrame();
+    // The picker shouldn't be reopened, even if the onChange RPC is slow.
+    expect(".o_datetime_picker").toHaveCount(0);
+    def.resolve();
+});
+
+test("Ensure only one datepicker is open", async () => {
+    Partner._fields.date_start = fields.Date();
+
+    await mountView({
+        type: "form",
+        resModel: "res.partner",
+        arch: `
+            <form>
+                <field name="date_start"/>
+                <field name="date"/>
+            </form>`,
+        resId: 1,
+    });
+
+    await queryFirst("[data-field='date_start']").click();
+    await queryFirst("[data-field='date']").click();
+    await animationFrame();
+    expect(".o_datetime_picker").toHaveCount(1);
 });
 
 test.tags("desktop");
@@ -335,7 +374,7 @@ test("multi edition of date field in list view: clear date in input", async () =
     await contains(".o_data_row:eq(0) .o_list_record_selector input").click();
     await contains(".o_data_row:eq(1) .o_list_record_selector input").click();
     await contains(".o_data_row:eq(0) .o_data_cell").click();
-    
+
     expect(".o_field_date button").toHaveCount(1);
     await contains(".o_field_date button").click();
     await fieldInput("date").clear();
@@ -354,7 +393,7 @@ test("date field remove value", async () => {
     });
 
     expect(".o_field_date").toHaveText("Feb 3, 2017");
-        
+
     await contains(".o_field_date button").click();
     await fieldInput("date").clear();
     expect(".o_field_date input").toHaveValue("");
@@ -509,4 +548,43 @@ test("date field with max_precision option", async () => {
     await click(getPickerCell("12"));
     await animationFrame();
     expect(".o_field_widget[name='date']").toHaveText("Jan 12, 2017");
+});
+
+test("DateField with onchange forcing a specific date", async () => {
+    mockDate("2009-05-04 10:00:00", +1);
+
+    Partner._onChanges.date = (obj) => {
+        if (obj.char_field === "force today") {
+            obj.date = "2009-05-04";
+        }
+    };
+
+    await mountView({
+        type: "form",
+        resModel: "res.partner",
+        arch: /* xml */ `
+            <form>
+                <field name="char_field"/>
+                <field name="date"/>
+            </form>`,
+    });
+
+    expect(".o_field_date input").toHaveValue("");
+
+    // enable the onchange
+    await contains(".o_field_widget[name=char_field] input").edit("force today");
+
+    // open the picker and try to set a value different from today
+    await click(".o_field_date input");
+    await animationFrame();
+    expect(".o_datetime_picker").toHaveCount(1);
+    await contains(getPickerCell("22")).click(); // 22 May 2009
+    expect(".o_field_date").toHaveText("May 4"); // value forced by the onchange
+
+    // do it again (the technical flow is a bit different as now the current value is already today)
+    await click(".o_field_date button");
+    await animationFrame();
+    expect(".o_datetime_picker").toHaveCount(1);
+    await contains(getPickerCell("22")).click(); // 22 May 2009
+    expect(".o_field_date").toHaveText("May 4"); // value forced by the onchange
 });

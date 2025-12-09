@@ -8,13 +8,14 @@
 # Ryoko Tsuda <ryoko@quartile.co>, 2023
 # 江口和志 <sandwhale1010@gmail.com>, 2023
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Junko Augias (juau)" <juau@odoo.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0beta\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-11 14:01+0000\n"
-"PO-Revision-Date: 2025-09-14 21:12+0000\n"
-"Last-Translator: \"Dylan Kiss (dyki)\" <dyki@odoo.com>\n"
+"POT-Creation-Date: 2025-12-05 18:35+0000\n"
+"PO-Revision-Date: 2025-11-25 07:30+0000\n"
+"Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "sale_management/ja/>\n"
 "Language: ja\n"
@@ -57,7 +58,7 @@ msgstr "一つを追加"
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_digest_digest__kpi_all_sale_total
 msgid "All Sales"
-msgstr "すべての販売"
+msgstr "販売実績"
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template_line__allowed_uom_ids
@@ -85,7 +86,7 @@ msgstr "会社"
 #. module: sale_management
 #: model:ir.model,name:sale_management.model_res_config_settings
 msgid "Config Settings"
-msgstr "詳細設定"
+msgstr "構成設定"
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template__mail_template_id
@@ -155,7 +156,8 @@ msgstr "表示タイプ"
 #. odoo-python
 #: code:addons/sale_management/models/digest.py:0
 msgid "Do not have access, skip this data for user's digest email"
-msgstr "アクセス権がありません。ユーザのレポートメール用にこのデータをスキップしてく"
+msgstr ""
+"アクセス権がありません。ユーザのレポートメール用にこのデータをスキップしてく"
 "ださい"
 
 #. module: sale_management
@@ -193,7 +195,8 @@ msgstr ""
 msgid ""
 "If unchecked, it will allow you to hide the quotation template without "
 "removing it."
-msgstr "チェックを外すと、見積テンプレートを削除せずに非表示にすることができます"
+msgstr ""
+"チェックを外すと、見積テンプレートを削除せずに非表示にすることができます"
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template__journal_id
@@ -237,7 +240,7 @@ msgstr "メモ"
 #. module: sale_management
 #: model:ir.model.fields,help:sale_management.field_sale_order_template__number_of_days
 msgid "Number of days for the validity date computation of the quotation"
-msgstr "見積有効期限計算用日数"
+msgstr "見積使用期限計算用日数"
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template__require_payment
@@ -253,12 +256,18 @@ msgstr "オンライン署名"
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_line__is_optional
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template_line__is_optional
 msgid "Optional Line"
+msgstr "オプション明細行"
+
+#. module: sale_management
+#. odoo-python
+#: code:addons/sale_management/models/sale_order_template.py:0
+msgid "Optional Products Section"
 msgstr ""
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template_line__parent_id
 msgid "Parent Section Line"
-msgstr ""
+msgstr "親セクション明細行"
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template__prepayment_percent
@@ -377,14 +386,21 @@ msgid ""
 "feature also exists in the Purchase application."
 msgstr ""
 "同じプロダクトを異なるサイズや色で販売していますか？プロダクトグリッドを試し"
-"て、各バリアントを複数の数量でオーダを追加して下さい。この機能は購買アプリケ"
-"ーションにもあります。"
+"て、各バリアントを複数の数量でオーダを追加して下さい。この機能は購買アプリ"
+"ケーションにもあります。"
 
 #. module: sale_management
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template__sequence
 #: model:ir.model.fields,field_description:sale_management.field_sale_order_template_line__sequence
 msgid "Sequence"
 msgstr "シーケンス"
+
+#. module: sale_management
+#. odoo-javascript
+#: code:addons/sale_management/static/src/fields/sale_order_line_field/sale_order_line_field.xml:0
+#: code:addons/sale_management/static/src/fields/sale_order_template_line_field/sale_order_template_line_field.xml:0
+msgid "Set Optional"
+msgstr "オプションに設定"
 
 #. module: sale_management
 #: model_terms:digest.tip,tip_description:sale_management.digest_tip_sale1_management_0
@@ -394,13 +410,13 @@ msgid ""
 "capacity, etc. Make sale orders encoding easier and error-proof."
 msgstr ""
 "複雑なプロダクトカタログでお困りですか？色、サイズ、容量など、さまざまなオプ"
-"ションでプロダクトを構成できるプロダクト設定をお試しし下さい。販売オーダのエ"
-"ンコーディングをより簡単に、ミスのないものにしましょう。"
+"ションでプロダクトを構成できるプロダクトコンフィギュレータをお試しし下さい。"
+"販売オーダのエンコーディングをより簡単に、ミスのないものにしましょう。"
 
 #. module: sale_management
 #: model:ir.model.fields.selection,name:sale_management.selection__sale_order_template_line__display_type__line_subsection
 msgid "Subsection"
-msgstr ""
+msgstr "サブセクション"
 
 #. module: sale_management
 #: model_terms:ir.ui.view,arch_db:sale_management.sale_order_template_view_form
@@ -424,7 +440,8 @@ msgstr ""
 #. module: sale_management
 #: model:ir.model.fields,help:sale_management.field_sale_order_template__prepayment_percent
 msgid "The percentage of the amount needed to be paid to confirm quotations."
-msgstr "見積書を確定するために顧客が支払わなければならない必要金額のパーセンテージ。"
+msgstr ""
+"見積書を確定するために顧客が支払わなければならない必要金額のパーセンテージ。"
 
 #. module: sale_management
 #: model:ir.model.fields,help:sale_management.field_sale_order_template__mail_template_id
@@ -453,6 +470,13 @@ msgid "Unit"
 msgstr "単位"
 
 #. module: sale_management
+#. odoo-javascript
+#: code:addons/sale_management/static/src/fields/sale_order_line_field/sale_order_line_field.xml:0
+#: code:addons/sale_management/static/src/fields/sale_order_template_line_field/sale_order_template_line_field.xml:0
+msgid "Unset Optional"
+msgstr "未設定 オプション"
+
+#. module: sale_management
 #: model_terms:ir.actions.act_window,help:sale_management.sale_order_template_action
 msgid ""
 "Use templates to create polished, professional quotes in minutes.\n"
@@ -476,7 +500,8 @@ msgstr "全員に表示"
 msgid ""
 "You cannot change the type of a sale quote line. Instead you should delete "
 "the current line and create a new line of the proper type."
-msgstr "販売見積書明細のタイプを変更することはできません。代わりに、現在の明細を削除"
+msgstr ""
+"販売見積書明細のタイプを変更することはできません。代わりに、現在の明細を削除"
 "し、適切なタイプの新しい明細を作成する必要があります。"
 
 #. module: sale_management

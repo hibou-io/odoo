@@ -2,6 +2,8 @@
 import logging
 import time
 
+from odoo.fields import Domain
+from odoo.modules.loading import force_demo
 from odoo.tools import make_index_name, SQL
 from odoo.tools.translate import TranslationImporter
 from odoo.tests import standalone
@@ -31,9 +33,21 @@ def test_all_l10n(env):
 
 
     # Ensure the presence of demo data, to see if they can be correctly installed
-    assert env.ref('base.module_account').demo, "Need the demo to test with data"
+    if not env.ref('base.module_account').demo:
+        force_demo(env)
 
-    # Install the requiriments
+    # Install prerequisite modules
+    _logger.info('Installing prerequisite modules')
+    pre_mods = env['ir.module.module'].search([
+        ('name', 'in', (
+            'stock_account',
+            'mrp_accountant',
+        )),
+        ('state', '=', 'uninstalled'),
+    ])
+    pre_mods.button_immediate_install()
+
+    # Install the requirements
     _logger.info('Installing all l10n modules')
     l10n_mods = env['ir.module.module'].search([
         ('name', '=like', 'l10n_%'),
@@ -107,6 +121,19 @@ def test_all_l10n(env):
             env.cr.commit()
             if company.fiscal_position_ids and not company.domestic_fiscal_position_id:
                 _logger.warning("No domestic fiscal position found in fiscal data for %s %s.", company.country_id.name, template_code)
+            elif company.fiscal_position_ids:
+                potential_domestic_fps = company.fiscal_position_ids.filtered_domain(
+                    Domain('country_id', '=', company.country_id.id)
+                    | Domain([
+                            ('country_id', '=', False),
+                            ('country_group_id', 'in', company.country_id.country_group_ids.ids),
+                        ]),
+                )
+                if len(potential_domestic_fps) > 1:
+                    potential_domestic_fps.sorted(lambda x: x.country_id.id or float('inf')).sorted('sequence')
+                    if ((potential_domestic_fps[0].country_id == potential_domestic_fps[1].country_id) and
+                        (potential_domestic_fps[0].sequence == potential_domestic_fps[1].sequence)):
+                        _logger.warning("Several fiscal positions fitting for being tagged as domestic were found in fiscal data for %s %s.", company.country_id.name, template_code)
         except Exception:
             _logger.error("Error when creating COA %s", template_code, exc_info=True)
             env.cr.rollback()

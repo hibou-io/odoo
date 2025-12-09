@@ -3,10 +3,12 @@ import { patch } from "@web/core/utils/patch";
 import { session } from "@web/session";
 import { rpc } from "@web/core/network/rpc";
 
-patch(PosData.prototype, {
+export const unpatchSelf = patch(PosData.prototype, {
     async loadInitialData() {
         const configId = session.data.config_id;
-        return await rpc(`/pos-self/data/${parseInt(configId)}`);
+        return await rpc(`/pos-self/data/${parseInt(configId)}`, {
+            access_token: odoo.access_token,
+        });
     },
     async loadFieldsAndRelations() {
         const configId = session.data.config_id;

@@ -74,7 +74,38 @@ describe("Html Paste cleaning - whitelist", () => {
                 );
             },
             contentAfter:
-                '<p>123a</p><table class="table table-bordered"><thead><tr><th>h</th></tr></thead><tbody><tr><td>b</td></tr></tbody></table><p>d[]</p>',
+                '<p>123a</p><table class="table table-bordered o_table"><tbody><tr><th>h</th></tr><tr><td>b</td></tr></tbody></table><p>d[]</p>',
+        });
+    });
+
+    test("should insert a base container inside empty <td> on paste", async () => {
+        await testEditor({
+            contentBefore: `
+                <p>[]<br></p>
+            `,
+            stepFunction: async (editor) => {
+                pasteHtml(
+                    editor,
+                    unformat(`
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `)
+                );
+            },
+            contentAfter: unformat(`
+                <table class="table table-bordered o_table">
+                    <tbody>
+                        <tr>
+                            <td><p>[]<br></p></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `),
         });
     });
 
@@ -397,6 +428,15 @@ describe("Simple text", () => {
                 },
                 contentAfter: "<div>ab</div><div>cd[]</div>",
             });
+        });
+    });
+    test("should not paste a text when in contenteditable=false", async () => {
+        await testEditor({
+            contentBefore: '<div contenteditable="false">a[b]c</div>',
+            stepFunction: async (editor) => {
+                pasteText(editor, "xyz");
+            },
+            contentAfter: '<div contenteditable="false">a[b]c</div>',
         });
     });
 });
@@ -3073,6 +3113,28 @@ describe("link", () => {
             });
         });
 
+        test("should paste plain text content inside a link if all of its contents is selected but link is inside non-editable (not collapsed)", async () => {
+            await testEditor({
+                contentBefore:
+                    '<p contenteditable="false">a<a href="#" contenteditable="true">[xyz]</a>d</p>',
+                stepFunction: async (editor) => {
+                    pasteText(editor, "bc");
+                },
+                contentAfter:
+                    '<p contenteditable="false">a<a href="#" contenteditable="true">bc[]</a>d</p>',
+            });
+        });
+
+        test("should paste plain text content inside a link if all of its contents is selected but link is unremovable (not collapsed)", async () => {
+            await testEditor({
+                contentBefore: '<p>a<a href="#" class="oe_unremovable">[xyz]</a>d</p>',
+                stepFunction: async (editor) => {
+                    pasteText(editor, "bc");
+                },
+                contentAfter: '<p>a<a href="#" class="oe_unremovable">bc[]</a>d</p>',
+            });
+        });
+
         test("should paste and transform plain text content over a link if all of its contents is selected (not collapsed)", async () => {
             await testEditor({
                 contentBefore: '<p><a href="#">[xyz]</a></p>',
@@ -3276,9 +3338,9 @@ describe("images", () => {
             // select xxx in "<p>ab[xxx]cd</p>""
             const p = editor.editable.querySelector("p");
             const selection = {
-                anchorNode: p.childNodes[1],
+                anchorNode: p.childNodes[0],
                 anchorOffset: 2,
-                focusNode: p.childNodes[1],
+                focusNode: p.childNodes[0],
                 focusOffset: 5,
             };
             setSelection(selection);
@@ -3478,9 +3540,9 @@ describe("youtube video", () => {
             // select xxx in "<p>ab[xxx]cd</p>"
             const p = editor.editable.querySelector("p");
             const selection = {
-                anchorNode: p.childNodes[1],
+                anchorNode: p.childNodes[0],
                 anchorOffset: 2,
-                focusNode: p.childNodes[1],
+                focusNode: p.childNodes[0],
                 focusOffset: 5,
             };
             setSelection(selection);
@@ -3799,7 +3861,7 @@ describe("Paste HTML tables", () => {
 </div>`
                 );
             },
-            contentAfter: `<table class="table table-bordered">
+            contentAfter: `<table class="table table-bordered o_table">
 ${"            "}
 ${"            "}
             <tbody><tr>
@@ -3821,9 +3883,9 @@ ${"            "}
             </tr>
             <tr>
                 <td>14pt MONO TEXT
-                </td>
+                []</td>
             </tr>
-        </tbody></table><p>[]<br></p>`,
+        </tbody></table>`,
         });
     });
 
@@ -3898,7 +3960,7 @@ ${"            "}
 </google-sheets-html-origin>`
                 );
             },
-            contentAfter: `<table class="table table-bordered">
+            contentAfter: `<table class="table table-bordered o_table">
 ${"        "}
 ${"            "}
 ${"            "}
@@ -3931,10 +3993,10 @@ ${"        "}
                     text on color background</td>
             </tr>
             <tr>
-                <td>14pt MONO TEXT</td>
+                <td>14pt MONO TEXT[]</td>
             </tr>
         </tbody>
-    </table><p>[]<br></p>`,
+    </table>`,
         });
     });
 
@@ -4033,7 +4095,7 @@ ${"        "}
 </html>`
                 );
             },
-            contentAfter: `<table class="table table-bordered">
+            contentAfter: `<table class="table table-bordered o_table">
 ${"        "}
 ${"        "}
         <tbody><tr>
@@ -4060,10 +4122,120 @@ ${"        "}
         </tr>
         <tr>
             <td>
-                14pt MONO TEXT
+                14pt MONO TEXT[]
             </td>
         </tr>
-    </tbody></table><p>[]<br></p>`,
+    </tbody></table>`,
+        });
+    });
+
+    test("should apply default table classes (table, table-bordered, o_table) on paste", async () => {
+        await testEditor({
+            contentBefore: `
+                <p>[]<br></p>
+            `,
+            stepFunction: async (editor) => {
+                pasteHtml(
+                    editor,
+                    unformat(`
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `)
+                );
+            },
+            contentAfter: unformat(`
+                <table class="table table-bordered o_table">
+                    <tbody>
+                        <tr>
+                            <td><p>[]<br></p></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `),
+        });
+    });
+
+    test("should move all rows from thead to tbody", async () => {
+        await testEditor({
+            contentBefore: "<p>[]<br></p>",
+            stepFunction: async (editor) => {
+                pasteHtml(
+                    editor,
+                    unformat(`
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>1</th>
+                                    <th>2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `)
+                );
+            },
+            contentAfter: unformat(`
+                        <table class="table table-bordered o_table">
+                            <tbody>
+                                <tr>
+                                    <th>1</th>
+                                    <th>2</th>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>2[]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `),
+        });
+    });
+    test("should replace thead element with tbody", async () => {
+        await testEditor({
+            contentBefore: "<p>[]<br></p>",
+            stepFunction: async (editor) => {
+                pasteHtml(
+                    editor,
+                    unformat(`
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>1</th>
+                                    <th>2</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    `)
+                );
+            },
+            contentAfter: unformat(`
+                        <table class="table table-bordered o_table">
+                            <tbody>
+                                <tr>
+                                    <th>1</th>
+                                    <th>2[]</th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `),
         });
     });
 });

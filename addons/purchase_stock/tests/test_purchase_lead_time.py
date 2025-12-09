@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from odoo import Command, fields
 from .common import PurchaseTestCommon
-from odoo.tests import Form
+from odoo.tests import Form, freeze_time
 
 
 class TestPurchaseLeadTime(PurchaseTestCommon):
@@ -44,7 +44,7 @@ class TestPurchaseLeadTime(PurchaseTestCommon):
             and different Delivery Lead Time."""
 
         # Make procurement request from product_1's form view, create procurement and check it's state
-        date_planned1 = fields.Datetime.now() + timedelta(days=10)
+        date_planned1 = fields.Datetime.now() + timedelta(days=5)
         self._create_make_procurement(self.product_1, 10.00, date_planned=date_planned1)
         purchase1 = self.env['purchase.order.line'].search([('product_id', '=', self.product_1.id)], limit=1).order_id
 
@@ -85,6 +85,91 @@ class TestPurchaseLeadTime(PurchaseTestCommon):
         purchase_form.date_planned = purchase2.date_planned + timedelta(days=2)
         purchase_form.save()
         self.assertEqual(purchase2.picking_ids.date_deadline, purchase2.date_planned, "Deadline of pickings should be propagate")
+
+    def test_02_product_level_delay(self):
+        """ To check schedule dates of multiple purchase order line of the same purchase order,
+            we create two procurements for the two different product with same vendor
+            and different supplier Lead Time. Vendor grouping rfq option is 'by day'."""
+
+        self.partner_1.group_rfq = 'day'
+        # Make procurement request from product_1's form view, create procurement and check it's state
+        date_planned = fields.Datetime.now()
+        ref1, ref2 = self.env['stock.reference'].create([
+            {'name': 'SO001'},
+            {'name': 'SO002'},
+        ])
+        self._create_make_procurement(self.product_1, 10.00, date_planned=date_planned, ref=ref1)
+        purchase1 = self.env['purchase.order.line'].search([('product_id', '=', self.product_1.id)], limit=1).order_id
+
+        # Make procurement request from product_2's form view, create procurement and check it's state
+        self._create_make_procurement(self.product_2, 5.00, date_planned=date_planned, ref=ref2)
+        purchase2 = self.env['purchase.order.line'].search([('product_id', '=', self.product_2.id)], limit=1).order_id
+
+        # Check purchase order is same or not
+        self.assertEqual(purchase1, purchase2, 'Purchase orders should be same for the two different product with same vendor.')
+
+        # Confirm purchase order
+        purchase1.button_confirm()
+
+        # Check order date of purchase order
+        order_line_pro_1 = purchase1.order_line.filtered(lambda r: r.product_id == self.product_1)
+        order_line_pro_2 = purchase2.order_line.filtered(lambda r: r.product_id == self.product_2)
+        self.assertEqual(purchase2.date_planned, date_planned, 'planned date should be equal to procurement date')
+        deadline = date_planned - timedelta(days=max((self.product_1 | self.product_2).seller_ids.mapped('delay')))
+        self.assertEqual(purchase2.date_order, deadline, 'Deadline date should be equal to: Date of the procurement order - max Lead Time.')
+
+        # Check scheduled date of purchase order line for product_1
+        self.assertEqual(order_line_pro_1.date_planned, date_planned, 'Schedule date of purchase order line for product_1 should be equal to: Order date of purchase order + Delivery Lead Time of product_1.')
+
+        # Check scheduled date of purchase order line for product_2
+        self.assertEqual(order_line_pro_2.date_planned, date_planned, 'Schedule date of purchase order line for product_2 should be equal to: Order date of purchase order + Delivery Lead Time of product_2.')
+
+    @freeze_time("2025-09-10 10:00:00")
+    def test_03_group_week(self):
+        """ Make the rfq for the supplier group by week on a specific day. Check the planned date
+        and deadline date are compute accordingly.
+
+        8(Mon) -- 9(Tue) -- 10(Wed) -- 11(Thu) -- 12(Fri) -- 13(Sat) -- 14(Sun)
+                            today                 planned 1  planned 2
+
+        15(Mon) -- 16(Tue) -- 17(Wed) -- 18(Thu) -- 19(Fri) -- 20(Sat) -- 21(Sun)
+                   PO
+
+
+        """
+
+        self.partner_1.group_rfq = 'week'
+        self.partner_1.group_on = '2'  # Tuesday
+        self.product_1.seller_ids.delay = 0
+        # Make procurement request from product_1's form view, create procurement and check it's state
+        date_planned = fields.Datetime.now() + timedelta(days=2)
+        ref1, ref2 = self.env['stock.reference'].create([
+            {'name': 'SO001'},
+            {'name': 'SO002'},
+        ])
+        self._create_make_procurement(self.product_1, 10.00, date_planned=date_planned, ref=ref1)
+        purchase1 = self.env['purchase.order.line'].search([('product_id', '=', self.product_1.id)], limit=1).order_id
+
+        # Make procurement request from product_2's form view, create procurement and check it's state
+        date_planned = fields.Datetime.now() + timedelta(days=3)
+        self._create_make_procurement(self.product_2, 5.00, date_planned=date_planned, ref=ref2)
+        purchase2 = self.env['purchase.order.line'].search([('product_id', '=', self.product_2.id)], limit=1).order_id
+
+        self.assertEqual(purchase1, purchase2, 'Purchase orders should be same for the two different product with same vendor.')
+
+        purchase1.button_confirm()
+
+        # Check date deadline and date planned of purchase order. Supplier of product 2 has a delay of 2 days.
+        # The purchase order is planned on Tuesday 16th, so the date deadline is 2 days before, on Sunday 14th.
+        date_p = fields.Datetime.from_string('2025-09-16 10:00:00')
+        date_d = fields.Datetime.from_string('2025-09-14 10:00:00')
+        self.assertRecordValues(purchase1, [{
+            'date_planned': date_p, 'date_order': date_d,
+        }])
+        self.assertRecordValues(purchase1.order_line, [
+            {'date_planned': date_p},
+            {'date_planned': date_p},
+        ])
 
     def test_merge_po_line(self):
         """Change that merging po line for same procurement is done."""
@@ -303,3 +388,23 @@ class TestPurchaseLeadTime(PurchaseTestCommon):
         today = datetime.combine(fields.Datetime.now(), time(12))
         self.assertEqual(purchase_order.date_order, today)
         self.assertEqual(purchase_order.date_planned, today + timedelta(days=7))
+
+    def test_lead_time_with_no_supplier(self):
+        """Test that lead time is incremented by 365 days (1 year) when there
+        is no supplier defined on a product with buy route.
+        """
+        buy_route = self.warehouse_1.buy_pull_id.route_id
+        product = self.env['product.product'].create({
+            'name': 'test',
+            'is_storable': True,
+            'route_ids': buy_route.ids,
+        })
+        orderpoint = self.env['stock.warehouse.orderpoint'].create({
+            'name': 'test',
+            'location_id': self.warehouse_1.lot_stock_id.id,
+            'product_id': product.id,
+            'product_min_qty': 0,
+            'product_max_qty': 5,
+        })
+
+        self.assertEqual(orderpoint.lead_days, 365)

@@ -2,6 +2,9 @@
     width: $o-mail-ChatWindow-width;
 
     z-index: $zindex-sticky;
+    &.o-mobile {
+        z-index: $zindex-sticky - 2 !important;
+    }
     &:not(.o-mobile) {
         --border-opacity: .15;
         height: Min(95vh, $o-mail-ChatWindow-width * 15 / 9)
@@ -35,21 +38,15 @@
 }
 
 .o-mail-ChatWindow-header {
-    --o-mail-ActionList-Button-height: auto;
-
     .o-mail-ActionList-group {
         gap: map-get($spacers, 3);
 
-        button:not(:hover, &:focus-visible, &:active):not(.btn-success) {
+        button:not(:hover):not(:focus-visible):not(:active):not(.btn-success) {
             --o-mail-ActionList-Button-opacity: 1;
         }
 
         @include media-breakpoint-up(md) {
-            gap: map-get($spacers, 2);
-
-            button[name="fold-chat-window"] {
-                margin-inline-start: map-get($spacers, 2) !important;
-            }
+            gap: map-get($spacers, 1);
         }
     }
 

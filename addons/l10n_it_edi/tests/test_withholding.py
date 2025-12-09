@@ -1,7 +1,7 @@
 import datetime
 
 from odoo import fields
-from odoo.tests import tagged
+from odoo.tests import tagged, Form
 from odoo.exceptions import ValidationError
 from odoo.addons.l10n_it_edi.tests.common import TestItEdi
 
@@ -142,6 +142,35 @@ class TestWithholdingAndPensionFundTaxes(TestItEdi):
         cls.pension_fund_tax_invoice._post()
         cls.enasarco_tax_invoice._post()
         cls.inps_tax_invoice._post()
+
+    def test_withholding_tax_change(self):
+        tax_form = Form(self.env['account.tax'])
+        name = "Test Withholding"
+
+        tax_form.name = name
+        tax_form.amount = -2.00
+        tax_form.l10n_it_withholding_type = 'RT01'
+        tax_form.l10n_it_withholding_reason = False
+        with self.assertRaises(ValidationError):
+            tax_form.save()
+
+        tax_form.l10n_it_withholding_reason = "A"
+        tax = tax_form.save()
+        self.assertRecordValues(tax, [{
+            'name': name,
+            'amount': -2.00,
+            'l10n_it_withholding_type': 'RT01',
+            'l10n_it_withholding_reason': 'A',
+        }])
+
+        tax_form.l10n_it_withholding_type = False
+        tax = tax_form.save()
+        self.assertRecordValues(tax, [{
+            'name': name,
+            'amount': -2.00,
+            'l10n_it_withholding_type': False,
+            'l10n_it_withholding_reason': False,
+        }])
 
     def test_withholding_tax_constraints(self):
         with self.assertRaises(ValidationError):
@@ -286,7 +315,7 @@ class TestWithholdingAndPensionFundTaxes(TestItEdi):
             enasarco_imported_tax = line.tax_ids.filtered(lambda x: x.l10n_it_pension_fund_type == 'TC07')
             self.assertEqual(self.enasarco_purchase_tax, enasarco_imported_tax)
             self.assertEqual(-8.5, enasarco_imported_tax.amount)
-            self.assertEqual(self.withholding_purchase_tax_23, line.tax_ids.filtered(lambda x: x.l10n_it_withholding_reason == 'ZO'))
+            self.assertEqual(self.withholding_purchase_tax_23 | enasarco_imported_tax, line.tax_ids.filtered(lambda x: x.l10n_it_withholding_reason == 'ZO'))
 
     def test_enasarco_tax_import_global(self):
         """Test that if we have a unique ENASARCO line with a price of 0.0,
@@ -330,7 +359,7 @@ class TestWithholdingAndPensionFundTaxes(TestItEdi):
             enasarco_imported_tax = line.tax_ids.filtered(lambda x: x.l10n_it_pension_fund_type == 'TC07')
             self.assertEqual(self.enasarco_purchase_tax, enasarco_imported_tax)
             self.assertEqual(-8.5, enasarco_imported_tax.amount)
-            self.assertEqual(self.withholding_purchase_tax_23, line.tax_ids.filtered(lambda x: x.l10n_it_withholding_reason == 'ZO'))
+            self.assertEqual(self.withholding_purchase_tax_23 | enasarco_imported_tax, line.tax_ids.filtered(lambda x: x.l10n_it_withholding_reason == 'ZO'))
 
     def test_inps_tax_export(self):
         """

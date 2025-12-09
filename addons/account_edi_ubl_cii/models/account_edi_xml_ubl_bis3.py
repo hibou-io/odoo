@@ -2,11 +2,13 @@
 from markupsafe import Markup
 from typing import Literal
 
-from odoo import models, _
+from odoo import _, api, models
 from odoo.addons.account.tools import dict_to_xml
-from odoo.addons.account_edi_ubl_cii.models.account_edi_xml_ubl_20 import UBL_NAMESPACES
+from odoo.addons.account_edi_ubl_cii.models.account_edi_xml_ubl_20 import FloatFmt, UBL_NAMESPACES
 
 from stdnum.no import mva
+
+CHORUS_PRO_PEPPOL_ID = "0009:11000201100044"
 
 
 class AccountEdiXmlUbl_Bis3(models.AbstractModel):
@@ -30,6 +32,10 @@ class AccountEdiXmlUbl_Bis3(models.AbstractModel):
     To avoid multi-parental inheritance in case of UBL 4.0, we're adding the sale/purchase logic here.
     * Documentation for Peppol Order transaction 3.5: https://docs.peppol.eu/poacc/upgrade-3/syntax/Order/tree/
     """
+
+    @api.model
+    def _is_customer_behind_chorus_pro(self, customer):
+        return customer.peppol_eas and customer.peppol_endpoint and f"{customer.peppol_eas}:{customer.peppol_endpoint}" == CHORUS_PRO_PEPPOL_ID
 
     # -------------------------------------------------------------------------
     # EXPORT
@@ -71,6 +77,11 @@ class AccountEdiXmlUbl_Bis3(models.AbstractModel):
             'cbc:CustomizationID': {'_text': self._get_customization_id(vals['process_type'])},
             'cbc:ProfileID': {'_text': f"urn:fdc:peppol.eu:2017:poacc:{vals['process_type']}:01:1.0"},
         })
+        # For B2G transactions in Germany: set the buyer_reference to the Leitweg-ID (code 0204)
+        if invoice.commercial_partner_id.peppol_eas == '0204':
+            document_node.update({
+                'cbc:BuyerReference': {'_text': invoice.commercial_partner_id.peppol_endpoint}
+            })
 
         # [NL-R-001] For suppliers in the Netherlands, if the document is a creditnote, the document MUST
         # contain an invoice reference (cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID)
@@ -94,18 +105,26 @@ class AccountEdiXmlUbl_Bis3(models.AbstractModel):
         invoice = vals['invoice']
         customer = vals['customer']
         supplier = vals['supplier']
+        shipping_partner = vals['partner_shipping']
+
         intracom_delivery = (
             customer.country_id.code in (economic_area := self.env.ref('base.europe').country_ids.mapped('code') + ['NO'])
             and supplier.country_id.code in economic_area
             and supplier.country_id != customer.country_id
         )
-        if intracom_delivery:
-            document_node['cac:Delivery'] = {
-                'cbc:ActualDeliveryDate': {'_text': invoice.invoice_date},
-                'cac:DeliveryLocation': {
-                    'cac:Address': self._get_address_node({'partner': vals['partner_shipping']})
-                },
-            }
+        delivery_date = invoice.invoice_date if intracom_delivery else invoice.delivery_date
+
+        document_node['cac:Delivery'] = {
+            'cbc:ActualDeliveryDate': {'_text': delivery_date},
+            'cac:DeliveryParty': {
+                'cac:PartyName': {
+                    'cbc:Name': {'_text': shipping_partner.name or customer.name},
+                }
+            },
+            'cac:DeliveryLocation': {
+                'cac:Address': self._get_address_node({'partner': shipping_partner})
+            },
+        }
 
     def _add_invoice_payment_means_nodes(self, document_node, vals):
         super()._add_invoice_payment_means_nodes(document_node, vals)
@@ -133,13 +152,17 @@ class AccountEdiXmlUbl_Bis3(models.AbstractModel):
                 'schemeID': commercial_partner.peppol_eas
             }
 
-        if commercial_partner.country_code == 'NL':
-            party_node['cac:PartyIdentification'] = [
-                party_node['cac:PartyIdentification'],
-                {
-                    'cbc:ID': {'_text': commercial_partner.peppol_endpoint}
-                }
-            ]
+        if commercial_partner.country_code == 'NL' and commercial_partner.peppol_endpoint:
+            # [UBL-SR-16] Buyer identifier shall occur maximum once
+            if role == 'customer':
+                party_node['cac:PartyIdentification'] = [{'cbc:ID': {'_text': commercial_partner.peppol_endpoint}}]
+            else:
+                party_node['cac:PartyIdentification'] = [
+                    party_node['cac:PartyIdentification'],
+                    {
+                        'cbc:ID': {'_text': commercial_partner.peppol_endpoint}
+                    }
+                ]
 
         party_node['cac:PartyTaxScheme'] = party_tax_scheme = [
             {
@@ -278,8 +301,9 @@ class AccountEdiXmlUbl_Bis3(models.AbstractModel):
 
     def _add_document_line_price_nodes(self, line_node, vals):
         super()._add_document_line_price_nodes(line_node, vals)
-        if vals['base_line']['price_unit'] < 0.0:
-            line_node['cac:Price']['cbc:PriceAmount']['_text'] = -line_node['cac:Price']['cbc:PriceAmount']['_text']
+        currency_suffix = vals['currency_suffix']
+        sign = 1 if vals['base_line']['price_unit'] >= 0.0 else -1
+        line_node['cac:Price']['cbc:PriceAmount']['_text'] = FloatFmt(sign * vals[f'gross_price_unit{currency_suffix}'], 1, 8)
 
     # -------------------------------------------------------------------------
     # EXPORT: Constraints

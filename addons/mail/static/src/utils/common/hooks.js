@@ -8,6 +8,7 @@ import {
     useEffect,
     useRef,
     useState,
+    useSubEnv,
     xml,
 } from "@odoo/owl";
 
@@ -339,6 +340,9 @@ export function useMessageScrolling(duration = 2000) {
          * @param {import("models").Thread} thread
          */
         async highlightMessage(message, thread) {
+            if (thread.model !== "mail.box" && thread.notEq(message.thread)) {
+                return;
+            }
             state.initiated = true;
             let messageScrollDirection;
             if (message.notIn(thread.messages)) {
@@ -644,4 +648,16 @@ export function useLongPress(refName, { action, predicate = () => true } = {}) {
     );
     useLazyExternalListener(() => ref.el, "touchend", reset);
     useLazyExternalListener(() => ref.el, "touchcancel", reset);
+}
+
+export const inDiscussCallViewProps = ["isPip?"];
+export function useInDiscussCallView() {
+    const component = useComponent();
+    useSubEnv({
+        inDiscussCallView: {
+            get isPip() {
+                return component.props.isPip;
+            },
+        },
+    });
 }

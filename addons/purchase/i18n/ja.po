@@ -6,16 +6,19 @@
 # Yoshi Tashiro (Quartile) <tashiro@roomsfor.hk>, 2023
 # Andy Yiu, 2023
 # 江口和志 <sandwhale1010@gmail.com>, 2023
-# Ryoko Tsuda <ryoko@quartile.co>, 2023
+# Ryoko Tsuda <ryoko@quartile.co>, 2023, 2025.
 # Martin Trigaux, 2023
 # "Dylan Kiss (dyki)" <dyki@odoo.com>, 2025.
+# "Junko Augias (juau)" <juau@odoo.com>, 2025.
+# MAHAMADASIF ANSARI <maan@odoo.com>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-11 14:00+0000\n"
-"PO-Revision-Date: 2025-09-14 21:10+0000\n"
-"Last-Translator: \"Dylan Kiss (dyki)\" <dyki@odoo.com>\n"
+"POT-Creation-Date: 2025-11-28 18:35+0000\n"
+"PO-Revision-Date: 2025-12-05 07:58+0000\n"
+"Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-19/"
 "purchase/ja/>\n"
 "Language: ja\n"
@@ -23,7 +26,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: purchase
 #: model:ir.actions.report,print_report_name:purchase.action_report_purchase_order
@@ -34,8 +37,8 @@ msgid ""
 "                'Purchase Order - %s' % (object.name))"
 msgstr ""
 "\n"
-"                (object.state in ('ドラフト', '送信済') および '見積依頼 - "
-"%s' % (object.name) または\n"
+"                (object.state in ('draft', 'sent') and '見積依頼 - %s' % "
+"(object.name) or\n"
 "                '購買オーダ - %s' % (object.name))"
 
 #. module: purchase
@@ -46,7 +49,7 @@ msgstr "仕入先請求書数"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__nbr_lines
 msgid "# of Lines"
-msgstr "行数"
+msgstr "明細数"
 
 #. module: purchase
 #. odoo-python
@@ -76,7 +79,8 @@ msgstr "'見積依頼 - %s' % (object.name)"
 msgid ""
 ", it's 100% free! You'll save time creating beautiful quotations and track "
 "sales."
-msgstr "100％無料です！きれいな見積書を作成し、販売を追跡する時間を節約できます。"
+msgstr ""
+"100％無料です！きれいな見積書を作成し、販売を追跡する時間を節約できます。"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.track_po_line_qty_received_template
@@ -153,8 +157,8 @@ msgstr ""
 "        </t>\n"
 "        入荷希望日: \n"
 "        <t t-if=\"object.date_planned\">\n"
-"            <span style=\"font-weight:bold;\" t-out=\""
-"format_date(object.date_planned) or ''\">05/05/2021</span>.\n"
+"            <span style=\"font-weight:bold;\" t-"
+"out=\"format_date(object.date_planned) or ''\">05/05/2021</span>.\n"
 "        </t>\n"
 "         <t t-else=\"\">\n"
 "            <span style=\"font-weight:bold;\">未定</span>です。\n"
@@ -169,8 +173,8 @@ msgstr ""
 "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
 "quote-container=\"1\">\n"
 "            <br/><br/>\n"
-"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t "
-"t-out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
+"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
+"out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
 "Admin</t></div>\n"
 "        </t>\n"
 "        <br/><br/>\n"
@@ -234,13 +238,14 @@ msgstr ""
 "        <t t-if=\"object.partner_ref\">\n"
 "            参照番号: <t t-out=\"object.partner_ref or ''\">REF_XXX</t>\n"
 "        </t>\n"
-"        金額: <span style=\"font-weight:bold;\" t-out=\"format_amount("
-"object.amount_total, object.currency_id) or ''\">$ 10.00</span>\n"
+"        金額: <span style=\"font-weight:bold;\" t-"
+"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+"10.00</span>\n"
 "        発注元: <t t-out=\"object.company_id.name or ''\">YourCompany</t>. \n"
 "        <br/><br/>\n"
 "        <t t-if=\"object.date_planned\">\n"
-"            入荷希望日は <span style=\"font-weight:bold;\" t-out=\""
-"format_date(object.date_planned) or ''\">05/05/2021</span>です。\n"
+"            入荷希望日は <span style=\"font-weight:bold;\" t-"
+"out=\"format_date(object.date_planned) or ''\">05/05/2021</span>です。\n"
 "            <br/><br/>\n"
 "            この注文を受領したことをご確認下さい。\n"
 "            <br/><br/>\n"
@@ -252,8 +257,8 @@ msgstr ""
 "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
 "quote-container=\"1\">\n"
 "            <br/><br/>\n"
-"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t "
-"t-out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
+"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
+"out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
 "Admin</t></div>\n"
 "        </t>\n"
 "        <br/><br/>\n"
@@ -305,8 +310,8 @@ msgstr ""
 "        <t t-if=\"object.partner_ref\">\n"
 "            参照番号: <t t-out=\"object.partner_ref or ''\">REF_XXX</t>\n"
 "        </t>\n"
-"        発行元 <t t-out=\"object.company_id.name or ''\""
-">YourCompany</t>をお送りさせて頂きます。\n"
+"        発行元 <t t-out=\"object.company_id.name or ''\">YourCompany</t>をお"
+"送りさせて頂きます。\n"
 "        <br/><br/>\n"
 "        ご不明な点などございましたら、ご連絡下さい。\n"
 "        <br/><br/>\n"
@@ -314,8 +319,8 @@ msgstr ""
 "        <t t-if=\"not is_html_empty(object.user_id.signature)\" data-o-mail-"
 "quote-container=\"1\">\n"
 "            <br/><br/>\n"
-"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t "
-"t-out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
+"            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-"
+"out=\"object.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell "
 "Admin</t></div>\n"
 "        </t>\n"
 "    </p>\n"
@@ -343,9 +348,9 @@ msgid ""
 "Bill\" title=\"Waiting for Bill\"/><span class=\"d-none d-md-inline\"> "
 "Waiting for Bill</span>"
 msgstr ""
-"<i class=\"fa fa-fw fa-file-text\" role=\"img\" aria-label="
-"\"Waiting for Bill\" title=\"Waiting for Bill\"/><span class="
-"\"d-none d-md-inline\">請求書待ち</span>"
+"<i class=\"fa fa-fw fa-file-text\" role=\"img\" aria-label=\"Waiting for "
+"Bill\" title=\"Waiting for Bill\"/><span class=\"d-none d-md-inline\">請求書"
+"待ち</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_orders
@@ -353,8 +358,8 @@ msgid ""
 "<i class=\"fa fa-fw fa-remove\" role=\"img\" aria-label=\"Cancelled\" "
 "title=\"Cancelled\"/><span class=\"d-none d-md-inline\"> Cancelled</span>"
 msgstr ""
-"<i class=\"fa fa-fw fa-remove\" role=\"img\" aria-label=\"Cancelled\" title="
-"\"Cancelled\"/><span class=\"d-none d-md-inline\"> キャンセル済</span>"
+"<i class=\"fa fa-fw fa-remove\" role=\"img\" aria-label=\"Cancelled\" "
+"title=\"Cancelled\"/><span class=\"d-none d-md-inline\"> キャンセル済</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -406,10 +411,10 @@ msgid ""
 "                        <span class=\"o_form_label\" invisible=\"state in "
 "('draft', 'sent')\">Purchase Order </span>"
 msgstr ""
-"<span class=\"o_form_label\" invisible=\"state not in ('draft', 'sent')\""
-">見積依頼</span>\n"
-"                        <span class=\"o_form_label\" invisible="
-"\"state in ('draft', 'sent')\">購買オーダ</span>"
+"<span class=\"o_form_label\" invisible=\"state not in ('draft', 'sent')\">見"
+"積依頼</span>\n"
+"                        <span class=\"o_form_label\" invisible=\"state in "
+"('draft', 'sent')\">購買オーダ</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -588,7 +593,8 @@ msgid ""
 "A blanket purchase order is a purchase agreement between a buyer and a "
 "supplier to deliver goods or services to the buyer at a preset price for a "
 "period of time."
-msgstr "包括購買オーダとは、購買者と仕入先の間で交わされる、一定期間、あらかじめ設定"
+msgstr ""
+"包括購買オーダとは、購買者と仕入先の間で交わされる、一定期間、あらかじめ設定"
 "された価格で購買者に商品やサービスを提供する購入契約のことです。"
 
 #. module: purchase
@@ -657,12 +663,12 @@ msgstr "活動"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "例外活動文字装飾"
+msgstr "例外の活動を示す装飾"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__activity_state
 msgid "Activity State"
-msgstr "活動状態"
+msgstr "活動ステータス"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__activity_type_icon
@@ -798,6 +804,7 @@ msgstr "Aml"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_union__amount
+#: model:ir.model.fields,field_description:purchase.field_purchase_order_line__amount_to_invoice_at_date
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Amount"
 msgstr "金額"
@@ -854,9 +861,8 @@ msgid ""
 "you want to change it, please archive the product and create a new one."
 msgstr ""
 "このプロダクトでは、すでに例:%(problem_uom)sなど、他の測定単位(%(uom)sではな"
-"く) "
-"が使用されているため、測定単位の変更はできません。変更する場合は、プロダクト"
-"をアーカイブし、新しいプロダクトを作成して下さい。"
+"く) が使用されているため、測定単位の変更はできません。変更する場合は、プロダ"
+"クトをアーカイブし、新しいプロダクトを作成して下さい。"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_attachment_count
@@ -877,25 +883,25 @@ msgstr "属性"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_move_form_inherit_purchase
 msgid "Auto-Complete"
-msgstr "自動補完"
+msgstr "自動入力"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_account_bank_statement_line__purchase_vendor_bill_id
 #: model:ir.model.fields,field_description:purchase.field_account_move__purchase_vendor_bill_id
 msgid "Auto-complete"
-msgstr "オートコンプリート"
+msgstr "自動入力"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_account_bank_statement_line__purchase_id
 #: model:ir.model.fields,help:purchase.field_account_move__purchase_id
 msgid "Auto-complete from a past purchase order."
-msgstr "過去の注文書からオートコンプリートします。"
+msgstr "過去の注文書から自動入力します。"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_account_bank_statement_line__purchase_vendor_bill_id
 #: model:ir.model.fields,help:purchase.field_account_move__purchase_vendor_bill_id
 msgid "Auto-complete from a previous bill, refund, or purchase order."
-msgstr ""
+msgstr "過去の請求書、返金、または購買オーダからの自動入力。"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -945,6 +951,7 @@ msgid "Bill to Purchase Order"
 msgstr "仕入先請求書から購買オーダ"
 
 #. module: purchase
+#: model:ir.model.fields,field_description:purchase.field_purchase_order_line__qty_invoiced_at_date
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_bill_line_match_tree
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Billed"
@@ -1083,7 +1090,7 @@ msgstr "Eメール作成"
 #. module: purchase
 #: model:ir.model,name:purchase.model_res_config_settings
 msgid "Config Settings"
-msgstr "詳細設定"
+msgstr "構成設定"
 
 #. module: purchase
 #: model:ir.ui.menu,name:purchase.menu_purchase_config
@@ -1269,7 +1276,8 @@ msgstr "デフォルト販売価格 含む"
 msgid ""
 "Default on whether the sales price used on the product and invoices with "
 "this Company includes its taxes."
-msgstr "この会社で使用されるプロダクトおよび顧客請求書に記載される販売価格に消費税が"
+msgstr ""
+"この会社で使用されるプロダクトおよび顧客請求書に記載される販売価格に消費税が"
 "含まれるかどうかのデフォルト設定。"
 
 #. module: purchase
@@ -1296,7 +1304,8 @@ msgstr ""
 msgid ""
 "Delivery date promised by vendor. This date is used to determine expected "
 "arrival of products."
-msgstr "仕入先が約束した納期。この日付は、プロダクトの入荷予定日を決定するために使用"
+msgstr ""
+"仕入先が約束した納期。この日付は、プロダクトの入荷予定日を決定するために使用"
 "されます。"
 
 #. module: purchase
@@ -1392,7 +1401,8 @@ msgstr "ドラフト見積依頼書"
 msgid ""
 "Drag and drop the request for quotation PDF file into your list of "
 "quotations in Odoo. Enjoy the automation!"
-msgstr "見積依頼のPDFファイルをOdooの見積一覧にドラッグ&ドロップします。自動処理をご"
+msgstr ""
+"見積依頼のPDFファイルをOdooの見積一覧にドラッグ&ドロップします。自動処理をご"
 "活用下さい!"
 
 #. module: purchase
@@ -1562,7 +1572,7 @@ msgstr "チェックした場合は、新しいメッセージに注意が必要
 #: model:ir.model.fields,help:purchase.field_purchase_order__message_has_error
 #: model:ir.model.fields,help:purchase.field_purchase_order__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
-msgstr "チェックした場合は、一部のメッセージに配信エラーが発生されました。"
+msgstr "選択されている場合、一部のメッセージで配信エラーが発生しています。"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -1578,7 +1588,8 @@ msgstr ""
 msgid ""
 "If installed, the product variants will be added to purchase orders through "
 "a grid entry."
-msgstr "インストールされている場合、プロダクトバリアントはグリッドエントリを介して発"
+msgstr ""
+"インストールされている場合、プロダクトバリアントはグリッドエントリを介して発"
 "注書に追加されます。"
 
 #. module: purchase
@@ -1718,7 +1729,7 @@ msgstr "遅延"
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
 msgid "Late Activities"
-msgstr "遅れた活動"
+msgstr "期限超過の活動"
 
 #. module: purchase
 #. odoo-javascript
@@ -1851,10 +1862,8 @@ msgid "Message for Purchase Order"
 msgstr "購買オーダのメッセージ"
 
 #. module: purchase
-#: model:ir.model.fields,field_description:purchase.field_account_move_line__purchase_line_warn_msg
 #: model:ir.model.fields,field_description:purchase.field_product_product__purchase_line_warn_msg
 #: model:ir.model.fields,field_description:purchase.field_product_template__purchase_line_warn_msg
-#: model:ir.model.fields,field_description:purchase.field_purchase_order_line__purchase_line_warn_msg
 msgid "Message for Purchase Order Line"
 msgstr "購買オーダ明細のメッセージ"
 
@@ -2080,7 +2089,7 @@ msgstr "エラー数"
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr "アクションを必要とするメッセージの数"
+msgstr "対応が必要なメッセージ数"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__message_has_error_counter
@@ -2126,7 +2135,8 @@ msgstr ""
 msgid ""
 "Once you ordered your products to your supplier, confirm your request for "
 "quotation and it will turn into a purchase order."
-msgstr "仕入先にプロダクトをオーダして見積依頼を確定すると、購買オーダになります。"
+msgstr ""
+"仕入先にプロダクトをオーダして見積依頼を確定すると、購買オーダになります。"
 
 #. module: purchase
 #. odoo-python
@@ -2200,7 +2210,7 @@ msgstr "オーダ一覧"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__parent_id
 msgid "Parent Section Line"
-msgstr ""
+msgstr "親セクション明細行"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_bill_to_po_wizard__partner_id
@@ -2230,8 +2240,15 @@ msgstr "支払期限"
 msgid ""
 "Please select at least two purchase orders with state RFQ and RFQ sent to "
 "merge."
-msgstr "マージするために少なくとも2つの購買オーダと見積依頼ステータスおよび見積依頼送"
+msgstr ""
+"マージするために少なくとも2つの購買オーダと見積依頼ステータスおよび見積依頼送"
 "信済の購買オーダを選択して下さい。"
+
+#. module: purchase
+#. odoo-python
+#: code:addons/purchase/models/purchase_bill_line_match.py:0
+msgid "Please select bill lines with the same vendor."
+msgstr ""
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_line_match__pol_id
@@ -2399,6 +2416,12 @@ msgid "Purchase History for %s"
 msgstr "%s用の購買履歴"
 
 #. module: purchase
+#: model:ir.model.fields,field_description:purchase.field_account_move_line__purchase_line_warn_msg
+#: model:ir.model.fields,field_description:purchase.field_purchase_order_line__purchase_line_warn_msg
+msgid "Purchase Line Warn Msg"
+msgstr ""
+
+#. module: purchase
 #: model:ir.model,name:purchase.model_purchase_bill_line_match
 msgid "Purchase Line and Vendor Bill line matching view"
 msgstr "購買明細と仕入先請求書明細の照合ビュー"
@@ -2549,24 +2572,24 @@ msgstr "属性(サイズ、色など)を使用して製品のバリエーショ�
 #. module: purchase
 #: model:mail.template,name:purchase.email_template_edi_purchase_done
 msgid "Purchase: Purchase Order"
-msgstr "購買：購買オーダ"
+msgstr "購買: 購買オーダ"
 
 #. module: purchase
 #: model:mail.template,name:purchase.email_template_edi_purchase
 msgid "Purchase: Request For Quotation"
-msgstr "購買：見積依頼"
+msgstr "購買: 見積依頼"
 
 #. module: purchase
 #: model:mail.template,name:purchase.email_template_edi_purchase_reminder
 msgid "Purchase: Vendor Reminder"
-msgstr "購買：仕入先リマインダ"
+msgstr "購買: 仕入先リマインダ"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_product_product__purchased_product_qty
 #: model:ir.model.fields,field_description:purchase.field_product_template__purchased_product_qty
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_bill_line_match_tree
 msgid "Purchased"
-msgstr "購入した"
+msgstr "購買済"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.product_normal_form_view_inherit_purchase
@@ -2703,6 +2726,7 @@ msgid "Receipt Reminder Email"
 msgstr "入荷リマインダEメール"
 
 #. module: purchase
+#: model:ir.model.fields,field_description:purchase.field_purchase_order_line__qty_received_at_date
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Received"
 msgstr "入荷済"
@@ -2824,8 +2848,8 @@ msgid ""
 "will be confirmed and turned into purchase orders."
 msgstr ""
 "見積依頼は、購入を検討しているさまざまなプロダクトの価格見積を依頼するために"
-"仕入先に送られるドキュメントです。仕入先と合意が取れると、見積依頼は確定され"
-"、発注書に変換されます。"
+"仕入先に送られるドキュメントです。仕入先と合意が取れると、見積依頼は確定さ"
+"れ、発注書に変換されます。"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__activity_user_id
@@ -2835,7 +2859,7 @@ msgstr "担当ユーザ"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_has_sms_error
 msgid "SMS Delivery error"
-msgstr "SMS配信エラー"
+msgstr "SMS送信エラー"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -2987,7 +3011,8 @@ msgstr "次回活動日が過去のすべてのレコードを表示"
 msgid ""
 "Some order lines are missing a product, you need to correct them before "
 "going further."
-msgstr "一部のオーダ明細にプロダクトが欠落しています。先に進む前に修正してください。"
+msgstr ""
+"一部のオーダ明細にプロダクトが欠落しています。先に進む前に修正してください。"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_union__reference
@@ -3018,7 +3043,7 @@ msgstr "都道府県・州"
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_line_search
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search
 msgid "Status"
-msgstr "状態"
+msgstr "ステータス"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__activity_state
@@ -3036,7 +3061,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order_line__display_type__line_subsection
 msgid "Subsection"
-msgstr ""
+msgstr "サブセクション"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -3125,7 +3150,7 @@ msgstr "税金"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__technical_price_unit
 msgid "Technical Price Unit"
-msgstr ""
+msgstr "技術価格単位"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__display_type
@@ -3142,8 +3167,9 @@ msgstr ""
 msgid ""
 "Technical field to filter the available taxes depending on the fiscal "
 "country and fiscal position."
-msgstr "会計上の国及び会計ポジションによって使用可能な税を絞り込む用の技術フィールド"
-"。"
+msgstr ""
+"会計上の国及び会計ポジションによって使用可能な税を絞り込む用の技術フィール"
+"ド。"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__selected_seller_id
@@ -3176,7 +3202,8 @@ msgid ""
 "                    converted into a purchase order, you will be able to "
 "control the receipt\n"
 "                    of the products and the vendor bill."
-msgstr "見積依頼は、購買フローの最初のステップです。購買オーダに変換されると、プロダ"
+msgstr ""
+"見積依頼は、購買フローの最初のステップです。購買オーダに変換されると、プロダ"
 "クトの入荷と仕入先の請求書を管理できるようになります。"
 
 #. module: purchase
@@ -3341,8 +3368,15 @@ msgstr "記録上の例外活動の種類。"
 msgid ""
 "Unable to cancel purchase order(s): %s. You must first cancel their related "
 "vendor bills."
-msgstr "この購買オーダをキャンセルできません: "
-"%s。最初に、関連する仕入先請求をキャンセルする必要があります。"
+msgstr ""
+"この購買オーダをキャンセルできません: %s。最初に、関連する仕入先請求をキャン"
+"セルする必要があります。"
+
+#. module: purchase
+#. odoo-python
+#: code:addons/purchase/models/purchase_order.py:0
+msgid "Unable to cancel purchase order(s): %s. You must first unlock them."
+msgstr ""
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_line_match__product_uom_id
@@ -3378,6 +3412,12 @@ msgid "Unlock"
 msgstr "ロック解除"
 
 #. module: purchase
+#. odoo-python
+#: code:addons/purchase/models/purchase_order.py:0
+msgid "Unsupported operator"
+msgstr ""
+
+#. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_kpis_tree
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_tree
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_tree
@@ -3410,7 +3450,8 @@ msgstr "緊急"
 msgid ""
 "Use the above REST URL to get structured data of the purchase order in UBL "
 "format."
-msgstr "上記のREST URLを使用して、購買オーダの構造データをUBL形式で取得します。"
+msgstr ""
+"上記のREST URLを使用して、購買オーダの構造データをUBL形式で取得します。"
 
 #. module: purchase
 #: model:res.groups,name:purchase.group_purchase_user
@@ -3641,7 +3682,8 @@ msgstr ""
 #: code:addons/purchase/models/purchase_bill_line_match.py:0
 msgid ""
 "You must select at least one Purchase Order line to match or create bill."
-msgstr "仕入先請求書と照合、または作成するには、少なくとも1つの購買オーダ明細を選択す"
+msgstr ""
+"仕入先請求書と照合、または作成するには、少なくとも1つの購買オーダ明細を選択す"
 "る必要があります。"
 
 #. module: purchase
@@ -3653,11 +3695,10 @@ msgid ""
 " Please change the company of your quotation or remove the products from "
 "other companies (%(bad_products)s)."
 msgstr ""
-"見積書には会社%(product_company)sのプロダクトが含まれていますが、見積書は会社"
-"%(quote_company)sに属しています。\n"
-"見積書の "
-"会社を変更するか、他の会社からプロダクトを削除してください(%(bad_products)s)"
-"。"
+"見積書には会社%(product_company)sのプロダクトが含まれていますが、見積書は会"
+"社%(quote_company)sに属しています。\n"
+"見積書の 会社を変更するか、他の会社からプロダクトを削除してください(%"
+"(bad_products)s)。"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form

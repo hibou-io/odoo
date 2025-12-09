@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~18.4+e\n"
+"Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-08 08:46+0000\n"
-"PO-Revision-Date: 2025-09-08 08:46+0000\n"
+"POT-Creation-Date: 2025-11-13 15:37+0000\n"
+"PO-Revision-Date: 2025-11-13 15:37+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -48,12 +48,6 @@ msgstr ""
 #. module: l10n_tr_nilvera_einvoice
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
-msgid "Check Street 2 on Partner(s)"
-msgstr ""
-
-#. module: l10n_tr_nilvera_einvoice
-#. odoo-python
-#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
 msgid "Check Tax ID, City, Street, State, and Country or Company(s)"
 msgstr ""
 
@@ -72,19 +66,13 @@ msgstr ""
 #. module: l10n_tr_nilvera_einvoice
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
-msgid "Check data on Partner(s)"
-msgstr ""
-
-#. module: l10n_tr_nilvera_einvoice
-#. odoo-python
-#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
 msgid "Check e-Invoice Format or Nilvera Status on Partner(s)"
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
-msgid "Check reference on Company(s)"
+msgid "Check name on Invoice(s)"
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
@@ -193,11 +181,6 @@ msgid "Nilvera document has been received successfully"
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
-#: model:ir.actions.server,name:l10n_tr_nilvera_einvoice.ir_cron_nilvera_get_invoice_status_ir_actions_server
-msgid "Nilvera: retrieve invoice status"
-msgstr ""
-
-#. module: l10n_tr_nilvera_einvoice
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_edi_xml_ubl_tr.py:0
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
@@ -207,8 +190,23 @@ msgid ""
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
-#: model:ir.actions.server,name:l10n_tr_nilvera_einvoice.ir_cron_nilvera_get_new_documents_ir_actions_server
-msgid "Nilvera: retrieve new documents"
+#: model:ir.actions.server,name:l10n_tr_nilvera_einvoice.ir_cron_nilvera_get_new_einvoice_sale_documents_ir_actions_server
+msgid "Nilvera: retrieve E-Invoice new sale documents"
+msgstr ""
+
+#. module: l10n_tr_nilvera_einvoice
+#: model:ir.actions.server,name:l10n_tr_nilvera_einvoice.ir_cron_nilvera_get_invoice_status_ir_actions_server
+msgid "Nilvera: retrieve invoice status"
+msgstr ""
+
+#. module: l10n_tr_nilvera_einvoice
+#: model:ir.actions.server,name:l10n_tr_nilvera_einvoice.ir_cron_nilvera_get_new_earchive_sale_documents_ir_actions_server
+msgid "Nilvera: retrieve new E-Archive sale documents"
+msgstr ""
+
+#. module: l10n_tr_nilvera_einvoice
+#: model:ir.actions.server,name:l10n_tr_nilvera_einvoice.ir_cron_nilvera_get_new_purchase_documents_ir_actions_server
+msgid "Nilvera: retrieve new purchase documents"
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
@@ -291,6 +289,12 @@ msgstr ""
 #. module: l10n_tr_nilvera_einvoice
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
+msgid "TR Company(s)"
+msgstr ""
+
+#. module: l10n_tr_nilvera_einvoice
+#. odoo-python
+#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
 msgid "Testing mode is enabled."
 msgstr ""
 
@@ -314,6 +318,14 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
 msgid ""
+"The following TR Company(s) must have the reference field set to the tax "
+"office name."
+msgstr ""
+
+#. module: l10n_tr_nilvera_einvoice
+#. odoo-python
+#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
+msgid ""
 "The following company(s) either do not have their country set as Türkiye or "
 "are missing at least one of these fields: Tax ID, Street, City, or State"
 msgstr ""
@@ -322,24 +334,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
 msgid ""
-"The following company(s) must have the reference field set to the tax office"
-" name."
-msgstr ""
-
-#. module: l10n_tr_nilvera_einvoice
-#. odoo-python
-#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
-msgid ""
 "The following invoice(s) need to have the same Start Date and End Date on "
 "all their respective Invoice Lines."
-msgstr ""
-
-#. module: l10n_tr_nilvera_einvoice
-#. odoo-python
-#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
-msgid ""
-"The following partner(s) are either not Turkish or are missing one of those "
-"fields: city, state and street."
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
@@ -360,12 +356,6 @@ msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice
 #. odoo-python
-#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
-msgid "The following partner(s) must have Street 2 empty"
-msgstr ""
-
-#. module: l10n_tr_nilvera_einvoice
-#. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move.py:0
 msgid "The invoice couldn't be sent due to the following errors:\n"
 msgstr ""
@@ -380,6 +370,15 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_tr_nilvera_einvoice/models/account_move.py:0
 msgid "The invoice has been successfully sent to Nilvera."
+msgstr ""
+
+#. module: l10n_tr_nilvera_einvoice
+#. odoo-python
+#: code:addons/l10n_tr_nilvera_einvoice/models/account_move_send.py:0
+msgid ""
+"The invoice name must follow the format when sending to Nilvera: 3 "
+"alphanumeric characters, followed by the year, and then a sequential number."
+" Example: INV/2025/000001"
 msgstr ""
 
 #. module: l10n_tr_nilvera_einvoice

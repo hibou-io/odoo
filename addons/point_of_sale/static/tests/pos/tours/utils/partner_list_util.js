@@ -1,3 +1,5 @@
+import { negateStep } from "@point_of_sale/../tests/generic_helpers/utils";
+
 export function clickPartner(name = "", { expectUnloadPage = false } = {}) {
     return {
         content: `click partner '${name}' from partner list screen`,
@@ -29,12 +31,53 @@ export function clickDropDownItemText(text) {
     };
 }
 
-export function clickSettleOrderName(name) {
-    return {
+export function clickSettleOrderName(
+    prefix,
+    suffix = "",
+    checkCurrentYear = false,
+    availability = true
+) {
+    let trigger = `tr.o_data_row td[name='name']:contains("${prefix}")`;
+    if (checkCurrentYear) {
+        trigger += `:contains("${new Date().getFullYear()}")`;
+    }
+    if (suffix) {
+        trigger += `:contains("${suffix}")`;
+    }
+    const step = {
         content: "Check the settle due account line is present",
-        trigger: `tr.o_data_row td[name='name']:contains("${name}")`,
+        trigger,
         run: "click",
     };
+    if (!availability) {
+        return negateStep(step);
+    }
+    return step;
+}
+
+export function settleCustomerAccount(
+    partner,
+    dueAmount,
+    orderPrefix,
+    orderSuffix = "",
+    checkYear = false,
+    orderSettlement = false,
+    availability = true
+) {
+    const steps = [
+        {
+            trigger: `tr:contains(${partner}) .partner-due:contains(${dueAmount})`,
+        },
+        clickPartnerOptions(`${partner}`),
+    ];
+    const buttonText = orderSettlement ? "Settle orders" : "Settle invoices";
+    steps.push(
+        ...[
+            clickDropDownItemText(buttonText),
+            clickSettleOrderName(orderPrefix, orderSuffix, checkYear, availability),
+        ]
+    );
+    return steps;
 }
 
 export function checkContactValues(name, address = "", phone = "", email = "") {

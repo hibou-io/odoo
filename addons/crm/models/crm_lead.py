@@ -236,8 +236,10 @@ class CrmLead(models.Model):
         index=True, ondelete='restrict', tracking=71)
     # Statistics
     calendar_event_ids = fields.One2many('calendar.event', 'opportunity_id', string='Meetings')
-    duplicate_lead_ids = fields.Many2many("crm.lead", compute="_compute_potential_lead_duplicates", string="Potential Duplicate Lead", context={"active_test": False})
-    duplicate_lead_count = fields.Integer(compute="_compute_potential_lead_duplicates", string="Potential Duplicate Lead Count")
+    duplicate_lead_ids = fields.Many2many("crm.lead", compute="_compute_potential_lead_duplicates", string="Potential Duplicate Lead",
+        context={"active_test": False}, compute_sudo=True)
+    duplicate_lead_count = fields.Integer(compute="_compute_potential_lead_duplicates", string="Potential Duplicate Lead Count",
+        compute_sudo=True)
     meeting_display_date = fields.Date(compute="_compute_meeting_display")
     meeting_display_label = fields.Char(compute="_compute_meeting_display")
     # UX
@@ -351,7 +353,7 @@ class CrmLead(models.Model):
     @api.depends('team_id', 'type')
     def _compute_stage_id(self):
         for lead in self:
-            if not lead.stage_id:
+            if not lead.stage_id or (lead.team_id and lead.stage_id.team_ids and lead.team_id not in lead.stage_id.team_ids):
                 lead.stage_id = lead._stage_find(domain=[('fold', '=', False)]).id
 
     @api.depends('user_id')
@@ -641,7 +643,7 @@ class CrmLead(models.Model):
             records. Idea is that counter indicates duplicates are present and
             the lead could be escalated to managers.
             """
-            model = self.env[model_name].sudo().with_context(active_test=False)
+            model = self.env[model_name].with_context(active_test=False)
             res = model.search(domain, limit=SEARCH_RESULT_LIMIT)
             return res if len(res) < SEARCH_RESULT_LIMIT else model
 
@@ -1026,7 +1028,7 @@ class CrmLead(models.Model):
         for lead, vals in zip(self, vals_list):
             vals.setdefault('type', lead.type)
             vals.setdefault('team_id', lead.team_id.id)
-            vals['date_open'] = now if lead.type == 'opportunity' else False
+            vals['date_open'] = now if lead.type == 'opportunity' and lead.user_id.active else False
             if not lead.user_id.active:
                 vals['user_id'] = False
         return vals_list
@@ -1052,15 +1054,11 @@ class CrmLead(models.Model):
         # - OR ('fold', '=', False): add default columns that are not folded
         # - OR ('team_ids', '=', team_id), ('fold', '=', False) if team_id: add team columns that are not folded
         team_id = self.env.context.get('default_team_id')
-        if team_id:
-            search_domain = ['|', ('id', 'in', stages.ids), '|', ('team_ids', '=', False), ('team_ids', 'in', team_id)]
-        if self.env.context.get('show_user_team_stages'):
-            team_ids = self.env.user.crm_team_ids._ids
-            if team_id:
-                team_ids += (team_id,)
+        team_ids = self.env.user.crm_team_ids._ids if self.env.context.get('show_user_team_stages') else ()
+        team_ids += (team_id,) if team_id else ()
+        search_domain = ['|', ('id', 'in', stages.ids), ('team_ids', '=', False)]
+        if team_ids:
             search_domain = ['|', ('id', 'in', stages.ids), '|', ('team_ids', '=', False), ('team_ids', 'in', team_ids)]
-        else:
-            search_domain = ['|', ('id', 'in', stages.ids), ('team_ids', '=', False)]
 
         # perform search
         stage_ids = stages.sudo()._search(search_domain, order=stages._order)

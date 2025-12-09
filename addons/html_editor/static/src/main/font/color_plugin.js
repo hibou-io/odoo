@@ -5,6 +5,7 @@ import {
     hasAnyNodesColor,
     hasColor,
     TEXT_CLASSES_REGEX,
+    hasTextColorClass,
 } from "@html_editor/utils/color";
 import { fillEmpty, unwrapContents } from "@html_editor/utils/dom";
 import {
@@ -15,67 +16,54 @@ import {
     isZwnbsp,
 } from "@html_editor/utils/dom_info";
 import { closestElement, descendants, selectElements } from "@html_editor/utils/dom_traversal";
-import { reactive } from "@odoo/owl";
-import { _t } from "@web/core/l10n/translation";
-import { isColorGradient, isCSSColor, RGBA_REGEX, rgbaToHex } from "@web/core/utils/colors";
-import { ColorSelector } from "./color_selector";
+import { isColorGradient, rgbaToHex } from "@web/core/utils/colors";
 import { backgroundImageCssToParts, backgroundImagePartsToCss } from "@html_editor/utils/image";
 import { isHtmlContentSupported } from "@html_editor/core/selection_plugin";
 import { isBlock } from "@html_editor/utils/blocks";
 
-const RGBA_OPACITY = 0.6;
-const HEX_OPACITY = "99";
 const COLOR_COMBINATION_CLASSES = [1, 2, 3, 4, 5].map((i) => `o_cc${i}`);
 const COLOR_COMBINATION_SELECTOR = COLOR_COMBINATION_CLASSES.map((c) => `.${c}`).join(", ");
 
 /**
  * @typedef { Object } ColorShared
  * @property { ColorPlugin['colorElement'] } colorElement
- * @property { ColorPlugin['getPropsForColorSelector'] } getPropsForColorSelector
  * @property { ColorPlugin['removeAllColor'] } removeAllColor
  * @property { ColorPlugin['getElementColors'] } getElementColors
- * @property { ColorPlugin['getColorCombination'] } getColorCombination
+ * @property { ColorPlugin['applyColor'] } applyColor
  */
+
+/**
+ * @typedef {((element: HTMLElement, cssProp: string, color: string) => boolean)[]} apply_color_style_overrides
+ * @typedef {((color: string, mode: "color" | "backgroundColor") => void)[]} color_apply_overrides
+ * @typedef {((color: string, mode: "color" | "backgroundColor") => string)[]} apply_background_color_processors
+ * @typedef {((color: string) => string)[]} get_background_color_processors
+ *
+ * @typedef {((el: HTMLElement, actionParam: string) => string)[]} color_combination_getters
+ */
+
 export class ColorPlugin extends Plugin {
     static id = "color";
     static dependencies = ["selection", "split", "history", "format"];
     static shared = [
         "colorElement",
-        "getPropsForColorSelector",
         "removeAllColor",
         "getElementColors",
         "getColorCombination",
+        "applyColor",
     ];
+    /** @type {import("plugins").EditorResources} */
     resources = {
         user_commands: [
             {
                 id: "applyColor",
-                run: this.applyColor.bind(this),
+                run: ({ color, mode }) => {
+                    this.applyColor(color, mode);
+                    this.dependencies.history.addStep();
+                },
                 isAvailable: isHtmlContentSupported,
             },
         ],
-        toolbar_items: [
-            {
-                id: "forecolor",
-                groupId: "decoration",
-                namespaces: ["compact", "expanded"],
-                description: _t("Apply Font Color"),
-                Component: ColorSelector,
-                props: this.getPropsForColorSelector("foreground"),
-                isAvailable: isHtmlContentSupported,
-            },
-            {
-                id: "backcolor",
-                groupId: "decoration",
-                description: _t("Apply Background Color"),
-                Component: ColorSelector,
-                props: this.getPropsForColorSelector("background"),
-                isAvailable: isHtmlContentSupported,
-            },
-        ],
-
         /** Handlers */
-        selectionchange_handlers: this.updateSelectedColor.bind(this),
         remove_all_formats_handlers: this.removeAllColor.bind(this),
         color_combination_getters: getColorCombinationFromClass,
 
@@ -89,57 +77,12 @@ export class ColorPlugin extends Plugin {
         normalize_handlers: this.normalize.bind(this),
     };
 
-    setup() {
-        this.selectedColors = reactive({ color: "", backgroundColor: "" });
-        this.previewableApplyColor = this.dependencies.history.makePreviewableOperation(
-            (color, mode, previewMode) => this._applyColor(color, mode, previewMode)
-        );
-    }
-
     normalize(root) {
         for (const el of selectElements(root, "font")) {
             if (isRedundantElement(el)) {
                 unwrapContents(el);
             }
         }
-    }
-
-    /**
-     * @param {'foreground'|'background'} type
-     */
-    getPropsForColorSelector(type) {
-        const mode = type === "foreground" ? "color" : "backgroundColor";
-        return {
-            type,
-            mode,
-
-            getUsedCustomColors: () => this.getUsedCustomColors(mode),
-            getSelectedColors: () => this.selectedColors,
-            applyColor: (color) => {
-                this.applyColor({ color, mode });
-            },
-            applyColorPreview: (color) => this.applyColorPreview({ color, mode }),
-            applyColorResetPreview: this.applyColorResetPreview.bind(this),
-            colorPrefix: mode === "color" ? "text-" : "bg-",
-            onClose: () => this.dependencies.selection.focusEditable(),
-            getTargetedElements: () => {
-                const nodes = this.dependencies.selection.getTargetedNodes().filter(isTextNode);
-                return nodes.map((node) => closestElement(node));
-            },
-        };
-    }
-
-    updateSelectedColor() {
-        const nodes = this.dependencies.selection.getTargetedNodes().filter(isTextNode);
-        if (nodes.length === 0) {
-            return;
-        }
-        const el = closestElement(nodes[0]);
-        if (!el) {
-            return;
-        }
-
-        Object.assign(this.selectedColors, this.getElementColors(el));
     }
 
     getElementColors(el) {
@@ -150,18 +93,8 @@ export class ColorPlugin extends Plugin {
         const hasTextGradientClass = el.classList.contains("text-gradient");
 
         let backgroundColor = elStyle.backgroundColor;
-        const activeTab = document
-            .querySelector(".o_font_color_selector button.active")
-            ?.innerHTML.trim();
-        if (backgroundColor.startsWith("rgba") && (!activeTab || activeTab === "Solid")) {
-            // Buttons in the solid tab of color selector have no
-            // opacity, hence to match selected color correctly,
-            // we need to remove applied 0.6 opacity.
-            const values = backgroundColor.match(RGBA_REGEX) || [];
-            const alpha = parseFloat(values.pop()); // Extract alpha value
-            if (alpha === RGBA_OPACITY) {
-                backgroundColor = `rgb(${values.slice(0, 3).join(", ")})`; // Remove alpha
-            }
+        for (const processor of this.getResource("get_background_color_processors")) {
+            backgroundColor = processor(backgroundColor);
         }
 
         return {
@@ -169,38 +102,6 @@ export class ColorPlugin extends Plugin {
             backgroundColor:
                 hasGradient && !hasTextGradientClass ? gradient : rgbaToHex(backgroundColor),
         };
-    }
-
-    /**
-     * Apply a css or class color on the current selection (wrapped in <font>).
-     *
-     * @param {Object} param
-     * @param {string} param.color hexadecimal or bg-name/text-name class
-     * @param {string} param.mode 'color' or 'backgroundColor'
-     */
-    applyColor({ color, mode }) {
-        this.previewableApplyColor.commit(color, mode);
-        this.updateSelectedColor();
-    }
-    /**
-     * Apply a css or class color on the current selection (wrapped in <font>)
-     * in preview mode so that it can be reset.
-     *
-     * @param {Object} param
-     * @param {string} param.color hexadecimal or bg-name/text-name class
-     * @param {string} param.mode 'color' or 'backgroundColor'
-     */
-    applyColorPreview({ color, mode }) {
-        // Preview the color before applying it.
-        this.previewableApplyColor.preview(color, mode, true);
-        this.updateSelectedColor();
-    }
-    /**
-     * Reset the color applied in preview mode.
-     */
-    applyColorResetPreview() {
-        this.previewableApplyColor.revert();
-        this.updateSelectedColor();
     }
 
     removeAllColor() {
@@ -222,7 +123,7 @@ export class ColorPlugin extends Plugin {
                     return hasAnyNodesColor(nodes, mode);
                 };
                 while (hasAnySelectedNodeColor(mode) && max > 0) {
-                    this._applyColor("", mode);
+                    this.applyColor("", mode);
                     someColorWasRemoved = true;
                     max--;
                 }
@@ -241,15 +142,12 @@ export class ColorPlugin extends Plugin {
      * @param {string} mode 'color' or 'backgroundColor'
      * @param {boolean} [previewMode=false] true - apply color in preview mode
      */
-    _applyColor(color, mode, previewMode = false) {
+    applyColor(color, mode, previewMode = false) {
         this.dependencies.selection.selectAroundNonEditable();
-        const activeTab = document
-            .querySelector(".o_font_color_selector button.active")
-            ?.innerHTML.trim();
-        if (mode === "backgroundColor" && activeTab === "Solid" && color.startsWith("#")) {
-            // Apply default transparency to selected solid tab colors in background
-            // mode to make text highlighting more usable between light and dark modes.
-            color += HEX_OPACITY;
+        if (mode === "backgroundColor") {
+            for (const processor of this.getResource("apply_background_color_processors")) {
+                color = processor(color, mode);
+            }
         }
         if (this.delegateTo("color_apply_overrides", color, mode, previewMode)) {
             return;
@@ -321,14 +219,22 @@ export class ColorPlugin extends Plugin {
 
         const getFonts = (selectedNodes) =>
             selectedNodes.flatMap((node) => {
+                // Invisible nodes like `feff`s can be removed during `splitAroundUntil`
+                // so we filter them out.
+                if (!node.isConnected) {
+                    return [];
+                }
                 let font =
                     closestElement(node, "font") ||
                     closestElement(
                         node,
                         '[style*="color"]:not(li), [style*="background-color"]:not(li), [style*="background-image"]:not(li)'
                     ) ||
-                    closestElement(node, "span");
-                if (font && font.querySelector(".fa")) {
+                    closestElement(node, "span") ||
+                    closestElement(node, (node) => hasTextColorClass(node, mode));
+
+                const faNodes = font?.querySelectorAll(".fa");
+                if (faNodes && Array.from(faNodes).some((faNode) => faNode.contains(node))) {
                     return font;
                 }
                 const children = font && descendants(font);
@@ -344,7 +250,10 @@ export class ColorPlugin extends Plugin {
                 if (
                     font &&
                     font.nodeName !== "T" &&
-                    (font.nodeName !== "SPAN" || font.style[mode] || font.style.backgroundImage) &&
+                    (font.nodeName !== "SPAN" ||
+                        font.style[mode] ||
+                        font.style.backgroundImage ||
+                        hasTextColorClass(font, mode)) &&
                     (isColorGradient(color) ||
                         color === "" ||
                         !hasInlineGradient ||
@@ -366,6 +275,12 @@ export class ColorPlugin extends Plugin {
                                     font.style.removeProperty(style);
                                 }
                             }
+                            font.classList.forEach((className) => {
+                                if (TEXT_CLASSES_REGEX.test(className)) {
+                                    font.classList.remove(className);
+                                    newFont.classList.add(className);
+                                }
+                            });
                             newFont.append(...font.childNodes);
                             font.append(newFont);
                             font = newFont;
@@ -376,10 +291,13 @@ export class ColorPlugin extends Plugin {
                         );
                         const isGradientBeingUpdated = closestGradientEl && isColorGradient(color);
                         const splitnode = isGradientBeingUpdated ? closestGradientEl : font;
+                        const cursors = this.dependencies.selection.preserveSelection();
                         font = this.dependencies.split.splitAroundUntil(
                             selectedChildren,
-                            splitnode
+                            splitnode,
+                            cursors
                         );
+                        cursors.restore();
                         if (isGradientBeingUpdated) {
                             const classRegex =
                                 mode === "color" ? TEXT_CLASSES_REGEX : BG_CLASSES_REGEX;
@@ -411,7 +329,7 @@ export class ColorPlugin extends Plugin {
                         font = [];
                     }
                 } else if (
-                    (node.nodeType === Node.TEXT_NODE && !isWhitespace(node) && !isZwnbsp(node)) ||
+                    (node.nodeType === Node.TEXT_NODE && !isZwnbsp(node)) ||
                     (node.nodeName === "BR" && isEmptyBlock(node.parentNode)) ||
                     (node.nodeType === Node.ELEMENT_NODE &&
                         ["inline", "inline-block"].includes(getComputedStyle(node).display) &&
@@ -485,17 +403,6 @@ export class ColorPlugin extends Plugin {
             }
         }
         this.dependencies.selection.setSelection(selection, { normalize: false });
-    }
-
-    getUsedCustomColors(mode) {
-        const allFont = this.editable.querySelectorAll("font");
-        const usedCustomColors = new Set();
-        for (const font of allFont) {
-            if (isCSSColor(font.style[mode])) {
-                usedCustomColors.add(rgbaToHex(font.style[mode]));
-            }
-        }
-        return usedCustomColors;
     }
 
     /**

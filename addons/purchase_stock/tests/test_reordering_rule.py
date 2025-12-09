@@ -25,8 +25,8 @@ class TestReorderingRule(TransactionCase):
         cls.partner = cls.env['res.partner'].create({
             'name': 'Smith'
         })
-        cls.env.user.group_ids += cls.env.ref('uom.group_uom')
-
+        cls.buy_route = cls.env.ref('purchase_stock.route_warehouse0_buy')
+        cls.buy_route.product_selectable = True
         # create product and set the vendor
         product_form = Form(cls.env['product.product'])
         product_form.name = 'Product A'
@@ -35,7 +35,7 @@ class TestReorderingRule(TransactionCase):
         with product_form.seller_ids.new() as seller:
             seller.partner_id = cls.partner
             seller.product_uom_id = product_form.uom_id
-        product_form.route_ids.add(cls.env.ref('purchase_stock.route_warehouse0_buy'))
+        product_form.route_ids.add(cls.buy_route)
         cls.product_01 = product_form.save()
 
     def test_reordering_rule_1(self):
@@ -305,11 +305,13 @@ class TestReorderingRule(TransactionCase):
         - The PO should be updated
         - The qty to order of the RR should be zero
         """
+        today = Date.context_today(self.env.user)
         warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.user.id)], limit=1)
         stock_location = warehouse.lot_stock_id
         out_type = warehouse.out_type_id
         customer_location = self.env.ref('stock.stock_location_customers')
 
+        self.product_01.seller_ids.delay = 3
         rr = self.env['stock.warehouse.orderpoint'].create({
             'location_id': stock_location.id,
             'product_id': self.product_01.id,
@@ -330,6 +332,9 @@ class TestReorderingRule(TransactionCase):
             })]
         })
         delivery.action_confirm()
+        self.assertEqual(rr.deadline_date, today - td(days=3))
+        delivery.scheduled_date += td(days=4)
+        self.assertEqual(rr.deadline_date, today + td(days=1))
 
         pol = self.env['purchase.order.line'].search([('product_id', '=', self.product_01.id)])
         self.assertEqual(pol.product_qty, 1.0)

@@ -246,7 +246,8 @@ class ReportStockReport_Reception(models.AbstractModel):
                     # need to make sure the reserved qtys still match the demand amount the move (we're assigning).
                     out.move_line_ids.move_id = new_out
                     assigned_amount = 0
-                    for move_line_id in new_out.move_line_ids:
+                    matching_locations = potential_ins.location_dest_id
+                    for move_line_id in new_out.move_line_ids.sorted(lambda ml: ml.location_id not in matching_locations):
                         if assigned_amount + move_line_id.quantity_product_uom > qty_to_link:
                             new_move_line = move_line_id.copy({'quantity': 0})
                             new_move_line.quantity = move_line_id.quantity
@@ -335,12 +336,20 @@ class ReportStockReport_Reception(models.AbstractModel):
         return True
 
     def _action_assign(self, in_move, out_move):
-        """ For extension purposes only """
-        return
+        """ share reference across source documents """
+        in_ref = in_move.reference_ids
+        out_ref = out_move.reference_ids
+        if out_ref:
+            in_move._get_source_document()._add_reference(out_ref)
+        if in_ref:
+            out_move._get_source_document()._add_reference(in_ref)
 
     def _action_unassign(self, in_move, out_move):
-        """ For extension purposes only """
-        return
+        """ remove shared reference across source documents if any"""
+        in_ref = in_move.reference_ids
+        out_ref = out_move.reference_ids
+        in_move._get_source_document()._remove_reference(out_ref)
+        out_move._get_source_document()._remove_reference(in_ref)
 
     def _format_html_docs(self, docs):
         """ Format docs to be sent in an html request. """

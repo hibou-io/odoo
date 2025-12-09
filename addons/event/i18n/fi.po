@@ -27,13 +27,15 @@
 # Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023
 # Martin Trigaux, 2023
 # "Tiffany Chang (tic)" <tic@odoo.com>, 2025.
+# Saara Hakanen <sahak@odoo.com>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-11 13:55+0000\n"
-"PO-Revision-Date: 2025-09-16 15:23+0000\n"
-"Last-Translator: \"Tiffany Chang (tic)\" <tic@odoo.com>\n"
+"POT-Creation-Date: 2025-11-21 18:35+0000\n"
+"PO-Revision-Date: 2025-11-19 13:23+0000\n"
+"Last-Translator: Saara Hakanen <sahak@odoo.com>\n"
 "Language-Team: Finnish <https://translate.odoo.com/projects/odoo-19/event/fi/"
 ">\n"
 "Language: fi\n"
@@ -132,8 +134,8 @@ msgid ""
 "'Badge - %s - %s' % ((object.event_id.name or 'Event').replace('/',''), "
 "(object.name or '').replace('/',''))"
 msgstr ""
-"'Nimilappu - %s - %s' % ((object.event_id.name or 'Event').replace('/',''), ("
-"object.name or '').replace('/',''))"
+"'Nimilappu - %s - %s' % ((object.event_id.name or 'Event').replace('/',''), "
+"(object.name or '').replace('/',''))"
 
 #. module: event
 #: model:ir.actions.report,print_report_name:event.action_report_event_event_badge
@@ -262,8 +264,8 @@ msgid ""
 "                                            <span class=\"me-1\">from</span>"
 msgstr ""
 "<br/>\n"
-"                                            <span class=\"me-1\""
-">osoitteesta</span>"
+"                                            <span "
+"class=\"me-1\">osoitteesta</span>"
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.event_report_template_full_page_ticket
@@ -272,8 +274,8 @@ msgid ""
 "                                            <span class=\"me-1\">to</span>"
 msgstr ""
 "<br/>\n"
-"                                            <span class=\"me-1\""
-">osoitteeseen</span>"
+"                                            <span "
+"class=\"me-1\">osoitteeseen</span>"
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.res_config_settings_view_form
@@ -325,7 +327,8 @@ msgstr "<i class=\"fa fa-calendar\" title=\"Slot\"/>"
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.view_event_kanban
 msgid "<i class=\"fa fa-group mt-1 me-2 text-center\" title=\"Attendees\"/>"
-msgstr "<i class=\"fa fa-group mt-1 me-2 text-center\" title=\"Osallistujat\"/>"
+msgstr ""
+"<i class=\"fa fa-group mt-1 me-2 text-center\" title=\"Osallistujat\"/>"
 
 #. module: event
 #: model_terms:event.event,description:event.event_0
@@ -370,7 +373,8 @@ msgstr "<span class=\"me-1\">osoitteeseen</span>"
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.event_report_template_badge_card
 msgid "<span class=\"o_event_badge_font_faded\">My Placeholder Company</span>"
-msgstr "<span class=\"o_event_badge_font_faded\">Oma paikanvaraajayritys</span>"
+msgstr ""
+"<span class=\"o_event_badge_font_faded\">Oma paikanvaraajayritys</span>"
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.event_question_view_form
@@ -496,8 +500,8 @@ msgid ""
 "left:8px; margin-left: 8px; border-radius: 3px; background-color: #E7E9ED;"
 "\">\n"
 "                                    <img src=\"/event/static/src/img/apple-"
-"calendar.svg\" alt=\"iCal\" title=\"iCal\" style=\"height: 20px; vertical-"
-"align: baseline;\"/>\n"
+"calendar-128.png\" alt=\"iCal\" title=\"iCal\" style=\"height: 20px; "
+"vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
@@ -507,7 +511,7 @@ msgid ""
 "left:8px; margin-left: 8px; border-radius: 3px; background-color: #E7E9ED;"
 "\">\n"
 "                                    <img src=\"/event/static/src/img/outlook-"
-"calendar.svg\" alt=\"Outlook\" title=\"Outlook\" style=\"height: 20px; "
+"calendar-128.png\" alt=\"Outlook\" title=\"Outlook\" style=\"height: 20px; "
 "vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
@@ -515,12 +519,12 @@ msgid ""
 "                                <a t-attf-href=\"https://www.google.com/"
 "calendar/render?action=TEMPLATE&amp;text={{ object.event_id.name }}"
 "&amp;dates={{ date_begin }}/{{ date_end }}&amp;location={{ location }}"
-"&amp;details={{ object.event_id._get_external_description() }}\" "
+"&amp;details={{ object.event_id._get_external_description_url_encoded() }}\" "
 "target=\"new\" style=\"padding-top: 10px; padding-right:8px; padding-"
 "bottom:2px; padding-left:8px; margin-left: 8px; border-radius: 3px; "
 "background-color: #E7E9ED;\">\n"
 "                                    <img src=\"/event/static/src/img/google-"
-"calendar.svg\" alt=\"Google\" title=\"Google\" style=\"height: 20px; "
+"calendar-128.png\" alt=\"Google\" title=\"Google\" style=\"height: 20px; "
 "vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
@@ -731,7 +735,8 @@ msgid ""
 "                    <t t-if=\"event_address and location\">\n"
 "                        <table style=\"width:100%;\"><tr><td>\n"
 "                            <div>\n"
-"                                <i class=\"fa fa-map-marker\"/>\n"
+"                                <img src=\"/web_editor/font_to_img/61505/"
+"rgb(81,81,102)/20\" height=\"20\" style=\"vertical-align: bottom;\"/>\n"
 "                                <a t-attf-href=\"https://maps.google.com/"
 "maps?q={{ location }}\" target=\"new\">\n"
 "                                    <img t-if=\"event_address.static_map_url "
@@ -838,7 +843,8 @@ msgid ""
 "                        <div style=\"margin-bottom: 5px;\">\n"
 "                            <img t-attf-src=\"/report/barcode/QR/"
 "{{object.barcode}}?&amp;width=100&amp;height=100&amp;quiet=0\" width=\"100\" "
-"height=\"100\" alt=\"QR Code\"/>\n"
+"height=\"100\" alt=\"QR Code\" t-att-style=\"'height: 100px !important;'\"/"
+">\n"
 "                        </div>\n"
 "                    </t>\n"
 "                    <t t-if=\"not object.company_id.uses_default_logo\">\n"
@@ -896,8 +902,8 @@ msgid ""
 "left:8px; margin-left: 8px; border-radius: 3px; background-color: #E7E9ED;"
 "\">\n"
 "                                    <img src=\"/event/static/src/img/apple-"
-"calendar.svg\" alt=\"iCal\" title=\"iCal\" style=\"height: 20px; vertical-"
-"align: baseline;\"/>\n"
+"calendar-128.png\" alt=\"iCal\" title=\"iCal\" style=\"height: 20px; "
+"vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
@@ -907,7 +913,7 @@ msgid ""
 "left:8px; margin-left: 8px; border-radius: 3px; background-color: #E7E9ED;"
 "\">\n"
 "                                    <img src=\"/event/static/src/img/outlook-"
-"calendar.svg\" alt=\"Outlook\" title=\"Outlook\" style=\"height: 20px; "
+"calendar-128.png\" alt=\"Outlook\" title=\"Outlook\" style=\"height: 20px; "
 "vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
@@ -915,12 +921,12 @@ msgid ""
 "                                <a t-attf-href=\"https://www.google.com/"
 "calendar/render?action=TEMPLATE&amp;text={{ object.event_id.name }}"
 "&amp;dates={{ date_begin }}/{{ date_end }}&amp;location={{ location }}"
-"&amp;details={{ object.event_id._get_external_description() }}\" "
+"&amp;details={{ object.event_id._get_external_description_url_encoded() }}\" "
 "target=\"new\" style=\"padding-top: 10px; padding-right:8px; padding-"
 "bottom:2px; padding-left:8px; margin-left: 8px; border-radius: 3px; "
 "background-color: #E7E9ED;\">\n"
 "                                    <img src=\"/event/static/src/img/google-"
-"calendar.svg\" alt=\"Google\" title=\"Google\" style=\"height: 20px; "
+"calendar-128.png\" alt=\"Google\" title=\"Google\" style=\"height: 20px; "
 "vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
@@ -1128,7 +1134,8 @@ msgid ""
 "                    <table t-if=\"event_address and location\" "
 "style=\"width:100%;\"><tr><td>\n"
 "                        <div>\n"
-"                            <i class=\"fa fa-map-marker\"/>\n"
+"                            <img src=\"/web_editor/font_to_img/61505/"
+"rgb(81,81,102)/20\" height=\"20\" style=\"vertical-align: bottom;\"/>\n"
 "                            <a t-attf-href=\"https://maps.google.com/maps?"
 "q={{ location }}\" target=\"new\">\n"
 "                                <img t-if=\"event_address.static_map_url and "
@@ -1235,7 +1242,8 @@ msgid ""
 "                        <div style=\"margin-bottom: 5px;\">\n"
 "                            <img t-attf-src=\"/report/barcode/QR/"
 "{{object.barcode}}?&amp;width=100&amp;height=100&amp;quiet=0\" width=\"100\" "
-"height=\"100\" alt=\"QR Code\"/>\n"
+"height=\"100\" alt=\"QR Code\" t-att-style=\"'height: 100px !important;'\"/"
+">\n"
 "                        </div>\n"
 "                    </t>\n"
 "                    <t t-if=\"not object.company_id.uses_default_logo\">\n"
@@ -1288,10 +1296,10 @@ msgid ""
 "out=\"object.sale_order_id.name\"/>\n"
 "                        and was placed on <t t-"
 "out=\"object.sale_order_id.date_order.date()\"/>\n"
-"                        <t t-if=\"object.sale_order_line_id.price_unit\"> "
+"                        <t t-if=\"object.sale_order_line_id.price_total\"> "
 "for an amount of\n"
 "                            <t t-"
-"out=\"object.sale_order_line_id.price_unit\" t-options=\"{'widget': "
+"out=\"object.sale_order_line_id.price_total\" t-options=\"{'widget': "
 "'monetary', 'display_currency': object.sale_order_line_id.currency_id}\"/>\n"
 "                        </t>.\n"
 "                    </div>\n"
@@ -1309,8 +1317,8 @@ msgid ""
 "left:8px; margin-left: 8px; border-radius: 3px; background-color: #E7E9ED;"
 "\">\n"
 "                                    <img src=\"/event/static/src/img/apple-"
-"calendar.svg\" alt=\"iCal\" title=\"iCal\" style=\"height: 20px; vertical-"
-"align: baseline;\"/>\n"
+"calendar-128.png\" alt=\"iCal\" title=\"iCal\" style=\"height: 20px; "
+"vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
@@ -1320,7 +1328,7 @@ msgid ""
 "left:8px; margin-left: 8px; border-radius: 3px; background-color: #E7E9ED;"
 "\">\n"
 "                                    <img src=\"/event/static/src/img/outlook-"
-"calendar.svg\" alt=\"Outlook\" title=\"Outlook\" style=\"height: 20px; "
+"calendar-128.png\" alt=\"Outlook\" title=\"Outlook\" style=\"height: 20px; "
 "vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
@@ -1328,12 +1336,12 @@ msgid ""
 "                                <a t-attf-href=\"https://www.google.com/"
 "calendar/render?action=TEMPLATE&amp;text={{ object.event_id.name }}"
 "&amp;dates={{ date_begin }}/{{ date_end }}&amp;location={{ location }}"
-"&amp;details={{ object.event_id._get_external_description() }}\" "
+"&amp;details={{ object.event_id._get_external_description_url_encoded() }}\" "
 "target=\"new\" style=\"padding-top: 10px; padding-right:8px; padding-"
 "bottom:2px; padding-left:8px; margin-left: 8px; border-radius: 3px; "
 "background-color: #E7E9ED;\">\n"
 "                                    <img src=\"/event/static/src/img/google-"
-"calendar.svg\" alt=\"Google\" title=\"Google\" style=\"height: 20px; "
+"calendar-128.png\" alt=\"Google\" title=\"Google\" style=\"height: 20px; "
 "vertical-align: baseline;\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
@@ -1544,7 +1552,8 @@ msgid ""
 "                    <t t-if=\"event_address and location\">\n"
 "                        <table style=\"width:100%;\"><tr><td>\n"
 "                            <div>\n"
-"                                <i class=\"fa fa-map-marker\"/>\n"
+"                                <img src=\"/web_editor/font_to_img/61505/"
+"rgb(81,81,102)/20\" height=\"20\" style=\"vertical-align: bottom;\"/>\n"
 "                                <a t-attf-href=\"https://maps.google.com/"
 "maps?q={{ location }}\" target=\"new\">\n"
 "                                    <img t-if=\"event_address.static_map_url "
@@ -1610,10 +1619,10 @@ msgid ""
 "Event:\t\t%(event_start)s - %(event_end)s\n"
 "Slot:\t\t%(slot_name)s"
 msgstr ""
-"Aikaa ei voida ajoittaa tapahtuman aikavälin ulkopuolelle.\n"
+"Aikaa ei voida valita tapahtuma-ajan ulkopuolelle.\n"
 "\n"
 "Tapahtuma:\t\t%(event_start)s - %(event_end)s\n"
-"Aikaväli:\t\t%(slot_name)s"
+"Aikaikkuna:\t\t%(slot_name)s"
 
 #. module: event
 #. odoo-python
@@ -1779,9 +1788,9 @@ msgid ""
 "attendees and the maximum number of tickets registrations are defined for "
 "each time slot instead of the whole event."
 msgstr ""
-"Salli useita ajanjaksoja. Viestintä, osallistujien enimmäismäärä ja lippujen "
-"enimmäisrekisteröinnit määritetään jokaista ajanjaksoa kohden erikseen, ei "
-"koko tapahtumalle."
+"Salli useita aikaikkunoita. Viestintä, osallistujien enimmäismäärä ja "
+"lippujen enimmäisrekisteröinnit määritetään jokaista aikaa kohden erikseen, "
+"ei koko tapahtumalle."
 
 #. module: event
 #: model:ir.model.fields,help:event.field_event_question__is_reusable
@@ -2192,8 +2201,8 @@ msgstr "Viestintä"
 msgid ""
 "Communication for %(event_name)s scheduled on %(scheduled_date)s failed."
 msgstr ""
-"Tapahtuman %(event_name)s viestinnän lähettäminen, joka oli ajoitettu "
-"%(scheduled_date)s, epäonnistui."
+"Tapahtuman %(event_name)s viestinnän lähettäminen, joka oli ajoitettu %"
+"(scheduled_date)s, epäonnistui."
 
 #. module: event
 #: model:ir.model.fields,help:event.field_event_mail__mail_registration_ids
@@ -2664,7 +2673,7 @@ msgstr "Tapahtuman jaettava URL"
 #. module: event
 #: model:ir.model,name:event.model_event_slot
 msgid "Event Slot"
-msgstr "Tapahtuman ajanjakso"
+msgstr "Tapahtuman aikaikkuna"
 
 #. module: event
 #: model:ir.model,name:event.model_event_stage
@@ -2917,8 +2926,9 @@ msgid ""
 "class=\"o_translate_inline\" "
 "href=\"mailto:events@odoo.com\">events@odoo.com</a>"
 msgstr ""
-"Lisätietoja saat ottamalla yhteyttä osoitteessa <a class="
-"\"o_translate_inline\" href=\"mailto:events@odoo.com\">events@odoo.com</a>"
+"Lisätietoja saat ottamalla yhteyttä osoitteessa <a "
+"class=\"o_translate_inline\" "
+"href=\"mailto:events@odoo.com\">events@odoo.com</a>"
 
 #. module: event
 #: model_terms:event.event,description:event.event_7
@@ -2927,9 +2937,9 @@ msgid ""
 "class=\"o_translate_inline\" "
 "href=\"mailto:events@openwood.example.com\">events@penwood.example.com</a>."
 msgstr ""
-"Lisätietoja saat ottamalla yhteyttä osoitteessa<a class="
-"\"o_translate_inline\" href=\"mailto:events@openwood.example.com\""
-">events@penwood.example.com</a>."
+"Lisätietoja saat ottamalla yhteyttä osoitteessa<a "
+"class=\"o_translate_inline\" "
+"href=\"mailto:events@openwood.example.com\">events@penwood.example.com</a>."
 
 #. module: event
 #: model_terms:event.event,description:event.event_0
@@ -2941,9 +2951,9 @@ msgid ""
 "class=\"o_translate_inline\" "
 "href=\"mailto:events@yourcompany.com\">events@yourcompany.com</a>."
 msgstr ""
-"Lisätietoja saat ottamalla yhteyttä osoitteessa <a class="
-"\"o_translate_inline\" href=\"mailto:events@yourcompany.com\""
-">events@yourcompany.com</a>."
+"Lisätietoja saat ottamalla yhteyttä osoitteessa <a "
+"class=\"o_translate_inline\" "
+"href=\"mailto:events@yourcompany.com\">events@yourcompany.com</a>."
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.event_question_view_search
@@ -2958,8 +2968,9 @@ msgid ""
 "event has multiple slots, this maximum number is applied per slot."
 msgstr ""
 "Jokaiselle tapahtumalle voidaan määrittää paikkarajoitus (osallistujamäärä), "
-"jonka täytyttyä rekisteröitymisiä ei hyväksytä. Jos tapahtumassa on useita "
-"ajanjaksoja, tämä enimmäismäärä koskee jokaista ajanjaksoa erikseen."
+"jonka täytyttyä rekisteröitymisiä ei enää hyväksytä. Jos tapahtumalla on "
+"useita aikaikkunoita, tämä enimmäismäärä koskee jokaista aikaikkunaa "
+"erikseen."
 
 #. module: event
 #: model:event.event.ticket,description:event.event_0_ticket_1
@@ -3256,9 +3267,8 @@ msgid ""
 "Indicates when the communication is sent. If the event has multiple slots, "
 "the interval is related to each time slot instead of the whole event."
 msgstr ""
-"Määrittää, milloin viesti lähetetään. Jos tapahtumassa on useita "
-"ajanjaksoja, viestin ajankohta liittyy kuhunkin ajanjaksoon yksitellen, ei "
-"koko tapahtumaan."
+"Osoittaa viestinnän lähetysajan. Jos tapahtumalla on useita aikaikkunoita, "
+"viestin ajankohta liittyy kuhunkin aikaan erikseen, ei koko tapahtumaan."
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.res_config_settings_view_form
@@ -3286,7 +3296,7 @@ msgstr "Tutustuminen, CRM, myynninhallinta"
 #. odoo-python
 #: code:addons/event/models/event_registration.py:0
 msgid "Invalid event / slot choice"
-msgstr "Virheellinen tapahtuman tai ajanjakson valinta"
+msgstr "Virheellinen tapahtuman tai aikaikkunan valinta"
 
 #. module: event
 #. odoo-python
@@ -3308,7 +3318,7 @@ msgstr "On saatavilla"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_registration__is_multi_slots
 msgid "Is Event Multi Slots"
-msgstr "Tapahtuma sisältää useita ajanjaksoja"
+msgstr "Tapahtuma sisältää useita aikaikkunoita"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_event_ticket__is_expired
@@ -3985,7 +3995,7 @@ msgstr "Skannaa uudelleen!"
 #. module: event
 #: model_terms:event.event,description:event.event_2
 msgid "Point of Sale (POS), Introduction to report customization."
-msgstr "Kassapääte (POS), raporttien kustomintiin tutustuminen."
+msgstr "Kassajärjestelmä (POS), raporttien räätälöintiin tutustuminen."
 
 #. module: event
 #. odoo-javascript
@@ -4049,7 +4059,7 @@ msgstr "Kysymykset"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_res_config_settings__module_website_event_track_quiz
 msgid "Quiz on Tracks"
-msgstr "Tentti esitykselle"
+msgstr "Testi tilaisuuksista"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_event__rating_ids
@@ -4410,8 +4420,7 @@ msgstr "Ajanjakson sähköpostin ajastustoiminto"
 #. odoo-python
 #: code:addons/event/models/event_registration.py:0
 msgid "Slot choice is mandatory on multi-slots events."
-msgstr ""
-"Ajanjakson valinta on pakollista, kun tapahtumassa on useita ajanjaksoja."
+msgstr "Ajan valinta on pakollista, kun tapahtumalla on useita aikaikkunoita."
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.view_event_form
@@ -4664,8 +4673,8 @@ msgid ""
 "registrations linked to them:\n"
 "- %s"
 msgstr ""
-"Seuraavia aikajaksoja ei voida poistaa, koska niihin liittyy rekisteröintejä:"
-"\n"
+"Seuraavia aikajaksoja ei voida poistaa, koska niihin liittyy "
+"rekisteröintejä:\n"
 "- %s"
 
 #. module: event
@@ -4745,8 +4754,8 @@ msgid ""
 "There is an issue with dynamic placeholder. Actual error received is: %"
 "(error)s."
 msgstr ""
-"Dynaamisessa paikkamerkissä on ongelma. Vastaanotettu tapahtunut virhe on: "
-"%(error)s"
+"Dynaamisessa paikkamerkissä on ongelma. Vastaanotettu tapahtunut virhe on: %"
+"(error)s"
 
 #. module: event
 #: model:ir.model.constraint,message:event.constraint_event_registration_answer_value_check
@@ -4760,7 +4769,7 @@ msgid ""
 "These events cannot have slots scheduled outside of their time range:\n"
 "%(event_names)s"
 msgstr ""
-"Seuraaviin tapahtumiin ei voida lisätä ajanjaksoja niiden tapahtumaaikojen "
+"Näihin tapahtumiin ei voi lisätä aikaikkunoita niiden tapahtuma-aikojen "
 "ulkopuolelle:\n"
 "%(event_names)s"
 
@@ -4970,7 +4979,7 @@ msgstr "Ilmoittautumiset tähän tapahtumaan yhteensä"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_res_config_settings__module_website_event_track
 msgid "Tracks and Agenda"
-msgstr "Esitykset ja ohjelmakartta"
+msgstr "Tilaisuudet ja ohjelma"
 
 #. module: event
 #: model:event.type,name:event.event_type_1
@@ -5025,8 +5034,8 @@ msgid ""
 "Attended: registrations for which the attendee attended the event\n"
 "Cancelled: registrations cancelled manually"
 msgstr ""
-"Vahvistamattomat: rekisteröinnit, jotka odottavat toimenpiteitä ("
-"erityistapaus, erityisesti myyntitilanne)\n"
+"Vahvistamattomat: rekisteröinnit, jotka odottavat toimenpiteitä "
+"(erityistapaus, erityisesti myyntitilanne)\n"
 "Rekisteröity: rekisteröinnit, jotka asiakas on ottanut vastaan\n"
 "Osallistuneet: rekisteröinnit, joiden osalta osallistuja osallistui "
 "tapahtumaan\n"
@@ -5150,13 +5159,8 @@ msgstr ""
 #. module: event
 #: model_terms:event.event,description:event.event_2
 msgid "Warehouse management, Manufacturing (MRP) &amp; Sales, Import/Export."
-msgstr "Varastonhallinta, Tuotanto (Tarvelaskenta) &amp; Myynnin vienti/tuonti."
-
-#. module: event
-#. odoo-javascript
-#: code:addons/event/static/src/client_action/event_barcode.js:0
-msgid "Warning"
-msgstr "Varoitus"
+msgstr ""
+"Varastonhallinta, Tuotanto (Tarvelaskenta) &amp; Myynnin vienti/tuonti."
 
 #. module: event
 #: model_terms:event.event,description:event.event_1
@@ -5325,7 +5329,7 @@ msgstr ""
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.event_question_view_form
 msgid "events"
-msgstr ""
+msgstr "tapahtumat"
 
 #. module: event
 #: model_terms:ir.ui.view,arch_db:event.event_report_full_page_ticket_layout
@@ -5397,6 +5401,9 @@ msgstr "huomenna"
 #: model:mail.template,subject:event.event_reminder
 msgid "{{ object.event_id.name }}: {{ object.event_date_range }}"
 msgstr "{{ object.event_id.name }}: {{ object.event_date_range }}"
+
+#~ msgid "Warning"
+#~ msgstr "Varoitus"
 
 #~ msgid ""
 #~ "'Foldable Badge - %s - %s' % ((object.event_id.name or "

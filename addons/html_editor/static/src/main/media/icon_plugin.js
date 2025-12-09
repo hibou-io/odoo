@@ -2,12 +2,14 @@ import { withSequence } from "@html_editor/utils/resource";
 import { Plugin } from "../../plugin";
 import { _t } from "@web/core/l10n/translation";
 import { MediaDialog } from "./media_dialog/media_dialog";
-import { ColorSelector } from "../font/color_selector";
 import { isHtmlContentSupported } from "@html_editor/core/selection_plugin";
+import { ICON_SELECTOR, isElement } from "@html_editor/utils/dom_info";
 
 export class IconPlugin extends Plugin {
     static id = "icon";
-    static dependencies = ["history", "selection", "color", "dialog"];
+    static dependencies = ["history", "selection", "dialog"];
+    toolbarNamespace = "icon";
+    /** @type {import("plugins").EditorResources} */
     resources = {
         user_commands: [
             {
@@ -54,42 +56,28 @@ export class IconPlugin extends Plugin {
                 isAvailable: isHtmlContentSupported,
             },
         ],
-        toolbar_namespaces: [
-            {
-                id: "icon",
-                isApplied: (targetedNodes) =>
+        toolbar_namespace_providers: [
+            (targetedNodes) => {
+                if (
+                    targetedNodes.length &&
                     targetedNodes.every(
+                        // All nodes should be icons, its ZWS child or its ancestors
                         (node) =>
-                            // All nodes should be icons, its ZWS child or its ancestors
                             node.classList?.contains("fa") ||
                             node.parentElement.classList.contains("fa") ||
                             (node.querySelector?.(".fa") && node.isContentEditable !== false)
-                    ),
+                    )
+                ) {
+                    return this.toolbarNamespace;
+                }
             },
         ],
         toolbar_groups: [
-            withSequence(1, { id: "icon_color", namespaces: ["icon"] }),
-            withSequence(1, { id: "icon_size", namespaces: ["icon"] }),
+            withSequence(2, { id: "icon_size", namespaces: ["icon"] }),
             withSequence(3, { id: "icon_spin", namespaces: ["icon"] }),
             withSequence(3, { id: "icon_replace", namespaces: ["icon"] }),
         ],
         toolbar_items: [
-            {
-                id: "icon_forecolor",
-                groupId: "icon_color",
-                description: _t("Select Font Color"),
-                Component: ColorSelector,
-                props: this.dependencies.color.getPropsForColorSelector("foreground"),
-                isAvailable: isHtmlContentSupported,
-            },
-            {
-                id: "icon_backcolor",
-                groupId: "icon_color",
-                description: _t("Select Background Color"),
-                Component: ColorSelector,
-                props: this.dependencies.color.getPropsForColorSelector("background"),
-                isAvailable: isHtmlContentSupported,
-            },
             {
                 id: "icon_size_1",
                 groupId: "icon_size",
@@ -142,7 +130,7 @@ export class IconPlugin extends Plugin {
 
     getTargetedIcon() {
         const targetedNodes = this.dependencies.selection.getTargetedNodes();
-        return targetedNodes.find((node) => node.classList?.contains?.("fa"));
+        return targetedNodes.find((node) => isElement(node) && node.matches(ICON_SELECTOR));
     }
 
     resizeIcon({ size }) {

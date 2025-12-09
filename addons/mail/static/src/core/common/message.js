@@ -13,7 +13,6 @@ import { renderToElement } from "@web/core/utils/render";
 
 import {
     Component,
-    markup,
     onMounted,
     onPatched,
     onWillDestroy,
@@ -23,6 +22,7 @@ import {
     useEffect,
     useRef,
     useState,
+    useSubEnv,
 } from "@odoo/owl";
 
 import { ActionSwiper } from "@web/core/action_swiper/action_swiper";
@@ -35,11 +35,11 @@ import { useService } from "@web/core/utils/hooks";
 import { createElementWithContent } from "@web/core/utils/html";
 import { getOrigin, url } from "@web/core/utils/urls";
 import { useMessageActions } from "./message_actions";
-import { rpc } from "@web/core/network/rpc";
 import { discussComponentRegistry } from "./discuss_component_registry";
 import { NotificationMessage } from "./notification_message";
 import { useLongPress } from "@mail/utils/common/hooks";
 import { ActionList } from "@mail/core/common/action_list";
+import { loadCssFromBundle } from "@mail/utils/common/misc";
 
 /**
  * @typedef {Object} Props
@@ -104,7 +104,6 @@ export class Message extends Component {
             isClicked: false,
             expandOptions: false,
             emailHeaderOpen: false,
-            showTranslation: false,
         });
         /** @type {ShadowRoot} */
         this.shadowRoot;
@@ -132,6 +131,7 @@ export class Message extends Component {
         this.ui = useService("ui");
         this.openReactionMenu = this.openReactionMenu.bind(this);
         this.optionsDropdown = useDropdownState();
+        useSubEnv({ inMessage: true });
         useChildSubEnv({
             message: this.props.message,
             alignedRight: this.isAlignedRight,
@@ -140,6 +140,7 @@ export class Message extends Component {
             if (this.shadowBody.el) {
                 this.shadowRoot = this.shadowBody.el.attachShadow({ mode: "open" });
                 const color = this.store.isOdooWhiteTheme ? "dark" : "white";
+                loadCssFromBundle(this.shadowRoot, "mail.assets_message_email");
                 const shadowStyle = document.createElement("style");
                 shadowStyle.textContent = `
                     * {
@@ -190,7 +191,7 @@ export class Message extends Component {
                 if (this.shadowBody.el) {
                     const bodyEl = createElementWithContent(
                         "span",
-                        this.state.showTranslation
+                        this.message.showTranslation
                             ? this.message.richTranslationValue
                             : this.props.messageSearch?.highlight(this.message.richBody) ??
                                   this.message.richBody
@@ -203,7 +204,7 @@ export class Message extends Component {
                 }
             },
             () => [
-                this.state.showTranslation,
+                this.message.showTranslation,
                 this.message.richTranslationValue,
                 this.props.messageSearch?.searchTerm,
                 this.message.richBody,
@@ -263,7 +264,7 @@ export class Message extends Component {
             "pt-1": !this.props.asCard && !this.props.squashed,
             "o-pt-0_5": !this.props.asCard && this.props.squashed,
             "o-selfAuthored": this.message.isSelfAuthored && !this.env.messageCard,
-            "o-selected": this.props.thread?.composer.replyToMessage?.eq(this.props.message),
+            "o-selected": this.props.message.composerAsReplyToMessage?.thread.eq(this.props.thread),
             "o-squashed": this.props.squashed,
             "mt-1":
                 !this.props.squashed &&
@@ -271,7 +272,6 @@ export class Message extends Component {
                 !this.env.messageCard &&
                 !this.props.asCard,
             "px-1": this.props.isInChatWindow,
-            "opacity-50": this.props.thread?.composer.replyToMessage?.notEq(this.props.message),
             "o-actionMenuMobileOpen": this.ui.isSmall && this.optionsDropdown.isOpen,
             "o-editing": this.isEditing,
         };
@@ -442,15 +442,8 @@ export class Message extends Component {
         }
         const editedEl = bodyEl.querySelector(".o-mail-Message-edited");
         editedEl?.replaceChildren(renderToElement("mail.Message.edited"));
-        for (const linkEl of bodyEl.querySelectorAll(".o_channel_redirect")) {
-            const text = linkEl.textContent.substring(1); // remove '#' prefix
-            const icon = linkEl.classList.contains("o_channel_redirect_asThread")
-                ? "fa fa-comments-o"
-                : "fa fa-hashtag";
-            const iconEl = renderToElement("mail.Message.mentionedChannelIcon", { icon });
-            linkEl.replaceChildren(iconEl);
-            linkEl.insertAdjacentText("beforeend", ` ${text}`);
-        }
+        const channelLinks = bodyEl.querySelectorAll("a.o_channel_redirect");
+        this.store.handleValidChannelMention(Array.from(channelLinks));
         for (const el of bodyEl.querySelectorAll(".o_message_redirect")) {
             // only transform links targetting the same database
             if (el.getAttribute("href")?.startsWith(getOrigin())) {
@@ -505,17 +498,7 @@ export class Message extends Component {
     }
 
     async onClickToggleTranslation() {
-        const message = toRaw(this.message);
-        if (!message.translationValue) {
-            const { error, lang_name, body } = await rpc("/mail/message/translate", {
-                message_id: message.id,
-            });
-            message.translationValue = body && markup(body);
-            message.translationSource = lang_name;
-            message.translationErrors = error;
-        }
-        this.state.showTranslation =
-            !this.state.showTranslation && Boolean(message.translationValue);
+        toRaw(this.props.message).onClickToggleTranslation();
     }
 
     get shouldHideFromMessageListOnDelete() {

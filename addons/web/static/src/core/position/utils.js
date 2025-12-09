@@ -135,10 +135,20 @@ function computePosition(popper, target, { container, flip, margin, position, sh
     // Boxes
     const popBox = popper.getBoundingClientRect();
     const targetBox = target.getBoundingClientRect();
-    const contBox = container.getBoundingClientRect();
+    const contRect = container.getBoundingClientRect();
+    // Shrink the container a little bit (up to 20px) so that the popper avoids sticking to its edges
+    const getContainerMargin = (val) => Math.min(20, Math.max(0, Math.round((val - 40) / 2)));
+    const contBox = {
+        top: contRect.top + getContainerMargin(contRect.height),
+        left: contRect.left + getContainerMargin(contRect.width),
+        right: contRect.right - getContainerMargin(contRect.width),
+        bottom: contRect.bottom - getContainerMargin(contRect.height),
+    };
     const iframeBox = iframe?.getBoundingClientRect() ?? { top: 0, left: 0 };
 
     const containerIsHTMLNode = container === container.ownerDocument.firstElementChild;
+    const containerIsInIframe =
+        shouldAccountForIFrame && target.ownerDocument === container.ownerDocument;
 
     // Compute positioning data
     const directionsData = {
@@ -166,16 +176,19 @@ function computePosition(popper, target, { container, flip, margin, position, sh
         const variantPrefix = vertical ? "v" : "h";
         const directionValue = directionsData[d];
         let variantValue = variantsData[variantPrefix + v];
+        const [leftCompensation, topCompensation] = containerIsInIframe
+            ? [iframeBox.left, iframeBox.top]
+            : [0, 0];
 
         const [directionSize, variantSize] = vertical
             ? [popBox.height, popBox.width]
             : [popBox.width, popBox.height];
         let [directionMin, directionMax] = vertical
-            ? [contBox.top, contBox.bottom]
-            : [contBox.left, contBox.right];
+            ? [contBox.top + topCompensation, contBox.bottom + topCompensation]
+            : [contBox.left + leftCompensation, contBox.right + leftCompensation];
         let [variantMin, variantMax] = vertical
-            ? [contBox.left, contBox.right]
-            : [contBox.top, contBox.bottom];
+            ? [contBox.left + leftCompensation, contBox.right + leftCompensation]
+            : [contBox.top + topCompensation, contBox.bottom + topCompensation];
 
         if (containerIsHTMLNode) {
             if (vertical) {
