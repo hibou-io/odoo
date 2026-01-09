@@ -615,7 +615,9 @@ class MrpProduction(models.Model):
             if not production.bom_id and not production._origin.product_id:
                 production.workorder_ids = workorders_list
             # if the product has changed or if in a second onchange with bom resets the relations
-            if production.product_id != production._origin.product_id or (production._origin.bom_id != production.bom_id and production._origin.bom_id.operation_ids and not production.workorder_ids.filtered(lambda wo: wo.ids and wo.operation_id)):
+            if production.product_id != production._origin.product_id \
+                or (not production._origin.bom_id and production.bom_id) \
+                or (production._origin.bom_id != production.bom_id and production._origin.bom_id.operation_ids and not production.workorder_ids.filtered(lambda wo: wo.ids and wo.operation_id)):
                 production.workorder_ids = [Command.clear()]
             if production.bom_id and production.product_id and production.product_qty > 0:
                 # keep manual entries
@@ -2960,6 +2962,21 @@ class MrpProduction(models.Model):
             action = self.env.ref("stock.label_lot_template").report_action(lot_id.id, config=False)
             clean_action(action, self.env)
             return action
+
+    def _autoprint_mass_generated_lots(self):
+        actions = []
+        productions_to_print = self.filtered(lambda p: p.picking_type_id.auto_print_generated_mrp_lot)
+        productions_by_print_formats = productions_to_print.grouped(lambda p: p.picking_type_id.generated_mrp_lot_label_to_print)
+        for print_format in productions_to_print.picking_type_id.mapped('generated_mrp_lot_label_to_print'):
+            grouped_productions = productions_by_print_formats.get(print_format)
+            lots_to_print = grouped_productions.mapped('lot_producing_ids')
+            if print_format == 'pdf':
+                action = self.env.ref("stock.action_report_lot_label").report_action(lots_to_print.ids, config=False)
+            elif print_format == 'zpl':
+                action = self.env.ref("stock.label_lot_template").report_action(lots_to_print.ids, config=False)
+            clean_action(action, self.env)
+            actions.append(action)
+        return actions
 
     def _prepare_finished_extra_vals(self):
         self.ensure_one()
