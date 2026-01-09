@@ -88,7 +88,10 @@ COPY --chown=104 . /opt/odoo/odoo
 
 RUN set -x; \
     cd /opt/odoo/odoo \
-    && python setup.py install \
+    # skip python setup and just add to python path
+    # && python setup.py install \
+    && cp /opt/odoo/odoo/odoo-bin /usr/local/bin/odoo \
+    && cp /opt/odoo/odoo/odoo-bin /usr/local/bin/odoo-bin \
     && mv /opt/odoo/odoo/entrypoint.sh /entrypoint.sh \
     && mv /opt/odoo/odoo/wait-for-psql.py /usr/local/bin/wait-for-psql.py \
     && chmod a+x /usr/local/bin/wait-for-psql.py \
@@ -103,6 +106,8 @@ ENV SHELL=/bin/bash \
     THEIA_DEFAULT_PLUGINS=local-dir:/opt/athene/plugins
 ENV USE_LOCAL_GIT=true
 ENV ODOO_RC=/etc/odoo/odoo.conf
+# surprisingly no $PYTHONPATH in the python image
+ENV PYTHONPATH=/opt/odoo/odoo
 USER odoo
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["odoo"]
