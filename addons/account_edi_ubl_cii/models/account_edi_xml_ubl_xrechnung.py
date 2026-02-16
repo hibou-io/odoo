@@ -61,6 +61,24 @@ class AccountEdiXmlUBLDE(models.AbstractModel):
     # EXPORT: New (dict_to_xml) helpers
     # -------------------------------------------------------------------------
 
+    def _ubl_add_values_tax_currency_code(self, vals):
+        # OVERRIDE account.edi.xml.ubl_bis3
+        self._ubl_add_values_tax_currency_code_empty(vals)
+
+    def _ubl_tax_totals_node_grouping_key(self, base_line, tax_data, vals, currency):
+        # EXTENDS account.edi.xml.ubl_bis3
+        tax_total_keys = super()._ubl_tax_totals_node_grouping_key(base_line, tax_data, vals, currency)
+
+        company_currency = vals['company'].currency_id
+        if (
+            tax_total_keys['tax_total_key']
+            and company_currency != vals['currency']
+            and tax_total_keys['tax_total_key']['currency'] == company_currency
+        ):
+            tax_total_keys['tax_total_key'] = None
+
+        return tax_total_keys
+
     def _add_invoice_header_nodes(self, document_node, vals):
         # EXTENDS account.edi.xml.ubl_bis3
         super()._add_invoice_header_nodes(document_node, vals)
@@ -78,3 +96,11 @@ class AccountEdiXmlUBLDE(models.AbstractModel):
                 'schemeID': 'EM'
             }
         return party_node
+
+    def _ubl_get_line_allowance_charge_discount_node(self, vals, discount_values):
+        # EXTENDS account.edi.xml.ubl_bis3
+        discount_node = super()._ubl_get_line_allowance_charge_discount_node(vals, discount_values)
+        discount_node['cbc:AllowanceChargeReason'] = None
+        discount_node['cbc:MultiplierFactorNumeric'] = None
+        discount_node['cbc:BaseAmount'] = None
+        return discount_node

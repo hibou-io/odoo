@@ -1393,15 +1393,8 @@ class WebsiteSale(payment_portal.PaymentPortal):
             elif value:  # The value cannot be saved on the `res.partner` model.
                 extra_form_data[key] = value
 
-        if (
-            hasattr(ResPartner, 'check_vat')  # The `base_vat` module is installed.
-            and address_values.get('vat')
-            and address_values.get('country_id')
-        ):
-            address_values['vat'] = ResPartner.fix_eu_vat_number(
-                address_values['country_id'],
-                address_values['vat'],
-            )
+        if address_values.get('vat'):
+            address_values['vat'] = self._fix_eu_vat_number(address_values['vat'], address_values.get('country_id'))
 
         return address_values, extra_form_data
 
@@ -1469,10 +1462,15 @@ class WebsiteSale(payment_portal.PaymentPortal):
                     " the account settings or contact your administrator."
                 ))
 
+            if vat := partner_sudo.vat:
+                vat = self._fix_eu_vat_number(
+                    vat,
+                    partner_sudo.country_id.id or address_values['country_id'],
+                )
             # Prevent changing the VAT number if invoices have been issued.
             if (
                 'vat' in address_values
-                and address_values['vat'] != partner_sudo.vat
+                and address_values['vat'] != vat
                 and not partner_sudo.can_edit_vat()
             ):
                 invalid_fields.add('vat')
@@ -1696,10 +1694,9 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 )
             # Process the delivery method.
             if shipping_option:
-                delivery_method_sudo = request.env['delivery.carrier'].sudo().browse(
-                    int(shipping_option['id'])
-                ).exists()
-                order_sudo._set_delivery_method(delivery_method_sudo)
+                dm_id = int(shipping_option['id'])
+                available_dms = order_sudo._get_delivery_methods()
+                order_sudo._set_delivery_method(available_dms.filtered(lambda dm: dm.id == dm_id))
 
         return order_sudo.partner_id.id
 
@@ -2282,6 +2279,19 @@ class WebsiteSale(payment_portal.PaymentPortal):
                 domain += [('product_id.product_tmpl_id', '=', int(product_template_id))]
             request.env['website.track'].sudo().search(domain).unlink()
         return {}
+
+    @staticmethod
+    def _fix_eu_vat_number(vat, country_id):
+        ResPartner = request.env['res.partner']
+        if (
+            hasattr(ResPartner, 'check_vat')  # The `base_vat` module is installed.
+            and country_id
+        ):
+            vat = ResPartner.fix_eu_vat_number(
+                country_id,
+                vat,
+            )
+        return vat
 
     @staticmethod
     def _populate_currency_and_pricelist(kwargs):

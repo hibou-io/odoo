@@ -102,6 +102,41 @@ class AccountEdiXmlUBLNL(models.AbstractModel):
     # EXPORT: New (dict_to_xml) helpers
     # -------------------------------------------------------------------------
 
+    def _ubl_default_tax_category_grouping_key(self, base_line, tax_data, vals, currency):
+        # EXTENDS account.edi.xml.ubl_bis3
+        grouping_key = super()._ubl_default_tax_category_grouping_key(base_line, tax_data, vals, currency)
+        if not grouping_key:
+            return
+
+        grouping_key['tax_exemption_reason_code'] = None
+        return grouping_key
+
+    def _ubl_add_values_tax_currency_code(self, vals):
+        # OVERRIDE account.edi.xml.ubl_bis3
+        self._ubl_add_values_tax_currency_code_empty(vals)
+
+    def _ubl_tax_totals_node_grouping_key(self, base_line, tax_data, vals, currency):
+        # EXTENDS account.edi.xml.ubl_bis3
+        tax_total_keys = super()._ubl_tax_totals_node_grouping_key(base_line, tax_data, vals, currency)
+
+        company_currency = vals['company'].currency_id
+        if (
+            tax_total_keys['tax_total_key']
+            and company_currency != vals['currency']
+            and tax_total_keys['tax_total_key']['currency'] == company_currency
+        ):
+            tax_total_keys['tax_total_key'] = None
+
+        return tax_total_keys
+
+    def _ubl_get_line_allowance_charge_discount_node(self, vals, discount_values):
+        # EXTENDS account.edi.xml.ubl_bis3
+        discount_node = super()._ubl_get_line_allowance_charge_discount_node(vals, discount_values)
+        discount_node['cbc:AllowanceChargeReasonCode'] = None
+        discount_node['cbc:MultiplierFactorNumeric'] = None
+        discount_node['cbc:BaseAmount'] = None
+        return discount_node
+
     def _add_invoice_header_nodes(self, document_node, vals):
         # EXTENDS account.edi.xml.ubl_bis3
         super()._add_invoice_header_nodes(document_node, vals)
@@ -124,23 +159,3 @@ class AccountEdiXmlUBLNL(models.AbstractModel):
         # /cbc:CountrySubentity) is not recommended
         address_node['cbc:CountrySubentity'] = None
         return address_node
-
-    def _get_line_discount_allowance_charge_node(self, vals):
-        # EXTENDS account.edi.xml.ubl_bis3
-        node = super()._get_line_discount_allowance_charge_node(vals)
-        if node:
-            # [BR-NL-32] Use of Discount reason code ( AllowanceChargeReasonCode ) is not recommended.
-            # [BR-EN-34] Use of Charge reason code ( AllowanceChargeReasonCode ) is not recommended.
-            # Careful! [BR-42]-Each Invoice line allowance (BG-27) shall have an Invoice line allowance reason (BT-139)
-            # or an Invoice line allowance reason code (BT-140).
-            node['cbc:AllowanceChargeReason'] = {'_text': 'Discount'}
-            node['cbc:AllowanceChargeReasonCode'] = None
-        return node
-
-    def _get_tax_category_node(self, vals):
-        # EXTENDS account.edi.xml.ubl_bis3
-        node = super()._get_tax_category_node(vals)
-        # [BR-NL-35] The use of a tax exemption reason code (cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory
-        # /cbc:TaxExemptionReasonCode) is not recommended
-        node['cbc:TaxExemptionReasonCode'] = None
-        return node

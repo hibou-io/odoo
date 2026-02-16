@@ -43,14 +43,14 @@
 # Alen Komljen <alen@uvid.hr>, 2025.
 # Karlo Mikešić <karlo@uvid.hr>, 2025.
 # Ana Matulin <ana@uvid.hr>, 2025.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-05 18:36+0000\n"
-"PO-Revision-Date: 2025-12-02 08:22+0000\n"
-"Last-Translator: Ana Matulin <ana@uvid.hr>\n"
+"POT-Creation-Date: 2026-02-12 18:38+0000\n"
+"PO-Revision-Date: 2026-01-24 18:00+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Croatian <https://translate.odoo.com/projects/odoo-18/account/"
 "hr/>\n"
 "Language: hr\n"
@@ -266,7 +266,7 @@ msgstr "%s nije spremljeno polje"
 #: code:addons/account/models/company.py:0
 #: code:addons/account/models/partner.py:0
 msgid "%s, or / if not applicable"
-msgstr ""
+msgstr "%s ili / ako nije primjenjivo"
 
 #. module: account
 #: model:ir.actions.server,name:account.action_move_block_payment
@@ -1730,6 +1730,14 @@ msgstr "Zaokruživanje gotovine"
 #: model:ir.model,name:account.model_account_chart_template
 msgid "Account Chart Template"
 msgstr "Predložak kontnog plana"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_code_mapping.py:0
+msgid ""
+"Account Code Mapping cannot be accessed directly. It is designed to be used "
+"only through the Chart of Accounts."
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_report_line__account_codes_formula
@@ -6001,7 +6009,7 @@ msgstr "Adresa dostave"
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__delivery_date
 #: model:ir.model.fields,field_description:account.field_account_move__delivery_date
 msgid "Delivery Date"
-msgstr "Datum dostave"
+msgstr "Datum isporuke"
 
 #. module: account
 #: model:account.account.tag,name:account.demo_ceo_wages_account
@@ -14427,7 +14435,7 @@ msgstr "Bez poreza"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_tax__tax_exigibility
 msgid "Tax Exigibility"
-msgstr ""
+msgstr "Oporezivanje"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
@@ -15076,12 +15084,12 @@ msgstr ""
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax_group__country_id
 msgid "The country for which this tax group is applicable."
-msgstr ""
+msgstr "Zemlja za koju se primjenjuje ova porezna skupina."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax__country_id
 msgid "The country for which this tax is applicable."
-msgstr ""
+msgstr "Zemlja za koju se ovaj porez primjenjuje."
 
 #. module: account
 #. odoo-python
@@ -15202,6 +15210,14 @@ msgstr ""
 #: model:ir.model.fields,help:account.field_account_bank_statement_line__secured
 #: model:ir.model.fields,help:account.field_account_move__secured
 msgid "The entry is secured with an inalterable hash."
+msgstr ""
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The entry is using accounts (%(accounts_codes_names)s) from a different "
+"company."
 msgstr ""
 
 #. module: account
@@ -15914,15 +15930,6 @@ msgstr "Ovaj tjedan"
 #: model:ir.model.fields.selection,name:account.selection__account_report__default_opening_date_filter__this_year
 msgid "This Year"
 msgstr "Ova godina"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_account.py:0
-msgid ""
-"This account is configured in %(journal_names)s journal(s) (ids %"
-"(journal_ids)s) as payment debit or credit account. This means that this "
-"account's type should be reconcilable."
-msgstr ""
 
 #. module: account
 #. odoo-python
@@ -17738,6 +17745,13 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_payment.py:0
+msgid ""
+"You cannot change the amount of a payment with multiple liquidity lines."
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/company.py:0
 msgid ""
 "You cannot change the currency of the company since some journal items "
@@ -17966,6 +17980,12 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "You cannot post an entry with an archived analytic account: %s"
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/res_currency.py:0
 msgid ""
 "You cannot reduce the number of decimal places of a currency which has "
@@ -18052,7 +18072,8 @@ msgstr ""
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
-msgid "You cannot switch the type of a document which has been posted once."
+msgid ""
+"You cannot switch the type of a document with an existing sequence number."
 msgstr ""
 
 #. module: account
@@ -18153,6 +18174,14 @@ msgid ""
 "You have to configure the 'Exchange Gain or Loss Journal' in your company "
 "settings, to manage automatically the booking of accounting entries related "
 "to differences between exchange rates."
+msgstr ""
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_journal_dashboard.py:0
+msgid ""
+"You may only use samples in demo mode, try uploading one of your invoices "
+"instead."
 msgstr ""
 
 #. module: account

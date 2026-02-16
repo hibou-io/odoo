@@ -6,13 +6,13 @@
 # Ryanto The <ry.the77@gmail.com>, 2024
 # Wil Odoo, 2025
 # Abe Manyo, 2025
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-05 18:36+0000\n"
-"PO-Revision-Date: 2025-12-06 17:08+0000\n"
+"POT-Creation-Date: 2026-02-12 18:38+0000\n"
+"PO-Revision-Date: 2026-02-14 18:01+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Indonesian <https://translate.odoo.com/projects/odoo-18/"
 "account/id/>\n"
@@ -1910,6 +1910,16 @@ msgid "Account Chart Template"
 msgstr "Templat Bagan Akun"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_code_mapping.py:0
+msgid ""
+"Account Code Mapping cannot be accessed directly. It is designed to be used "
+"only through the Chart of Accounts."
+msgstr ""
+"Code Mapping Akun tidak dapat diakses langsung. Dirancang untuk digunakan "
+"hanya melalui Bagan Akun."
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_report_line__account_codes_formula
 msgid "Account Codes Formula Shortcut"
 msgstr "Shortcut Formula Kode Akun"
@@ -3356,7 +3366,7 @@ msgstr "Lampiran"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_send_wizard__attachments_not_supported
 msgid "Attachments Not Supported"
-msgstr ""
+msgstr "Lampiran Tidak Didukung"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_mail_mail__account_audit_log_activated
@@ -6535,7 +6545,7 @@ msgstr "Tampilkan Jumlah"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_send_wizard__display_attachments_widget
 msgid "Display Attachments Widget"
-msgstr ""
+msgstr "Widget Tampilan Lampiran"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment_term_line__display_days_next_month
@@ -15806,6 +15816,16 @@ msgid "The entry is secured with an inalterable hash."
 msgstr "Entri diamankan dengan hash yang tidak dapat diubah."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The entry is using accounts (%(accounts_codes_names)s) from a different "
+"company."
+msgstr ""
+"Entri ini menggunakan akun (%(accounts_codes_names)s) dari perusahaan yang "
+"berbeda."
+
+#. module: account
 #: model:ir.model.fields,help:account.field_product_category__property_account_expense_categ_id
 msgid ""
 "The expense is accounted for when a vendor bill is validated, except in "
@@ -16645,18 +16665,6 @@ msgstr "Pekan Ini"
 #: model:ir.model.fields.selection,name:account.selection__account_report__default_opening_date_filter__this_year
 msgid "This Year"
 msgstr "Tahun Ini"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_account.py:0
-msgid ""
-"This account is configured in %(journal_names)s journal(s) (ids %"
-"(journal_ids)s) as payment debit or credit account. This means that this "
-"account's type should be reconcilable."
-msgstr ""
-"Akun ini dikonfigurasi di jurnal %(journal_names)s (id %(journal_ids)s) "
-"sebagai debit pembayaran atau akun kredit. Ini berarti tipe akun ini "
-"harusnya bisa direkonsiliasi. "
 
 #. module: account
 #. odoo-python
@@ -18626,6 +18634,13 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_payment.py:0
+msgid ""
+"You cannot change the amount of a payment with multiple liquidity lines."
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/company.py:0
 msgid ""
 "You cannot change the currency of the company since some journal items "
@@ -18908,6 +18923,12 @@ msgstr "Anda tidak post entri di jurnal yang sudah diarsip (%(journal)s)"
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "You cannot post an entry with an archived analytic account: %s"
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/res_currency.py:0
 msgid ""
 "You cannot reduce the number of decimal places of a currency which has "
@@ -19008,8 +19029,9 @@ msgstr ""
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
-msgid "You cannot switch the type of a document which has been posted once."
-msgstr "Anda tidak dapat mengganti tipe dokumen yang telah diposting sekali."
+msgid ""
+"You cannot switch the type of a document with an existing sequence number."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -19130,6 +19152,16 @@ msgstr ""
 "Anda harus mengonfigurasi 'Jurnal Forex Gain or Loss' di pengaturan "
 "perusahaan Anda, untuk mengelola secara otomatis booking dari entri "
 "akuntansi yang terkait perbedaan di antara nilai tukar mata uang."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_journal_dashboard.py:0
+msgid ""
+"You may only use samples in demo mode, try uploading one of your invoices "
+"instead."
+msgstr ""
+"Anda hanya dapat menggunakan sampel di mode demo, coba unggah salah satu "
+"faktur Anda."
 
 #. module: account
 #. odoo-python
@@ -19708,6 +19740,19 @@ msgid ""
 "{{ object.company_id.name }} Payment Receipt (Ref {{ object.name or 'n/a' }})"
 msgstr ""
 "{{ object.company_id.name }} Resi Pembayaran (Ref {{ object.name or 'n/a' }})"
+
+#~ msgid "You cannot switch the type of a document which has been posted once."
+#~ msgstr ""
+#~ "Anda tidak dapat mengganti tipe dokumen yang telah diposting sekali."
+
+#~ msgid ""
+#~ "This account is configured in %(journal_names)s journal(s) (ids %"
+#~ "(journal_ids)s) as payment debit or credit account. This means that this "
+#~ "account's type should be reconcilable."
+#~ msgstr ""
+#~ "Akun ini dikonfigurasi di jurnal %(journal_names)s (id %(journal_ids)s) "
+#~ "sebagai debit pembayaran atau akun kredit. Ini berarti tipe akun ini "
+#~ "harusnya bisa direkonsiliasi. "
 
 #~ msgid "This setting cannot be changed after an invoice is created."
 #~ msgstr "Pengaturan ini tidak dapat diubah setelah faktur dibuat."

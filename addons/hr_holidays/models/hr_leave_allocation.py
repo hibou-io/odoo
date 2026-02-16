@@ -6,7 +6,7 @@ from datetime import datetime, date, time
 from dateutil.relativedelta import relativedelta
 from calendar import monthrange
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models, tools, _
 from odoo.addons.hr_holidays.models.hr_leave import get_employee_from_context
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools.float_utils import float_round
@@ -176,14 +176,14 @@ class HolidaysAllocation(models.Model):
                 name_validity = _(
                     "%(allocation_name)s (from %(date_from)s to %(date_to)s)",
                     allocation_name=allocation.name,
-                    date_from=allocation.date_from.strftime("%b %d %Y"),
-                    date_to=allocation.date_to.strftime("%b %d %Y"),
+                    date_from=tools.format_date(self.env, allocation.date_from, date_format='MMM dd yyyy'),
+                    date_to=tools.format_date(self.env, allocation.date_to, date_format='MMM dd yyyy'),
                 )
             else:
                 name_validity = _(
                     "%(allocation_name)s (from %(date_from)s to No Limit)",
                     allocation_name=allocation.name,
-                    date_from=allocation.date_from.strftime("%b %d %Y"),
+                    date_from=tools.format_date(self.env, allocation.date_from, date_format='MMM dd yyyy'),
                 )
             allocation.name_validity = name_validity
 
@@ -506,12 +506,14 @@ class HolidaysAllocation(models.Model):
                         allocation.number_of_days = max(0, allocation.number_of_days - expiring_days)
                         allocation.expiring_carryover_days = 0
 
+                is_accrual_date = allocation.nextcall == period_end or allocation.nextcall == current_level_last_date
+                if not allocation.already_accrued and is_accrual_date and allocation.accrual_plan_id.accrued_gain_time == 'start':
+                    allocation._add_days_to_allocation(current_level, current_level_maximum_leave, leaves_taken, period_start, period_end)
+
                 # if it's the carry-over date, adjust days using current level's carry-over policy
                 if allocation.nextcall == carryover_date:
                     allocation.last_executed_carryover_date = carryover_date
                     if current_level.action_with_unused_accruals in ['lost', 'maximum']:
-                        if current_level != first_level or (nextcall == expiration_date and allocation.number_of_days - leaves_taken == 0):
-                            allocation._add_days_to_allocation(current_level, current_level_maximum_leave, leaves_taken, period_start, period_end)
                         allocated_days_left = allocation.number_of_days - leaves_taken
                         allocation_max_days = 0 # default if unused_accrual are lost
                         if current_level.action_with_unused_accruals == 'maximum':
@@ -523,9 +525,7 @@ class HolidaysAllocation(models.Model):
                         allocation.number_of_days = min(allocation.number_of_days, allocation_max_days) + leaves_taken
                     allocation.expiring_carryover_days = allocation.number_of_days
 
-                # Only accrue on the end of the accrual period or on level transition date
-                is_accrual_date = allocation.nextcall == period_end or allocation.nextcall == current_level_last_date
-                if not allocation.already_accrued and is_accrual_date:
+                if not allocation.already_accrued and is_accrual_date and allocation.accrual_plan_id.accrued_gain_time == 'end':
                     allocation._add_days_to_allocation(current_level, current_level_maximum_leave, leaves_taken, period_start, period_end)
 
                 if allocation.nextcall == carryover_date:

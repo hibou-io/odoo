@@ -3,14 +3,14 @@
 
 from lxml import etree
 from odoo import fields, Command
-from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+from odoo.addons.account_edi_ubl_cii.tests.common import TestUblCiiCommon
 from odoo.tests import tagged
 from odoo.tools import file_open
 from odoo.tools.safe_eval import datetime
 
 
 @tagged('post_install', '-at_install')
-class TestAccountEdiUblCii(AccountTestInvoicingCommon):
+class TestAccountEdiUblCii(TestUblCiiCommon):
 
     @classmethod
     def setUpClass(cls):
@@ -40,11 +40,10 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             'xsi': "http://www.w3.org/2001/XMLSchema-instance",
         }
 
-    def import_attachment(self, attachment, journal=None):
-        journal = journal or self.company_data["default_journal_purchase"]
-        return self.env['account.journal'] \
-            .with_context(default_journal_id=journal.id) \
-            ._create_document_from_attachment(attachment.id)
+        cls.ubl_namespaces = {
+            'cbc': "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+            'cac': "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+        }
 
     def test_export_import_product(self):
         products = self.env['product.product'].create([{
@@ -65,34 +64,42 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
         line_vals = [
             {
                 'product_id': self.place_prdct.id,
+                'name': 'Placement',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id]
             }, {
                 'product_id': self.displace_prdct.id,
+                'name': 'Displacement',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id]
             }, {
                 'product_id': self.displace_prdct.id,
+                'name': 'Displacement',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id]
             }, {
                 'product_id': self.displace_prdct.id,
+                'name': 'Displacement',
                 'product_uom_id': self.uom_dozens.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id]
             }, {
                 'product_id': products[0].id,
+                'name': 'Awesome Product',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id],
             }, {
                 'product_id': products[1].id,
+                'name': 'XYZ',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id],
             }, {
                 'product_id': products[2].id,
+                'name': 'XXX',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id],
             }, {
                 'product_id': products[3].id,
+                'name': 'YYY',
                 'product_uom_id': self.uom_units.id,
                 'tax_ids': [self.company_data_2['default_tax_sale'].id],
             },
@@ -106,7 +113,8 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
         company.partner_id.bank_ids = [Command.create({
             'acc_number': '999999',
             'partner_id': company.partner_id.id,
-            'acc_holder_name': 'The Chosen One'
+            'acc_holder_name': 'The Chosen One',
+            'allow_out_payment': True,
         })]
 
         for ubl_cii_format in ['facturx', 'ubl_bis3']:
@@ -193,7 +201,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             })
 
         # Import the document for the first time
-        bill = self.import_attachment(xml_attachment, self.company_data["default_journal_purchase"])
+        bill = self._import_as_attachment_on(attachment=xml_attachment)
 
         # Ensure the first tax is retrieved as there isn't any prediction that could be leverage
         self.assertEqual(bill.invoice_line_ids.tax_ids, new_tax_1)
@@ -203,7 +211,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
         bill.action_post()
 
         # Import the bill again and ensure the prediction did his work
-        bill = self.import_attachment(xml_attachment, self.company_data["default_journal_purchase"])
+        bill = self._import_as_attachment_on(attachment=xml_attachment)
         self.assertEqual(bill.invoice_line_ids.tax_ids, new_tax_2)
 
     def test_peppol_eas_endpoint_compute(self):
@@ -239,17 +247,25 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             'peppol_endpoint': '0477472701',
         }])
 
+    def test_export_company_registry_in_party_nodes(self):
+        """Check that company_registry is used for PartyIdentification and CompanyID."""
+        self.partner_be.company_registry = '1234567890'
+        invoice = self.env['account.move'].create({
+            'partner_id': self.partner_be.id,
+            'move_type': 'out_invoice',
+            'invoice_line_ids': [Command.create({'product_id': self.product_a.id})]
+        })
+        invoice.action_post()
+
+        xml_tree = etree.fromstring(self.env['account.edi.xml.ubl_bis3']._export_invoice(invoice)[0])
+        customer_nodes = xml_tree.xpath('//cac:AccountingCustomerParty/cac:Party', namespaces=self.ubl_namespaces)
+        self.assertEqual(customer_nodes[0].find('.//{*}PartyIdentification/{*}ID').text, '1234567890')
+        self.assertEqual(customer_nodes[0].find('.//{*}PartyLegalEntity/{*}CompanyID').text, '1234567890')
+
     def test_import_partner_peppol_fields(self):
         """ Check that the peppol fields are used to retrieve the partner when importing a Bis 3 xml. """
-        partner = self.env['res.partner'].create({
-            'name': "My Belgian Partner",
-            'vat': "BE0477472701",
-            'peppol_eas': "0208",
-            'peppol_endpoint': "0477472701",
-            'email': "mypartner@email.com",
-        })
         invoice = self.env['account.move'].create({
-            'partner_id': partner.id,
+            'partner_id': self.partner_be.id,
             'move_type': 'out_invoice',
             'invoice_line_ids': [Command.create({'product_id': self.product_a.id})]
         })
@@ -265,14 +281,14 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             'email': "mypartner@email.com",
         })
         # Change the fields of the partner, keep the peppol fields
-        partner.update({
+        self.partner_be.update({
             'name': "Turlututu",
             'email': False,
             'vat': False,
         })
         # The partner should be retrieved based on the peppol fields
-        imported_invoice = self.import_attachment(xml_attachment, self.company_data["default_journal_sale"])
-        self.assertEqual(imported_invoice.partner_id, partner)
+        imported_invoice = self._import_as_attachment_on(attachment=xml_attachment, journal=self.company_data["default_journal_sale"])
+        self.assertEqual(imported_invoice.partner_id, self.partner_be)
 
     def test_actual_delivery_date_in_cii_xml(self):
 
@@ -399,7 +415,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
                 'raw': file.read(),
             })
 
-        bill = self.import_attachment(xml_attachment, self.company_data["default_journal_purchase"])
+        bill = self._import_as_attachment_on(attachment=xml_attachment)
 
         self.assertRecordValues(bill.partner_id, [{
             'name': "ALD Automotive LU",
@@ -411,6 +427,32 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             'city': 'Strassen',
             'zip': '8010',
         }])
+
+    def test_import_bill(self):
+        partner = self.env['res.partner'].create({
+            'name': "My Belgian Partner",
+            'vat': "BE0477472701",
+            'email': "mypartner@email.com",
+        })
+        invoice = self.env['account.move'].create({
+            'partner_id': partner.id,
+            'move_type': 'out_invoice',
+            'invoice_line_ids': [Command.create({'product_id': self.product_a.id})]
+        })
+        invoice.action_post()
+        my_invoice_raw = self.env['account.edi.xml.ubl_bis3']._export_invoice(invoice)[0]
+        my_invoice_root = etree.fromstring(my_invoice_raw)
+        modifying_xpath = """<xpath expr="(//*[local-name()='LegalMonetaryTotal']/*[local-name()='TaxExclusiveAmount'])" position="replace">
+        <TaxExclusiveAmount currencyID="EUR"><!--Some valid XML
+comment-->1000.0</TaxExclusiveAmount></xpath>"""
+        xml_attachment = self.env['ir.attachment'].create({
+            'raw': etree.tostring(self.with_applied_xpath(my_invoice_root, modifying_xpath)),
+            'name': 'test_invoice.xml',
+        })
+        imported_invoice = self._import_as_attachment_on(attachment=xml_attachment, journal=self.company_data["default_journal_purchase"])
+        self.assertRecordValues(imported_invoice.invoice_line_ids, [{
+            'amount_currency': 1000.00,
+            'quantity': 1.0}])
 
     def test_import_discount(self):
         invoice = self.env['account.move'].create({
@@ -433,7 +475,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             'raw': self.env['account.edi.xml.cii']._export_invoice(invoice)[0],
             'name': 'test_invoice.xml',
         })
-        imported_invoice = self.import_attachment(xml_attachment, self.company_data["default_journal_sale"])
+        imported_invoice = self._import_as_attachment_on(attachment=xml_attachment, journal=self.company_data["default_journal_sale"])
         for line in imported_invoice.invoice_line_ids:
             self.assertFalse(line.discount, "A discount on the imported lines signals a rounding error in the discount computation")
 
@@ -444,6 +486,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
                 'partner_id': self.partner_a.id,
                 'bank_id': bank_ing.id,
                 'company_id': self.env.company.id,
+                'allow_out_payment': True,
             })
         invoice = self.env['account.move'].create({
             'partner_id': self.partner_a.id,
@@ -467,8 +510,11 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             company.sdd_creditor_identifier = 'BE30ZZZ300D000000042'
             company_bank_journal = self.company_data['default_journal_bank']
             company_bank_journal.bank_acc_number = 'CH9300762011623852957'
-            company_bank_journal.bank_account_id.bank_id = bank_ing
             self.partner_a.country_id = self.env.ref('base.nl').id
+            company_bank_journal.bank_account_id.write({
+                'bank_id': bank_ing.id,
+                'allow_out_payment': True,
+            })
 
             mandate = self.env['sdd.mandate'].create({
                 'name': 'mandate ' + (self.partner_a.name or ''),
@@ -506,7 +552,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
         partner = self.partner_a
         partner.peppol_endpoint = '00000000001020304050'
         partner.country_id = self.env.ref('base.nl').id
-        partner.bank_ids = [Command.create({'acc_number': "0123456789"})]
+        partner.bank_ids = [Command.create({'acc_number': "0123456789", 'allow_out_payment': True})]
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
             'move_type': 'out_invoice',
@@ -521,38 +567,8 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
         builder = invoice.partner_id.commercial_partner_id._get_edi_builder('ubl_bis3')
         xml_content = builder._export_invoice(invoice)[0]
         xml_tree = etree.fromstring(xml_content)
-        scheme_ID = xml_tree.find('.//cac:PartyLegalEntity/cbc:CompanyID[@schemeID]', {
-            'cbc': "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
-            'cac': "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"})
+        scheme_ID = xml_tree.find('.//cac:PartyLegalEntity/cbc:CompanyID[@schemeID]', self.ubl_namespaces)
         self.assertEqual(scheme_ID.attrib.get("schemeID"), "0190")
-
-    def test_bank_details_import(self):
-        acc_number = '1234567890'
-        partner_bank = self.env['res.partner.bank'].create({
-            'active': False,
-            'acc_number': acc_number,
-            'partner_id': self.partner_a.id
-        })
-        invoice = self.env['account.move'].create({
-            'partner_id': self.partner_a.id,
-            'move_type': 'in_invoice',
-            'invoice_line_ids': [Command.create({'product_id': self.product_a.id})],
-        })
-        # will not raise sql constraint because the sql is not commited yet
-        self.env['account.edi.common']._import_partner_bank(invoice, [acc_number])
-        self.assertEqual(invoice.partner_bank_id, partner_bank, "Partner bank must be the same")
-        self.assertTrue(partner_bank.active, "Partner bank must be the activated")
-
-    def test_bank_details_import_duplicate(self):
-        acc_number = '1234567890'
-        invoice = self.env['account.move'].create({
-            'partner_id': self.partner_a.id,
-            'move_type': 'in_invoice',
-            'invoice_line_ids': [Command.create({'product_id': self.product_a.id})],
-        })
-        # Importing should not try to create multiple partner bank records with the same account number.
-        # It would cause a traceback due to a unique constraint on the (sanitized) account number, partner pair.
-        self.env['account.edi.common']._import_partner_bank(invoice, [acc_number, acc_number])
 
     def test_facturx_use_correct_vat(self):
         """Test that Factur-X uses the foreign VAT when available, else the company VAT."""
@@ -589,6 +605,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             'partner_id': self.partner_a.id,
             'move_type': 'out_invoice',
             'fiscal_position_id': fiscal_position.id,
+            'invoice_date': fields.Date.from_string('2025-12-22'),
             'invoice_line_ids': [Command.create({
                 'product_id': self.product_a.id,
                 'tax_ids': [Command.set(tax.ids)],
@@ -597,6 +614,7 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
         local_invoice = self.env['account.move'].create({
             'partner_id': self.partner_b.id,
             'move_type': 'out_invoice',
+            'invoice_date': fields.Date.from_string('2025-12-22'),
             'invoice_line_ids': [Command.create({
                 'product_id': self.product_a.id,
             })],
@@ -621,3 +639,27 @@ class TestAccountEdiUblCii(AccountTestInvoicingCommon):
             "rsm": "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100",
         })
         self.assertEqual(node[0].text, self.company.vat, "Company VAT fallback")
+
+    def test_partner_name_in_xml(self):
+        """
+        Test that invoice contacts without specific names use their parent partner's
+        name in the XML output, avoiding the 'Invoice address' suffix from display_name.
+        """
+        self.env['ir.config_parameter'].set_param('account_edi_ubl_cii.use_new_dict_to_xml_helpers', True)
+        partner = self.env['res.partner'].create({
+            'parent_id': self.partner_a.id,
+            'type': 'invoice'
+        })
+        invoice = self.env['account.move'].create({
+            'partner_id': partner.id,
+            'move_type': 'out_invoice',
+            'invoice_date': "2025-12-23",
+            'invoice_date_due': "2025-12-31",
+            'invoice_line_ids': [Command.create({'product_id': self.product_a.id})],
+        })
+        invoice.action_post()
+
+        xml_content = self.env['account.edi.xml.ubl_bis3']._export_invoice(invoice)[0]
+        xml_tree = etree.fromstring(xml_content)
+        partner_name = xml_tree.find('.//cac:AccountingCustomerParty/cac:Party/cac:PartyName/cbc:Name', self.ubl_namespaces)
+        self.assertEqual(partner_name.text, 'partner_a')

@@ -33,22 +33,22 @@
 # Lasse L, 2024
 # Anders Wallenquist <anders.wallenquist@vertel.se>, 2025
 # Chrille Hedberg <hedberg.chrille@gmail.com>, 2025
-# Jakob Krabbe <jakob.krabbe@vertel.se>, 2025
+# Jakob Krabbe <jakob.krabbe@vertel.se>, 2025, 2026.
 # Larissa Manderfeld, 2025
 # Thomas Becquevort, 2025
 # Wil Odoo, 2025
 # Claes-Johan Dahlin <user-89@users.noreply.translate.odoo.com>, 2025.
 # Mikael Akerberg <mikael.akerberg@mariaakerberg.com>, 2025.
-# Hanna Kharraziha <hakha@odoo.com>, 2025.
+# Hanna Kharraziha <hakha@odoo.com>, 2025, 2026.
 # Johannes Myrlander <johannes.myrlander@ucsonedo.se>, 2025.
 # Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-05 18:36+0000\n"
-"PO-Revision-Date: 2025-12-06 17:08+0000\n"
-"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"POT-Creation-Date: 2026-02-12 18:38+0000\n"
+"PO-Revision-Date: 2026-02-07 10:41+0000\n"
+"Last-Translator: Hanna Kharraziha <hakha@odoo.com>\n"
 "Language-Team: Swedish <https://translate.odoo.com/projects/odoo-18/account/"
 "sv/>\n"
 "Language: sv\n"
@@ -1944,6 +1944,14 @@ msgid "Account Chart Template"
 msgstr "Kontoplan"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_code_mapping.py:0
+msgid ""
+"Account Code Mapping cannot be accessed directly. It is designed to be used "
+"only through the Chart of Accounts."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_report_line__account_codes_formula
 msgid "Account Codes Formula Shortcut"
 msgstr "Genväg för formel för kontokoder"
@@ -2428,6 +2436,9 @@ msgid ""
 "Accrual entry created on %(date)s: %(accrual_entry)s.                And its "
 "reverse entry: %(reverse_entry)s."
 msgstr ""
+"Periodiseringstransaktion skapad den %(date)s: %"
+"(accrual_entry)s.                  Och dess omvända transaktion: %"
+"(reverse_entry)s."
 
 #. module: account
 #. odoo-python
@@ -3920,6 +3931,8 @@ msgid ""
 "Batch invoice sending is unavailable. Please, activate the cron to enable "
 "batch sending of invoices."
 msgstr ""
+"Det går inte att skicka batchfakturor. Aktivera cron för att möjliggöra "
+"batchutskick av fakturor."
 
 #. module: account
 #. odoo-python
@@ -3928,6 +3941,8 @@ msgid ""
 "Batch invoice sending is unavailable. Please, contact your system "
 "administrator to activate the cron to enable batch sending of invoices."
 msgstr ""
+"Det går inte att skicka batchfakturor. Kontakta din systemadministratör för "
+"att aktivera cron-funktionen för att möjliggöra batchutskick av fakturor."
 
 #. module: account
 #. odoo-javascript
@@ -8049,7 +8064,7 @@ msgstr "Globalt låsdatum"
 #. odoo-python
 #: code:addons/account/wizard/account_move_send_batch_wizard.py:0
 msgid "Go to cron configuration"
-msgstr ""
+msgstr "Gå till cron-konfigurationen"
 
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.action_account_audit_trail_report
@@ -15821,6 +15836,14 @@ msgid "The entry is secured with an inalterable hash."
 msgstr "Posten är säkrad med en oföränderlig hash."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The entry is using accounts (%(accounts_codes_names)s) from a different "
+"company."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,help:account.field_product_category__property_account_expense_categ_id
 msgid ""
 "The expense is accounted for when a vendor bill is validated, except in "
@@ -16244,7 +16267,7 @@ msgstr ""
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "The recurrence will end on"
-msgstr "Återfallet kommer att avslutas den"
+msgstr "Prenumerationen kommer att avslutas den"
 
 #. module: account
 #. odoo-python
@@ -16665,18 +16688,6 @@ msgstr "Det här året"
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_account.py:0
-msgid ""
-"This account is configured in %(journal_names)s journal(s) (ids %"
-"(journal_ids)s) as payment debit or credit account. This means that this "
-"account's type should be reconcilable."
-msgstr ""
-"Detta konto är konfigurerat i %(journal_names)s journal(er) (ids %"
-"(journal_ids)s) som betalningsdebet- eller kreditkonto. Detta innebär att "
-"kontotypen bör vara avstämningsbar."
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_account.py:0
 msgid "This account was split off from %(account_name)s (%(company_name)s)."
 msgstr "Detta konto delades av från %(account_name)s (%(company_name)s)."
 
@@ -16987,7 +16998,7 @@ msgstr ""
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "This setting locks once a journal entry is created."
-msgstr ""
+msgstr "Den här inställningen låses när ett verifikat har skapats."
 
 #. module: account
 #. odoo-python
@@ -18625,6 +18636,13 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_payment.py:0
+msgid ""
+"You cannot change the amount of a payment with multiple liquidity lines."
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/company.py:0
 msgid ""
 "You cannot change the currency of the company since some journal items "
@@ -18898,6 +18916,12 @@ msgstr "Du kan inte lägga upp en post i en arkiverad journal (%(journal)s)"
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "You cannot post an entry with an archived analytic account: %s"
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/res_currency.py:0
 msgid ""
 "You cannot reduce the number of decimal places of a currency which has "
@@ -19000,8 +19024,9 @@ msgstr ""
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
-msgid "You cannot switch the type of a document which has been posted once."
-msgstr "Du kan inte byta typ av ett dokument som har postats en gång."
+msgid ""
+"You cannot switch the type of a document with an existing sequence number."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -19119,6 +19144,14 @@ msgstr ""
 "valutakursförluster\" i företagets inställningar, för att automatiskt "
 "hantera bokföring av verifikat relaterade till skillnader mellan "
 "valutakurser."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_journal_dashboard.py:0
+msgid ""
+"You may only use samples in demo mode, try uploading one of your invoices "
+"instead."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -19696,6 +19729,18 @@ msgid ""
 msgstr ""
 "{{ object.company_id.name }} Betalningskvitto (Ref {{ object.name or 'n/"
 "a' }})"
+
+#~ msgid "You cannot switch the type of a document which has been posted once."
+#~ msgstr "Du kan inte byta typ av ett dokument som har postats en gång."
+
+#~ msgid ""
+#~ "This account is configured in %(journal_names)s journal(s) (ids %"
+#~ "(journal_ids)s) as payment debit or credit account. This means that this "
+#~ "account's type should be reconcilable."
+#~ msgstr ""
+#~ "Detta konto är konfigurerat i %(journal_names)s journal(er) (ids %"
+#~ "(journal_ids)s) som betalningsdebet- eller kreditkonto. Detta innebär att "
+#~ "kontotypen bör vara avstämningsbar."
 
 #~ msgid "This setting cannot be changed after an invoice is created."
 #~ msgstr "Denna inställning kan inte ändras efter att en faktura har skapats."

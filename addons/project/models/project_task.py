@@ -583,10 +583,10 @@ class Task(models.Model):
         )
         for task in task_linked_to_calendar:
             dt_create_date = fields.Datetime.from_string(task.create_date)
-
+            domain = [('company_id', 'in', task.project_id.company_id.ids), ('time_type', '=', 'leave')]
             if task.date_assign:
                 dt_date_assign = fields.Datetime.from_string(task.date_assign)
-                duration_data = task.project_id.resource_calendar_id.get_work_duration_data(dt_create_date, dt_date_assign, compute_leaves=True)
+                duration_data = task.project_id.resource_calendar_id.get_work_duration_data(dt_create_date, dt_date_assign, compute_leaves=True, domain=domain)
                 task.working_hours_open = duration_data['hours']
                 task.working_days_open = duration_data['days']
             else:
@@ -595,7 +595,7 @@ class Task(models.Model):
 
             if task.date_end:
                 dt_date_end = fields.Datetime.from_string(task.date_end)
-                duration_data = task.project_id.resource_calendar_id.get_work_duration_data(dt_create_date, dt_date_end, compute_leaves=True)
+                duration_data = task.project_id.resource_calendar_id.get_work_duration_data(dt_create_date, dt_date_end, compute_leaves=True, domain=domain)
                 task.working_hours_close = duration_data['hours']
                 task.working_days_close = duration_data['days']
             else:
@@ -1380,10 +1380,15 @@ class Task(models.Model):
             for dom in domain:
                 if len(dom) == 3:
                     _, op, value = dom
+                    if op in ("any", "not any"):
+                        new_op = "in" if op == "any" else "not in"
+                        ids = [val[2] for val in value if isinstance(val, (tuple, list)) and isinstance(val[2], int)]
+                        new_domain.append(("id", new_op, ids))
+                        continue
                     op = "ilike" if op == "child_of" else op
                     if isinstance(value, list) and all(isinstance(val, int) for val in value):
                         new_domain.append(("id", op, value))
-                    if isinstance(value, str) or (isinstance(value, list) and not all(isinstance(val, str) for val in value)):
+                    elif isinstance(value, str) or (isinstance(value, list) and not all(isinstance(val, str) for val in value)):
                         new_domain.append(("name", op, value))
                     if isinstance(value, int):
                         if op == "=":
