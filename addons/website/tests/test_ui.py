@@ -186,6 +186,24 @@ class TestUiHtmlEditor(HttpCaseWithUserDemo):
 
         self.start_tour("/", 'website_media_dialog_undraw', login='admin')
 
+    def test_dynamic_svg_theme_colors(self):
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
+            '<rect width="10" height="4" fill="#3AADAA"/>'
+            '<rect y="4" width="10" height="4" fill="#7C6576"/>'
+            '<rect y="8" width="10" height="2" fill="#000000"/>'
+            '</svg>'
+        )
+        self.env['ir.attachment'].create({
+            'name': 'dynamic svg test',
+            'type': 'binary',
+            'mimetype': 'image/svg+xml',
+            'datas': base64.b64encode(svg.encode()),
+            'public': True,
+            'url': '/html_editor/shape/illustration/dynamic-svg-test',
+        })
+        self.start_tour("/", 'website_dynamic_svg_theme_colors', login='admin')
+
     def test_code_editor_usable(self):
         # TODO: enable debug mode when failing tests have been fixed (props validation)
         url = '/odoo/action-website.website_preview'
@@ -725,3 +743,7 @@ class TestUi(HttpCaseWithWebsiteUser):
 
     def test_mega_footer(self):
         self.start_tour('/', 'mega_footer', login='admin')
+
+    def test_anchor_on_accordion_item(self):
+        self.start_tour("/", "anchor_behaviour_on_accordion_same_tab", login="admin")
+        self.start_tour("/#What-services-does-your-company-offer-%3F", "anchor_behaviour_on_accordion_new_tab", login="admin")

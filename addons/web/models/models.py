@@ -446,7 +446,7 @@ class Base(models.AbstractModel):
             all_records = self.browse().union(*recordset_groups)
             record_mapped = dict(zip(
                 all_records._ids,
-                all_records.web_read(unfold_read_specification),
+                all_records.web_read(unfold_read_specification or {}),
                 strict=True,
             ))
 
@@ -841,7 +841,7 @@ class Base(models.AbstractModel):
         ):
             # It doesn't respect the order with aggregates inside
             expand_groups = self._web_read_group_expand(domain, groups, groupby[0], aggregates, order)
-            if not limit or len(expand_groups) < limit:
+            if not limit or len(expand_groups) <= limit:
                 # Ditch the result of expand_groups because the limit is reached and to avoid
                 # returning inconsistent result inside length of web_read_group
                 groups = expand_groups

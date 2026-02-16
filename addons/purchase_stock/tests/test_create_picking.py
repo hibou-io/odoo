@@ -637,7 +637,7 @@ class TestCreatePicking(ProductVariantsCommon):
         # Create initial procurement that will generate the initial move and its picking.
         create_run_procurement(product, 50, {
             'warehouse_id': picking_type_out.warehouse_id,
-            'partner_id': vendor
+            'partner_id': vendor.id
         })
         customer_move = self.env['stock.move'].search([('product_id', '=', product.id)])
         purchase_order = self.env['purchase.order'].search([('partner_id', '=', partner.id)])
@@ -892,6 +892,7 @@ class TestCreatePicking(ProductVariantsCommon):
         """
         Check the product price update from receiving discounted goods.
         """
+        self.env['product.value'].search([('product_id', '=', self.product_id_1.id)]).unlink()
         self.product_id_1.categ_id = self.env['product.category'].create({
             'name': 'average',
             'property_cost_method': 'average',
