@@ -920,6 +920,17 @@ def save_test_file(test_name, content, prefix, extension='png', logger=_logger, 
     logger.runbot(f'{document_type} in: {full_path}')
 
 
+if os.name == 'posix' and platform.system() != 'Darwin':
+    # since the introduction of pointer compression in Chrome 80 (v8 v8.0),
+    # the memory reservation algorithm requires more than 8GiB of
+    # virtual mem for alignment this exceeds our default memory limits.
+    def _preexec():
+        import resource  # noqa: PLC0415
+        resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+else:
+    _preexec = None
+
+
 class ChromeBrowser:
     """ Helper object to control a Chrome headless process. """
     remote_debugging_port = 0  # 9222, change it in a non-git-tracked file
@@ -1049,24 +1060,15 @@ class ChromeBrowser:
                 if os.path.exists(bin_):
                     return bin_
 
+        self._logger.warning('Chrome executable not found')
         raise unittest.SkipTest("Chrome executable not found")
 
-    def _chrome_without_limit(self, cmd):
-        if os.name == 'posix' and platform.system() != 'Darwin':
-            # since the introduction of pointer compression in Chrome 80 (v8 v8.0),
-            # the memory reservation algorithm requires more than 8GiB of
-            # virtual mem for alignment this exceeds our default memory limits.
-            def preexec():
-                import resource
-                resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-        else:
-            preexec = None
-
-        # pylint: disable=subprocess-popen-preexec-fn
-        return subprocess.Popen(cmd, stderr=subprocess.DEVNULL, preexec_fn=preexec)
-
     def _spawn_chrome(self, cmd):
-        proc = self._chrome_without_limit(cmd)
+        log_path = pathlib.Path(self.user_data_dir, 'err.log')
+        with log_path.open('wb') as log_file:
+            # pylint: disable=subprocess-popen-preexec-fn
+            proc = subprocess.Popen(cmd, stderr=log_file, preexec_fn=_preexec)  # noqa: PLW1509
+
         port_file = pathlib.Path(self.user_data_dir, 'DevToolsActivePort')
         for _ in range(CHECK_BROWSER_ITERATIONS):
             time.sleep(CHECK_BROWSER_SLEEP)
@@ -1074,6 +1076,19 @@ class ChromeBrowser:
                 with port_file.open('r', encoding='utf-8') as f:
                     self.devtools_port = int(f.readline())
                     return proc.pid
+
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+        self._logger.warning('Chrome headless failed to start:\n%s', log_path.read_text(encoding="utf-8"))
+        # since the chrome never started, it's not going to be `stop`-ed so we
+        # need to cleanup the directory here
+        shutil.rmtree(self.user_data_dir, ignore_errors=True)
+
         raise unittest.SkipTest(f'Failed to detect chrome devtools port after {BROWSER_WAIT :.1f}s.')
 
     def _chrome_start(self):
@@ -1104,6 +1119,7 @@ class ChromeBrowser:
             '--remote-debugging-port': str(self.remote_debugging_port),
             '--no-sandbox': '',
             '--disable-gpu': '',
+            '--mute-audio': '',
             '--remote-allow-origins': '*',
             # '--enable-precise-memory-info': '', # uncomment to debug memory leaks in qunit suite
             # '--js-flags': '--expose-gc', # uncomment to debug memory leaks in qunit suite
@@ -1220,7 +1236,7 @@ class ChromeBrowser:
                 continue
             except websocket.WebSocketConnectionClosedException as e:
                 if not self._result.done():
-                    self.ws = None
+                    del self.ws
                     self._result.set_exception(e)
                     for f in self._responses.values():
                         f.cancel()
@@ -1259,8 +1275,8 @@ class ChromeBrowser:
     def _websocket_request(self, method, *, params=None, timeout=10.0):
         assert threading.get_ident() != self._receiver.ident,\
             "_websocket_request must not be called from the consumer thread"
-        if self.ws is None:
-            return
+        if not hasattr(self, 'ws'):
+            return None
 
         f = self._websocket_send(method, params=params, with_future=True)
         try:
@@ -1273,8 +1289,8 @@ class ChromeBrowser:
 
         If ``with_future`` is set, returns a ``Future`` for the operation.
         """
-        if self.ws is None:
-            return
+        if not hasattr(self, 'ws'):
+            return None
 
         result = None
         request_id = next(self._request_id)
@@ -1471,7 +1487,8 @@ which leads to stray network requests and inconsistencies."""
 
         self._logger.info('Asking for screenshot')
         f = self._websocket_send('Page.captureScreenshot', with_future=True)
-        f.add_done_callback(handler)
+        if f:
+            f.add_done_callback(handler)
         return f
 
     def _save_screencast(self, prefix='failed'):
