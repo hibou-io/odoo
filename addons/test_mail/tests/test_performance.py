@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from contextlib import nullcontext
 from markupsafe import Markup
 from unittest.mock import patch
 
@@ -288,7 +289,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
             # voip module read activity_type during create leading to one less query in enterprise on action_feedback
             _category = activity.activity_type_id.category
 
-        with self.assertQueryCount(admin=12, employee=12):
+        with self.assertQueryCount(admin=13, employee=13):
             activity.action_feedback(feedback='Zizisse Done !')
 
     @warmup
@@ -323,7 +324,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
 
         record.write({'name': 'Dupe write'})
 
-        with self.assertQueryCount(admin=13, employee=13):
+        with self.assertQueryCount(admin=14, employee=14):
             record.action_close('Dupe feedback')
 
         self.assertEqual(record.activity_ids, self.env['mail.activity'])
@@ -349,7 +350,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
 
         record.write({'name': 'Dupe write'})
 
-        with self.assertQueryCount(admin=15, employee=15):  # com+tm 14/14
+        with self.assertQueryCount(admin=16, employee=16):  # com+tm 15/15
             record.action_close('Dupe feedback', attachment_ids=attachments.ids)
 
         # notifications
@@ -420,7 +421,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
                 composer_form.attachment_ids.add(attachment)
             composer = composer_form.save()
 
-        with self.assertQueryCount(admin=57, employee=57):  # tm+com 56/56
+        with self.assertQueryCount(admin=58, employee=58):  # tm+com 57/57
             composer._action_send_mail()
 
         # notifications
@@ -538,7 +539,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
             )
             composer = composer_form.save()
 
-        with self.assertQueryCount(admin=53, employee=53):
+        with self.assertQueryCount(admin=54, employee=54):
             composer._action_send_mail()
 
         # notifications
@@ -568,7 +569,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
             )
             composer = composer_form.save()
 
-        with self.assertQueryCount(admin=72, employee=72):
+        with self.assertQueryCount(admin=73, employee=73):
             composer._action_send_mail()
 
         # notifications
@@ -604,7 +605,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
     @warmup
     def test_message_assignation_inbox(self):
         record = self.env['mail.test.track'].create({'name': 'Test'})
-        with self.assertQueryCount(admin=24, employee=23):
+        with self.assertQueryCount(admin=25, employee=24):
             record.write({
                 'user_id': self.user_test_inbox.id,
             })
@@ -654,7 +655,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
     def test_message_log_with_post(self):
         record = self.env['mail.test.simple'].create({'name': 'Test'})
 
-        with self.assertQueryCount(admin=7, employee=7):
+        with self.assertQueryCount(admin=8, employee=8):
             record.message_post(
                 body=Markup('<p>Test message_post as log</p>'),
                 subtype_xmlid='mail.mt_note',
@@ -665,7 +666,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
     def test_message_post_no_notification(self):
         record = self.env['mail.test.simple'].create({'name': 'Test'})
 
-        with self.assertQueryCount(admin=7, employee=7):
+        with self.assertQueryCount(admin=8, employee=8):
             record.message_post(
                 body=Markup('<p>Test Post Performances basic</p>'),
                 partner_ids=[],
@@ -690,7 +691,7 @@ class TestBaseAPIPerformance(BaseMailPerformance):
     def test_message_post_one_inbox_notification(self):
         record = self.env['mail.test.simple'].create({'name': 'Test'})
 
-        with self.assertQueryCount(admin=21, employee=21):  # com 18/18
+        with self.assertQueryCount(admin=23, employee=23):  # com 20/20
             record.message_post(
                 body=Markup('<p>Test Post Performances with an inbox ping</p>'),
                 partner_ids=self.user_test.partner_id.ids,
@@ -925,7 +926,7 @@ class TestMailAPIPerformance(BaseMailPerformance):
                 'default_template_id': test_template.id,
             }).create({})
 
-        with self.assertQueryCount(admin=142, employee=142):
+        with self.assertQueryCount(admin=152, employee=152):
             messages_as_sudo = test_records.message_post_with_source(
                 'test_mail.mail_template_simple_test',
                 render_values={'partner': self.user_test.partner_id},
@@ -1131,6 +1132,116 @@ class TestMailAPIPerformance(BaseMailPerformance):
         self.assertEqual(len(rec1.message_ids), 3)
 
 
+@tagged('mail_performance', 'WIP', 'post_install', '-at_install')
+class TestMailAccessPerformance(BaseMailPerformance):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.records_access = cls.env['mail.test.access'].create([
+            {'name': 'Access.1', 'access': 'public'},
+            {'name': 'Access.2', 'access': 'logged'},
+            {'name': 'Access.3', 'access': 'followers'},
+        ])
+        cls.records_access_custo = cls.env['mail.test.access.custo'].create([
+            {'name': 'Custo.1'},
+            {'name': 'Custo.2', 'is_readonly': True},  # read access, should be able to read messages / activities
+            {'name': 'Custo.3', 'is_locked': True},  # not able to read messages / activities
+        ])
+        cls.records_mc = cls.env['mail.test.multi.company'].create([
+            {'name': 'MC.1'},
+            {'name': 'MC.2'},
+            {'name': 'MC.3'},
+        ])
+
+        # messages to check access
+        cls.messages = cls.env['mail.message']
+        for records_model in [cls.records_access, cls.records_access_custo, cls.records_mc]:
+            for record in records_model:
+                cls.messages += record.with_user(cls.user_admin).message_post(
+                    body=f'Posting on {record.name}',
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment',
+                )
+        # message employee cannot read due to specific rules (aka locked record)
+        cls.messages_emp_nope = cls.messages[5]
+
+        # activities to check access
+        cls.activities = cls.env['mail.activity']
+        for records_model in [cls.records_access, cls.records_access_custo, cls.records_mc]:
+            cls.activities += cls.env['mail.activity'].create([
+                {
+                    'res_id': record.id,
+                    'res_model_id': cls.env['ir.model']._get_id(record._name),
+                    'summary': f'TestActivity {idx} on {record._name},{record.id} for {user.name}',
+                    'user_id': user.id,
+                }
+                for record in records_model
+                for user in (cls.user_admin + cls.user_employee)
+                for idx in range(2)
+            ])
+            records_model.message_unsubscribe(partner_ids=(cls.user_admin + cls.user_employee).partner_id.ids)
+        # activities employee cannot read due to specific rules (other user on non open custo)
+        cls.activities_emp_nope = cls.activities.filtered(
+            lambda a: a.res_model == 'mail.test.access.custo' and a.res_id == cls.records_access_custo[2].id and a.user_id == cls.user_admin
+        )
+
+    @users('employee')
+    @warmup
+    def test_activity_read(self):
+        # queries
+        # fetch activities: 1
+        # filter records: 3
+        #  * 1 / model without _get_mail_message_access override (_filter_access_rule)
+        #  * 1 for model with _get_mail_message_access override (_get_mail_message_access)
+        # 'fetch_query': 1
+        profile = self.profile() if self.warm else nullcontext()
+        with self.assertQueryCount(employee=5), profile:
+            content = (self.activities - self.activities_emp_nope).with_env(self.env).read(['summary'])
+        self.assertEqual(len(content), len(self.activities - self.activities_emp_nope))
+
+    @users('employee')
+    @warmup
+    def test_activity_search(self):
+        # queries
+        # select mail.activity: 1
+        # filter records: 4
+        #  * 1 / model without _get_mail_message_access override (_filter_access_rule)
+        #  * 2 for model with _get_mail_message_access override (_get_mail_message_access + _filter_access_rule)
+        profile = self.profile() if self.warm else nullcontext()
+        with self.assertQueryCount(employee=5), profile:
+            found = self.activities.with_env(self.env).search([('summary', 'ilike', 'TestActivity')])
+        self.assertEqual(found, self.activities - self.activities_emp_nope)
+
+    @users('employee')
+    @warmup
+    def test_message_read(self):
+        # queries
+        # fetch messages: 1
+        # filter records: 3
+        #  * 1 / model without _get_mail_message_access override (_filter_access_rule)
+        #  * 1 for model with _get_mail_message_access override (_get_mail_message_access)
+        # 'read': 1
+        profile = self.profile() if self.warm else nullcontext()
+        with self.assertQueryCount(employee=5), profile:
+            content = (self.messages - self.messages_emp_nope).with_env(self.env).read(['body'])
+        self.assertEqual(len(content), len(self.messages - self.messages_emp_nope))
+
+    @users('employee')
+    @warmup
+    def test_message_search(self):
+        # queries
+        # select mail.message: 1
+        # filter records: 4
+        #  * 1 / model without _get_mail_message_access override (_filter_access_rule)
+        #  * 2 for model with _get_mail_message_access override (_get_mail_message_access + _filter_access_rule)
+        profile = self.profile() if self.warm else nullcontext()
+        with self.assertQueryCount(employee=5), profile:
+            found = self.messages.with_env(self.env).search([('body', 'ilike', 'Posting on ')])
+        self.assertEqual(found, self.messages - self.messages_emp_nope)
+
+
 @tagged('mail_performance', 'post_install', '-at_install')
 class TestMailFormattersPerformance(BaseMailPerformance):
 
@@ -1271,7 +1382,7 @@ class TestMailFormattersPerformance(BaseMailPerformance):
         """
         messages_all = self.messages_all.with_env(self.env)
 
-        with self.assertQueryCount(employee=27):
+        with self.assertQueryCount(employee=28):
             res = messages_all.message_format()
 
         self.assertEqual(len(res), 2*2)
@@ -1284,7 +1395,7 @@ class TestMailFormattersPerformance(BaseMailPerformance):
     def test_message_format_single(self):
         message = self.messages_all[0].with_env(self.env)
 
-        with self.assertQueryCount(employee=24):
+        with self.assertQueryCount(employee=25):
             res = message.message_format()
 
         self.assertEqual(len(res), 1)
@@ -1305,14 +1416,14 @@ class TestMailFormattersPerformance(BaseMailPerformance):
             'res_id': record.id
         } for record in records])
 
-        with self.assertQueryCount(employee=7):
+        with self.assertQueryCount(employee=9):
             res = messages.message_format()
             self.assertEqual(len(res), 6)
 
         self.env.flush_all()
         self.env.invalidate_all()
 
-        with self.assertQueryCount(employee=15):
+        with self.assertQueryCount(employee=17):
             res = messages.message_format()
             self.assertEqual(len(res), 6)
 
@@ -1390,7 +1501,7 @@ class TestPerformance(BaseMailPerformance):
         attachments = self.env['ir.attachment'].with_user(self.env.user).create(self.test_attachments_vals)
         # enable_logging = self.cr._enable_logging() if self.warm else nullcontext()
         # with self.assertQueryCount(employee=63), enable_logging:
-        with self.assertQueryCount(employee=69):
+        with self.assertQueryCount(employee=70):
             record_container.with_context({}).message_post(
                 body=Markup('<p>Test body <img src="cid:cid1"> <img src="cid:cid2"></p>'),
                 subject='Test Subject',

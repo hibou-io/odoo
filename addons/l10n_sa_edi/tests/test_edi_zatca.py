@@ -7,7 +7,7 @@ from lxml import etree
 from pytz import timezone
 from odoo import Command
 
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from odoo.tests import tagged
 from odoo.tools import misc
 from odoo.addons.l10n_sa_edi.tests.common import TestSaEdiCommon
@@ -204,6 +204,38 @@ class TestEdiZatca(TestSaEdiCommon):
             freeze_time_at=datetime(2022, 9, 5, 8, 20, 2, tzinfo=timezone('Etc/GMT-3'))
         )
 
+    def testInvoiceWithZeroTax(self):
+        """Test invoice generation with 0% tax on a line."""
+        tax_0 = self.env['account.tax'].create({
+            'name': 'Tax 0',
+            'amount_type': 'percent',
+            'amount': 0,
+        })
+        invoice = self._create_invoice(
+            name='INV/2022/00014',
+            invoice_date='2022-09-05',
+            invoice_date_due='2022-09-22',
+            partner_id=self.partner_sa,
+            invoice_line_ids=[{
+                'product_id': self.product_a.id,
+                'price_unit': 500,
+                'tax_ids': self.tax_15.ids,
+            }, {
+                'product_id': self.product_b.id,
+                'price_unit': -100,
+                'tax_ids': tax_0.ids,
+            }],
+        )
+
+        invoice.action_post()
+        xml_content = self.env['account.edi.format']._l10n_sa_generate_zatca_template(invoice)
+        xml_root = etree.fromstring(xml_content)
+        taxable_amount = xml_root.xpath(
+            "(//cac:TaxSubtotal)[2]/cbc:TaxableAmount",
+            namespaces=self.env['account.edi.xml.ubl_21.zatca']._l10n_sa_get_namespaces()
+        )[0].text.strip()
+        self.assertEqual(taxable_amount, '-100.00')
+
     def testInvoiceWithDownpayment(self):
         """Test invoice generation with downpayment scenarios."""
         if 'sale' not in self.env["ir.module.module"]._installed():
@@ -253,42 +285,116 @@ class TestEdiZatca(TestSaEdiCommon):
             final = final_wizard._create_invoices(sale_order)
             final.invoice_date_due = '2022-09-22'
 
+            # Test invoices
+            for move, test_file in [
+                (downpayment, "downpayment_invoice"),
+                (final, "final_invoice")
+            ]:
+                with self.subTest(move=move, test_file=test_file):
+                    self._test_document_generation(
+                        test_file_path=f'l10n_sa_edi/tests/test_files/{test_file}.xml',
+                        expected_xpath=self.invoice_applied_xpath,
+                        freeze_time_at=freeze,
+                        move=move,
+                    )
+
+            # Test credit notes
+            for move, test_file in [
+                (downpayment, "downpayment_credit_note"),
+                (final, "final_credit_note")
+            ]:
+                with self.subTest(move=move, test_file=test_file):
+                    # Create refund
+                    wiz_context = {
+                        'active_model': 'account.move',
+                        'active_ids': [move.id],
+                        'default_journal_id': move.journal_id.id,
+                    }
+                    refund_wizard = self.env['account.move.reversal'].with_context(wiz_context).create({
+                        'reason': 'please reverse :c',
+                        'date': '2022-09-05',
+                    })
+                    refund_invoice = self.env['account.move'].browse(refund_wizard.reverse_moves()['res_id'])
+                    refund_invoice.invoice_date_due = '2022-09-22'
+                    self._test_document_generation(
+                        test_file_path=f'l10n_sa_edi/tests/test_files/{test_file}.xml',
+                        expected_xpath=self.credit_note_applied_xpath,
+                        freeze_time_at=freeze,
+                        move=refund_invoice,
+                    )
+
+    @freeze_time('2022-09-05')
+    def test_invoice_with_downpayment_individual_negative_zero(self):
+        """
+        Test invoice generation with downpayment scenarios.
+        In this scenario, the final downpayment create a -0.00 in the PayableAmount (BT-115).
+        This test if it was handled. Otherwise it won't match the QRCode BT-115 and therefore will be refused by ZATCA.
+        """
+        if 'sale' not in self.env["ir.module.module"]._installed():
+            self.skipTest("Sale module is not installed")
+
+        def get_order_line(amount):
+            return {
+                'product_id': self.product_a.id,
+                'price_unit': amount,
+                'product_uom_qty': 1,
+                'tax_id': [Command.set(tax_15_included.ids)],
+            }
+
+        # Helper to test generated files
+        saudi_pricelist = self.env['product.pricelist'].create({
+            'name': 'SAR',
+            'currency_id': self.env.ref('base.SAR').id
+        })
+        tax_15_included = self.env['account.tax'].create({
+            'name': '15% included',
+            'amount': 15,
+            'price_include': True,
+        })
+        self.partner_sa.company_type = 'person'
+        sale_order = self.env['sale.order'].create({
+            'partner_id': self.partner_sa.id,
+            'pricelist_id': saudi_pricelist.id,
+            'order_line': [
+                Command.create(line_vals) for line_vals in [
+                    get_order_line(225.40),
+                    get_order_line(180),
+                    get_order_line(300),
+                    get_order_line(-101.43),  # This line will create a -0.00 in the final invoice
+                ]
+            ]
+        })
+        sale_order.action_confirm()
+        # Context for wizards
+        context = {
+            'active_model': 'sale.order',
+            'active_ids': sale_order.ids,
+            'default_journal_id': self.customer_invoice_journal.id,
+        }
+
+        # Create downpayment invoice
+        downpayment_wizard = self.env['sale.advance.payment.inv'].with_context(context).create({
+            'advance_payment_method': 'percentage',
+            'amount': 100,
+            'deposit_taxes_id': [Command.set(tax_15_included.ids)],
+        })
+        downpayment = downpayment_wizard._create_invoices(sale_order)
+        downpayment.invoice_date_due = '2022-09-22'
+        # Create final invoice
+        final_wizard = self.env['sale.advance.payment.inv'].with_context(context).create({})
+        final = final_wizard._create_invoices(sale_order)
+        final.invoice_date_due = '2022-09-22'
         # Test invoices
         for move, test_file in [
-            (downpayment, "downpayment_invoice"),
-            (final, "final_invoice")
+            (downpayment, "downpayment_invoice_minus_zero"),
+            (final, "final_invoice_minus_zero"),
         ]:
             with self.subTest(move=move, test_file=test_file):
                 self._test_document_generation(
                     test_file_path=f'l10n_sa_edi/tests/test_files/{test_file}.xml',
                     expected_xpath=self.invoice_applied_xpath,
-                    freeze_time_at=freeze,
+                    freeze_time_at='2022-09-05',
                     move=move,
-                )
-
-        # Test credit notes
-        for move, test_file in [
-            (downpayment, "downpayment_credit_note"),
-            (final, "final_credit_note")
-        ]:
-            with self.subTest(move=move, test_file=test_file):
-                # Create refund
-                wiz_context = {
-                    'active_model': 'account.move',
-                    'active_ids': [move.id],
-                    'default_journal_id': move.journal_id.id,
-                }
-                refund_wizard = self.env['account.move.reversal'].with_context(wiz_context).create({
-                    'reason': 'please reverse :c',
-                    'date': '2022-09-05',
-                })
-                refund_invoice = self.env['account.move'].browse(refund_wizard.reverse_moves()['res_id'])
-                refund_invoice.invoice_date_due = '2022-09-22'
-                self._test_document_generation(
-                    test_file_path=f'l10n_sa_edi/tests/test_files/{test_file}.xml',
-                    expected_xpath=self.credit_note_applied_xpath,
-                    freeze_time_at=freeze,
-                    move=refund_invoice,
                 )
 
     def testInvoiceWithRetention(self):
@@ -353,3 +459,122 @@ class TestEdiZatca(TestSaEdiCommon):
         qr_company_name = decoded_qr[2:2 + length].decode()
 
         self.assertEqual(xml_company_name, qr_company_name, "Seller name on the xml does not match the seller name on the QR code")
+
+    def test_company_missing_country_on_standard_invoice(self):
+        """Test standard invoice generation when the company does not have a country set."""
+        # setup new company to prevent errors in other tests
+        vals = self._get_company_vals({"name": "SA Company (Minus Country)"})
+        new_company = self.setup_company_data("SA Branch", "sa", **vals)["company"]
+        new_company.l10n_sa_private_key = self.env['res.company']._l10n_sa_generate_private_key()
+
+        new_company_customer_invoice_journal = self.env['account.journal'].search([
+            ('company_id', '=', new_company.id),
+            ('type', '=', 'sale'),
+        ], limit=1)
+        new_company_customer_invoice_journal._l10n_sa_load_edi_demo_data()
+
+        new_company.country_id = False
+
+        # missing tax should always cause a user error, even if the country is blank
+        move_data = {
+            'name': 'INV/2022/00014',
+            'invoice_date': '2022-09-05',
+            'invoice_date_due': '2022-09-22',
+            'company_id': new_company,
+            'partner_id': self.partner_sa,
+            'invoice_line_ids': [{
+                'product_id': self.product_a.id,
+                'price_unit': self.product_a.standard_price,
+                'tax_ids': False,
+            }],
+        }
+
+        invoice = self._create_invoice(**move_data)
+        with self.assertRaises(UserError):
+            invoice.action_post()
+
+    def test_csr_generation_compliant_company(self):
+        """Test that CSR generation succeeds for a compliant company with valid field lengths."""
+        compliant_company = self.env['res.company'].create({
+            'name': 'Valid Company Name',
+            'vat': '300000000000003',
+            'street': 'Short Street Name',
+            'city': 'Riyadh',
+            'zip': '12345',
+            'country_id': self.saudi_arabia.id,
+            'state_id': self.riyadh.id,
+            'l10n_sa_api_mode': 'sandbox',
+            'currency_id': self.env.ref('base.SAR').id,
+        })
+        compliant_company.partner_id.industry_id = self.env['res.partner.industry'].create({
+            'name': 'Technology',
+        })
+        compliant_company.l10n_sa_private_key = self.env['res.company']._l10n_sa_generate_private_key()
+        compliant_journal = self.env['account.journal'].create({
+            'name': 'Sales',
+            'code': 'SAL',
+            'type': 'sale',
+            'company_id': compliant_company.id,
+        })
+
+        compliant_journal._l10n_sa_edi_set_csr_fields()
+        try:
+            csr_string = compliant_journal._l10n_sa_get_csr_str()
+            self.assertTrue(csr_string, "a Valid CSR should not be empty")
+        except UserError as e:
+            self.fail(f"Compliant company should not raise error: {e}")
+
+    def test_csr_generation_non_compliant_company(self):
+        """Test that CSR generation fails for non-compliant company with all invalid fields listed."""
+        long_name = "A" * 70
+        long_street = "B" * 70
+        long_city = "C" * 70
+        long_state_name = "D" * 70
+        long_industry_name = "E" * 70
+        long_journal_name = "F" * 70
+
+        long_state = self.env['res.country.state'].create({
+            'name': long_state_name,
+            'code': 'LST',
+            'country_id': self.saudi_arabia.id,
+        })
+        long_industry = self.env['res.partner.industry'].create({
+            'name': long_industry_name,
+        })
+
+        non_compliant_company = self.env['res.company'].create({
+            'name': long_name,
+            'vat': '333333333333333',
+            'street': long_street,
+            'city': long_city,
+            'zip': '12345',
+            'country_id': self.saudi_arabia.id,
+            'state_id': long_state.id,
+            'l10n_sa_api_mode': 'sandbox',
+            'currency_id': self.env.ref('base.SAR').id,
+        })
+        non_compliant_company.partner_id.industry_id = long_industry
+        non_compliant_company.l10n_sa_private_key = self.env['res.company']._l10n_sa_generate_private_key()
+        non_compliant_journal = self.env['account.journal'].create({
+            'name': long_journal_name,
+            'code': 'NC',
+            'type': 'sale',
+            'company_id': non_compliant_company.id,
+        })
+        non_compliant_journal._l10n_sa_edi_set_csr_fields()
+
+        with self.assertRaises(UserError) as context:
+            non_compliant_journal._l10n_sa_get_csr_str()
+
+        error_message = str(context.exception)
+        expected_error_fields = [
+            "Company Name",
+            "Common Name",
+            "Street",
+            "Locality Name",
+            "State/Province Name",
+            "Partner Industry Name",
+        ]
+
+        for field_name in expected_error_fields:
+            self.assertIn(field_name, error_message, f"Error message should contain '{field_name}'")

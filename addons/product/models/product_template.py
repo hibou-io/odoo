@@ -751,8 +751,10 @@ class ProductTemplate(models.Model):
                     # Do not add single value if the resulting combination would
                     # be invalid anyway.
                     if (
-                        len(combination) == len(lines_without_no_variants) and
-                        combination.attribute_line_id == lines_without_no_variants
+                        len(combination) == len(lines_without_no_variants)
+                        and combination.attribute_line_id == lines_without_no_variants
+                        # Update only if necessary to prevent a cache invalidation
+                        and variant.product_template_attribute_value_ids != combination
                     ):
                         variant.product_template_attribute_value_ids = combination
 
@@ -1238,6 +1240,11 @@ class ProductTemplate(models.Model):
         :return: a generator of product template attribute value
         """
         if not product_template_attribute_values_per_line:
+            return
+
+        product_template_attribute_values_per_line = [ptav for ptav in product_template_attribute_values_per_line if len(ptav)]
+        if not product_template_attribute_values_per_line:
+            yield self.env['product.template.attribute.value']
             return
 
         all_exclusions = {self.env['product.template.attribute.value'].browse(k):

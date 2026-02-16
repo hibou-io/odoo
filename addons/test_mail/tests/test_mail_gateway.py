@@ -41,6 +41,21 @@ class TestEmailParsing(MailCommon):
              "Content-Type 'binary/octet-stream', assuming 'application/octet-stream'"),
         ])
 
+    def test_message_parse_and_replace_wildcard(self):
+        """Incoming email containing a wrong Content-Type (*/*) as described in RFC2046/section-3"""
+        mail_with_wildcard_mime = self.format(test_mail_data.MAIL_PDF_MIME_TEMPLATE, pdf_mime="*/*")
+        self.assertIn("Content-Type: */*", mail_with_wildcard_mime, "Wildcard for content-type not found")
+        with self.assertLogs("odoo.addons.mail.models.mail_thread", level="WARNING") as capture:
+            extracted_mail = self.env['mail.thread'].message_parse(self.from_string(mail_with_wildcard_mime))
+
+        self.assertEqual(len(extracted_mail['attachments']), 1)
+        attachment = extracted_mail['attachments'][0]
+        self.assertEqual(attachment.fname, 'scan_soraya.lernout_1691652648.pdf')
+        self.assertEqual(capture.output, [
+            ("WARNING:odoo.addons.mail.models.mail_thread:Message containing an unexpected "
+             "Content-Type '*/*', assuming 'application/octet-stream'"),
+        ])
+
     def test_message_parse_body(self):
         # test pure plaintext
         plaintext = self.format(test_mail_data.MAIL_TEMPLATE_PLAINTEXT, email_from='"Sylvie Lelitre" <test.sylvie.lelitre@agrolait.com>')
@@ -1282,7 +1297,18 @@ class TestMailgateway(MailGatewayCommon):
         self.assertEqual(self.test_record.message_bounce, 0)
         self.assertEqual(other_record.message_bounce, 10)
         self.assertEqual(yet_other_record.message_bounce, 10)
+        # MAX_BOUNCE_LIMIT in discuss_channel is set to 10,
+        # If this partner exceeds the limit, remove them from the channel.
         self.assertNotIn(self.partner_1, test_channel.channel_partner_ids)
+
+        # On a new successful incoming email, the partner bounce counter should be reset.
+        self.format_and_process(
+            MAIL_TEMPLATE, self.partner_1.email_formatted,
+            f'groups@{self.alias_domain}',
+            subject='Test Working Email Subject',
+            extra=f'In-Reply-To:\r\n\t{self.fake_email.message_id}\n',
+        )
+        self.assertEqual(self.partner_1.message_bounce, 0)
 
     @mute_logger('odoo.addons.mail.models.mail_thread')
     def test_message_process_bounce_records_partner(self):
@@ -1780,7 +1806,7 @@ class TestMailgateway(MailGatewayCommon):
     def test_message_process_file_encoding(self):
         """ Incoming email with file encoding """
         file_content = 'Hello World'
-        for encoding in ['', 'UTF-8', 'UTF-16LE', 'UTF-32BE']:
+        for encoding in ['', 'UTF-8', 'UTF-16LE', 'UTF-32BE', 'cp-850']:
             file_content_b64 = base64.b64encode(file_content.encode(encoding or 'utf-8')).decode()
             record = self.format_and_process(test_mail_data.MAIL_FILE_ENCODING,
                 self.email_from, f'groups@{self.alias_domain}',
@@ -1790,7 +1816,7 @@ class TestMailgateway(MailGatewayCommon):
             )
             attachment = record.message_ids.attachment_ids
             self.assertEqual(file_content, attachment.raw.decode(encoding or 'utf-8'))
-            if encoding not in ['', 'UTF-8']:
+            if encoding not in ['', 'UTF-8', 'cp-850']:
                 self.assertNotEqual(file_content, attachment.raw.decode('utf-8'))
 
     def test_message_hebrew_iso8859_8_i(self):

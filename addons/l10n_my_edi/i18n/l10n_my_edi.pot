@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 08:19+0000\n"
-"PO-Revision-Date: 2025-05-23 08:19+0000\n"
+"POT-Creation-Date: 2026-01-15 19:01+0000\n"
+"PO-Revision-Date: 2026-01-15 19:01+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -270,7 +270,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:l10n_my_edi.view_partner_form_inherit_l10n_my_myinvois
 msgid ""
 "<span class=\"text-success fa fa-check\" title=\"Validation Successful\" invisible=\"not l10n_my_edi_display_tin_warning or l10n_my_tin_validation_state != 'valid'\"/>\n"
-"                                <span class=\"text-danger fa fa-close\" title=\"Validation Failed\" invisible=\"not l10n_my_edi_display_tin_warning or l10n_my_tin_validation_state != 'invalid'\"/>"
+"                            <span class=\"text-danger fa fa-close\" title=\"Validation Failed\" invisible=\"not l10n_my_edi_display_tin_warning or l10n_my_tin_validation_state != 'invalid'\"/>"
 msgstr ""
 
 #. module: l10n_my_edi
@@ -431,6 +431,11 @@ msgid "E-Invoicing"
 msgstr ""
 
 #. module: l10n_my_edi
+#: model:ir.model,name:l10n_my_edi.model_account_tax
+msgid "ETA tax codes mixin"
+msgstr ""
+
+#. module: l10n_my_edi
 #. odoo-python
 #: code:addons/l10n_my_edi/wizard/account_move_send.py:0
 #, python-format
@@ -495,6 +500,11 @@ msgid "Identification"
 msgstr ""
 
 #. module: l10n_my_edi
+#: model:ir.model.fields,help:l10n_my_edi.field_res_config_settings__l10n_my_edi_company_vat
+msgid "Identification Number for selected type"
+msgstr ""
+
+#. module: l10n_my_edi
 #. odoo-python
 #: code:addons/l10n_my_edi/models/res_partner.py:0
 #, python-format
@@ -535,6 +545,11 @@ msgstr ""
 #. module: l10n_my_edi
 #: model:ir.model,name:l10n_my_edi.model_account_move
 msgid "Journal Entry"
+msgstr ""
+
+#. module: l10n_my_edi
+#: model_terms:ir.ui.view,arch_db:l10n_my_edi.ubl_21_InvoiceType_my
+msgid "K2"
 msgstr ""
 
 #. module: l10n_my_edi
@@ -780,7 +795,10 @@ msgstr ""
 #: model:ir.model.fields,help:l10n_my_edi.field_account_bank_statement_line__l10n_my_edi_custom_form_reference
 #: model:ir.model.fields,help:l10n_my_edi.field_account_move__l10n_my_edi_custom_form_reference
 #: model:ir.model.fields,help:l10n_my_edi.field_account_payment__l10n_my_edi_custom_form_reference
-msgid "Reference Number of Customs Form No.1, 9, etc."
+msgid ""
+"Reference Number of Customs Forms\n"
+"Customs form No. 2 for Customer Invoices\n"
+"Customs form No. 1, 9, etc for Vendor Bills"
 msgstr ""
 
 #. module: l10n_my_edi
@@ -851,11 +869,6 @@ msgid "Submission UID"
 msgstr ""
 
 #. module: l10n_my_edi
-#: model:ir.model,name:l10n_my_edi.model_account_tax
-msgid "Tax"
-msgstr ""
-
-#. module: l10n_my_edi
 #: model:ir.model.fields,field_description:l10n_my_edi.field_account_bank_statement_line__l10n_my_edi_exemption_reason
 #: model:ir.model.fields,field_description:l10n_my_edi.field_account_move__l10n_my_edi_exemption_reason
 #: model:ir.model.fields,field_description:l10n_my_edi.field_account_payment__l10n_my_edi_exemption_reason
@@ -902,14 +915,6 @@ msgid ""
 "The TIN number of the supplier in the invoices does not match with the one provided at the time of registering for the e-invoice service.\n"
 "If the TIN of the supplier's record changed after that, you will need to archive your EDI Proxy User and re-register.\n"
 "The TIN found in the document is %(tin_number)s"
-msgstr ""
-
-#. module: l10n_my_edi
-#: model:ir.model.fields,help:l10n_my_edi.field_res_config_settings__l10n_my_edi_company_vat
-msgid ""
-"The Tax Identification Number. Values here will be validated based on the "
-"country format. You can use '/' to indicate that the partner is not subject "
-"to tax."
 msgstr ""
 
 #. module: l10n_my_edi
@@ -1085,6 +1090,11 @@ msgstr ""
 msgid ""
 "This document has already been submitted and was deemed invalid.\n"
 "Please correct the document based on the previous error, or wait before retrying."
+msgstr ""
+
+#. module: l10n_my_edi
+#: model:ir.model.constraint,message:l10n_my_edi.constraint_account_edi_proxy_client_user_unique_identification_l10n_my_edi
+msgid "This edi identification is already assigned to an active user"
 msgstr ""
 
 #. module: l10n_my_edi

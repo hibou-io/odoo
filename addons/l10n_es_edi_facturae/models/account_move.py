@@ -40,6 +40,32 @@ COUNTRY_CODE_MAP = {
     "AX": "ALA", "AZ": "AZE", "IE": "IRL", "ID": "IDN", "UA": "UKR", "QA": "QAT", "MZ": "MOZ"
 }
 REVERSED_COUNTRY_CODE = {v: k for k, v in COUNTRY_CODE_MAP.items()}
+#  The reason type should be exactly the fields given below.
+#  We cannot rely on the translated Selection since a single character difference would render the XML incorrect.
+SPANISH_CREDIT_REASON_TYPE = {
+    '01': 'Número de la factura',
+    '02': 'Serie de la factura',
+    '03': 'Fecha expedición',
+    '04': 'Nombre y apellidos/Razón Social-Emisor',
+    '05': 'Nombre y apellidos/Razón Social-Receptor',
+    '06': 'Identificación fiscal Emisor/obligado',
+    '07': 'Identificación fiscal Receptor',
+    '08': 'Domicilio Emisor/Obligado',
+    '09': 'Domicilio Receptor',
+    '10': 'Detalle Operación',
+    '11': 'Porcentaje impositivo a aplicar',
+    '12': 'Cuota tributaria a aplicar',
+    '13': 'Fecha/Periodo a aplicar',
+    '14': 'Clase de factura',
+    '15': 'Literales legales',
+    '16': 'Base imponible',
+    '80': 'Cálculo de cuotas repercutidas',
+    '81': 'Cálculo de cuotas retenidas',
+    '82': 'Base imponible modificada por devolución de envases / embalajes',
+    '83': 'Base imponible modificada por descuentos y bonificaciones',
+    '84': 'Base imponible modificada por resolución firme, judicial o administrativa',
+    '85': 'Base imponible modificada cuotas repercutidas no satisfechas. Auto de declaración de concurso',
+}
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
@@ -147,8 +173,7 @@ class AccountMove(models.Model):
             tax_period = refunded_invoice._l10n_es_edi_facturae_get_tax_period()
 
             reason_code = self.l10n_es_edi_facturae_reason_code or '10'
-            reason_description = [label for code, label in self._fields['l10n_es_edi_facturae_reason_code'].selection
-                                  if code == reason_code][0]
+            reason_description = SPANISH_CREDIT_REASON_TYPE[reason_code]
             return {
                 'refunded_invoice_record': refunded_invoice,
                 'ReasonCode': reason_code,
@@ -338,6 +363,7 @@ class AccountMove(models.Model):
         total_exec_am_in_currency = abs(self.amount_total_in_currency_signed)
         total_exec_am = abs(self.amount_total_signed)
         items, taxes, taxes_withheld, totals = self._l10n_es_edi_facturae_inv_lines_to_items(conversion_rate)
+        tax_lines = self.line_ids.filtered('tax_line_id')
         template_values = {
             'self_party': company.partner_id,
             'self_party_country_code': COUNTRY_CODE_MAP[company.country_id.code],
@@ -391,8 +417,8 @@ class AccountMove(models.Model):
                 'TotalGeneralDiscounts': totals['total_general_discounts'],
                 'TotalGeneralSurcharges': totals['total_general_surcharges'],
                 'TotalGrossAmountBeforeTaxes': totals['total_gross_amount'] - totals['total_general_discounts'] + totals['total_general_surcharges'],
-                'TotalTaxOutputs': totals['total_tax_outputs'],
-                'TotalTaxesWithheld': totals['total_taxes_withheld'],
+                'TotalTaxOutputs': sum(tax_lines.filtered(lambda tax_line: tax_line.tax_line_id.amount > 0.0).mapped('balance')) * self.direction_sign,
+                'TotalTaxesWithheld': sum(tax_lines.filtered(lambda tax_line: tax_line.tax_line_id.amount < 0.0).mapped('balance')) * self.direction_sign,
                 'PaymentsOnAccount': [],
                 'TotalOutstandingAmount': total_outst_am_in_currency,
                 'InvoiceTotal': abs(self.amount_total_in_currency_signed),

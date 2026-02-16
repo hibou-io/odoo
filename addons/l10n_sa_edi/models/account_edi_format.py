@@ -413,7 +413,7 @@ class AccountEdiFormat(models.Model):
         company = invoice.company_id
 
         errors = super()._check_move_configuration(invoice)
-        if self.code != 'sa_zatca' or company.country_id.code != 'SA':
+        if self.code != 'sa_zatca' or company.country_id and company.country_id.code != 'SA':
             return errors
 
         if invoice.commercial_partner_id == invoice.company_id.partner_id.commercial_partner_id:
@@ -516,4 +516,6 @@ class AccountEdiFormat(models.Model):
                     'date': fields.Date.context_today(self),
                 },
             )
+            if "<pdfaid:conformance>B</pdfaid:conformance>" in content:
+                content.replace("<pdfaid:conformance>B</pdfaid:conformance>", "<pdfaid:conformance>A</pdfaid:conformance>")
             pdf_writer.add_file_metadata(content.encode())

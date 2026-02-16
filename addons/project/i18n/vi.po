@@ -7,13 +7,13 @@
 # Wil Odoo, 2024
 # Thi Huong Nguyen, 2025
 #
-# "Thi Huong Nguyen (thng)" <thng@odoo.com>, 2025.
+# "Thi Huong Nguyen (thng)" <thng@odoo.com>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-09 20:36+0000\n"
-"PO-Revision-Date: 2025-08-12 01:11+0000\n"
+"POT-Creation-Date: 2025-12-29 18:36+0000\n"
+"PO-Revision-Date: 2026-01-10 08:05+0000\n"
 "Last-Translator: \"Thi Huong Nguyen (thng)\" <thng@odoo.com>\n"
 "Language-Team: Vietnamese <https://translate.odoo.com/projects/odoo-17/"
 "project/vi/>\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: project
 #. odoo-python
@@ -33,7 +33,8 @@ msgid ""
 "                <p class=\"o_view_nocontent_smiling_face\">\n"
 "                    No milestones found. Let's create one!\n"
 "                </p><p>\n"
-"                    Track major progress points that must be reached to achieve success.\n"
+"                    Track major progress points that must be reached to "
+"achieve success.\n"
 "                </p>\n"
 "            "
 msgstr ""
@@ -41,7 +42,8 @@ msgstr ""
 "                <p class=\"o_view_nocontent_smiling_face\">\n"
 "                    Không tìm thấy mốc thời gian nào. Hãy tạo một mốc!\n"
 "                </p><p>\n"
-"                    Theo dõi các điểm tiến độ chính cần đạt được để đến với thành công.\n"
+"                    Theo dõi các điểm tiến độ chính cần đạt được để đến với "
+"thành công.\n"
 "                </p>\n"
 "            "
 
@@ -200,59 +202,76 @@ msgstr "<b>Kéo &amp; thả</b> các thẻ để đổi công việc của bạn
 msgid ""
 "<b>Log notes</b> for internal communications <i>(the people following this "
 "task won't be notified of the note you are logging unless you specifically "
-"tag them)</i>. Use @ <b>mentions</b> to ping a colleague or # "
-"<b>mentions</b> to reach an entire team."
+"tag them)</i>. Use @ <b>mentions</b> to ping a colleague or # <b>mentions</"
+"b> to reach an entire team."
 msgstr ""
 "<b>Tạo ghi chú</b> để trao đổi nội bộ <i>(những người theo dõi nhiệm vụ này "
-"sẽ không được thông báo về ghi chú bạn tạo trừ khi bạn gắn thẻ họ)</i>. Dùng"
-" @ <b>đề cập</b> để thông báo cho một đồng nghiệp hoặc # <b>đề cập</b> để "
+"sẽ không được thông báo về ghi chú bạn tạo trừ khi bạn gắn thẻ họ)</i>. Dùng "
+"@ <b>đề cập</b> để thông báo cho một đồng nghiệp hoặc # <b>đề cập</b> để "
 "thông báo cho cả bộ phận."
 
 #. module: project
 #: model:mail.template,body_html:project.rating_project_request_email_template
 msgid ""
 "<div>\n"
-"    <t t-set=\"access_token\" t-value=\"object._rating_get_access_token()\"></t>\n"
+"    <t t-set=\"access_token\" t-value=\"object._rating_get_access_token()"
+"\"></t>\n"
 "    <t t-set=\"partner\" t-value=\"object._rating_get_partner()\"></t>\n"
-"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"width:100%; margin:0px auto;\">\n"
+"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" "
+"style=\"width:100%; margin:0px auto;\">\n"
 "    <tbody>\n"
 "        <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
 "            <t t-if=\"partner.name\">\n"
-"                Hello <t t-out=\"partner.name or ''\">Brandon Freeman</t>,<br><br>\n"
+"                Hello <t t-out=\"partner.name or ''\">Brandon Freeman</t>,"
+"<br><br>\n"
 "            </t>\n"
 "            <t t-else=\"\">\n"
 "                Hello,<br><br>\n"
 "            </t>\n"
-"            Please take a moment to rate our services related to the <strong t-out=\"object.name or ''\">Planning and budget</strong> task\n"
+"            Please take a moment to rate our services related to the <strong "
+"t-out=\"object.name or ''\">Planning and budget</strong> task\n"
 "            <t t-if=\"object._rating_get_operator().name\">\n"
-"                assigned to <strong t-out=\"object._rating_get_operator().name or ''\">Mitchell Admin</strong>.<br>\n"
+"                assigned to <strong t-"
+"out=\"object._rating_get_operator().name or ''\">Mitchell Admin</strong>."
+"<br>\n"
 "            </t>\n"
 "            <t t-else=\"\">\n"
 "                .<br>\n"
 "            </t>\n"
 "        </td></tr>\n"
 "        <tr><td style=\"text-align: center;\">\n"
-"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" summary=\"o_mail_notification\" style=\"width:100%; margin: 32px 0px 32px 0px;\">\n"
+"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" "
+"width=\"590\" summary=\"o_mail_notification\" style=\"width:100%; margin: "
+"32px 0px 32px 0px;\">\n"
 "                <tr><td style=\"font-size: 13px;\">\n"
-"                    <strong>Tell us how you feel about our services</strong><br>\n"
-"                    <span style=\"font-size: 12px; opacity: 0.5; color: #454748;\">(click on one of these smileys)</span>\n"
+"                    <strong>Tell us how you feel about our services</"
+"strong><br>\n"
+"                    <span style=\"font-size: 12px; opacity: 0.5; color: "
+"#454748;\">(click on one of these smileys)</span>\n"
 "                </td></tr>\n"
 "                <tr><td style=\"font-size: 13px;\">\n"
-"                    <table style=\"width:100%;text-align:center;margin-top:2rem;\">\n"
+"                    <table style=\"width:100%;text-align:center;margin-"
+"top:2rem;\">\n"
 "                        <tr>\n"
 "                            <td>\n"
-"                                <a t-attf-href=\"/rate/{{ access_token }}/5\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\">\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/"
+"5\">\n"
+"                                    <img alt=\"Satisfied\" src=\"/rating/"
+"static/src/img/rating_5.png\" title=\"Satisfied\">\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
-"                                <a t-attf-href=\"/rate/{{ access_token }}/3\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\">\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/"
+"3\">\n"
+"                                    <img alt=\"Okay\" src=\"/rating/static/"
+"src/img/rating_3.png\" title=\"Okay\">\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
-"                                <a t-attf-href=\"/rate/{{ access_token }}/1\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\">\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/"
+"1\">\n"
+"                                    <img alt=\"Dissatisfied\" src=\"/rating/"
+"static/src/img/rating_1.png\" title=\"Dissatisfied\">\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -263,23 +282,38 @@ msgid ""
 "        <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
 "            We appreciate your feedback. It helps us improve continuously.\n"
 "            <t t-if=\"object.project_id.rating_status == 'stage'\">\n"
-"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; color: #454748;\">This satisfaction survey has been sent because your task has been moved to the <b t-out=\"object.stage_id.name or ''\">In progress</b> stage</span>\n"
+"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; "
+"color: #454748;\">This satisfaction survey has been sent because your task "
+"has been moved to the <b t-out=\"object.stage_id.name or ''\">In progress</"
+"b> stage</span>\n"
 "            </t>\n"
 "            <t t-if=\"object.project_id.rating_status == 'periodic'\">\n"
-"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; color: #454748;\">This satisfaction survey is sent <b t-out=\"object.project_id.rating_status_period or ''\">weekly</b> as long as the task is in the <b t-out=\"object.stage_id.name or ''\">In progress</b> stage.</span>\n"
+"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; "
+"color: #454748;\">This satisfaction survey is sent <b t-"
+"out=\"object.project_id.rating_status_period or ''\">weekly</b> as long as "
+"the task is in the <b t-out=\"object.stage_id.name or ''\">In progress</b> "
+"stage.</span>\n"
 "            </t>\n"
 "        </td></tr>\n"
 "        <tr><td><br>Best regards,</td></tr>\n"
 "        <tr><td>\n"
-"           <t t-out=\"object.project_id.company_id.name or ''\">YourCompany</t>\n"
+"           <t t-out=\"object.project_id.company_id.name or ''\">YourCompany</"
+"t>\n"
 "        </td></tr>\n"
 "        <tr><td style=\"opacity: 0.5;\">\n"
-"            <t t-out=\"object.project_id.company_id.phone or ''\">1 650-123-4567</t>\n"
+"            <t t-out=\"object.project_id.company_id.phone or ''\">1 "
+"650-123-4567</t>\n"
 "            <t t-if=\"object.project_id.company_id.email\">\n"
-"                | <a t-attf-href=\"mailto:{{ object.project_id.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"object.project_id.company_id.email or ''\">info@yourcompany.com</a>\n"
+"                | <a t-attf-href=\"mailto:"
+"{{ object.project_id.company_id.email }}\" style=\"text-decoration:none; "
+"color: #454748;\" t-out=\"object.project_id.company_id.email or "
+"''\">info@yourcompany.com</a>\n"
 "            </t>\n"
 "            <t t-if=\"object.project_id.company_id.website\">\n"
-"                | <a t-attf-href=\"{{ object.project_id.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"object.project_id.company_id.website or ''\">http://www.example.com</a>\n"
+"                | <a t-attf-href=\"{{ object.project_id.company_id.website }}"
+"\" style=\"text-decoration:none; color: #454748;\" t-"
+"out=\"object.project_id.company_id.website or ''\">http://www.example.com</"
+"a>\n"
 "            </t>\n"
 "        </td></tr>\n"
 "    </tbody>\n"
@@ -288,47 +322,64 @@ msgid ""
 "            "
 msgstr ""
 "<div>\n"
-"    <t t-set=\"access_token\" t-value=\"object._rating_get_access_token()\"></t>\n"
+"    <t t-set=\"access_token\" t-value=\"object._rating_get_access_token()"
+"\"></t>\n"
 "    <t t-set=\"partner\" t-value=\"object._rating_get_partner()\"></t>\n"
-"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"width:100%; margin:0px auto;\">\n"
+"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" "
+"style=\"width:100%; margin:0px auto;\">\n"
 "    <tbody>\n"
 "        <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
 "            <t t-if=\"partner.name\">\n"
-"                Xin chào <t t-out=\"partner.name or ''\">Brandon Freeman</t>,<br><br>\n"
+"                Xin chào <t t-out=\"partner.name or ''\">Brandon Freeman</t>,"
+"<br><br>\n"
 "            </t>\n"
 "            <t t-else=\"\">\n"
 "                Xin chào,<br><br>\n"
 "            </t>\n"
-"            Vui lòng dành chút thời gian để đánh giá dịch vụ <strong t-out=\"object.name or ''\">Lập kế hoạch và ngân sách</strong>\n"
+"            Vui lòng dành chút thời gian để đánh giá dịch vụ <strong t-"
+"out=\"object.name or ''\">Lập kế hoạch và ngân sách</strong>\n"
 "            <t t-if=\"object._rating_get_operator().name\">\n"
-"                đã được giao cho <strong t-out=\"object._rating_get_operator().name or ''\">Mitchell Admin</strong> của chúng tôi.<br>\n"
+"                đã được giao cho <strong t-"
+"out=\"object._rating_get_operator().name or ''\">Mitchell Admin</strong> của "
+"chúng tôi.<br>\n"
 "            </t>\n"
 "            <t t-else=\"\">\n"
 "                .<br>\n"
 "            </t>\n"
 "        </td></tr>\n"
 "        <tr><td style=\"text-align: center;\">\n"
-"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" summary=\"o_mail_notification\" style=\"width:100%; margin: 32px 0px 32px 0px;\">\n"
+"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" "
+"width=\"590\" summary=\"o_mail_notification\" style=\"width:100%; margin: "
+"32px 0px 32px 0px;\">\n"
 "                <tr><td style=\"font-size: 13px;\">\n"
-"                    <strong>Vui lòng cho biết bạn cảm thấy thế nào về dịch vụ của chúng tôi</strong><br>\n"
-"                    <span style=\"font-size: 12px; opacity: 0.5; color: #454748;\">(nhấp vào một trong những biểu tượng mặt cười này)</span>\n"
+"                    <strong>Vui lòng cho biết bạn cảm thấy thế nào về dịch "
+"vụ của chúng tôi</strong><br>\n"
+"                    <span style=\"font-size: 12px; opacity: 0.5; color: "
+"#454748;\">(nhấp vào một trong những biểu tượng mặt cười này)</span>\n"
 "                </td></tr>\n"
 "                <tr><td style=\"font-size: 13px;\">\n"
-"                    <table style=\"width:100%;text-align:center;margin-top:2rem;\">\n"
+"                    <table style=\"width:100%;text-align:center;margin-"
+"top:2rem;\">\n"
 "                        <tr>\n"
 "                            <td>\n"
-"                                <a t-attf-href=\"/rate/{{ access_token }}/5\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\">\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/"
+"5\">\n"
+"                                    <img alt=\"Satisfied\" src=\"/rating/"
+"static/src/img/rating_5.png\" title=\"Satisfied\">\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
-"                                <a t-attf-href=\"/rate/{{ access_token }}/3\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\">\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/"
+"3\">\n"
+"                                    <img alt=\"Okay\" src=\"/rating/static/"
+"src/img/rating_3.png\" title=\"Okay\">\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
-"                                <a t-attf-href=\"/rate/{{ access_token }}/1\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\">\n"
+"                                <a t-attf-href=\"/rate/{{ access_token }}/"
+"1\">\n"
+"                                    <img alt=\"Dissatisfied\" src=\"/rating/"
+"static/src/img/rating_1.png\" title=\"Dissatisfied\">\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -337,25 +388,41 @@ msgstr ""
 "            </table>\n"
 "        </td></tr>\n"
 "        <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
-"            Chúng tôi rất trân trọng phản hồi từ bạn, vì nhờ đó chúng tôi có thể liên tục cải thiện dịch vụ của mình.\n"
+"            Chúng tôi rất trân trọng phản hồi từ bạn, vì nhờ đó chúng tôi có "
+"thể liên tục cải thiện dịch vụ của mình.\n"
 "            <t t-if=\"object.project_id.rating_status == 'stage'\">\n"
-"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; color: #454748;\">Bản khảo sát mức độ hài lòng này được gửi tới bạn vì nhiệm vụ của bạn đã được chuyển sang giai đoạn <b t-out=\"object.stage_id.name or ''\">Đang thực hiện</b></span>\n"
+"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; "
+"color: #454748;\">Bản khảo sát mức độ hài lòng này được gửi tới bạn vì nhiệm "
+"vụ của bạn đã được chuyển sang giai đoạn <b t-out=\"object.stage_id.name or "
+"''\">Đang thực hiện</b></span>\n"
 "            </t>\n"
 "            <t t-if=\"object.project_id.rating_status == 'periodic'\">\n"
-"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; color: #454748;\">Bản khảo sát mức độ hài lòng này sẽ được <b t-out=\"object.project_id.rating_status_period or ''\">hàng tuần</b> nếu nhiệm vụ vẫn còn trong giai đoạn <b t-out=\"object.stage_id.name or ''\">Đang thực hiện</b>.</span>\n"
+"                <br><span style=\"margin: 0; font-size: 12px; opacity: 0.5; "
+"color: #454748;\">Bản khảo sát mức độ hài lòng này sẽ được <b t-"
+"out=\"object.project_id.rating_status_period or ''\">hàng tuần</b> nếu nhiệm "
+"vụ vẫn còn trong giai đoạn <b t-out=\"object.stage_id.name or ''\">Đang thực "
+"hiện</b>.</span>\n"
 "            </t>\n"
 "        </td></tr>\n"
 "        <tr><td><br>Trân trọng,</td></tr>\n"
 "        <tr><td>\n"
-"           <t t-out=\"object.project_id.company_id.name or ''\">YourCompany</t>\n"
+"           <t t-out=\"object.project_id.company_id.name or ''\">YourCompany</"
+"t>\n"
 "        </td></tr>\n"
 "        <tr><td style=\"opacity: 0.5;\">\n"
-"            <t t-out=\"object.project_id.company_id.phone or ''\">1 650-123-4567</t>\n"
+"            <t t-out=\"object.project_id.company_id.phone or ''\">1 "
+"650-123-4567</t>\n"
 "            <t t-if=\"object.project_id.company_id.email\">\n"
-"                | <a t-attf-href=\"mailto:{{ object.project_id.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"object.project_id.company_id.email or ''\">info@yourcompany.com</a>\n"
+"                | <a t-attf-href=\"mailto:"
+"{{ object.project_id.company_id.email }}\" style=\"text-decoration:none; "
+"color: #454748;\" t-out=\"object.project_id.company_id.email or "
+"''\">info@yourcompany.com</a>\n"
 "            </t>\n"
 "            <t t-if=\"object.project_id.company_id.website\">\n"
-"                | <a t-attf-href=\"{{ object.project_id.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"object.project_id.company_id.website or ''\">http://www.example.com</a>\n"
+"                | <a t-attf-href=\"{{ object.project_id.company_id.website }}"
+"\" style=\"text-decoration:none; color: #454748;\" t-"
+"out=\"object.project_id.company_id.website or ''\">http://www.example.com</"
+"a>\n"
 "            </t>\n"
 "        </td></tr>\n"
 "    </tbody>\n"
@@ -367,32 +434,43 @@ msgstr ""
 #: model:mail.template,body_html:project.project_done_email_template
 msgid ""
 "<div>\n"
-"    Dear <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</t>,<br>\n"
-"    It is my pleasure to let you know that we have successfully completed the project \"<strong t-out=\"object.name or ''\">Renovations</strong>\".\n"
+"    Dear <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</"
+"t>,<br>\n"
+"    It is my pleasure to let you know that we have successfully completed "
+"the project \"<strong t-out=\"object.name or ''\">Renovations</strong>\".\n"
 "    <t t-if=\"user.signature\">\n"
 "        <br>\n"
 "        <t t-out=\"user.signature or ''\">--<br>Mitchell Admin</t>\n"
 "    </t>\n"
 "</div>\n"
-"<br><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; color: #454748;\" groups=\"project.group_project_stages\">You are receiving this email because your project has been moved to the stage <b t-out=\"object.stage_id.name or ''\">Done</b></span>\n"
+"<br><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; "
+"color: #454748;\" groups=\"project.group_project_stages\">You are receiving "
+"this email because your project has been moved to the stage <b t-"
+"out=\"object.stage_id.name or ''\">Done</b></span>\n"
 "            "
 msgstr ""
 "<div>\n"
-"    Xin chào <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</t>,<br>\n"
-"    Tôi rất vui mừng được thông báo với bạn rằng chúng tôi đã hoàn thành dự án \"<strong t-out=\"object.name or ''\">Cải tiến</strong>\" thành công .\n"
+"    Xin chào <t t-out=\"object.partner_id.name or 'customer'\">Brandon "
+"Freeman</t>,<br>\n"
+"    Tôi rất vui mừng được thông báo với bạn rằng chúng tôi đã hoàn thành dự "
+"án \"<strong t-out=\"object.name or ''\">Cải tiến</strong>\" thành công .\n"
 "    <t t-if=\"user.signature\">\n"
 "        <br>\n"
 "        <t t-out=\"user.signature or ''\">--<br>Mitchell Admin</t>\n"
 "    </t>\n"
 "</div>\n"
-"<br><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; color: #454748;\" groups=\"project.group_project_stages\">Bạn nhận được email này vì dự án của bạn đã được chuyển sang giai đoạn <b t-out=\"object.stage_id.name or ''\">Hoàn tất</b></span>\n"
+"<br><span style=\"margin: 0px 0px 0px 0px; font-size: 12px; opacity: 0.5; "
+"color: #454748;\" groups=\"project.group_project_stages\">Bạn nhận được "
+"email này vì dự án của bạn đã được chuyển sang giai đoạn <b t-"
+"out=\"object.stage_id.name or ''\">Hoàn tất</b></span>\n"
 "            "
 
 #. module: project
 #: model:mail.template,body_html:project.mail_template_data_project_task
 msgid ""
 "<div>\n"
-"    Dear <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</t>,<br>\n"
+"    Dear <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</"
+"t>,<br>\n"
 "    Thank you for your enquiry.<br>\n"
 "    If you have any questions, please let us know.\n"
 "    <br><br>\n"
@@ -405,7 +483,8 @@ msgid ""
 "        "
 msgstr ""
 "<div>\n"
-"    Xin chào <t t-out=\"object.partner_id.name or 'customer'\">Brandon Freeman</t>,<br>\n"
+"    Xin chào <t t-out=\"object.partner_id.name or 'customer'\">Brandon "
+"Freeman</t>,<br>\n"
 "    Cảm ơn câu hỏi của bạn!<br>\n"
 "    Nếu bạn có bất kì thắc mắc nào thêm, vui lòng liên hệ với chúng tôi.\n"
 "    <br><br>\n"
@@ -420,13 +499,21 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_form2
 msgid ""
-"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Satisfied\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Okay\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Dissatisfied\"/>"
+"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" "
+"invisible=\"rating_avg &lt; 3.66\" title=\"Satisfied\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-"
+"warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" "
+"title=\"Okay\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-frown-o "
+"text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Dissatisfied\"/>"
 msgstr ""
-"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg < 3.66\" title=\"Hài lòng\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg < 2.33 or rating_avg >= 3.66\" title=\"Bình thường\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg >= 2.33\" title=\"Không hài lòng\"/>"
+"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" "
+"invisible=\"rating_avg < 3.66\" title=\"Hài lòng\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-"
+"warning\" invisible=\"rating_avg < 2.33 or rating_avg >= 3.66\" title=\"Bình "
+"thường\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-frown-o "
+"text-danger\" invisible=\"rating_avg >= 2.33\" title=\"Không hài lòng\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -488,13 +575,15 @@ msgid ""
 "<span class=\"fa fa-envelope-o me-2\" aria-label=\"Domain Alias\" "
 "title=\"Domain Alias\"/>"
 msgstr ""
-"<span class=\"fa fa-envelope-o me-2\" aria-label=\"Bí danh miền\" title=\"Bí"
-" danh miền\"/>"
+"<span class=\"fa fa-envelope-o me-2\" aria-label=\"Bí danh miền\" title=\"Bí "
+"danh miền\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_kanban
-msgid "<span class=\"fa fa-user me-2\" aria-label=\"Partner\" title=\"Partner\"/>"
-msgstr "<span class=\"fa fa-user me-2\" aria-label=\"Đối tác\" title=\"Đối tác\"/>"
+msgid ""
+"<span class=\"fa fa-user me-2\" aria-label=\"Partner\" title=\"Partner\"/>"
+msgstr ""
+"<span class=\"fa fa-user me-2\" aria-label=\"Đối tác\" title=\"Đối tác\"/>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_milestone_view_form
@@ -540,22 +629,36 @@ msgstr "<span class=\"o_stat_text\">Nhiệm vụ chính</span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
-msgid "<span class=\"text-muted o_row ps-1 pb-3\">Send a rating request:</span>"
-msgstr "<span class=\"text-muted o_row ps-1 pb-3\">Gửi yêu cầu đánh giá:</span>"
+msgid ""
+"<span class=\"text-muted o_row ps-1 pb-3\">Send a rating request:</span>"
+msgstr ""
+"<span class=\"text-muted o_row ps-1 pb-3\">Gửi yêu cầu đánh giá:</span>"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
 msgid ""
 "<span colspan=\"2\" class=\"text-muted o_row ps-1\">\n"
-"                                                    <i class=\"fa fa-lightbulb-o pe-2\"/>\n"
-"                                                    <span invisible=\"rating_status == 'periodic'\">A rating request will be sent as soon as the task reaches a stage on which a Rating Email Template is defined.</span>\n"
-"                                                    <span invisible=\"rating_status == 'stage'\">Rating requests will be sent as long as the task remains in a stage on which a Rating Email Template is defined.</span>\n"
+"                                                    <i class=\"fa fa-"
+"lightbulb-o pe-2\"/>\n"
+"                                                    <span "
+"invisible=\"rating_status == 'periodic'\">A rating request will be sent as "
+"soon as the task reaches a stage on which a Rating Email Template is defined."
+"</span>\n"
+"                                                    <span "
+"invisible=\"rating_status == 'stage'\">Rating requests will be sent as long "
+"as the task remains in a stage on which a Rating Email Template is defined.</"
+"span>\n"
 "                                                </span>"
 msgstr ""
 "<span colspan=\"2\" class=\"text-muted o_row ps-1\">\n"
-"                                                    <i class=\"fa fa-lightbulb-o pe-2\"/>\n"
-"                                                    <span invisible=\"rating_status == 'periodic'\">Yêu cầu đánh giá sẽ được gửi ngay khi nhiệm vụ đạt đến giai đoạn mà Mẫu email đánh giá được chỉ định.</span>\n"
-"                                                    <span invisible=\"rating_status == 'stage'\">Yêu cầu đánh giá sẽ được gửi nếu nhiệm vụ vẫn ở giai đoạn mà Mẫu email đánh giá được chỉ định.</span>\n"
+"                                                    <i class=\"fa fa-"
+"lightbulb-o pe-2\"/>\n"
+"                                                    <span "
+"invisible=\"rating_status == 'periodic'\">Yêu cầu đánh giá sẽ được gửi ngay "
+"khi nhiệm vụ đạt đến giai đoạn mà Mẫu email đánh giá được chỉ định.</span>\n"
+"                                                    <span "
+"invisible=\"rating_status == 'stage'\">Yêu cầu đánh giá sẽ được gửi nếu "
+"nhiệm vụ vẫn ở giai đoạn mà Mẫu email đánh giá được chỉ định.</span>\n"
 "                                                </span>"
 
 #. module: project
@@ -604,8 +707,8 @@ msgid ""
 "A Python dictionary that will be evaluated to provide default values when "
 "creating new records for this alias."
 msgstr ""
-"Một từ điển Python sẽ được đánh giá để cung cấp giá trị mặc định khi tạo bản"
-" ghi mới cho bí danh này. "
+"Một từ điển Python sẽ được đánh giá để cung cấp giá trị mặc định khi tạo bản "
+"ghi mới cho bí danh này. "
 
 #. module: project
 #: model:ir.model.constraint,message:project.constraint_project_collaborator_unique_collaborator
@@ -621,8 +724,8 @@ msgstr ""
 #: code:addons/project/models/project_task_type.py:0
 #, python-format
 msgid ""
-"A personal stage cannot be linked to a project because it is only visible to"
-" its corresponding user."
+"A personal stage cannot be linked to a project because it is only visible to "
+"its corresponding user."
 msgstr ""
 "Không thể liên kết một giai đoạn cá nhân với một dự án vì nó chỉ hiển thị "
 "với người dùng tương ứng."
@@ -747,7 +850,6 @@ msgstr "Thêm ghi chú"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/js/tours/project.js:0
 #: code:addons/project/static/src/js/tours/project.js:0
 #, python-format
 msgid ""
@@ -886,26 +988,41 @@ msgstr "Kế hoạch phân tích"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__analytic_account_id
 msgid ""
-"Analytic account to which this project, its tasks and its timesheets are linked. \n"
-"Track the costs and revenues of your project by setting this analytic account on your related documents (e.g. sales orders, invoices, purchase orders, vendor bills, expenses etc.).\n"
-"This analytic account can be changed on each task individually if necessary.\n"
+"Analytic account to which this project, its tasks and its timesheets are "
+"linked. \n"
+"Track the costs and revenues of your project by setting this analytic "
+"account on your related documents (e.g. sales orders, invoices, purchase "
+"orders, vendor bills, expenses etc.).\n"
+"This analytic account can be changed on each task individually if "
+"necessary.\n"
 "An analytic account is required in order to use timesheets."
 msgstr ""
-"Tài khoản phân tích liên kết với dự án này cùng với các nhiệm vụ và bảng chấm công của dự án.\n"
-"Theo dõi chi phí và doanh thu của dự án bằng cách cài đặt tài khoản phân tích này trên các chứng từ liên quan của bạn (ví dụ: đơn bán hàng, hóa đơn, đơn mua hàng, hóa đơn mua hàng, chi phí,...).\n"
-"Tài khoản phân tích này có thể được thay đổi trên từng nhiệm vụ riêng lẻ nếu cần thiết.\n"
+"Tài khoản phân tích liên kết với dự án này cùng với các nhiệm vụ và bảng "
+"chấm công của dự án.\n"
+"Theo dõi chi phí và doanh thu của dự án bằng cách cài đặt tài khoản phân "
+"tích này trên các chứng từ liên quan của bạn (ví dụ: đơn bán hàng, hóa đơn, "
+"đơn mua hàng, hóa đơn mua hàng, chi phí,...).\n"
+"Tài khoản phân tích này có thể được thay đổi trên từng nhiệm vụ riêng lẻ nếu "
+"cần thiết.\n"
 "Cần có tài khoản phân tích để sử dụng bảng chấm công."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task__analytic_account_id
 msgid ""
 "Analytic account to which this task and its timesheets are linked.\n"
-"Track the costs and revenues of your task by setting its analytic account on your related documents (e.g. sales orders, invoices, purchase orders, vendor bills, expenses etc.).\n"
-"By default, the analytic account of the project is set. However, it can be changed on each task individually if necessary."
+"Track the costs and revenues of your task by setting its analytic account on "
+"your related documents (e.g. sales orders, invoices, purchase orders, vendor "
+"bills, expenses etc.).\n"
+"By default, the analytic account of the project is set. However, it can be "
+"changed on each task individually if necessary."
 msgstr ""
-"Tài khoản phân tích liên kết với nhiệm vụ này và bảng chấm công của nhiệm vụ.\n"
-"Theo dõi chi phí và doanh thu của dự án bằng cách cài đặt tài khoản phân tích này trên các chứng từ liên quan của bạn (ví dụ: đơn bán hàng, hóa đơn, đơn mua hàng, hóa đơn mua hàng, chi phí,...).\n"
-"Theo mặc định, tài khoản phân tích của dự án đã được thiết lập. Tuy nhiên, nó có thể được thay đổi trên từng nhiệm vụ riêng lẻ nếu cần thiết."
+"Tài khoản phân tích liên kết với nhiệm vụ này và bảng chấm công của nhiệm "
+"vụ.\n"
+"Theo dõi chi phí và doanh thu của dự án bằng cách cài đặt tài khoản phân "
+"tích này trên các chứng từ liên quan của bạn (ví dụ: đơn bán hàng, hóa đơn, "
+"đơn mua hàng, hóa đơn mua hàng, chi phí,...).\n"
+"Theo mặc định, tài khoản phân tích của dự án đã được thiết lập. Tuy nhiên, "
+"nó có thể được thay đổi trên từng nhiệm vụ riêng lẻ nếu cần thiết."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -1093,13 +1210,19 @@ msgstr "Trạng thái kanban tự động"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task_type__auto_validation_state
 msgid ""
-"Automatically modify the state when the customer replies to the feedback for this stage.\n"
-" * Good feedback from the customer will update the state to 'Approved' (green bullet).\n"
-" * Neutral or bad feedback will set the kanban state to 'Changes Requested' (orange bullet).\n"
+"Automatically modify the state when the customer replies to the feedback for "
+"this stage.\n"
+" * Good feedback from the customer will update the state to 'Approved' "
+"(green bullet).\n"
+" * Neutral or bad feedback will set the kanban state to 'Changes Requested' "
+"(orange bullet).\n"
 msgstr ""
-"Tự động điều chỉnh trạng thái khi khách hàng trả lời phản hồi cho giai đoạn này.\n"
-"* Phản hồi tốt từ khách hàng sẽ cập nhật trạng thái thành 'Đã phê duyệt' (dấu đầu dòng màu xanh lá cây).\n"
-"* Phản hồi trung lập hoặc không tốt sẽ chuyển trạng thái kanban thành 'Đã yêu cầu thay đổi' (dấu đầu dòng màu cam).\n"
+"Tự động điều chỉnh trạng thái khi khách hàng trả lời phản hồi cho giai đoạn "
+"này.\n"
+"* Phản hồi tốt từ khách hàng sẽ cập nhật trạng thái thành 'Đã phê duyệt' "
+"(dấu đầu dòng màu xanh lá cây).\n"
+"* Phản hồi trung lập hoặc không tốt sẽ chuyển trạng thái kanban thành 'Đã "
+"yêu cầu thay đổi' (dấu đầu dòng màu cam).\n"
 
 #. module: project
 #. odoo-javascript
@@ -1143,7 +1266,6 @@ msgstr "Đánh giá trung bình: Hài lòng"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Backlog"
@@ -1247,11 +1369,10 @@ msgstr "Đã yêu cầu thay đổi"
 #, python-format
 msgid ""
 "Choose a <b>name</b> for your project. <i>It can be anything you want: the "
-"name of a customer, of a product, of a team, of a construction site, "
-"etc.</i>"
+"name of a customer, of a product, of a team, of a construction site, etc.</i>"
 msgstr ""
-"Chọn một <b>tên</b> cho dự án. <i>Có thể là bất kỳ tên nào bạn muốn: tên của"
-" khách hàng, sản phẩm, một bộ phận, hay tên một công trường,...</i>"
+"Chọn một <b>tên</b> cho dự án. <i>Có thể là bất kỳ tên nào bạn muốn: tên của "
+"khách hàng, sản phẩm, một bộ phận, hay tên một công trường,...</i>"
 
 #. module: project
 #. odoo-javascript
@@ -1260,8 +1381,8 @@ msgstr ""
 msgid ""
 "Choose a task <b>name</b> <i>(e.g. Website Design, Purchase Goods...)</i>"
 msgstr ""
-"Chọn cho nhiệm vụ một cái <b>tên</b> <i>(ví dụ. Thiết kế Website, Mua hàng "
-"...)</i>"
+"Chọn cho nhiệm vụ một cái <b>tên</b> <i>(ví dụ. Thiết kế Website, Mua "
+"hàng ...)</i>"
 
 #. module: project
 #. odoo-javascript
@@ -1301,8 +1422,8 @@ msgstr "Nhiệm vụ đã đóng"
 #: model_terms:ir.actions.act_window,help:project.project_collaborator_action
 msgid ""
 "Collaborate efficiently with key stakeholders by sharing with them the "
-"Kanban view of your tasks. Collaborators will be able to edit parts of tasks"
-" and send messages."
+"Kanban view of your tasks. Collaborators will be able to edit parts of tasks "
+"and send messages."
 msgstr ""
 "Cộng tác hiệu quả với các bên liên quan chính bằng cách chia sẻ với họ chế "
 "độ xem kanban nhiệm vụ của bạn. Cộng tác viên sẽ có thể chỉnh sửa các phần "
@@ -1327,13 +1448,22 @@ msgstr "Cộng tác viên dự án đã chia sẻ"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__rating_status
 msgid ""
-"Collect feedback from your customers by sending them a rating request when a task enters a certain stage. To do so, define a rating email template on the corresponding stages.\n"
-"Rating when changing stage: an email will be automatically sent when the task reaches the stage on which the rating email template is set.\n"
-"Periodic rating: an email will be automatically sent at regular intervals as long as the task remains in the stage in which the rating email template is set."
+"Collect feedback from your customers by sending them a rating request when a "
+"task enters a certain stage. To do so, define a rating email template on the "
+"corresponding stages.\n"
+"Rating when changing stage: an email will be automatically sent when the "
+"task reaches the stage on which the rating email template is set.\n"
+"Periodic rating: an email will be automatically sent at regular intervals as "
+"long as the task remains in the stage in which the rating email template is "
+"set."
 msgstr ""
-"Thu thập phản hồi từ khách hàng của bạn bằng cách gửi cho họ yêu cầu đánh giá khi nhiệm vụ bước vào một giai đoạn nhất định. Để làm như vậy, hãy chỉ định mẫu email xếp hạng ở các giai đoạn tương ứng.\n"
-"Đánh giá khi thay đổi giai đoạn: một email sẽ được gửi tự động khi nhiệm vụ đạt đến giai đoạn mà mẫu email xếp hạng được thiết lập.\n"
-"Đánh giá định kỳ: một email sẽ được gửi tự động đều đặn nếu nhiệm vụ vẫn ở giai đoạn mà mẫu email xếp hạng được thiết lập."
+"Thu thập phản hồi từ khách hàng của bạn bằng cách gửi cho họ yêu cầu đánh "
+"giá khi nhiệm vụ bước vào một giai đoạn nhất định. Để làm như vậy, hãy chỉ "
+"định mẫu email xếp hạng ở các giai đoạn tương ứng.\n"
+"Đánh giá khi thay đổi giai đoạn: một email sẽ được gửi tự động khi nhiệm vụ "
+"đạt đến giai đoạn mà mẫu email xếp hạng được thiết lập.\n"
+"Đánh giá định kỳ: một email sẽ được gửi tự động đều đặn nếu nhiệm vụ vẫn ở "
+"giai đoạn mà mẫu email xếp hạng được thiết lập."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_tags__color
@@ -1352,10 +1482,12 @@ msgstr "Mã màu"
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid ""
-"Communicate with customers on the task using the email gateway. Attach logo designs to the task, so that information flows from\n"
+"Communicate with customers on the task using the email gateway. Attach logo "
+"designs to the task, so that information flows from\n"
 "      designers to the workers who print the t-shirt."
 msgstr ""
-"Trao đổi với khách hàng về nhiệm vụ thông qua cổng email. Gắn các thiết kế logo vào nhiệm vụ để thông tin được truyền từ\n"
+"Trao đổi với khách hàng về nhiệm vụ thông qua cổng email. Gắn các thiết kế "
+"logo vào nhiệm vụ để thông tin được truyền từ\n"
 "      nhà thiết kế đến công nhân in áo phông."
 
 #. module: project
@@ -1410,8 +1542,7 @@ msgstr "Xác nhận"
 #: code:addons/project/static/src/js/tours/project.js:0
 #, python-format
 msgid "Congratulations, you are now a master of project management."
-msgstr ""
-"Xin chúc mừng! Giờ đây bạn đã trở thành một bậc thầy về quản lý dự án."
+msgstr "Xin chúc mừng! Giờ đây bạn đã trở thành một bậc thầy về quản lý dự án."
 
 #. module: project
 #. odoo-javascript
@@ -1465,8 +1596,7 @@ msgstr "Ảnh bìa"
 msgid ""
 "Create <b>activities</b> to set yourself to-dos or to schedule meetings."
 msgstr ""
-"Tạo <b>hoạt động</b> để tạo việc cần làm cho mình hoặc lên lịch các cuộc "
-"họp."
+"Tạo <b>hoạt động</b> để tạo việc cần làm cho mình hoặc lên lịch các cuộc họp."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_report_project_task_user__create_date
@@ -1500,11 +1630,11 @@ msgstr ""
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.open_view_project_all
 msgid ""
-"Create projects to organize your tasks. Define a different workflow for each"
-" project."
+"Create projects to organize your tasks. Define a different workflow for each "
+"project."
 msgstr ""
-"Tạo dự án để tổ chức nhiệm vụ của bạn. Xác định quy trình làm việc khác nhau"
-" cho từng dự án."
+"Tạo dự án để tổ chức nhiệm vụ của bạn. Xác định quy trình làm việc khác nhau "
+"cho từng dự án."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.edit_project
@@ -1655,10 +1785,12 @@ msgstr "Trạng thái xếp hạng của khách hàng"
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid ""
-"Customers propose feedbacks by email; Odoo creates tasks automatically, and you can\n"
+"Customers propose feedbacks by email; Odoo creates tasks automatically, and "
+"you can\n"
 "      communicate on the task directly."
 msgstr ""
-"Khách hàng đề xuất phản hồi qua email; Odoo tự động tạo các nhiệm vụ và bạn có thể \n"
+"Khách hàng đề xuất phản hồi qua email; Odoo tự động tạo các nhiệm vụ và bạn "
+"có thể \n"
 "            trao đổi trực tiếp trên nhiệm vụ đó."
 
 #. module: project
@@ -1699,10 +1831,14 @@ msgstr "Ngày và giai đoạn"
 #: model:ir.model.fields,help:project.field_project_task__date_last_stage_update
 msgid ""
 "Date on which the state of your task has last been modified.\n"
-"Based on this information you can identify tasks that are stalling and get statistics on the time it usually takes to move tasks from one stage/state to another."
+"Based on this information you can identify tasks that are stalling and get "
+"statistics on the time it usually takes to move tasks from one stage/state "
+"to another."
 msgstr ""
 "Ngày mà trạng thái nhiệm vụ của bạn được điều chỉnh lần cuối.\n"
-"Dựa trên thông tin này, bạn có thể xác định các nhiệm vụ đang bị đình trệ và nhận số liệu thống kê về thời gian thông thường cần để chuyển nhiệm vụ từ giai đoạn/trạng thái này sang giai đoạn/trạng thái khác."
+"Dựa trên thông tin này, bạn có thể xác định các nhiệm vụ đang bị đình trệ và "
+"nhận số liệu thống kê về thời gian thông thường cần để chuyển nhiệm vụ từ "
+"giai đoạn/trạng thái này sang giai đoạn/trạng thái khác."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__date
@@ -1719,9 +1855,9 @@ msgid ""
 "Date on which this task was last assigned (or unassigned). Based on this, "
 "you can get statistics on the time it usually takes to assign tasks."
 msgstr ""
-"Ngày mà nhiệm vụ này được phân công lần cuối (hoặc chưa được phân công). Dựa"
-" trên thông tin này, bạn có thể nhận được số liệu thống kê về thời gian "
-"thông thường cần để phân công nhiệm vụ."
+"Ngày mà nhiệm vụ này được phân công lần cuối (hoặc chưa được phân công). Dựa "
+"trên thông tin này, bạn có thể nhận được số liệu thống kê về thời gian thông "
+"thường cần để phân công nhiệm vụ."
 
 #. module: project
 #: model:ir.model.fields.selection,name:project.selection__project_task__repeat_unit__day
@@ -1761,13 +1897,16 @@ msgstr "Giá trị Mặc định"
 #: model_terms:ir.actions.act_window,help:project.open_task_type_form_domain
 msgid ""
 "Define the steps that will be used in the project from the\n"
-"                creation of the task, up to the closing of the task or issue.\n"
+"                creation of the task, up to the closing of the task or "
+"issue.\n"
 "                You will use these stages in order to track the progress in\n"
 "                solving a task or an issue."
 msgstr ""
 "Định nghĩa các bước mà sẽ được sử dụng ở dự án từ lúc khởi tạo nhiệm vụ\n"
-"                đến lúc đóng nhiệm vụ hoặc phát sinh. Bạn sẽ sử dụng các giai\n"
-"                đoạn này để theo dõi tiến triển trong việc thực hiện nhiệm vụ\n"
+"                đến lúc đóng nhiệm vụ hoặc phát sinh. Bạn sẽ sử dụng các "
+"giai\n"
+"                đoạn này để theo dõi tiến triển trong việc thực hiện nhiệm "
+"vụ\n"
 "                hoặc giải quyết các phát sinh."
 
 #. module: project
@@ -1847,7 +1986,6 @@ msgstr ""
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Delivered"
 msgstr "Đã giao"
@@ -1881,8 +2019,6 @@ msgstr "Mô tả để cung cấp thêm thông tin và bối cảnh về dự á
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Design"
@@ -1978,10 +2114,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/project/models/project_task.py:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: model:ir.model.fields.selection,name:project.selection__project_project__last_update_status__done
 #: model:ir.model.fields.selection,name:project.selection__project_task__state__1_done
 #: model:ir.model.fields.selection,name:project.selection__project_task_burndown_chart_report__state__1_done
@@ -2021,7 +2153,6 @@ msgstr "Chỉnh sửa"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Editing"
@@ -2107,7 +2238,6 @@ msgstr ""
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/components/project_right_side_panel/components/project_profitability.xml:0
-#: code:addons/project/static/src/components/project_right_side_panel/components/project_profitability.xml:0
 #, python-format
 msgid "Expected"
 msgstr "Dự kiến"
@@ -2172,8 +2302,8 @@ msgid ""
 "Follow this project to automatically track the events associated to tasks "
 "and issues of this project."
 msgstr ""
-"Theo dõi dự án này để tự động theo dõi các sự kiện liên quan đến nhiệm vụ và"
-" các vấn đề phát sinh của dự án."
+"Theo dõi dự án này để tự động theo dõi các sự kiện liên quan đến nhiệm vụ và "
+"các vấn đề phát sinh của dự án."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_search_form_base
@@ -2228,8 +2358,8 @@ msgstr "Hoạt động trong tương lai"
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_update_all_action
 msgid ""
-"Get a snapshot of the status of your project and share its progress with key"
-" stakeholders."
+"Get a snapshot of the status of your project and share its progress with key "
+"stakeholders."
 msgstr ""
 "Chụp ảnh trạng thái của dự án và chia sẻ tiến độ với các bên liên quan chủ "
 "chốt."
@@ -2250,8 +2380,8 @@ msgstr "Grant Portal Access"
 #: code:addons/project/models/project_project.py:0
 #, python-format
 msgid ""
-"Grant employees access to your project or tasks by adding them as followers."
-" Employees automatically get access to the tasks they are assigned to."
+"Grant employees access to your project or tasks by adding them as followers. "
+"Employees automatically get access to the tasks they are assigned to."
 msgstr ""
 "Cấp cho nhân viên quyền truy cập vào dự án hoặc nhiệm vụ của bạn bằng cách "
 "thêm họ làm người theo dõi. Nhân viên tự động có quyền truy cập vào các "
@@ -2263,11 +2393,10 @@ msgstr ""
 #, python-format
 msgid ""
 "Grant portal users access to your project or tasks by adding them as "
-"followers. Customers automatically get access to their tasks in their "
-"portal."
+"followers. Customers automatically get access to their tasks in their portal."
 msgstr ""
-"Cấp cho người dùng cổng thông tin quyền truy cập vào dự án hoặc nhiệm vụ của"
-" bạn bằng cách thêm họ làm người theo dõi. Khách hàng tự động có quyền truy "
+"Cấp cho người dùng cổng thông tin quyền truy cập vào dự án hoặc nhiệm vụ của "
+"bạn bằng cách thêm họ làm người theo dõi. Khách hàng tự động có quyền truy "
 "cập vào nhiệm vụ của họ trên cổng thông tin."
 
 #. module: project
@@ -2283,8 +2412,8 @@ msgstr "Nhóm theo"
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid ""
-"Handle your idea gathering within Tasks of your new Project and discuss them"
-" in the chatter of the tasks."
+"Handle your idea gathering within Tasks of your new Project and discuss them "
+"in the chatter of the tasks."
 msgstr ""
 "Xử lý việc thu thập ý tưởng trong Nhiệm vụ của Dự án mới và thảo luận về "
 "chúng trong hộp thoại trò chuyện của nhiệm vụ."
@@ -2362,8 +2491,8 @@ msgstr "ID"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_parent_thread_id
 msgid ""
-"ID of the parent record holding the alias (example: project holding the task"
-" creation alias)"
+"ID of the parent record holding the alias (example: project holding the task "
+"creation alias)"
 msgstr ""
 "ID của bản ghi chính chứa bí danh (ví dụ: dự án chứa bí danh tạo nhiệm vụ)"
 
@@ -2383,7 +2512,6 @@ msgstr "Biểu tượng cho thấy một hoạt động ngoại lệ."
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Ideas"
@@ -2421,19 +2549,25 @@ msgstr ""
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task_type__rating_template_id
 msgid ""
-"If set, a rating request will automatically be sent by email to the customer when the task reaches this stage. \n"
-"Alternatively, it will be sent at a regular interval as long as the task remains in this stage, depending on the configuration of your project. \n"
-"To use this feature make sure that the 'Customer Ratings' option is enabled on your project."
+"If set, a rating request will automatically be sent by email to the customer "
+"when the task reaches this stage. \n"
+"Alternatively, it will be sent at a regular interval as long as the task "
+"remains in this stage, depending on the configuration of your project. \n"
+"To use this feature make sure that the 'Customer Ratings' option is enabled "
+"on your project."
 msgstr ""
-"Nếu thiết lập, yêu cầu đánh giá sẽ tự động được gửi qua email cho khách hàng khi nhiệm vụ đạt đến giai đoạn này.\n"
-"Ngoài ra, yêu cầu đánh giá sẽ được gửi định kỳ nếu nhiệm vụ vẫn ở giai đoạn này, tùy vào cấu hình dự án của bạn.\n"
-"Để sử dụng tính năng này, hãy đảm bảo rằng tùy chọn 'Đánh giá của khách hàng' được bật trên dự án của bạn."
+"Nếu thiết lập, yêu cầu đánh giá sẽ tự động được gửi qua email cho khách hàng "
+"khi nhiệm vụ đạt đến giai đoạn này.\n"
+"Ngoài ra, yêu cầu đánh giá sẽ được gửi định kỳ nếu nhiệm vụ vẫn ở giai đoạn "
+"này, tùy vào cấu hình dự án của bạn.\n"
+"Để sử dụng tính năng này, hãy đảm bảo rằng tùy chọn 'Đánh giá của khách "
+"hàng' được bật trên dự án của bạn."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project_stage__mail_template_id
 msgid ""
-"If set, an email will be automatically sent to the customer when the project"
-" reaches this stage."
+"If set, an email will be automatically sent to the customer when the project "
+"reaches this stage."
 msgstr ""
 "Nếu thiết lập, một email sẽ tự động được gửi đến khách hàng khi dự án đạt "
 "đến giai đoạn này."
@@ -2444,8 +2578,8 @@ msgid ""
 "If set, an email will be automatically sent to the customer when the task "
 "reaches this stage."
 msgstr ""
-"Nếu thiết lập, một email sẽ tự động được gửi đến khách hàng khi nhiệm vụ đạt"
-" đến giai đoạn này."
+"Nếu thiết lập, một email sẽ tự động được gửi đến khách hàng khi nhiệm vụ đạt "
+"đến giai đoạn này."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_bounced_content
@@ -2468,7 +2602,6 @@ msgstr ""
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/components/project_task_state_selection/project_task_state_selection.xml:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: model:ir.model.fields.selection,name:project.selection__project_task__state__01_in_progress
 #: model:ir.model.fields.selection,name:project.selection__project_task_burndown_chart_report__state__01_in_progress
@@ -2515,8 +2648,8 @@ msgid ""
 "Tracker module is installed)."
 msgstr ""
 "Email nội bộ liên kết với dự án này. Các email gửi đến sẽ được tự động đồng "
-"bộ với các Nhiệm vụ (hoặc tuỳ chọn với Phát sinh nếu có cài đặt phân hệ Theo"
-" dõi Phát sinh)."
+"bộ với các Nhiệm vụ (hoặc tuỳ chọn với Phát sinh nếu có cài đặt phân hệ Theo "
+"dõi Phát sinh)."
 
 #. module: project
 #. odoo-javascript
@@ -2615,19 +2748,23 @@ msgstr "JSON ánh xạ id từ trường many2one tới số giây đã sử d�
 #: model_terms:ir.actions.act_window,help:project.project_task_action_sub_task
 msgid ""
 "Keep track of the progress of your tasks from creation to completion.<br>\n"
-"                    Collaborate efficiently by chatting in real-time or via email."
+"                    Collaborate efficiently by chatting in real-time or via "
+"email."
 msgstr ""
 "Theo dõi tiến độ nhiệm vụ của bạn từ khi tạo đến khi hoàn thành.<br>\n"
-"                    Cộng tác hiệu quả bằng cách trò chuyện trong thời gian thực hoặc qua email."
+"                    Cộng tác hiệu quả bằng cách trò chuyện trong thời gian "
+"thực hoặc qua email."
 
 #. module: project
 #: model_terms:ir.actions.act_window,help:project.project_sharing_project_task_action
 msgid ""
 "Keep track of the progress of your tasks from creation to completion.<br>\n"
-"                Collaborate efficiently by chatting in real-time or via email."
+"                Collaborate efficiently by chatting in real-time or via "
+"email."
 msgstr ""
 "Theo dõi tiến độ nhiệm vụ của bạn từ khi tạo đến khi hoàn thành.<br>\n"
-"                    Cộng tác hiệu quả bằng cách trò chuyện trong thời gian thực hoặc qua email."
+"                    Cộng tác hiệu quả bằng cách trò chuyện trong thời gian "
+"thực hoặc qua email."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_digest_digest__kpi_project_task_opened_value
@@ -2733,7 +2870,6 @@ msgstr "Để lại một bình luận"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/js/tours/project.js:0
-#: code:addons/project/static/src/js/tours/project.js:0
 #, python-format
 msgid "Let's create your first <b>project</b>."
 msgstr "Hãy tạo <b>dự án</b> đầu tiên của bạn."
@@ -2767,8 +2903,8 @@ msgid ""
 "Let's go back to the <b>kanban view</b> to have an overview of your next "
 "tasks."
 msgstr ""
-"Hãy quay lại <b>dạng xem kanban</b> để có cái nhìn tổng quan về các nhiệm vụ"
-" tiếp theo."
+"Hãy quay lại <b>dạng xem kanban</b> để có cái nhìn tổng quan về các nhiệm vụ "
+"tiếp theo."
 
 #. module: project
 #. odoo-javascript
@@ -2830,7 +2966,8 @@ msgstr "Tệp đính kèm chính"
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid ""
-"Manage the lifecycle of your project using the kanban view. Add newly acquired projects,\n"
+"Manage the lifecycle of your project using the kanban view. Add newly "
+"acquired projects,\n"
 "      assign them and use the"
 msgstr ""
 "Quản lý vòng đời dự án của bạn bằng chế độ xem Kanban. Thêm các dự án mới,\n"
@@ -2838,7 +2975,6 @@ msgstr ""
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Manufacturing"
@@ -2871,8 +3007,8 @@ msgid ""
 "Measure your customer satisfaction by sending rating requests when your "
 "tasks reach a certain stage."
 msgstr ""
-"Đo lường sự hài lòng của khách hàng bằng cách gửi yêu cầu đánh giá khi nhiệm"
-" vụ đạt đến một giai đoạn nhất định."
+"Đo lường sự hài lòng của khách hàng bằng cách gửi yêu cầu đánh giá khi nhiệm "
+"vụ đạt đến một giai đoạn nhất định."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__favorite_user_ids
@@ -2908,7 +3044,6 @@ msgstr "Tin nhắn"
 #. module: project
 #. odoo-javascript
 #. odoo-python
-#: code:addons/project/controllers/portal.py:0
 #: code:addons/project/controllers/portal.py:0
 #: code:addons/project/static/src/components/project_right_side_panel/components/project_milestone.js:0
 #: model:ir.model.fields,field_description:project.field_project_project__milestone_ids
@@ -3038,7 +3173,6 @@ msgstr "Mặt không biểu cảm"
 #. odoo-python
 #: code:addons/project/models/project_project.py:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: model:project.task.type,name:project.project_stage_0
 #, python-format
 msgid "New"
@@ -3058,7 +3192,6 @@ msgstr "Mốc mới"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "New Orders"
@@ -3095,14 +3228,12 @@ msgstr "Nhiệm vụ mới"
 #. module: project
 #. odoo-python
 #: code:addons/project/controllers/portal.py:0
-#: code:addons/project/controllers/portal.py:0
 #, python-format
 msgid "Newest"
 msgstr "Mới nhất"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/project_sharing/components/chatter/chatter_pager.xml:0
 #: code:addons/project/static/src/project_sharing/components/chatter/chatter_pager.xml:0
 #, python-format
 msgid "Next"
@@ -3383,10 +3514,13 @@ msgstr "Sắp xếp mức độ ưu tiên giữa các đơn hàng bằng cách s
 #: model_terms:ir.actions.act_window,help:project.action_view_my_task
 msgid ""
 "Organize your tasks by dispatching them across the pipeline.<br>\n"
-"                    Collaborate efficiently by chatting in real-time or via email."
+"                    Collaborate efficiently by chatting in real-time or via "
+"email."
 msgstr ""
-"Sắp xếp các nhiệm vụ của bạn bằng cách điều chuyển chúng trong quy trình làm việc.<br>\n"
-"                    Cộng tác hiệu quả bằng cách trò chuyện trong thời gian thực hoặc qua email."
+"Sắp xếp các nhiệm vụ của bạn bằng cách điều chuyển chúng trong quy trình làm "
+"việc.<br>\n"
+"                    Cộng tác hiệu quả bằng cách trò chuyện trong thời gian "
+"thực hoặc qua email."
 
 #. module: project
 #. odoo-python
@@ -3429,8 +3563,8 @@ msgstr "Nhiệm vụ chính"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_parent_model_id
 msgid ""
-"Parent model holding the alias. The model holding the alias reference is not"
-" necessarily the model given by alias_model_id (example: project "
+"Parent model holding the alias. The model holding the alias reference is not "
+"necessarily the model given by alias_model_id (example: project "
 "(parent_model) and task (model))"
 msgstr ""
 "Mô hình chính chứa bí danh này. Mô hình chứa tham chiếu bí danh không nhất "
@@ -3441,11 +3575,9 @@ msgstr ""
 #. odoo-python
 #: code:addons/project/models/res_partner.py:0
 #, python-format
-msgid ""
-"Partner company cannot be different from its assigned projects' company"
+msgid "Partner company cannot be different from its assigned projects' company"
 msgstr ""
-"Công ty của đối tác không được khác công ty của dự án mà đối tác đó được "
-"giao"
+"Công ty của đối tác không được khác công ty của dự án mà đối tác đó được giao"
 
 #. module: project
 #. odoo-python
@@ -3470,33 +3602,62 @@ msgstr ""
 msgid ""
 "People to whom this project and its tasks will be visible.\n"
 "\n"
-"- Invited internal users: when following a project, internal users will get access to all of its tasks without distinction. Otherwise, they will only get access to the specific tasks they are following.\n"
-" A user with the project > administrator access right level can still access this project and its tasks, even if they are not explicitly part of the followers.\n"
+"- Invited internal users: when following a project, internal users will get "
+"access to all of its tasks without distinction. Otherwise, they will only "
+"get access to the specific tasks they are following.\n"
+" A user with the project > administrator access right level can still access "
+"this project and its tasks, even if they are not explicitly part of the "
+"followers.\n"
 "\n"
-"- All internal users: all internal users can access the project and all of its tasks without distinction.\n"
+"- All internal users: all internal users can access the project and all of "
+"its tasks without distinction.\n"
 "\n"
-"- Invited portal users and all internal users: all internal users can access the project and all of its tasks without distinction.\n"
-"When following a project, portal users will get access to all of its tasks without distinction. Otherwise, they will only get access to the specific tasks they are following.\n"
+"- Invited portal users and all internal users: all internal users can access "
+"the project and all of its tasks without distinction.\n"
+"When following a project, portal users will get access to all of its tasks "
+"without distinction. Otherwise, they will only get access to the specific "
+"tasks they are following.\n"
 "\n"
-"When a project is shared in read-only, the portal user is redirected to their portal. They can view the tasks, but not edit them.\n"
-"When a project is shared in edit, the portal user is redirected to the kanban and list views of the tasks. They can modify a selected number of fields on the tasks.\n"
+"When a project is shared in read-only, the portal user is redirected to "
+"their portal. They can view the tasks, but not edit them.\n"
+"When a project is shared in edit, the portal user is redirected to the "
+"kanban and list views of the tasks. They can modify a selected number of "
+"fields on the tasks.\n"
 "\n"
-"In any case, an internal user with no project access rights can still access a task, provided that they are given the corresponding URL (and that they are part of the followers if the project is private)."
+"In any case, an internal user with no project access rights can still access "
+"a task, provided that they are given the corresponding URL (and that they "
+"are part of the followers if the project is private)."
 msgstr ""
 "Những người có thể thấy được dự án này và các nhiệm vụ dự án.\n"
 "\n"
-"- Người dùng nội bộ được mời: khi theo dõi một dự án, người dùng nội bộ sẽ có quyền truy cập vào tất cả nhiệm vụ dự án mà không có sự phân biệt. Nếu không, họ sẽ chỉ có quyền truy cập vào các nhiệm vụ nhất định mà họ đang theo dõi.\n"
-"Người dùng có cấp độ quyền truy cập quản trị viên dự án vẫn có thể truy cập dự án này và các nhiệm vụ dự án, ngay cả khi rõ ràng họ không phải là một người theo dõi.\n"
+"- Người dùng nội bộ được mời: khi theo dõi một dự án, người dùng nội bộ sẽ "
+"có quyền truy cập vào tất cả nhiệm vụ dự án mà không có sự phân biệt. Nếu "
+"không, họ sẽ chỉ có quyền truy cập vào các nhiệm vụ nhất định mà họ đang "
+"theo dõi.\n"
+"Người dùng có cấp độ quyền truy cập quản trị viên dự án vẫn có thể truy cập "
+"dự án này và các nhiệm vụ dự án, ngay cả khi rõ ràng họ không phải là một "
+"người theo dõi.\n"
 "\n"
-"- Tất cả người dùng nội bộ: tất cả người dùng nội bộ đều có thể truy cập vào dự án và tất cả nhiệm vụ dự án mà không có sự phân biệt.\n"
+"- Tất cả người dùng nội bộ: tất cả người dùng nội bộ đều có thể truy cập vào "
+"dự án và tất cả nhiệm vụ dự án mà không có sự phân biệt.\n"
 "\n"
-"- Người dùng cổng thông tin được mời và tất cả người dùng nội bộ: tất cả người dùng nội bộ có thể truy cập dự án và tất cả nhiệm vụ dự án mà không có sự phân biệt.\n"
-"Khi theo dõi một dự án, người dùng cổng thông tin sẽ có quyền truy cập vào tất cả nhiệm vụ dự án mà không có sự phân biệt. Nếu không, họ sẽ chỉ có quyền truy cập vào các nhiệm vụ nhất định mà họ đang theo dõi.\n"
+"- Người dùng cổng thông tin được mời và tất cả người dùng nội bộ: tất cả "
+"người dùng nội bộ có thể truy cập dự án và tất cả nhiệm vụ dự án mà không có "
+"sự phân biệt.\n"
+"Khi theo dõi một dự án, người dùng cổng thông tin sẽ có quyền truy cập vào "
+"tất cả nhiệm vụ dự án mà không có sự phân biệt. Nếu không, họ sẽ chỉ có "
+"quyền truy cập vào các nhiệm vụ nhất định mà họ đang theo dõi.\n"
 "\n"
-"Khi một dự án được chia sẻ ở chế độ chỉ đọc, người dùng cổng thông tin sẽ được chuyển hướng đến cổng thông tin của họ. Họ có thể xem nhiệm vụ nhưng không thể chỉnh sửa chúng.\n"
-"Khi một dự án được chia sẻ trong chế độ chỉnh sửa, người dùng cổng thông tin sẽ được chuyển hướng đến chế độ xem kanban và chế độ xem danh sách của nhiệm vụ. Họ có thể sửa đổi một số trường đã chọn trong nhiệm vụ.\n"
+"Khi một dự án được chia sẻ ở chế độ chỉ đọc, người dùng cổng thông tin sẽ "
+"được chuyển hướng đến cổng thông tin của họ. Họ có thể xem nhiệm vụ nhưng "
+"không thể chỉnh sửa chúng.\n"
+"Khi một dự án được chia sẻ trong chế độ chỉnh sửa, người dùng cổng thông tin "
+"sẽ được chuyển hướng đến chế độ xem kanban và chế độ xem danh sách của nhiệm "
+"vụ. Họ có thể sửa đổi một số trường đã chọn trong nhiệm vụ.\n"
 "\n"
-"Trong mọi trường hợp, nếu người dùng nội bộ không có quyền truy cập dự án nhưng được cung cấp URL nhiệm vụ (và họ là một người theo dõi, nếu dự án ở chế độ riêng tư), thì họ vẫn có thể truy cập nhiệm vụ tương ứng."
+"Trong mọi trường hợp, nếu người dùng nội bộ không có quyền truy cập dự án "
+"nhưng được cung cấp URL nhiệm vụ (và họ là một người theo dõi, nếu dự án ở "
+"chế độ riêng tư), thì họ vẫn có thể truy cập nhiệm vụ tương ứng."
 
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__rating_percentage_satisfaction
@@ -3541,8 +3702,8 @@ msgid ""
 "Please remove existing tasks in the project linked to the accounts you want "
 "to delete."
 msgstr ""
-"Vui lòng xoá các tác vụ hiện tại trong dự án được liên kết đến các tài khoản"
-" mà bạn muốn xoá."
+"Vui lòng xoá các tác vụ hiện tại trong dự án được liên kết đến các tài khoản "
+"mà bạn muốn xoá."
 
 #. module: project
 #. odoo-javascript
@@ -3557,12 +3718,14 @@ msgid ""
 "Policy to post a message on the document using the mailgateway.\n"
 "- everyone: everyone can post\n"
 "- partners: only authenticated partners\n"
-"- followers: only followers of the related document or members of following channels\n"
+"- followers: only followers of the related document or members of following "
+"channels\n"
 msgstr ""
 "Chính sách cho phép đăng tin nhắn lên tài liệu sử dụng cổng email.\n"
 "- mọi người: mọi người có thể đăng\n"
 "- đối tác: chỉ các đối tác đã xác thực\n"
-"- người theo dõi: chỉ những người theo dõi của tài liệu liên quan hoặc thành viên của kênh đang theo dõi\n"
+"- người theo dõi: chỉ những người theo dõi của tài liệu liên quan hoặc thành "
+"viên của kênh đang theo dõi\n"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_project__access_url
@@ -3580,15 +3743,13 @@ msgstr "Tên người dùng cổng thông tin"
 #: code:addons/project/models/project_project.py:0
 #, python-format
 msgid ""
-"Portal users will be removed from the followers of the project and its "
-"tasks."
+"Portal users will be removed from the followers of the project and its tasks."
 msgstr ""
 "Người dùng cổng thông tin sẽ bị xóa khỏi danh sách người theo dõi dự án và "
 "nhiệm vụ dự án."
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/project_sharing/components/chatter/chatter_pager.xml:0
 #: code:addons/project/static/src/project_sharing/components/chatter/chatter_pager.xml:0
 #, python-format
 msgid "Previous"
@@ -3605,7 +3766,6 @@ msgstr ""
 
 #. module: project
 #. odoo-python
-#: code:addons/project/controllers/portal.py:0
 #: code:addons/project/controllers/portal.py:0
 #: model:ir.model.fields,field_description:project.field_project_task__priority
 #: model:ir.model.fields,field_description:project.field_report_project_task_user__priority
@@ -3627,7 +3787,6 @@ msgstr "Cảnh báo hiển thị quyền riêng tư"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/components/project_many2one_field/project_many2one_field.js:0
-#: code:addons/project/static/src/components/project_many2one_field/project_many2one_field.xml:0
 #: code:addons/project/static/src/components/project_many2one_field/project_many2one_field.xml:0
 #: code:addons/project/static/src/views/project_task_calendar/project_task_calendar_model.js:0
 #: code:addons/project/static/src/views/project_task_pivot/project_pivot_model.js:0
@@ -3675,7 +3834,6 @@ msgstr "Phần trăm tiến độ"
 #. module: project
 #. odoo-javascript
 #. odoo-python
-#: code:addons/project/controllers/portal.py:0
 #: code:addons/project/controllers/portal.py:0
 #: code:addons/project/static/src/views/project_rating_graph/project_rating_graph_view.js:0
 #: code:addons/project/static/src/views/project_rating_pivot/project_rating_pivot_view.js:0
@@ -3889,8 +4047,8 @@ msgstr ""
 #. module: project
 #: model:ir.model.fields,help:project.field_project_task_type__project_ids
 msgid ""
-"Projects in which this stage is present. If you follow a similar workflow in"
-" several projects, you can share this stage among them and get consolidated "
+"Projects in which this stage is present. If you follow a similar workflow in "
+"several projects, you can share this stage among them and get consolidated "
 "information this way."
 msgstr ""
 "Các dự án có giai đoạn này. Nếu bạn thực hiện cùng một quy trình làm việc "
@@ -3906,7 +4064,6 @@ msgstr "Thuộc tính"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Published"
@@ -3938,9 +4095,9 @@ msgid ""
 "identify those on hold until dependencies are resolved with the hourglass "
 "icon."
 msgstr ""
-"Nhanh chóng kiểm tra trạng thái nhiệm vụ để phê duyệt hoặc yêu cầu thay đổi,"
-" đồng thời xác định những nhiệm vụ đang chờ xử lý cho đến khi các thành phần"
-" phụ thuộc được xử lý với biểu tượng đồng hồ cát."
+"Nhanh chóng kiểm tra trạng thái nhiệm vụ để phê duyệt hoặc yêu cầu thay đổi, "
+"đồng thời xác định những nhiệm vụ đang chờ xử lý cho đến khi các thành phần "
+"phụ thuộc được xử lý với biểu tượng đồng hồ cát."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_task_view_tree_base
@@ -4123,7 +4280,6 @@ msgstr "Báo cáo"
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Research"
@@ -4349,11 +4505,10 @@ msgstr "Cài Mẫu email xếp hạng trên các giai đoạn"
 #. module: project
 #: model:mail.template,description:project.project_done_email_template
 msgid ""
-"Set on project's stages to inform customers when a project reaches that "
-"stage"
+"Set on project's stages to inform customers when a project reaches that stage"
 msgstr ""
-"Thiết lập trên giai đoạn dự án để thông báo cho khách hàng khi dự án đạt đến"
-" giai đoạn đó"
+"Thiết lập trên giai đoạn dự án để thông báo cho khách hàng khi dự án đạt đến "
+"giai đoạn đó"
 
 #. module: project
 #. odoo-javascript
@@ -4481,7 +4636,6 @@ msgstr "Sprint đang thực hiện"
 #. odoo-javascript
 #. odoo-python
 #: code:addons/project/controllers/portal.py:0
-#: code:addons/project/controllers/portal.py:0
 #: code:addons/project/static/src/views/burndown_chart/burndown_chart_search_model.js:0
 #: model:ir.model.fields,field_description:project.field_project_project__stage_id
 #: model:ir.model.fields,field_description:project.field_project_task__stage_id
@@ -4550,7 +4704,6 @@ msgstr "Trạng thái"
 
 #. module: project
 #. odoo-python
-#: code:addons/project/controllers/portal.py:0
 #: code:addons/project/controllers/portal.py:0
 #: model:ir.model.fields,field_description:project.field_project_update__status
 #: model_terms:ir.ui.view,arch_db:project.view_project
@@ -4811,8 +4964,6 @@ msgstr "Nhiệm vụ: Yêu cầu đánh giá"
 #. module: project
 #. odoo-python
 #: code:addons/project/models/project_project.py:0
-#: code:addons/project/models/project_project.py:0
-#: code:addons/project/models/project_project.py:0
 #: model:ir.actions.act_window,name:project.act_project_project_2_project_task_all
 #: model:ir.actions.act_window,name:project.action_view_task
 #: model:ir.actions.act_window,name:project.action_view_task_from_milestone
@@ -4904,8 +5055,7 @@ msgstr "Giai đoạn nhiệm vụ cá nhân của người dùng hiện tại."
 #. odoo-python
 #: code:addons/project/controllers/portal.py:0
 #, python-format
-msgid ""
-"The document does not exist or you do not have the rights to access it."
+msgid "The document does not exist or you do not have the rights to access it."
 msgstr ""
 "Tài liệu không tồn tại hoặc bạn không có quyền truy cập vào tài liệu đó."
 
@@ -4936,9 +5086,9 @@ msgstr "Khoảng cách ngày phải lớn hơn 0"
 #. module: project
 #: model:ir.model.fields,help:project.field_project_project__alias_model_id
 msgid ""
-"The model (Odoo Document Kind) to which this alias corresponds. Any incoming"
-" email that does not reply to an existing record will cause the creation of "
-"a new record of this model (e.g. a Project Task)"
+"The model (Odoo Document Kind) to which this alias corresponds. Any incoming "
+"email that does not reply to an existing record will cause the creation of a "
+"new record of this model (e.g. a Project Task)"
 msgstr ""
 "Mô hình (Loại tài liệu Odoo) mà bí danh này tương tác. Mọi email đến mà "
 "không phải là email trả lời một bản ghi hiện có sẽ tạo ra một bản ghi mới "
@@ -4950,8 +5100,8 @@ msgid ""
 "The name of the email alias, e.g. 'jobs' if you want to catch emails for "
 "<jobs@example.odoo.com>"
 msgstr ""
-"Tên của bí danh email, ví dụ: 'jobs' nếu bạn muốn nhận email gửi đến địa chỉ"
-" <jobs@example.odoo.com>"
+"Tên của bí danh email, ví dụ: 'jobs' nếu bạn muốn nhận email gửi đến địa chỉ "
+"<jobs@example.odoo.com>"
 
 #. module: project
 #. odoo-python
@@ -4970,8 +5120,8 @@ msgid ""
 "the project is too restricted. Set the privacy to 'Visible by following "
 "customers' in order to make it accessible by the recipient(s)."
 msgstr ""
-"Dự án không thể được chia sẻ với (các) người nhận vì quyền riêng tư củadự án"
-" quá hạn chế. Đặt quyền riêng tư thành 'Hiển thị bằng cách làm theokhách "
+"Dự án không thể được chia sẻ với (các) người nhận vì quyền riêng tư củadự án "
+"quá hạn chế. Đặt quyền riêng tư thành 'Hiển thị bằng cách làm theokhách "
 "hàng' để người nhận có thể truy cập được."
 
 #. module: project
@@ -4979,11 +5129,11 @@ msgstr ""
 #: code:addons/project/models/project_project.py:0
 #, python-format
 msgid ""
-"The project's company cannot be changed if its analytic account has analytic"
-" lines or if more than one project is linked to it."
+"The project's company cannot be changed if its analytic account has analytic "
+"lines or if more than one project is linked to it."
 msgstr ""
-"Không thể thay đổi công ty của dự án nếu tài khoản phân tích của công ty này"
-" có các dòng phân tích hoặc nếu có nhiều dự án được liên kết với công ty."
+"Không thể thay đổi công ty của dự án nếu tài khoản phân tích của công ty này "
+"có các dòng phân tích hoặc nếu có nhiều dự án được liên kết với công ty."
 
 #. module: project
 #: model:ir.model.constraint,message:project.constraint_project_project_project_date_greater
@@ -5001,10 +5151,8 @@ msgstr "Tìm kiếm không hỗ trợ toán tử %s hoặc giá trị %s."
 #. odoo-python
 #: code:addons/project/models/project_task.py:0
 #, python-format
-msgid ""
-"The task and the associated partner must be linked to the same company."
-msgstr ""
-"Nhiệm vụ và đối tác liên quan phải được liên kết với cùng một công ty."
+msgid "The task and the associated partner must be linked to the same company."
+msgstr "Nhiệm vụ và đối tác liên quan phải được liên kết với cùng một công ty."
 
 #. module: project
 #. odoo-python
@@ -5015,8 +5163,8 @@ msgid ""
 "project is too restricted. Set the privacy of the project to 'Visible by "
 "following customers' in order to make it accessible by the recipient(s)."
 msgstr ""
-"Nhiệm vụ không thể được chia sẻ với (các) người nhận vì quyền riêng tư củadự"
-" án quá hạn chế. Đặt quyền riêng tư của dự án thành 'Hiển thị theotheo dõi "
+"Nhiệm vụ không thể được chia sẻ với (các) người nhận vì quyền riêng tư củadự "
+"án quá hạn chế. Đặt quyền riêng tư của dự án thành 'Hiển thị theotheo dõi "
 "khách hàng' để người nhận có thể truy cập được."
 
 #. module: project
@@ -5064,9 +5212,9 @@ msgid ""
 "orders, purchase orders, invoices and bills, timesheets, and tickets."
 msgstr ""
 "Họ có thể chỉnh sửa các nhiệm vụ dự án được chia sẻ và xem các tài liệu cụ "
-"thể ở chế độ chỉ đọc trên trang web của bạn. Những tài liệu này bao gồm "
-"lead/cơ hội, báo giá/đơn bán hàng, đơn mua hàng, hóa đơn và hóa đơn thanh "
-"toán, bảng chấm công và phiếu hỗ trợ."
+"thể ở chế độ chỉ đọc trên trang web của bạn. Những tài liệu này bao gồm lead/"
+"cơ hội, báo giá/đơn bán hàng, đơn mua hàng, hóa đơn và hóa đơn thanh toán, "
+"bảng chấm công và phiếu hỗ trợ."
 
 #. module: project
 #. odoo-python
@@ -5106,18 +5254,18 @@ msgid ""
 "update the company information for these records to align them under the "
 "same company."
 msgstr ""
-"Dự án này được liên kết với %s, trong khi giai đoạn đã chọn thuộc về %s. Bạn"
-" có thể cân nhắc một số lựa chọn sau: xóa công ty khỏi dự án hoặc giai đoạn."
-" Ngoài ra, bạn có thể cập nhật thông tin công ty cho các bản ghi này để "
-"chúng thuộc về cùng một công ty."
+"Dự án này được liên kết với %s, trong khi giai đoạn đã chọn thuộc về %s. Bạn "
+"có thể cân nhắc một số lựa chọn sau: xóa công ty khỏi dự án hoặc giai đoạn. "
+"Ngoài ra, bạn có thể cập nhật thông tin công ty cho các bản ghi này để chúng "
+"thuộc về cùng một công ty."
 
 #. module: project
 #. odoo-python
 #: code:addons/project/models/project_project.py:0
 #, python-format
 msgid ""
-"This project is not associated to any company, while the stage is associated"
-" to %s. There are a couple of options to consider: either change the "
+"This project is not associated to any company, while the stage is associated "
+"to %s. There are a couple of options to consider: either change the "
 "project's company to align with the stage's company or remove the company "
 "designation from the stage"
 msgstr ""
@@ -5128,7 +5276,6 @@ msgstr ""
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/components/project_task_state_selection/project_task_state_selection.xml:0
 #: code:addons/project/static/src/components/project_task_state_selection/project_task_state_selection.xml:0
 #, python-format
 msgid "This task is blocked by another unfinished task"
@@ -5197,7 +5344,7 @@ msgstr "Việc cần làm"
 #: code:addons/project/static/src/components/project_right_side_panel/components/project_profitability.xml:0
 #, python-format
 msgid "To Invoice"
-msgstr "Cần xuất hoá đơn"
+msgstr "Cần lập hoá đơn"
 
 #. module: project
 #. odoo-javascript
@@ -5212,8 +5359,10 @@ msgid ""
 "To get things done, use activities and status on tasks.<br>\n"
 "                Chat in real time or by email to collaborate efficiently."
 msgstr ""
-"Để hoàn thành công việc, hãy sử dụng các hoạt động và trạng thái trên nhiệm vụ.<br>\n"
-"                Trò chuyện theo thời gian thực hoặc qua email để cộng tác hiệu quả."
+"Để hoàn thành công việc, hãy sử dụng các hoạt động và trạng thái trên nhiệm "
+"vụ.<br>\n"
+"                Trò chuyện theo thời gian thực hoặc qua email để cộng tác "
+"hiệu quả."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_task_convert_to_subtask_view_form
@@ -5223,8 +5372,8 @@ msgid ""
 "task."
 msgstr ""
 "Để chuyển một nhiệm vụ thành một nhiệm vụ phụ, hãy chọn một nhiệm vụ chính. "
-"Ngược lại, hãy để trống trường nhiệm vụ chính để chuyển đổi một nhiệm vụ phụ"
-" thành nhiệm vụ độc lập."
+"Ngược lại, hãy để trống trường nhiệm vụ chính để chuyển đổi một nhiệm vụ phụ "
+"thành nhiệm vụ độc lập."
 
 #. module: project
 #. odoo-python
@@ -5244,7 +5393,6 @@ msgstr "Hoạt động hôm nay"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/components/project_right_side_panel/components/project_profitability.xml:0
-#: code:addons/project/static/src/components/project_right_side_panel/components/project_profitability.xml:0
 #, python-format
 msgid "Total"
 msgstr "Tổng"
@@ -5258,8 +5406,7 @@ msgstr "Theo dõi mức độ hài lòng của khách hàng đối với các nh
 #: model_terms:ir.ui.view,arch_db:project.edit_project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
 msgid "Track major progress points that must be reached to achieve success"
-msgstr ""
-"Theo dõi các điểm tiến độ quan trọng cần đạt được để đi đến thành công"
+msgstr "Theo dõi các điểm tiến độ quan trọng cần đạt được để đi đến thành công"
 
 #. module: project
 #. odoo-javascript
@@ -5284,8 +5431,8 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.res_config_settings_view_form
 msgid ""
-"Track the profitability of your project with analytic accounting. Select the"
-" analytic plan for new projects:"
+"Track the profitability of your project with analytic accounting. Select the "
+"analytic plan for new projects:"
 msgstr ""
 "Theo dõi lợi nhuận dự án của bạn bằng kế toán phân tích. Lựa chọn kế hoạch "
 "phân tích cho dự án mới:"
@@ -5297,8 +5444,8 @@ msgid ""
 "timesheets are linked to an analytic account and any analytic account "
 "belongs to a plan."
 msgstr ""
-"Theo dõi lợi nhuận dự án của bạn. Trong mọi dự án, các nhiệm vụ và bảng chấm"
-" công của dự án đều được liên kết với một tài khoản phân tích và mọi tài "
+"Theo dõi lợi nhuận dự án của bạn. Trong mọi dự án, các nhiệm vụ và bảng chấm "
+"công của dự án đều được liên kết với một tài khoản phân tích và mọi tài "
 "khoản phân tích đều thuộc về một kế hoạch."
 
 #. module: project
@@ -5445,19 +5592,6 @@ msgstr "Dùng thẻ để phân loại nhiệm vụ."
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid "Use the"
 msgstr "Sử dụng"
@@ -5485,7 +5619,8 @@ msgid ""
 "        @user Assign the task to a user\n"
 "        ! Set the task a high priority\n"
 "\n"
-"        Make sure to use the right format and order e.g. Improve the configuration screen 5h #feature #v16 @Mitchell !"
+"        Make sure to use the right format and order e.g. Improve the "
+"configuration screen 5h #feature #v16 @Mitchell !"
 msgstr ""
 "Sử dụng các từ khóa này trong tiêu đề để thiết lập nhiệm vụ mới:\n"
 "\n"
@@ -5494,7 +5629,8 @@ msgstr ""
 "         @người_dùng Gán nhiệm vụ cho một người dùng\n"
 "         ! Đặt nhiệm vụ ở mức độ ưu tiên cao\n"
 "\n"
-"Hãy đảm bảo sử dụng đúng định dạng và thứ tự. VD: Cải thiện màn hình cấu hình 5h #tính_năng #v16 @Mitchell !"
+"Hãy đảm bảo sử dụng đúng định dạng và thứ tự. VD: Cải thiện màn hình cấu "
+"hình 5h #tính_năng #v16 @Mitchell !"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task_stage_personal__user_id
@@ -5544,13 +5680,11 @@ msgstr "Đang chờ"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/js/tours/project.js:0
-#: code:addons/project/static/src/js/tours/project.js:0
 #, python-format
 msgid ""
 "Want a better way to <b>manage your projects</b>? <i>It starts here.</i>"
 msgstr ""
-"Muốn có cách thức tốt hơn để <b>quản lý các dự án</b>? <i>Bắt đầu từ "
-"đây.</i>"
+"Muốn có cách thức tốt hơn để <b>quản lý các dự án</b>? <i>Bắt đầu từ đây.</i>"
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_milestone__website_message_ids
@@ -5589,20 +5723,28 @@ msgstr "Tuần"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_view_form
 msgid ""
-"When sharing a project in edit mode, you are giving people access to the kanban and list views of your tasks.\n"
-"                    Collaborators will be able to view and modify part of the tasks' information."
+"When sharing a project in edit mode, you are giving people access to the "
+"kanban and list views of your tasks.\n"
+"                    Collaborators will be able to view and modify part of "
+"the tasks' information."
 msgstr ""
-"Khi chia sẻ dự án ở chế độ chỉnh sửa, bạn đang cấp cho mọi người quyền truy cập vào chế độ xem danh sách và kanban của các nhiệm vụ.\n"
-"                     Cộng tác viên sẽ có thể xem và sửa đổi một phần thông tin của nhiệm vụ."
+"Khi chia sẻ dự án ở chế độ chỉnh sửa, bạn đang cấp cho mọi người quyền truy "
+"cập vào chế độ xem danh sách và kanban của các nhiệm vụ.\n"
+"                     Cộng tác viên sẽ có thể xem và sửa đổi một phần thông "
+"tin của nhiệm vụ."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_view_form
 msgid ""
-"When sharing a project in read-only mode, you are giving people access to the tasks in their portal.\n"
-"                    These people will be able to view the tasks, but not edit them."
+"When sharing a project in read-only mode, you are giving people access to "
+"the tasks in their portal.\n"
+"                    These people will be able to view the tasks, but not "
+"edit them."
 msgstr ""
-"Khi chia sẻ dự án ở chế độ chỉ đọc, bạn đang cấp cho mọi người quyền truy cập dự án trên cổng thông tin của họ.\n"
-"                   Họ sẽ có thể xem nhiệm vụ, nhưng không thể chỉnh sửa chúng."
+"Khi chia sẻ dự án ở chế độ chỉ đọc, bạn đang cấp cho mọi người quyền truy "
+"cập dự án trên cổng thông tin của họ.\n"
+"                   Họ sẽ có thể xem nhiệm vụ, nhưng không thể chỉnh sửa "
+"chúng."
 
 #. module: project
 #: model:ir.model.fields,field_description:project.field_project_task__working_days_open
@@ -5646,10 +5788,9 @@ msgstr "Thời gian làm việc để đóng"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_stage_unarchive_wizard
 msgid ""
-"Would you like to unarchive all of the projects contained in these stages as"
-" well?"
-msgstr ""
-"Bạn có muốn hủy lưu trữ tất cả dự án có trong các giai đoạn này không?"
+"Would you like to unarchive all of the projects contained in these stages as "
+"well?"
+msgstr "Bạn có muốn hủy lưu trữ tất cả dự án có trong các giai đoạn này không?"
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_task_type_unarchive_wizard
@@ -5668,7 +5809,6 @@ msgstr "Viết một thông điệp..."
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #: code:addons/project/static/src/views/project_task_kanban/project_task_kanban_examples.js:0
 #, python-format
 msgid "Writing"
@@ -5692,8 +5832,8 @@ msgstr "Năm"
 msgid ""
 "You are not able to switch the company of this stage to %(company_name)s "
 "since it currently includes projects associated with "
-"%(project_company_name)s. Please ensure that this stage exclusively consists"
-" of projects linked to %(company_name)s."
+"%(project_company_name)s. Please ensure that this stage exclusively consists "
+"of projects linked to %(company_name)s."
 msgstr ""
 "Bạn không thể chuyển công ty trong giai đoạn này thành %(company_name)s vì "
 "nó hiện bao gồm các dự án được liên kết với %(project_company_name)s. Vui "
@@ -5710,8 +5850,8 @@ msgstr "Bạn chỉ có thể thiết lập giai đoạn cá nhân cho một nhi
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_stage_delete_wizard
 msgid ""
-"You cannot delete stages containing projects. You can either archive them or"
-" first delete all of their projects."
+"You cannot delete stages containing projects. You can either archive them or "
+"first delete all of their projects."
 msgstr ""
 "Bạn không thể xóa các giai đoạn chứa dự án. Bạn có thể lưu trữ chúng hoặc "
 "trước tiên xóa tất cả dự án của chúng."
@@ -5719,8 +5859,8 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_project_stage_delete_wizard
 msgid ""
-"You cannot delete stages containing projects. You should first delete all of"
-" their projects."
+"You cannot delete stages containing projects. You should first delete all of "
+"their projects."
 msgstr ""
 "Bạn không thể xóa các giai đoạn chứa dự án. Tước tiên, bạn phải xóa tất cả "
 "dự án của chúng."
@@ -5731,8 +5871,8 @@ msgid ""
 "You cannot delete stages containing tasks. You can either archive them or "
 "first delete all of their tasks."
 msgstr ""
-"Bạn không thể xóa các giai đoạn chứa nhiệm vụ. Bạn có thể lưu trữ chúng hoặc"
-" trước tiên xóa tất cả các tác vụ của chúng."
+"Bạn không thể xóa các giai đoạn chứa nhiệm vụ. Bạn có thể lưu trữ chúng hoặc "
+"trước tiên xóa tất cả các tác vụ của chúng."
 
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_project_task_type_delete_wizard
@@ -5772,8 +5912,8 @@ msgstr "Bạn đã được phân công/gán cho"
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.project_share_wizard_confirm_form
 msgid ""
-"You have full control and can revoke portal access anytime. Are you ready to"
-" proceed?"
+"You have full control and can revoke portal access anytime. Are you ready to "
+"proceed?"
 msgstr ""
 "Bạn có toàn quyền kiểm soát và có thể thu hồi quyền truy cập cổng thông tin "
 "bất cứ lúc nào. Bạn đã sẵn sàng để tiếp tục chưa?"
@@ -5801,7 +5941,6 @@ msgstr "Quản lý của bạn quyết định phản hồi nào được chấp
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid "and"
@@ -5902,12 +6041,6 @@ msgstr "VD: Ra mắt sản phẩm"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid "icon to organize your daily activities."
 msgstr "biểu tượng để sắp xếp hoạt động hàng ngày của bạn."
@@ -5961,7 +6094,6 @@ msgstr "sẵn sàng được đánh dấu là đã đạt được"
 #. module: project
 #. odoo-javascript
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid ""
 "state to indicate a request for changes or a need for discussion on a task."
@@ -5970,7 +6102,6 @@ msgstr ""
 
 #. module: project
 #. odoo-javascript
-#: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #: code:addons/project/static/src/xml/project_task_kanban_examples.xml:0
 #, python-format
 msgid ""
@@ -6064,8 +6195,8 @@ msgstr ""
 #. module: project
 #: model_terms:ir.ui.view,arch_db:project.view_task_kanban
 msgid ""
-"{{ record.closed_subtask_count.value }} sub-tasks closed out of {{ "
-"record.subtask_count.value }}"
+"{{ record.closed_subtask_count.value }} sub-tasks closed out of "
+"{{ record.subtask_count.value }}"
 msgstr ""
 "{{ record.closed_subtask_count.value }} nhiệm vụ phụ đã được đóng trong số "
 "{{ record.subtask_count.value }}"
