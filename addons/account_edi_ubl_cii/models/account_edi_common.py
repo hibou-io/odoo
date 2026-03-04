@@ -146,6 +146,10 @@ class AccountEdiCommon(models.AbstractModel):
     # TAXES
     # -------------------------------------------------------------------------
 
+    def _is_reverse_charge_tax(self, tax):
+        """Check if tax is a reverse-charge tax (has negative factor repartition lines)"""
+        return any(line.factor_percent < 0 for line in tax.invoice_repartition_line_ids)
+
     def _validate_taxes(self, invoice):
         """ Validate the structure of the tax repartition lines (invalid structure could lead to unexpected results)
         """
@@ -193,12 +197,23 @@ class AccountEdiCommon(models.AbstractModel):
             if not tax or tax.amount == 0:
                 # in theory, you should indicate the precise law article
                 return create_dict(tax_category_code='E', tax_exemption_reason=_('Articles 226 items 11 to 15 Directive 2006/112/EN'))
+            elif self._is_reverse_charge_tax(tax):
+                # Special case: Purchase reverse-charge taxes for self-billed invoices.
+                # From the buyer's perspective, this is a standard tax with a non-zero percentage but
+                # two tax repartition lines that cancel each other out.
+                # But from the seller's perspective, this is a zero-percent tax (VAT liability is deferred
+                # to the buyer).
+                # For a self-billed invoice we, the buyer, create the invoice on behalf of the seller.
+                # So in the XML we put the zero-percent tax with code 'AE' that the seller would have used.
+                return create_dict(tax_category_code='AE')
             else:
                 return create_dict(tax_category_code='S')  # standard VAT
 
         if supplier.country_id.code in european_economic_area and supplier.vat:
-            if tax.amount != 0:
+            if tax.amount != 0 and not self._is_reverse_charge_tax(tax):
                 # otherwise, the validator will complain because G and K code should be used with 0% tax
+                # For purchase reverse-charge taxes for self-billed invoices, we put the zero-percent tax
+                # with code 'G' or 'K' that the buyer would have used, see explanation above.
                 return create_dict(tax_category_code='S')
             if customer.country_id.code not in european_economic_area:
                 return create_dict(
@@ -228,9 +243,15 @@ class AccountEdiCommon(models.AbstractModel):
         res = []
         for tax in taxes:
             tax_unece_codes = self._get_tax_unece_codes(invoice, tax)
+            # For reverse-charge taxes (with negative factor), percent should be 0.0
+            # From the seller's perspective, VAT liability is deferred to the buyer
+            if self._is_reverse_charge_tax(tax):
+                percent = 0.0
+            else:
+                percent = tax.amount if tax.amount_type == 'percent' else False
             res.append({
                 'id': tax_unece_codes.get('tax_category_code'),
-                'percent': tax.amount if tax.amount_type == 'percent' else False,
+                'percent': percent,
                 'name': tax_unece_codes.get('tax_exemption_reason'),
                 'tax_scheme_vals': {'id': 'VAT'},
                 **tax_unece_codes,
@@ -337,6 +358,9 @@ class AccountEdiCommon(models.AbstractModel):
 
         # === Import the embedded documents in the xml if some are found ===
         attachments = self.env['ir.attachment']
+        if invoice.message_main_attachment_id:
+            # Invoice look like it was already imported, don't import attachments again
+            return True
         additional_docs = tree.findall('./{*}AdditionalDocumentReference')
         for document in additional_docs:
             attachment_name = document.find('{*}ID')
@@ -393,9 +417,27 @@ class AccountEdiCommon(models.AbstractModel):
                 invoice.partner_id.vat = vat
 
     def _import_retrieve_and_fill_partner_bank_details(self, invoice, bank_details):
-        bank_details = list(set(map(sanitize_account_number, bank_details)))
-        body = _("The following bank account numbers got retrieved during the import : %s", ", ".join(bank_details))
-        invoice.with_context(no_new_invoice=True).message_post(body=body)
+        """ Retrieve the bank account, if no matching bank account is found, create it
+        """
+        if invoice.move_type in ('out_refund', 'in_invoice'):
+            partner = invoice.partner_id
+        elif invoice.move_type in ('out_invoice', 'in_refund'):
+            partner = invoice.company_id.partner_id
+        else:
+            return
+
+        banks = self.env['res.partner.bank']
+        for account_number in bank_details:
+            try:
+                banks += self.env['res.partner.bank']._find_or_create_bank_account(
+                    account_number=account_number,
+                    partner=partner,
+                    company=invoice.company_id,
+                )
+            except UserError as e:
+                invoice._message_log(body=_("The bank account couldn't be fetched: %s", str(e)))
+        if banks:
+            invoice.partner_bank_id = banks[0]
 
     def _import_fill_invoice_allowance_charge(self, tree, invoice, qty_factor):
         logs = []
@@ -739,7 +781,7 @@ class AccountEdiCommon(models.AbstractModel):
                 # company check is already done in the prediction query
                 predicted_tax_id = invoice_line\
                     ._predict_specific_tax('percent', amount, invoice_line.move_id.journal_id.type)
-                tax = self.env['account.tax'].browse(predicted_tax_id)
+                tax = self.env['account.tax'].browse(predicted_tax_id).filtered_domain(domain)[:1]
             if not tax:
                 tax = self.env['account.tax'].search(domain + [('price_include', '=', False)], limit=1)
             if not tax:

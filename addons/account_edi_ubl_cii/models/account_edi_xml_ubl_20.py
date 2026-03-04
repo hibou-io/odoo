@@ -144,16 +144,18 @@ class AccountEdiXmlUBL20(models.AbstractModel):
 
     def _get_delivery_vals_list(self, invoice):
         # the data is optional, except for ubl bis3 (see the override, where we need to set a default delivery address)
+        delivery_partner = invoice.company_id.partner_id if invoice.is_purchase_document() else invoice.partner_shipping_id
+
         delivery_vals = {
             'actual_delivery_date': invoice.delivery_date,
             'delivery_location_vals': {
-                'delivery_address_vals': self._get_partner_address_vals(invoice.partner_shipping_id),
+                'delivery_address_vals': self._get_partner_address_vals(delivery_partner),
             },
-            'delivery_party_vals': self._get_partner_party_vals(invoice.partner_shipping_id, 'delivery') if invoice.partner_shipping_id else {},
+            'delivery_party_vals': self._get_partner_party_vals(delivery_partner, 'delivery') if delivery_partner else {},
         }
         # TODO master: clean that code a bit hacky, when the module account_add_gln is merged with account
-        gln = 'global_location_number' in invoice.partner_shipping_id._fields and invoice.partner_shipping_id.global_location_number
-        if gln:
+        if delivery_partner and 'global_location_number' in delivery_partner._fields and delivery_partner.global_location_number:
+            gln = delivery_partner.global_location_number
             delivery_vals['delivery_location_vals'].update({
                 'delivery_location_scheme_id': '0088',
                 'delivery_location_id': gln,
@@ -696,6 +698,9 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         supplier = invoice.company_id.partner_id.commercial_partner_id
         customer = invoice.partner_id
 
+        if invoice.is_purchase_document():
+            supplier, customer = customer, supplier
+
         # OrderReference/SalesOrderID (sales_order_id) is optional
         sales_order_id = 'sale_line_ids' in invoice.invoice_line_ids._fields \
                          and ",".join(invoice.invoice_line_ids.sale_line_ids.order_id.mapped('name'))
@@ -951,6 +956,22 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             invoice_line = invoice.invoice_line_ids.create({'move_id': invoice.id})
             invl_logs = self._import_fill_invoice_line_form(invl_el, invoice_line, qty_factor)
             logs += invl_logs
+
+        # group lines
+        if invoice.journal_id.type == 'sale':
+            move_types = invoice.get_sale_types(include_receipts=True)
+        else:
+            move_types = invoice.get_purchase_types(include_receipts=True)
+        if not self.env.context.get('ungroup_lines'):
+            last_bill_from_vendor = self.env['account.move'].search([
+                ('move_type', 'in', move_types),
+                ('partner_id', '=', invoice.partner_id.id),
+                ('state', '=', 'posted'),
+                ('id', '!=', invoice.id),
+                *invoice.journal_id._check_company_domain(invoice.journal_id.company_id),
+            ], order="create_date desc", limit=1)
+            if last_bill_from_vendor and last_bill_from_vendor._has_lines_grouped():
+                invoice._group_lines_by_tax()
 
         # ==== Payable Rounding amount ====
 

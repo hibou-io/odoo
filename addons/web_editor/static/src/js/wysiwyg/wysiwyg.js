@@ -47,6 +47,7 @@ import {
 import { isCSSColor } from '@web/core/utils/colors';
 import { EmojiPicker } from '@web/core/emoji_picker/emoji_picker';
 import { Tooltip } from "@web/core/tooltip/tooltip";
+import { fixInvalidHTML } from "../editor/odoo-editor/src/OdooEditor";
 
 const OdooEditor = OdooEditorLib.OdooEditor;
 const getDeepRange = OdooEditorLib.getDeepRange;
@@ -344,7 +345,7 @@ export class Wysiwyg extends Component {
 
         this.$editable ??= this.$el;
         if (options.value) {
-            this.$editable.html(options.value);
+            this.$editable.html(fixInvalidHTML(options.value));
         }
 
         this._isDocumentStale = false;
@@ -1174,8 +1175,8 @@ export class Wysiwyg extends Component {
      * @param {String} value
      * @returns {String}
      */
-    setValue(value) {
-        this.odooEditor.resetContent(value);
+    setValue(value, isSavePoint = true) {
+        this.odooEditor.resetContent(value, isSavePoint);
     }
     /**
      * Undo one step of change in the editor.
@@ -3479,6 +3480,7 @@ export class Wysiwyg extends Component {
     async resetValue(value) {
         this.setValue(value);
         this.odooEditor.historyReset();
+        this.odooEditor.lastSavePoint = this.odooEditor._historyIds.at(-1);
         this._historyShareId = Math.floor(Math.random() * Math.pow(2,52)).toString();
         this._serverLastStepId = value && this._getLastHistoryStepId(value);
         if (this._serverLastStepId) {
