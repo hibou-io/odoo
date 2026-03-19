@@ -819,7 +819,7 @@ class Task(models.Model):
                     'dependent_ids': False,
                     'parent_id': False,
                 }
-                vals['child_ids'] = [Command.create(child_id.copy_data(default)[0]) for child_id in task.child_ids]
+                vals['child_ids'] = [Command.create(child_id.copy_data(default)[0]) for child_id in task.child_ids.filtered(lambda c: c.active)]
         return vals_list
 
     def _create_task_mapping(self, copied_tasks):
@@ -1073,7 +1073,8 @@ class Task(models.Model):
     def _load_records_create(self, vals_list):
         for vals in vals_list:
             if vals.get('recurring_task'):
-                if not vals.get('recurrence_id'):
+                rec_fields = vals.keys() & self._get_recurrence_fields()
+                if not vals.get('recurrence_id') and not rec_fields:
                     default_val = self.default_get(self._get_recurrence_fields())
                     vals.update(**default_val)
             project_id = vals.get('project_id')

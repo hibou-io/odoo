@@ -681,14 +681,27 @@ class PosOrder(models.Model):
         return currency.round(amount) if currency else amount
 
     def _get_partner_bank_id(self):
-        bank_partner_id = False
+        self.ensure_one()
+        partner_bank_id = False
+
+        def _first_allowed(bank_ids):
+            return bank_ids.filtered(lambda b: b.allow_out_payment)[:1]
+
+        # Case 1: refund / negative amount → customer bank
         if self.amount_total <= 0 and self.partner_id.bank_ids:
-            bank_partner_id = self.partner_id.bank_ids[0].id
-        elif self.amount_total >= 0 and self.payment_ids and self.payment_ids[0].payment_method_id.journal_id.bank_account_id:
-            bank_partner_id = self.payment_ids[0].payment_method_id.journal_id.bank_account_id.id
+            partner_bank_id = _first_allowed(self.partner_id.bank_ids)
+
+        # Case 2: positive amount → payment journal bank
+        elif self.amount_total >= 0 and self.payment_ids:
+            journal_bank = self.payment_ids[0].payment_method_id.journal_id.bank_account_id
+            if journal_bank and journal_bank.allow_out_payment:
+                partner_bank_id = journal_bank
+
+        # Case 3: fallback → company bank
         elif self.amount_total >= 0 and self.company_id.partner_id.bank_ids:
-            bank_partner_id = self.company_id.partner_id.bank_ids[0].id
-        return bank_partner_id
+            partner_bank_id = _first_allowed(self.company_id.partner_id.bank_ids)
+
+        return partner_bank_id.id if partner_bank_id else False
 
     def _create_invoice(self, move_vals):
         self.ensure_one()
@@ -791,11 +804,14 @@ class PosOrder(models.Model):
             'fiscal_position_id': self.fiscal_position_id.id,
             'invoice_line_ids': self._prepare_invoice_lines(),
             'invoice_payment_term_id': False,
-            'invoice_cash_rounding_id': self.config_id.rounding_method.id,
         }
         if self.refunded_order_id.account_move:
             vals['ref'] = _('Reversal of: %s', self.refunded_order_id.account_move.name)
             vals['reversed_entry_id'] = self.refunded_order_id.account_move.id
+
+        if self.config_id.cash_rounding and (not self.config_id.only_round_cash_method or any(p.payment_method_id.is_cash_count for p in self.payment_ids)):
+            vals['invoice_cash_rounding_id'] = self.config_id.rounding_method.id
+
         if self.floating_order_name:
             vals.update({'narration': self.floating_order_name})
         return vals
@@ -897,7 +913,7 @@ class PosOrder(models.Model):
                 ('product_id.categ_id.property_valuation', '=', 'real_time')
             ])
             for stock_move in stock_moves:
-                expense_account = stock_move.product_id._get_product_accounts()['expense']
+                expense_account = stock_move.with_company(stock_move.company_id).product_id._get_product_accounts()['expense']
                 stock_output_account = stock_move.product_id.categ_id.property_stock_account_output_categ_id
                 balance = -sum(stock_move.stock_valuation_layer_ids.mapped('value'))
                 aml_vals_list_per_nature['stock'].append({

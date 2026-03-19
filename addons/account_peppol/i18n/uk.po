@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-15 18:38+0000\n"
-"PO-Revision-Date: 2026-02-14 09:05+0000\n"
+"POT-Creation-Date: 2026-02-27 18:37+0000\n"
+"PO-Revision-Date: 2026-03-04 17:23+0000\n"
 "Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>\n"
 "Language-Team: Ukrainian <https://translate.odoo.com/projects/odoo-18/"
 "account_peppol/uk/>\n"
@@ -20,11 +20,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 "
-"? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && "
-"(n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && "
-"(n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 ))"
-" ? 2: 3);\n"
-"X-Generator: Weblate 5.14.3\n"
+"? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > "
+"14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % "
+"100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+"X-Generator: Weblate 5.16.1\n"
 
 #. module: account_peppol
 #. odoo-python
@@ -83,10 +82,10 @@ msgid ""
 "                        The invoice will be sent automatically via Peppol\n"
 "                    </span>"
 msgstr ""
-"<span class=\"mx-1\" invisible=\"'demo_' not in peppol_message_uuid\"> (Демо)"
-"</span>\n"
-"                    <span class=\"text-muted mx-3\" invisible="
-"\"peppol_move_state != 'to_send'\">\n"
+"<span class=\"mx-1\" invisible=\"'demo_' not in peppol_message_uuid\"> "
+"(Демо)</span>\n"
+"                    <span class=\"text-muted mx-3\" "
+"invisible=\"peppol_move_state != 'to_send'\">\n"
 "                        Рахунок буде надіслано автоматично через Peppol\n"
 "                    </span>"
 
@@ -1154,6 +1153,11 @@ msgid "Too many attempts to request an SMS code. Please try again later."
 msgstr "Забагато спроб запиту SMS-коду. Будь-ласка спробуйте пізніше."
 
 #. module: account_peppol
+#: model:ir.model,name:account_peppol.model_account_edi_xml_ubl_bis3
+msgid "UBL BIS Billing 3.0.12"
+msgstr "UBL BIS Billing 3.0.12"
+
+#. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_partner__peppol_verification_state__not_verified
 msgid "Unchecked"
 msgstr "Непозначено"
@@ -1257,8 +1261,8 @@ msgid ""
 "regulation."
 msgstr ""
 "Ви збираєтеся зареєструватися, використовуючи свій номер платника ПДВ. "
-"Спочатку переконайтеся, що ви зареєструвалися у своєму реєстрі компаній "
-"(BCE/KBO), щоб дотримуватися нових правил."
+"Спочатку переконайтеся, що ви зареєструвалися у своєму реєстрі компаній (BCE/"
+"KBO), щоб дотримуватися нових правил."
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
@@ -1275,7 +1279,8 @@ msgstr "Тепер ви можете отримувати демо-рахунк�
 #. odoo-python
 #: code:addons/account_peppol/wizard/peppol_registration.py:0
 msgid "You can now send and receive electronic invoices via Peppol"
-msgstr "Тепер ви можете надсилати та отримувати електронні рахунки через Peppol"
+msgstr ""
+"Тепер ви можете надсилати та отримувати електронні рахунки через Peppol"
 
 #. module: account_peppol
 #. odoo-python
@@ -1361,6 +1366,25 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Your registration should be activated within a day."
 msgstr "Ваша реєстрація має бути активована протягом доби."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/account_edi_xml_ubl_bis3.py:0
+msgid ""
+"[PEPPOL-EN16931-R010] An electronic address (EAS) must be provided on the "
+"customer '%s'."
+msgstr ""
+"[PEPPOL-EN16931-R010] Клієнт повинен вказати електронну адресу (EAS) '%s'."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/account_edi_xml_ubl_bis3.py:0
+msgid ""
+"[PEPPOL-EN16931-R020] An electronic address (EAS) must be provided on the "
+"company '%s'."
+msgstr ""
+"[PEPPOL-EN16931-R020] У компанії має бути надана електронна адреса (EAS) "
+"'%s'."
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.peppol_registration_form

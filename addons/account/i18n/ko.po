@@ -9,14 +9,14 @@
 # Wil Odoo, 2025
 # Sarah Park, 2025
 # "Kwanghee Park (kwpa)" <kwpa@odoo.com>, 2025, 2026.
-# Weblate <noreply-mt-weblate@weblate.org>, 2025.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12 18:38+0000\n"
-"PO-Revision-Date: 2026-02-14 09:25+0000\n"
-"Last-Translator: \"Kwanghee Park (kwpa)\" <kwpa@odoo.com>\n"
+"POT-Creation-Date: 2026-02-27 18:36+0000\n"
+"PO-Revision-Date: 2026-02-24 23:34+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Korean <https://translate.odoo.com/projects/odoo-18/account/"
 "ko/>\n"
 "Language: ko\n"
@@ -69,6 +69,16 @@ msgstr ""
 "        예: 180 / (1 - 10%) = 200 (가격에 미포함)\n"
 "        예: 200 * (1 - 10%) = 180 (가격에 포함)\n"
 "        "
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"\n"
+"Please contact your administrator."
+msgstr ""
+"\n"
+"관리자에게 문의하세요."
 
 #. module: account
 #. odoo-python
@@ -3745,6 +3755,12 @@ msgid "Bank of odoo"
 msgstr "Odoo 은행"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Bank settings"
+msgstr ""
+
+#. module: account
 #: model:ir.model,name:account.model_account_setup_bank_manual_config
 msgid "Bank setup manual config"
 msgstr "은행 수기 설정"
@@ -4497,6 +4513,8 @@ msgid "Chart of accounts set!"
 msgstr "계정과목표 설정 완료!"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
 msgid "Check"
 msgstr "확인"
@@ -9715,6 +9733,7 @@ msgstr "전표:"
 #: model:ir.actions.act_window,name:account.action_account_journal_form
 #: model:ir.model.fields,field_description:account.field_account_report__filter_journals
 #: model:ir.ui.menu,name:account.menu_action_account_journal_form
+#: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "Journals"
 msgstr "전표"
 
@@ -15382,6 +15401,14 @@ msgid ""
 msgstr "은행 전표에 있는 은행 계좌는 동일한 회사에 속해 있어야 합니다(%s)."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The bank account of your company is not trusted. Please ask an admin or "
+"someone with approval rights to check it."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__statement_id
 msgid "The bank statement used for bank reconciliation"
 msgstr "은행 조정에 사용된 은행거래명세서"
@@ -15446,6 +15473,15 @@ msgstr "전표에 대해 참조 모델과 참조 유형을 조합시키도록 �
 msgid ""
 "The commercial partner has been updated for all related accounting entries."
 msgstr "비즈니스 파트너 정보가 관련 회계 내역 전체에 반영이 완료되었습니다."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The company bank account (%(account_number)s) linked to this invoice is not "
+"trusted. Go to the Bank Settings, double-check that it is yours or correct "
+"the number, and click on Send Money to trust it."
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax_repartition_line__company_id
@@ -16064,6 +16100,14 @@ msgstr "회사 통화로 표시된 전표 상의 잔존가액입니다."
 #: code:addons/account/models/account_bank_statement.py:0
 msgid "The running balance (%s) doesn't match the specified ending balance."
 msgstr "현재 잔액 (%s)이 지정되어 있는 기말 잔액과 일치하지 않습니다."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"The scheduled action 'Send Invoices automatically' is archived. You won't be "
+"able to send invoices in batch."
+msgstr ""
 
 #. module: account
 #. odoo-python

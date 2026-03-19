@@ -2940,6 +2940,7 @@ class TestUi(TestPointOfSaleHttpCommon):
         )
 
     def test_scan_loyalty_card_select_customer(self):
+        self.env['ir.config_parameter'].sudo().set_param('point_of_sale.limited_customer_count', 0)
         self.env['loyalty.program'].search([]).write({'active': False})
         self.test_partner = self.env['res.partner'].create({'name': 'A Test Partner'})
 
@@ -3256,3 +3257,23 @@ class TestUi(TestPointOfSaleHttpCommon):
         trusted_pos_config.trusted_config_ids += self.main_pos_config
         self.start_pos_tour("test_loyalty_in_trusted_pos_make_order", login="pos_user")
         self.start_pos_tour("test_loyalty_in_trusted_pos", login="pos_user", pos_config=trusted_pos_config)
+
+    def test_multiple_physical_gift_card_sale(self):
+        """
+        Test that the manual gift card sold has been correctly generated.
+        """
+        LoyaltyProgram = self.env['loyalty.program']
+        # Deactivate all other programs to avoid interference and activate the gift_card_product_50
+        LoyaltyProgram.search([]).write({'pos_ok': False})
+        self.env.ref('loyalty.gift_card_product_50').write({'active': True})
+
+        # Create gift card program
+        gift_card_program = self.create_programs([('arbitrary_name', 'gift_card')])['arbitrary_name']
+
+        # Run the tour
+        self.start_tour(
+            "/pos/web?config_id=%d" % self.main_pos_config.id,
+            "test_multiple_physical_gift_card_sale",
+            login="pos_user",
+        )
+        self.assertEqual(len(gift_card_program.coupon_ids), 2)

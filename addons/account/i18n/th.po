@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12 18:38+0000\n"
+"POT-Creation-Date: 2026-02-27 18:36+0000\n"
 "PO-Revision-Date: 2025-12-06 17:08+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Thai <https://translate.odoo.com/projects/odoo-18/account/th/"
@@ -69,6 +69,14 @@ msgstr ""
 "        เช่น 180 / (1 - 10%) = 200 (ไม่รวมราคา)\n"
 "        เช่น 200 * (1 - 10%) = 180 (รวมราคาแล้ว)\n"
 "        "
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"\n"
+"Please contact your administrator."
+msgstr ""
 
 #. module: account
 #. odoo-python
@@ -3696,6 +3704,12 @@ msgid "Bank of odoo"
 msgstr "ธนาคารของ Odoo"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Bank settings"
+msgstr ""
+
+#. module: account
 #: model:ir.model,name:account.model_account_setup_bank_manual_config
 msgid "Bank setup manual config"
 msgstr "การตั้งค่าธนาคารด้วยตนเอง"
@@ -4435,6 +4449,8 @@ msgid "Chart of accounts set!"
 msgstr "ผังบัญชีเป็นชุด!"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
 msgid "Check"
 msgstr "ตรวจสอบ"
@@ -9612,6 +9628,7 @@ msgstr "สมุดรายวัน:"
 #: model:ir.actions.act_window,name:account.action_account_journal_form
 #: model:ir.model.fields,field_description:account.field_account_report__filter_journals
 #: model:ir.ui.menu,name:account.menu_action_account_journal_form
+#: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "Journals"
 msgstr "สมุดรายวัน"
 
@@ -15252,6 +15269,14 @@ msgid ""
 msgstr "บัญชีธนาคารของสมุดรายวันธนาคารต้องเป็นของบริษัทเดียวกัน (%s)"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The bank account of your company is not trusted. Please ask an admin or "
+"someone with approval rights to check it."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__statement_id
 msgid "The bank statement used for bank reconciliation"
 msgstr "ใบแจ้งยอดจากธนาคารที่ใช้สําหรับกระทบยอดบัญชีธนาคาร"
@@ -15315,6 +15340,15 @@ msgstr "การรวมกันของแบบจำลองอ้าง
 #: code:addons/account/models/partner.py:0
 msgid ""
 "The commercial partner has been updated for all related accounting entries."
+msgstr ""
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The company bank account (%(account_number)s) linked to this invoice is not "
+"trusted. Go to the Bank Settings, double-check that it is yours or correct "
+"the number, and click on Send Money to trust it."
 msgstr ""
 
 #. module: account
@@ -15914,6 +15948,14 @@ msgstr "ยอดเงินคงเหลือในรายการสม
 #: code:addons/account/models/account_bank_statement.py:0
 msgid "The running balance (%s) doesn't match the specified ending balance."
 msgstr "ยอดคงเหลือที่ใช้อยู่ (%s) ไม่ตรงกับยอดคงเหลือสิ้นสุดที่ระบุ"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"The scheduled action 'Send Invoices automatically' is archived. You won't be "
+"able to send invoices in batch."
+msgstr ""
 
 #. module: account
 #. odoo-python

@@ -16,9 +16,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12 18:38+0000\n"
-"PO-Revision-Date: 2026-02-14 18:01+0000\n"
-"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"POT-Creation-Date: 2026-02-27 18:36+0000\n"
+"PO-Revision-Date: 2026-03-05 08:06+0000\n"
+"Last-Translator: \"Marta (wacm)\" <wacm@odoo.com>\n"
 "Language-Team: Polish <https://translate.odoo.com/projects/odoo-18/account/"
 "pl/>\n"
 "Language: pl\n"
@@ -26,9 +26,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && "
-"(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || "
-"(n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
-"X-Generator: Weblate 5.14.3\n"
+"(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
+"n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+"X-Generator: Weblate 5.16.1\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -73,6 +73,16 @@ msgstr ""
 "       np. 180 / (1 - 10%) = 200 (cena nie jest wliczona)\n"
 "       np. 200 * (1 - 10%) = 180 (cena jest wliczona)\n"
 "       "
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"\n"
+"Please contact your administrator."
+msgstr ""
+"\n"
+"Skontaktuj się z administratorem."
 
 #. module: account
 #. odoo-python
@@ -3798,6 +3808,12 @@ msgid "Bank of odoo"
 msgstr "Bank Odoo"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Bank settings"
+msgstr "Ustawienia banku"
+
+#. module: account
 #: model:ir.model,name:account.model_account_setup_bank_manual_config
 msgid "Bank setup manual config"
 msgstr "Manualna konfiguracja banku"
@@ -4553,6 +4569,8 @@ msgid "Chart of accounts set!"
 msgstr "Plan kont został skonfigurowany!"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
 msgid "Check"
 msgstr "Sprawdź"
@@ -4917,7 +4935,7 @@ msgstr "Wyliczone saldo"
 #. module: account
 #: model:ir.model,name:account.model_res_config_settings
 msgid "Config Settings"
-msgstr "Ustawienia konfiguracji"
+msgstr "Konfiguracja ustawień"
 
 #. module: account
 #: model:ir.ui.menu,name:account.menu_finance_configuration
@@ -9843,6 +9861,7 @@ msgstr "Dziennik:"
 #: model:ir.actions.act_window,name:account.action_account_journal_form
 #: model:ir.model.fields,field_description:account.field_account_report__filter_journals
 #: model:ir.ui.menu,name:account.menu_action_account_journal_form
+#: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "Journals"
 msgstr "Dzienniki"
 
@@ -15590,6 +15609,16 @@ msgid ""
 msgstr "Konto bankowe dziennika Bank musi należeć do tej samej firmy (%s)."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The bank account of your company is not trusted. Please ask an admin or "
+"someone with approval rights to check it."
+msgstr ""
+"Konto bankowe Twojej firmy nie jest zaufane. Poproś administratora lub osobę "
+"z uprawnieniami do zatwierdzania o sprawdzenie tego."
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__statement_id
 msgid "The bank statement used for bank reconciliation"
 msgstr "Wyciąg bankowy zastosowany do uzgodnień bankowych"
@@ -15661,6 +15690,19 @@ msgid ""
 msgstr ""
 "Partner komercyjny został zaktualizowany dla wszystkich powiązanych wpisów "
 "księgowych."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The company bank account (%(account_number)s) linked to this invoice is not "
+"trusted. Go to the Bank Settings, double-check that it is yours or correct "
+"the number, and click on Send Money to trust it."
+msgstr ""
+"Firmowe konto bankowe (%(account_number)s) powiązane z tą fakturą nie jest "
+"zaufane. Przejdź do ustawień bankowych, sprawdź, czy jest to Twoje konto, "
+"lub popraw numer, a następnie kliknij „Wyślij pieniądze”, aby je "
+"uwierzytelnić."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax_repartition_line__company_id
@@ -16305,6 +16347,16 @@ msgstr "Pozostała  kwota pozycji wpisu wyrażona w walucie firmy."
 #: code:addons/account/models/account_bank_statement.py:0
 msgid "The running balance (%s) doesn't match the specified ending balance."
 msgstr "Saldo bieżące (%s) nie jest zgodne z podanym saldem końcowym."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"The scheduled action 'Send Invoices automatically' is archived. You won't be "
+"able to send invoices in batch."
+msgstr ""
+"Zaplanowana akcja „Automatyczne wysyłanie faktur” została zarchiwizowana. "
+"Nie będzie można wysyłać faktur zbiorczo."
 
 #. module: account
 #. odoo-python
@@ -18639,6 +18691,7 @@ msgstr ""
 msgid ""
 "You cannot change the amount of a payment with multiple liquidity lines."
 msgstr ""
+"Nie można zmienić kwoty płatności z wieloma wierszami płynności finansowej."
 
 #. module: account
 #. odoo-python
@@ -19035,7 +19088,7 @@ msgstr ""
 #: code:addons/account/models/account_move.py:0
 msgid ""
 "You cannot switch the type of a document with an existing sequence number."
-msgstr ""
+msgstr "Nie można zmienić typu dokumentu z istniejącym numerem sekwencyjnym."
 
 #. module: account
 #. odoo-python
@@ -19737,6 +19790,13 @@ msgid ""
 msgstr ""
 "{{ object.company_id.name }} Pokwitowanie zapłaty (Ref {{ object.name or 'n/"
 "a' }})"
+
+#~ msgid ""
+#~ "The company bank account linked to this invoice is not trusted, please "
+#~ "double-check and trust it before confirming, or remove it"
+#~ msgstr ""
+#~ "Konto bankowe firmy powiązane z tą fakturą nie jest zaufane. Sprawdź je "
+#~ "ponownie i oznacz jako zaufane przed potwierdzeniem lub usuń je."
 
 #~ msgid "You cannot switch the type of a document which has been posted once."
 #~ msgstr ""
