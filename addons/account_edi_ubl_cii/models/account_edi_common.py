@@ -1,7 +1,7 @@
 from odoo import _, models, Command
 from odoo.addons.base.models.res_bank import sanitize_account_number
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import float_is_zero, float_repr, find_xml_value
+from odoo.tools import float_compare, float_is_zero, float_repr, find_xml_value
 from odoo.tools.float_utils import float_round
 from odoo.tools.misc import clean_context, formatLang
 from odoo.tools.zeep import Client
@@ -31,7 +31,7 @@ UOM_TO_UNECE_CODE = {
     'uom.product_uom_foot': 'FOT',
     'uom.product_uom_mile': 'SMI',
     'uom.product_uom_floz': 'OZA',
-    'uom.product_uom_qt': 'QT',
+    'uom.product_uom_qt': 'QTL',
     'uom.product_uom_gal': 'GLL',
     'uom.product_uom_cubic_inch': 'INQ',
     'uom.product_uom_cubic_foot': 'FTQ',
@@ -129,8 +129,7 @@ class AccountEdiCommon(models.AbstractModel):
 
     def _get_uom_unece_code(self, line):
         """
-        list of codes: https://docs.peppol.eu/poacc/billing/3.0/codelist/UNECERec20/
-        or https://unece.org/fileadmin/DAM/cefact/recommendations/bkup_htm/add2c.htm (sorted by letter)
+        list of codes: https://docs.peppol.eu/poacc/billing/3.0/codelist/UNECERec20/ (sorted by letter)
         """
         xmlid = line.product_uom_id.get_external_id()
         if xmlid and line.product_uom_id.id in xmlid:
@@ -355,6 +354,13 @@ class AccountEdiCommon(models.AbstractModel):
         # This has to be done after the first import in order to let Odoo compute the taxes before overriding if needed.
         with invoice._get_edi_creation() as invoice:
             self._correct_invoice_tax_amount(tree, invoice)
+
+        # Set XML as ubl_cii_xml_file (XML used to import)
+        file_data['attachment'].write({
+            'res_field': 'ubl_cii_xml_file',
+            'res_model': invoice._name,
+            'res_id': invoice.id,
+        })
 
         # === Import the embedded documents in the xml if some are found ===
         attachments = self.env['ir.attachment']
@@ -687,11 +693,8 @@ class AccountEdiCommon(models.AbstractModel):
         # line_net_subtotal (mandatory)
         price_subtotal = None
         line_total_amount_node = tree.find(xpath_dict['line_total_amount'])
-        if line_total_amount_node is None or line_total_amount_node.text is None or not line_total_amount_node.text.strip():
-            return None
-        price_subtotal = float(line_total_amount_node.text)
-        if price_subtotal == 0:
-            return None
+        if line_total_amount_node is not None and line_total_amount_node.text and line_total_amount_node.text.strip():
+            price_subtotal = float(line_total_amount_node.text)
 
         ####################################################
         # Setting the values on the invoice_line
@@ -713,10 +716,13 @@ class AccountEdiCommon(models.AbstractModel):
         # discount
         discount = 0
         amount_fixed_taxes = sum(d['tax_amount'] * billed_qty for d in fixed_taxes_list)
+        currency = invoice_line.currency_id or self.env.company.currency_id
         if billed_qty * price_unit != 0 and price_subtotal is not None:
-            currency = invoice_line.currency_id or self.env.company.currency_id
             inferred_discount = 100 * (1 - (price_subtotal - amount_fixed_taxes) / currency.round(billed_qty * price_unit))
             discount = inferred_discount if not float_is_zero(inferred_discount, currency.decimal_places) else 0.0
+        elif not float_is_zero(billed_qty, currency.decimal_places) and price_subtotal is not None:
+            # Unit price is 0, so no discount could be inferred.
+            price_unit += (price_subtotal - amount_fixed_taxes) / currency.round(billed_qty)
 
         # Sometimes, the xml received is very bad; e.g.:
         #   * unit price = 0, qty = 0, but price_subtotal = -200
@@ -724,7 +730,7 @@ class AccountEdiCommon(models.AbstractModel):
         #   * unit price = 1, qty = 0, but price_subtotal = -200
         # for instance, when filling a down payment as an invoice line. The equation in the docstring is not
         # respected, and the result will not be correct, so we just follow the simple rule below:
-        if net_price_unit is not None and price_subtotal != net_price_unit * (billed_qty / basis_qty) - allow_charge_amount:
+        if net_price_unit is not None and float_compare(price_subtotal, net_price_unit * (billed_qty / basis_qty) - allow_charge_amount, currency.decimal_places):
             if net_price_unit == 0 and billed_qty == 0:
                 quantity = 1
                 price_unit = price_subtotal
@@ -739,6 +745,7 @@ class AccountEdiCommon(models.AbstractModel):
             'discount': discount,
             'product_uom_id': product_uom_id,
             'fixed_taxes_list': fixed_taxes_list,
+            'price_subtotal': price_subtotal,
         }
 
     def _import_retrieve_fixed_tax(self, invoice_line, fixed_tax_vals):
