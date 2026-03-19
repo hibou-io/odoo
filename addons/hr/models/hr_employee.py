@@ -455,7 +455,7 @@ class HrEmployee(models.Model):
             versions = versions.filtered(lambda c: c.date_start <= self.env.context['before_date'])
         return versions
 
-    def _get_first_version_date(self, no_gap=True):
+    def _get_first_versions_filtered(self, no_gap=True):
         self.ensure_one()
         if not self.env.su and not self.env.user.has_group("hr.group_hr_user"):
             raise AccessError(_("Only HR users can access first version date on an employee."))
@@ -481,7 +481,15 @@ class HrEmployee(models.Model):
         versions = self._get_first_versions().sorted('date_start', reverse=True)
         if no_gap:
             versions = remove_gap(versions)
+        return versions
+
+    def _get_first_version_date(self, no_gap=True):
+        versions = self._get_first_versions_filtered(no_gap=no_gap)
         return min(versions.mapped('date_start')) if versions else False
+
+    def _get_first_contract_date(self, no_gap=True):
+        versions = self._get_first_versions_filtered(no_gap=no_gap).filtered(lambda x: x.contract_date_start)
+        return min(versions.mapped('contract_date_start')) if versions else False
 
     @api.depends('name')
     def _compute_legal_name(self):
@@ -550,8 +558,9 @@ class HrEmployee(models.Model):
         If no valid version is found, we return the very first version of the employee.
         """
         self.ensure_one()
-        versions = self.version_ids.filtered_domain([('date_version', '<=', date)])
-        return max(versions, key=lambda v: v.date_version) if versions else self.version_ids[0]
+        active_versions = self.version_ids.filtered(lambda v: v.active)
+        versions = active_versions.filtered_domain([('date_version', '<=', date)])
+        return max(versions, key=lambda v: v.date_version) if versions else active_versions[0]
 
     def create_version(self, values):
         self.ensure_one()
@@ -1018,29 +1027,36 @@ class HrEmployee(models.Model):
                 '|', ('email_normalized', 'in', employee_emails),
                 ('login', 'in', employee_emails),
             ])
+        emp_by_email = self.grouped(lambda employee: email_normalize(employee.work_email))
+        duplicate_emails = [email for email, employees in emp_by_email.items() if email and len(employees) > 1]
         old_users = []
         new_users = []
         users_without_emails = []
         users_with_invalid_emails = []
         users_with_existing_email = []
+        employees_with_duplicate_email = []
         for employee in self:
+            normalized_email = email_normalize(employee.work_email)
             if employee.user_id:
                 old_users.append(employee.name)
                 continue
             if not employee.work_email:
                 users_without_emails.append(employee.name)
                 continue
-            if not tools.email_normalize(employee.work_email):
+            if not normalized_email:
                 users_with_invalid_emails.append(employee.name)
                 continue
-            if email_normalize(employee.work_email) in conflicting_users.mapped('email_normalized'):
+            if normalized_email in conflicting_users.mapped('email_normalized'):
                 users_with_existing_email.append(employee.name)
+                continue
+            if normalized_email in duplicate_emails:
+                employees_with_duplicate_email.append(employee.name)
                 continue
             new_users.append({
                 'create_employee_id': employee.id,
                 'name': employee.name,
                 'phone': employee.work_phone,
-                'login': tools.email_normalize(employee.work_email),
+                'login': normalized_email,
                 'partner_id': employee.work_contact_id.id,
             })
 
@@ -1068,6 +1084,10 @@ class HrEmployee(models.Model):
 
         if users_with_existing_email:
             message = _('User already exists with the same email for Employees %s', ', '.join(users_with_existing_email))
+            next_action = _get_user_creation_notification_action(message, 'warning', next_action)
+
+        if employees_with_duplicate_email:
+            message = _('The following employees have the same work email address: %s', ', '.join(employees_with_duplicate_email))
             next_action = _get_user_creation_notification_action(message, 'warning', next_action)
 
         return next_action
@@ -1360,13 +1380,13 @@ We can redirect you to the public employee list."""
         employees = employees.sorted(key=lambda employee: index_per_employee[employee])
         # Sudo in case HR officer doesn't have the Contact Creation group
         employees.filtered(lambda e: not e.work_contact_id).sudo()._create_work_contacts()
+        if self.env.context.get('salary_simulation'):
+            return employees
         for employee_sudo in employees.sudo():
             # creating 'svg/xml' attachments requires specific rights
             if not employee_sudo.image_1920 and self.env['ir.ui.view'].sudo(False).has_access('write'):
                 employee_sudo.image_1920 = employee_sudo._avatar_generate_svg()
                 employee_sudo.work_contact_id.image_1920 = employee_sudo.image_1920
-        if self.env.context.get('salary_simulation'):
-            return employees
         employee_departments = employees.department_id
         if employee_departments:
             self.env['discuss.channel'].sudo().search([

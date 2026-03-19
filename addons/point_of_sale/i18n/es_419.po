@@ -10,9 +10,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server saas~18.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 18:35+0000\n"
-"PO-Revision-Date: 2026-02-11 17:44+0000\n"
-"Last-Translator: \"Fernanda Alvarez (mfar)\" <mfar@odoo.com>\n"
+"POT-Creation-Date: 2026-03-06 18:36+0000\n"
+"PO-Revision-Date: 2026-02-25 14:55+0000\n"
+"Last-Translator: \"Patricia Gutiérrez (pagc)\" <pagc@odoo.com>\n"
 "Language-Team: Spanish (Latin America) <https://translate.odoo.com/projects/"
 "odoo-19/point_of_sale/es_419/>\n"
 "Language: es_419\n"
@@ -726,8 +726,8 @@ msgstr "Se requiere una acción"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
-msgid "Action cancelled (%s)"
-msgstr "Acción cancelada (%s)"
+msgid "Action cancelled (%(ACTION)s)"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -1833,8 +1833,8 @@ msgstr ""
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
-msgid "Cash drawer opened (%s)"
-msgstr "Se abrió la caja registradora (%s)"
+msgid "Cash drawer opened (%(ACTION)s)"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2209,7 +2209,7 @@ msgstr "Notas de cierre"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/closing_popup/closing_popup.xml:0
 msgid "Closing Register"
-msgstr "Cerrando la caja registradora"
+msgstr "Cierre de caja registradora"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2220,8 +2220,26 @@ msgstr "Cerrar sesión"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Closing counted: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
 msgid "Closing difference in %(payment_method)s (%(session)s)"
 msgstr "Diferencia de cierre en %(payment_method)s (%(session)s)"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Closing difference: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Closing expected: %s \n"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2787,7 +2805,7 @@ msgstr "Facturas del cliente"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_order_line__customer_note
 #: model_terms:ir.ui.view,arch_db:point_of_sale.view_pos_pos_form
 msgid "Customer Note"
-msgstr "Nota de cliente"
+msgstr "Nota para el cliente"
 
 #. module: point_of_sale
 #: model:ir.model.fields,help:point_of_sale.field_pos_order__access_url
@@ -5839,6 +5857,24 @@ msgstr "Efectivo de apertura"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Opening cash counted: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Opening cash difference: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Opening cash expected: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
 msgid "Opening control message: "
 msgstr "Mensaje de control de apertura: "
 
@@ -7201,7 +7237,7 @@ msgstr "Algunos navegadores no son compatibles con las impresiones"
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/closing_popup/closing_popup.js:0
 msgid "Proceed Anyway"
-msgstr "Continuar"
+msgstr "Continuar de todos modos"
 
 #. module: point_of_sale
 #: model:ir.model,name:point_of_sale.model_product_template
@@ -9558,12 +9594,6 @@ msgstr ""
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
-msgid "There is already a cash payment line."
-msgstr "Ya hay una línea de pago con efectivo."
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.js:0
 msgid "There is already an electronic payment in progress."
 msgstr "Ya hay un pago electrónico en progreso."
@@ -9984,7 +10014,7 @@ msgstr "Precio total con impuestos:"
 
 #. module: point_of_sale
 #. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.xml:0
+#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
 msgid "Total VAT:"
 msgstr "IVA total:"
 
@@ -10308,10 +10338,15 @@ msgstr "UUID"
 
 #. module: point_of_sale
 #. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
 #: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt/receipt_header/receipt_header.xml:0
 msgid "VAT"
 msgstr "Número de identificación fiscal"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
+msgid "VAT:"
+msgstr "IVA:"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -10607,6 +10642,16 @@ msgid ""
 msgstr ""
 "No puede archivar \"%(picking_type)s\" porque se utiliza en la configuración "
 "de PdV \"%(config)s\"."
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/product_template.py:0
+msgid ""
+"You cannot archive a product that is set as a special product in a Point of "
+"Sale configuration. Please change the configuration first."
+msgstr ""
+"No puedes archivar un producto que está definido como un producto especial "
+"en una configuración de Punto de venta. Primero cambia la configuración."
 
 #. module: point_of_sale
 #. odoo-python
@@ -11011,7 +11056,7 @@ msgstr "en esta categoría."
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/combo_configurator_popup/combo_configurator_popup.xml:0
 msgid "included"
-msgstr ""
+msgstr "incluido"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -11099,6 +11144,15 @@ msgstr "para activar los botones."
 msgid "using"
 msgstr "usando"
 
+#~ msgid "Action cancelled (%s)"
+#~ msgstr "Acción cancelada (%s)"
+
+#~ msgid "Cash drawer opened (%s)"
+#~ msgstr "Se abrió la caja registradora (%s)"
+
+#~ msgid "There is already a cash payment line."
+#~ msgstr "Ya hay una línea de pago con efectivo."
+
 #~ msgid "free"
 #~ msgstr "gratis"
 
@@ -11129,9 +11183,6 @@ msgstr "usando"
 #~ "siguientes órdenes.\n"
 #~ "\n"
 #~ "%s"
-
-#~ msgid "VAT:"
-#~ msgstr "IVA:"
 
 #~ msgid "Ok"
 #~ msgstr "De acuerdo"

@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-13 18:35+0000\n"
-"PO-Revision-Date: 2026-02-11 17:39+0000\n"
+"POT-Creation-Date: 2026-03-06 18:36+0000\n"
+"PO-Revision-Date: 2026-02-20 19:43+0000\n"
 "Last-Translator: \"Anastasiia Koroleva (koan)\" <koan@odoo.com>\n"
 "Language-Team: Russian <https://translate.odoo.com/projects/odoo-19/"
 "point_of_sale/ru/>\n"
@@ -341,7 +341,7 @@ msgstr ""
 "                    <div>\n"
 "                        <t t-if=\"client_name\">Здравствуйте, <t t-"
 "out=\"client_name\">имя клиента</t>!</t>\n"
-"                        <t t-else=\"\">Здравствуйте,</t>\n"
+"                        <t t-else=\"\">Здравствуйте!</t>\n"
 "                    </div>\n"
 "                    <br/>\n"
 "                    <div>Благодарим за покупку в <t t-"
@@ -726,8 +726,8 @@ msgstr "Требуются действия"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
-msgid "Action cancelled (%s)"
-msgstr "Действие отменено (%s)"
+msgid "Action cancelled (%(ACTION)s)"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -1832,8 +1832,8 @@ msgstr ""
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
-msgid "Cash drawer opened (%s)"
-msgstr "Денежный ящик открыт (%s)"
+msgid "Cash drawer opened (%(ACTION)s)"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -2211,8 +2211,26 @@ msgstr "Заключительная сессия"
 #. module: point_of_sale
 #. odoo-python
 #: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Closing counted: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
 msgid "Closing difference in %(payment_method)s (%(session)s)"
 msgstr "Разница закрытия в %(payment_method)s (%(session)s)"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Closing difference: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Closing expected: %s \n"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -3605,7 +3623,7 @@ msgstr "Резервная номенклатура"
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__fast_payment_method_ids
 #: model:ir.model.fields,field_description:point_of_sale.field_res_config_settings__pos_fast_payment_method_ids
 msgid "Fast Payment Methods"
-msgstr "Быстрые способы оплаты"
+msgstr "Быстрые методы оплаты"
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__use_fast_payment
@@ -4861,7 +4879,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/utils/init_lna.js:0
 msgid "Local Network Access is not configured for this POS."
-msgstr "Доступ к локальной сети не настроен для этого POS."
+msgstr "Доступ к локальной сети не настроен для этого POS-терминала."
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -5813,6 +5831,24 @@ msgstr "Начальный баланс, суммированный со все�
 #: code:addons/point_of_sale/static/src/app/components/popups/opening_control_popup/opening_control_popup.xml:0
 msgid "Opening cash"
 msgstr "Денежные средства на начало периода"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Opening cash counted: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Opening cash difference: %s \n"
+msgstr ""
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/pos_session.py:0
+msgid "Opening cash expected: %s \n"
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-python
@@ -7672,8 +7708,8 @@ msgstr "Перезагрузите меню кассового аппарата"
 #: code:addons/point_of_sale/static/src/app/components/popups/sync_popup/sync_popup.xml:0
 msgid "Reload all data (may take longer depending on the amount of data)."
 msgstr ""
-"Перезагрузить все данные (может занять больше времени в зависимости от "
-"объема данных)."
+"Обновить все данные (может занять некоторое время в зависимости от их "
+"объема)."
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -7996,8 +8032,8 @@ msgstr "Сканировать QR"
 #: code:addons/point_of_sale/static/src/app/screens/product_screen/product_screen.xml:0
 msgid "Scan a barcode to create automatically, or load our sample data."
 msgstr ""
-"Отсканируйте штрихкод для автоматического создания или загрузите наши "
-"примеры данных."
+"Отсканируйте штрихкод для автоматического создания или загрузите наши демо-"
+"данные."
 
 #. module: point_of_sale
 #: model:ir.model.fields,field_description:point_of_sale.field_pos_config__iface_scan_via_proxy
@@ -8085,7 +8121,7 @@ msgstr "Выберите способ оплаты, чтобы подтверд�
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/components/popups/preset_slots_popup/preset_slots_popup.xml:0
 msgid "Select a preset"
-msgstr "Выберите пресет"
+msgstr "Выбрать пресет"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -9003,8 +9039,7 @@ msgstr "Для компании должна быть установлена с�
 #: code:addons/point_of_sale/static/src/backend/test_epos/test_epos.js:0
 msgid "The cutter has a foreign matter, please check the cutter mechanism"
 msgstr ""
-"В резаке находится посторонний предмет, пожалуйста, проверьте механизм "
-"резака."
+"В резаке находится посторонний предмет, пожалуйста, проверьте механизм резака"
 
 #. module: point_of_sale
 #. odoo-python
@@ -9519,12 +9554,6 @@ msgstr ""
 #. module: point_of_sale
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
-msgid "There is already a cash payment line."
-msgstr "Строка оплаты наличными уже существует."
-
-#. module: point_of_sale
-#. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/models/pos_order.js:0
 #: code:addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.js:0
 msgid "There is already an electronic payment in progress."
 msgstr "Электронный платеж уже проводится."
@@ -9677,7 +9706,7 @@ msgstr "Этот журнал связан с методом оплаты. Вы 
 #. odoo-javascript
 #: code:addons/point_of_sale/static/src/app/utils/debug/debug_widget.js:0
 msgid "This operation will destroy all ${"
-msgstr "Эта операция уничтожит все ${"
+msgstr "Эта операция удалит все ${"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -9939,7 +9968,7 @@ msgstr "Общая цена вкл. налоги:"
 
 #. module: point_of_sale
 #. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.xml:0
+#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
 msgid "Total VAT:"
 msgstr "Общий НДС:"
 
@@ -10262,10 +10291,15 @@ msgstr "Uuid"
 
 #. module: point_of_sale
 #. odoo-javascript
-#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
 #: code:addons/point_of_sale/static/src/app/screens/receipt_screen/receipt/receipt_header/receipt_header.xml:0
 msgid "VAT"
 msgstr "НДС"
+
+#. module: point_of_sale
+#. odoo-javascript
+#: code:addons/point_of_sale/static/src/app/components/popups/product_info_popup/product_info_popup.js:0
+msgid "VAT:"
+msgstr "НДС:"
 
 #. module: point_of_sale
 #. odoo-javascript
@@ -10555,6 +10589,14 @@ msgid ""
 msgstr ""
 "Нельзя архивировать «%(picking_type)s», так как он используется в "
 "конфигурации POS «%(config)s»"
+
+#. module: point_of_sale
+#. odoo-python
+#: code:addons/point_of_sale/models/product_template.py:0
+msgid ""
+"You cannot archive a product that is set as a special product in a Point of "
+"Sale configuration. Please change the configuration first."
+msgstr ""
 
 #. module: point_of_sale
 #. odoo-python
@@ -11035,6 +11077,15 @@ msgstr "для активации кнопок."
 msgid "using"
 msgstr "используя"
 
+#~ msgid "Action cancelled (%s)"
+#~ msgstr "Действие отменено (%s)"
+
+#~ msgid "Cash drawer opened (%s)"
+#~ msgstr "Денежный ящик открыт (%s)"
+
+#~ msgid "There is already a cash payment line."
+#~ msgstr "Строка оплаты наличными уже существует."
+
 #~ msgid "free"
 #~ msgstr "бесплатно"
 
@@ -11045,9 +11096,6 @@ msgstr "используя"
 #~ msgstr ""
 #~ "Этот журнал связан с методом оплаты %(payment_method)s, который "
 #~ "используется в заказе %(pos_order)s в активной сессии POS %(pos_session)s"
-
-#~ msgid "VAT:"
-#~ msgstr "НДС:"
 
 #~ msgid "Ok"
 #~ msgstr "Ок"
