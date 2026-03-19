@@ -32,7 +32,7 @@
                         registerMessageRef="registerMessageRef"
                         messageToReplyTo="props.messageToReplyTo"
                         squashed="isSquashed(msg, prevMsg)"
-                        onParentMessageClick.bind="() => msg.parentMessage and env.messageHighlight?.highlightMessage(msg.parentMessage, props.thread)"
+                        onParentMessageClick.bind="() => this.onParentMessageClick(msg.parentMessage)"
                         thread="props.thread"
                         messageEdition="props.messageEdition"
                         isFirstMessage="msg_first"
@@ -81,6 +81,7 @@
         <div class="o-mail-Thread-error">
             An error occurred while fetching messages.
         </div>
+        <span t-if="props.thread.hasLoadingFailedError" class="o-xsmaller text-muted" t-esc="props.thread.hasLoadingFailedError"/>
         <button class="btn btn-link" t-on-click="onClickLoadOlder">
             Click here to retry
         </button>

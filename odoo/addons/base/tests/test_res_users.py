@@ -193,6 +193,19 @@ class TestUsers(TransactionCase):
         self.assertTrue(portal_partner_2.exists(), 'Should have kept the partner')
         self.assertEqual(asked_deletion_2.state, 'fail', 'Should have marked the deletion as failed')
 
+    def test_delete_public_user(self):
+        """Test that the public user cannot be deleted."""
+        public_user = self.env.ref('base.public_user')
+        public_partner = public_user.partner_id
+
+        # Attempt to delete the public user
+        with self.assertRaises(UserError, msg="Public user should not be deletable"):
+            public_user.unlink()
+
+        # Ensure the public user still exists and is inactive
+        self.assertTrue(public_user.exists() and not public_user.active, "Public user should still exist and be inactive")
+        self.assertTrue(public_partner.exists() and not public_partner.active, "Public partner should still exist and be inactive")
+
     def test_user_home_action_restriction(self):
         test_user = new_test_user(self.env, 'hello world')
 
@@ -608,10 +621,10 @@ class TestUsersIdentitycheck(HttpCase):
         self.env.user.password = "admin@odoo"
 
         # Create a first session that will be used to revoke other sessions
-        session = self.authenticate('admin', 'admin@odoo')
+        session = self.authenticate('admin', 'admin@odoo', session_extra={'_trace_disable': False})
 
         # Create a second session that will be used to check it has been revoked
-        self.authenticate('admin', 'admin@odoo')
+        self.authenticate('admin', 'admin@odoo', session_extra={'_trace_disable': False})
         # Test the session is valid
         # Valid session -> not redirected from /web to /web/login
         self.assertTrue(self.url_open('/web').url.endswith('/web'))

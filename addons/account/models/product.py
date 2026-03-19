@@ -61,9 +61,22 @@ class ProductTemplate(models.Model):
 
     def _get_product_accounts(self):
         return {
-            'income': self.property_account_income_id or self.categ_id.property_account_income_categ_id,
-            'expense': self.property_account_expense_id or self.categ_id.property_account_expense_categ_id
+            'income': self.property_account_income_id or self._get_category_account('property_account_income_categ_id'),
+            'expense': self.property_account_expense_id or self._get_category_account('property_account_expense_categ_id')
         }
+
+    def _get_category_account(self, field_name):
+        """
+        Return the first account defined on the product category hierarchy
+        for the given field.
+        """
+        categ = self.categ_id
+        while categ:
+            account = categ[field_name]
+            if account:
+                return account
+            categ = categ.parent_id
+        return self.env['account.account']
 
     def _get_asset_accounts(self):
         res = {}
@@ -92,7 +105,7 @@ class ProductTemplate(models.Model):
 
     def _construct_tax_string(self, price):
         currency = self.currency_id
-        res = self.taxes_id.filtered(lambda t: t.company_id == self.env.company).compute_all(
+        res = self.taxes_id._filter_taxes_by_company(self.env.company).compute_all(
             price, product=self, partner=self.env['res.partner']
         )
         joined = []
@@ -140,15 +153,23 @@ class ProductTemplate(models.Model):
 
     def _force_default_sale_tax(self, companies):
         default_customer_taxes = companies.filtered('account_sale_tax_id').account_sale_tax_id
-        for product_grouped_by_tax in self.grouped('taxes_id').values():
-            product_grouped_by_tax.taxes_id += default_customer_taxes
-        self.invalidate_recordset(['taxes_id'])
+        if not default_customer_taxes:
+            return
+        links = [Command.link(t.id) for t in default_customer_taxes]
+        for sub_ids in self.env.cr.split_for_in_conditions(self.ids, size=10000):
+            chunk = self.browse(sub_ids)
+            chunk.write({'taxes_id': links})
+            chunk.invalidate_recordset(['taxes_id'])
 
     def _force_default_purchase_tax(self, companies):
         default_supplier_taxes = companies.filtered('account_purchase_tax_id').account_purchase_tax_id
-        for product_grouped_by_tax in self.grouped('supplier_taxes_id').values():
-            product_grouped_by_tax.supplier_taxes_id += default_supplier_taxes
-        self.invalidate_recordset(['supplier_taxes_id'])
+        if not default_supplier_taxes:
+            return
+        links = [Command.link(t.id) for t in default_supplier_taxes]
+        for sub_ids in self.env.cr.split_for_in_conditions(self.ids, size=10000):
+            chunk = self.browse(sub_ids)
+            chunk.write({'supplier_taxes_id': links})
+            chunk.invalidate_recordset(['supplier_taxes_id'])
 
     def _force_default_tax(self, companies):
         self._force_default_sale_tax(companies)
@@ -160,7 +181,7 @@ class ProductTemplate(models.Model):
         # If no company was set for the product, the product will be available for all companies and therefore should
         # have the default taxes of the other companies as well. sudo() is used since we're going to need to fetch all
         # the other companies default taxes which the user may not have access to.
-        other_companies = self.env['res.company'].sudo().search([('id', 'not in', self.env.companies.ids)])
+        other_companies = self.env['res.company'].sudo().search(['!', ('id', 'child_of', self.env.companies.ids)])
         if other_companies and products:
             products_without_company = products.filtered(lambda p: not p.company_id).sudo()
             products_without_company._force_default_tax(other_companies)
@@ -291,21 +312,26 @@ class ProductProduct(models.Model):
         if default_code:
             domains.append([('default_code', '=', default_code)])
         if name:
-            domains += [[('name', '=', name)], [('name', 'ilike', name)]]
+            domains.append([('name', '=', name)])
+            # avoid matching unrelated products whose names merely contain that short string
+            if len(name) > 4:
+                domains.append([('name', 'ilike', name)])
 
         company = company or self.env.company
         for company_domain in (
             [*self.env['res.partner']._check_company_domain(company), ('company_id', '!=', False)],
             [('company_id', '=', False)],
         ):
-            products = self.env['product.product'].search(
-                expression.AND([
-                    expression.OR(domains),
-                    company_domain,
-                    extra_domain or [],
-                ]),
-            )
             for domain in domains:
-                if products_by_domain := products.filtered_domain(domain):
-                    return products_by_domain[0]
+                product = self.env['product.product'].search(
+                    expression.AND([
+                        domain,
+                        company_domain,
+                        extra_domain or [],
+                    ]),
+                    limit=1
+                )
+                # We need a single product. Exit early if one is found (implements the priority logic).
+                if product:
+                    return product
         return self.env['product.product']

@@ -1,7 +1,7 @@
 import { Plugin } from "../plugin";
 import { closestBlock, isBlock } from "../utils/blocks";
 import { hasAnyNodesColor, TEXT_CLASSES_REGEX, BG_CLASSES_REGEX } from "@html_editor/utils/color";
-import { cleanTextNode, splitTextNode, unwrapContents } from "../utils/dom";
+import { cleanTextNode, removeEmptyTextNodes, splitTextNode, unwrapContents } from "../utils/dom";
 import {
     areSimilarElements,
     isContentEditable,
@@ -13,6 +13,7 @@ import {
     isZwnbsp,
     isZWS,
     previousLeaf,
+    PROTECTED_QWEB_SELECTOR,
 } from "../utils/dom_info";
 import {
     childNodes,
@@ -153,7 +154,9 @@ export class FormatPlugin extends Plugin {
     };
 
     removeFormat() {
-        const targetedNodes = this.dependencies.selection.getTargetedNodes();
+        const targetedNodes = this.dependencies.selection
+            .getTargetedNodes()
+            .filter(this.dependencies.selection.isNodeEditable);
         for (const format of Object.keys(formatsSpecs)) {
             if (
                 !formatsSpecs[format].removeStyle ||
@@ -176,9 +179,13 @@ export class FormatPlugin extends Plugin {
      * @returns {boolean}
      */
     hasSelectionFormat(format, targetedNodes = this.dependencies.selection.getTargetedNodes()) {
-        const targetedTextNodes = targetedNodes.filter(isTextNode);
+        const targetedTextNodes = targetedNodes.filter(
+            (node) =>
+                node.matches?.(PROTECTED_QWEB_SELECTOR) ||
+                (isTextNode(node) && (isVisibleTextNode(node) || isZWS(node)))
+        );
         const isFormatted = formatsSpecs[format].isFormatted;
-        return targetedTextNodes.some((n) => isFormatted(n, this.editable));
+        return targetedTextNodes.some((n) => isFormatted(n, { editable: this.editable }));
     }
     /**
      * Return true if the current selection on the editable appears as the given
@@ -199,7 +206,8 @@ export class FormatPlugin extends Plugin {
         );
         const isFormatted = formatsSpecs[format].isFormatted;
         return (
-            targetedTextNodes.length && targetedTextNodes.every((node) => isFormatted(node, this.editable))
+            targetedTextNodes.length &&
+            targetedTextNodes.every((node) => isFormatted(node, { editable: this.editable }))
         );
     }
 
@@ -207,17 +215,20 @@ export class FormatPlugin extends Plugin {
     // - the calls to hasAnyColor should probably be replaced by calls to predicates
     //   registered as resources (e.g. by the ColorPlugin).
     hasAnyFormat(targetedNodes) {
+        const editableTargetedNodes = targetedNodes.filter(
+            this.dependencies.selection.isNodeEditable
+        );
         for (const format of Object.keys(formatsSpecs)) {
             if (
                 formatsSpecs[format].removeStyle &&
-                this.hasSelectionFormat(format, targetedNodes)
+                this.hasSelectionFormat(format, editableTargetedNodes)
             ) {
                 return true;
             }
         }
         return (
-            hasAnyNodesColor(targetedNodes, "color") ||
-            hasAnyNodesColor(targetedNodes, "backgroundColor")
+            hasAnyNodesColor(editableTargetedNodes, "color") ||
+            hasAnyNodesColor(editableTargetedNodes, "backgroundColor")
         );
     }
 
@@ -229,6 +240,16 @@ export class FormatPlugin extends Plugin {
 
     // @todo phoenix: refactor this method.
     _formatSelection(formatName, { applyStyle, formatProps } = {}) {
+        const deepSelection = this.dependencies.selection.getSelectionData().deepEditableSelection;
+        const anchorElement = deepSelection.anchorNode;
+        const focusElement = deepSelection.focusNode;
+        if (
+            anchorElement === focusElement &&
+            !isContentEditable(anchorElement) &&
+            !closestElement(anchorElement, PROTECTED_QWEB_SELECTOR)
+        ) {
+            return;
+        }
         // note: does it work if selection is in opposite direction?
         const selection = this.dependencies.split.splitSelection();
         if (typeof applyStyle === "undefined") {
@@ -270,8 +291,8 @@ export class FormatPlugin extends Plugin {
         const tagetedFieldNodes = new Set(
             this.dependencies.selection
                 .getTargetedNodes()
-                .map((n) => closestElement(n, "*[t-field],*[t-out],*[t-esc]"))
-                .filter(Boolean)
+                .map((node) => closestElement(node, PROTECTED_QWEB_SELECTOR))
+                .filter((node) => node && this.dependencies.selection.isNodeEditable(node))
         );
         const formatSpec = formatsSpecs[formatName];
         for (const node of selectedTextNodes) {
@@ -304,6 +325,12 @@ export class FormatPlugin extends Plugin {
                 if (isUselessZws) {
                     unwrapContents(parentNode);
                 } else {
+                    const cursors = this.dependencies.selection.preserveSelection();
+                    this.dispatchTo("clean_handlers", parentNode);
+                    // Remove empty text nodes (replaced FEFFs) before splitting,
+                    // to prevent creating empty elements in the DOM.
+                    removeEmptyTextNodes(parentNode, cursors);
+                    cursors.restore();
                     const newLastAncestorInlineFormat = this.dependencies.split.splitAroundUntil(
                         currentNode,
                         parentNode
@@ -425,6 +452,9 @@ export class FormatPlugin extends Plugin {
     removeEmptyInlineElement(selectionData) {
         const { anchorNode } = selectionData.editableSelection;
         const blockEl = closestBlock(anchorNode);
+        if (!blockEl) {
+            return;
+        }
         const inlineElement = findFurthest(
             closestElement(anchorNode),
             blockEl,

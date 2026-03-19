@@ -113,6 +113,7 @@ export class Composer extends Component {
             active: true,
             isFullComposerOpen: false,
         });
+        this.root = useRef("root");
         this.fullComposerBus = new EventBus();
         this.selection = useSelection({
             refName: "textarea",
@@ -589,6 +590,7 @@ export class Composer extends Component {
             default_res_ids: [this.thread.id],
             default_subtype_xmlid: this.props.type === "note" ? "mail.mt_note" : "mail.mt_comment",
             mail_post_autofollow: this.thread.hasWriteAccess,
+            body_contains_signature_only: !body || body.trim().length === 0,
         };
         const action = {
             name: this.props.type === "note" ? _t("Log note") : _t("Compose Email"),
@@ -665,16 +667,11 @@ export class Composer extends Component {
 
     async processMessage(cb) {
         const el = this.ref.el;
-        const attachments = this.props.composer.attachments;
-        if (attachments.some(({ uploading }) => uploading)) {
+        if (this.props.composer.attachments.some(({ uploading }) => uploading)) {
             this.env.services.notification.add(_t("Please wait while the file is uploading."), {
                 type: "warning",
             });
-        } else if (
-            this.props.composer.text.trim() ||
-            attachments.length > 0 ||
-            (this.message && this.message.attachment_ids.length > 0)
-        ) {
+        } else if (this.canProcessMessage) {
             if (!this.state.active) {
                 return;
             }
@@ -687,6 +684,14 @@ export class Composer extends Component {
             this.state.active = true;
             el.focus();
         }
+    }
+
+    get canProcessMessage() {
+        return (
+            this.props.composer.text.trim() ||
+            this.props.composer.attachments.length > 0 ||
+            (this.message && this.message.attachment_ids.length > 0)
+        );
     }
 
     async sendMessage() {
@@ -748,7 +753,7 @@ export class Composer extends Component {
 
     async editMessage() {
         const composer = toRaw(this.props.composer);
-        if (composer.text || composer.message.attachment_ids.length > 0) {
+        if (!this.askDeleteFromEdit) {
             await this.processMessage(async (value) =>
                 composer.message.edit(value, composer.attachments, {
                     mentionedChannels: composer.mentionedChannels,
@@ -756,13 +761,24 @@ export class Composer extends Component {
                 })
             );
         } else {
-            this.env.services.dialog.add(MessageConfirmDialog, {
-                message: composer.message,
-                onConfirm: () => this.message.remove(),
-                prompt: _t("Are you sure you want to delete this message?"),
-            });
+            this.env.services.dialog.add(
+                MessageConfirmDialog,
+                {
+                    message: composer.message,
+                    onConfirm: this.message.remove({
+                        removeFromThread: this.shouldHideFromMessageListOnDelete,
+                    }),
+                    prompt: _t("Are you sure you want to delete this message?"),
+                },
+                { context: this }
+            );
         }
         this.suggestion?.clearRawMentions();
+    }
+
+    get askDeleteFromEdit() {
+        const composer = toRaw(this.props.composer);
+        return !composer.text && composer.message.attachment_ids.length === 0;
     }
 
     addEmoji(str) {
@@ -822,5 +838,9 @@ export class Composer extends Component {
         } catch {
             browser.localStorage.removeItem(composer.localId);
         }
+    }
+
+    get shouldHideFromMessageListOnDelete() {
+        return false;
     }
 }

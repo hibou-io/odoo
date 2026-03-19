@@ -78,6 +78,7 @@ export class Thread extends Component {
         });
         this.lastJumpPresent = this.props.jumpPresent;
         this.orm = useService("orm");
+        this.ui = useService("ui");
         /** @type {ReturnType<import('@mail/utils/common/hooks').useMessageHighlight>|null} */
         this.messageHighlight = this.env.messageHighlight
             ? useState(this.env.messageHighlight)
@@ -533,6 +534,22 @@ export class Thread extends Component {
         this.env.services.action.doAction(actionDescription);
     }
 
+    async onParentMessageClick(parentMessage) {
+        if (!parentMessage) {
+            return;
+        }
+        const targetThread = parentMessage.thread;
+        if (!targetThread) {
+            return;
+        }
+        if (targetThread.eq(this.props.thread)) {
+            this.env.messageHighlight?.highlightMessage(parentMessage, targetThread);
+        } else {
+            targetThread.highlightMessage = parentMessage;
+            await targetThread.open({ focus: true });
+        }
+    }
+
     getMessageClassName(message) {
         return !message.isNotification && this.messageHighlight?.highlightedMessageId === message.id
             ? "o-highlighted bg-view shadow-lg pb-1"
@@ -546,6 +563,9 @@ export class Thread extends Component {
         this.props.thread.scrollTop = "bottom";
         this.state.showJumpPresent = false;
         this.scrollingToHighlight = false;
+        if (!this.ui.isSmall) {
+            this.props.thread.composer.autofocus++;
+        }
     }
 
     async onClickUnreadMessagesBanner() {

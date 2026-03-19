@@ -14,6 +14,7 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
 from odoo.tools import format_datetime, format_date, format_list, groupby, SQL
 from odoo.tools.float_utils import float_compare, float_is_zero
+from odoo.tools.misc import clean_context
 
 
 class PickingType(models.Model):
@@ -846,6 +847,8 @@ class Picking(models.Model):
     @api.depends('move_ids.state', 'move_ids.date', 'move_type')
     def _compute_scheduled_date(self):
         for picking in self:
+            if not picking.id:
+                continue
             moves_dates = picking.move_ids.filtered(lambda move: move.state not in ('done', 'cancel')).mapped('date')
             if picking.move_type == 'direct':
                 picking.scheduled_date = min(moves_dates, default=picking.scheduled_date or fields.Datetime.now())
@@ -1206,8 +1209,9 @@ class Picking(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'stock.move.line',
             'views': [(view_id, 'list')],
-            'domain': [('id', 'in', self.move_line_ids.ids)],
+            'domain': [('picking_id', '=', self.id)],
             'context': {
+                'sml_specific_default': True,
                 'default_picking_id': self.id,
                 'default_location_id': self.location_id.id,
                 'default_location_dest_id': self.location_dest_id.id,
@@ -1308,7 +1312,6 @@ class Picking(models.Model):
                     move_lines_without_package_level = move_lines_to_pack - move_lines_in_package_level
                     if package.package_use == 'disposable':
                         (move_lines_in_package_level | move_lines_without_package_level).result_package_id = package
-                    move_lines_in_package_level.result_package_id = package
                     for ml in move_lines_in_package_level:
                         ml.package_level_id = ml.move_id.package_level_id.id
                     move_lines_without_package_level.package_level_id = package_level_ids[0].id
@@ -1360,7 +1363,8 @@ class Picking(models.Model):
         no_quantities_done_ids = set()
         pickings_without_quantities = self.env['stock.picking']
         for picking in self:
-            if all(float_is_zero(move.quantity, precision_digits=precision_digits) for move in picking.move_ids.filtered(lambda m: m.state not in ('done', 'cancel'))):
+            has_pick = any(move.picked and move.state not in ('done', 'cancel') for move in picking.move_ids)
+            if all(float_is_zero(move.quantity, precision_digits=precision_digits) for move in picking.move_ids.filtered(lambda m: m.state not in ('done', 'cancel') and (not has_pick or m.picked))):
                 pickings_without_quantities |= picking
 
         pickings_using_lots = self.filtered(lambda p: p.picking_type_id.use_create_lots or p.picking_type_id.use_existing_lots)
@@ -1495,6 +1499,11 @@ class Picking(models.Model):
         """Whether the different transfers should be displayed on the pre action done wizards."""
         return len(self) > 1
 
+    def _should_ignore_backorders(self):
+        """ Checks if the `create_backorder` setting from the picking type should be ignored.
+        """
+        return bool(self.return_id)
+
     def _get_without_quantities_error_message(self):
         """ Returns the error message raised in validation if no quantities are reserved.
         The purpose of this method is to be overridden in case we want to adapt this message.
@@ -1503,7 +1512,7 @@ class Picking(models.Model):
         :rtype: str
         """
         return _(
-            'You cannot validate a transfer if no quantities are reserved. '
+            'You cannot validate a transfer if no quantities are reserved, or if only non-reserved moves are picked.'
             'To force the transfer, encode quantities.'
         )
 
@@ -1779,7 +1788,7 @@ class Picking(models.Model):
             return {}
 
     def _put_in_pack(self, move_line_ids):
-        package = self.env['stock.quant.package'].create({})
+        package = self._get_put_in_pack_package()
         package_type = move_line_ids.move_id.product_packaging_id.package_type_id
         if len(package_type) == 1:
             package.package_type_id = package_type
@@ -1802,6 +1811,9 @@ class Picking(models.Model):
                 'company_id': self.company_id.id,
             })
         return package
+
+    def _get_put_in_pack_package(self):
+        return self.env['stock.quant.package'].create({})
 
     def _post_put_in_pack_hook(self, package_id):
         if package_id and self.picking_type_id.auto_print_package_label:
@@ -1834,6 +1846,8 @@ class Picking(models.Model):
 
     def action_put_in_pack(self, move_lines_to_pack=False):
         self.ensure_one()
+        if self.env.context.get('sml_specific_default'):
+            self = self.with_context(clean_context(self.env.context))
         if self.state not in ('done', 'cancel'):
             move_line_ids = self._package_move_lines(move_lines_to_pack=move_lines_to_pack)
             if move_line_ids:

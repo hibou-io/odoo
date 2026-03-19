@@ -7,15 +7,17 @@ import {
     TEXT_CLASSES_REGEX,
     BG_CLASSES_REGEX,
     RGBA_REGEX,
+    hasTextColorClass,
 } from "@html_editor/utils/color";
 import { fillEmpty, unwrapContents } from "@html_editor/utils/dom";
 import {
-    isContentEditable,
     isEmptyBlock,
+    isEmptyTextNode,
     isRedundantElement,
     isTextNode,
     isWhitespace,
     isZwnbsp,
+    PROTECTED_QWEB_SELECTOR,
 } from "@html_editor/utils/dom_info";
 import { closestElement, descendants, selectElements } from "@html_editor/utils/dom_traversal";
 import { isCSSColor } from "@web/core/utils/colors";
@@ -24,6 +26,7 @@ import { reactive } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { withSequence } from "@html_editor/utils/resource";
 import { isBlock } from "@html_editor/utils/blocks";
+import { callbacksForCursorUpdate } from "@html_editor/utils/selection";
 
 const RGBA_OPACITY = 0.6;
 const HEX_OPACITY = "99";
@@ -180,9 +183,11 @@ export class ColorPlugin extends Plugin {
                         .getTargetedNodes()
                         .filter(
                             (n) =>
-                                isTextNode(n) ||
-                                (mode === "backgroundColor" &&
-                                    n.classList.contains("o_selected_td"))
+                                (isTextNode(n) ||
+                                    n.matches?.(`t, ${PROTECTED_QWEB_SELECTOR}`) ||
+                                    (mode === "backgroundColor" &&
+                                        n.classList.contains("o_selected_td"))) &&
+                                this.dependencies.selection.isNodeEditable(n)
                         );
                     return hasAnyNodesColor(nodes, mode);
                 };
@@ -207,9 +212,6 @@ export class ColorPlugin extends Plugin {
      * @param {boolean} [previewMode=false] true - apply color in preview mode
      */
     _applyColor(color, mode, previewMode = false) {
-        if (this.delegateTo("color_apply_overrides", color, mode, previewMode)) {
-            return;
-        }
         const activeTab = document
             .querySelector(".o_font_color_selector button.active")
             ?.innerHTML.trim();
@@ -218,14 +220,18 @@ export class ColorPlugin extends Plugin {
             // mode to make text highlighting more usable between light and dark modes.
             color += HEX_OPACITY;
         }
+        if (this.delegateTo("color_apply_overrides", color, mode, previewMode)) {
+            return;
+        }
+        let cursors;
         let selection = this.dependencies.selection.getEditableSelection();
         let targetedNodes;
         // Get the <font> nodes to color
         if (selection.isCollapsed) {
             let zws;
             if (
-                selection.anchorNode.nodeType !== Node.TEXT_NODE &&
-                selection.anchorNode.textContent !== "\u200b"
+                selection.anchorNode.nodeType === Node.TEXT_NODE &&
+                selection.anchorNode.textContent === "\u200b"
             ) {
                 zws = selection.anchorNode;
             } else {
@@ -238,12 +244,17 @@ export class ColorPlugin extends Plugin {
                 },
                 { normalize: false }
             );
+            cursors = this.dependencies.selection.preserveSelection();
             targetedNodes = [zws];
         } else {
             selection = this.dependencies.split.splitSelection();
+            cursors = this.dependencies.selection.preserveSelection();
             targetedNodes = this.dependencies.selection
                 .getTargetedNodes()
-                .filter((node) => isContentEditable(node) && node.nodeName !== "T");
+                .filter(
+                    (node) =>
+                        this.dependencies.selection.isNodeEditable(node) && node.nodeName !== "T"
+                );
             if (isEmptyBlock(selection.endContainer)) {
                 targetedNodes.push(selection.endContainer, ...descendants(selection.endContainer));
             }
@@ -257,19 +268,25 @@ export class ColorPlugin extends Plugin {
         const targetedFieldNodes = new Set(
             this.dependencies.selection
                 .getTargetedNodes()
-                .map((n) => closestElement(n, "*[t-field],*[t-out],*[t-esc]"))
+                .map((node) => closestElement(node, PROTECTED_QWEB_SELECTOR))
                 .filter(Boolean)
         );
 
-        const getFonts = (selectedNodes) => {
-            return selectedNodes.flatMap((node) => {
+        const getFonts = (selectedNodes) =>
+            selectedNodes.flatMap((node) => {
                 let font =
                     closestElement(node, "font") ||
                     closestElement(
                         node,
                         '[style*="color"], [style*="background-color"], [style*="background-image"]'
                     ) ||
-                    closestElement(node, "span");
+                    closestElement(node, "span") ||
+                    closestElement(node, (node) => hasTextColorClass(node, mode));
+
+                const faNodes = font?.querySelectorAll(".fa");
+                if (faNodes && Array.from(faNodes).some((faNode) => faNode.contains(node))) {
+                    return font;
+                }
                 const children = font && descendants(font);
                 const hasInlineGradient = font && isColorGradient(font.style["background-image"]);
                 const isFullySelected =
@@ -283,7 +300,10 @@ export class ColorPlugin extends Plugin {
                 if (
                     font &&
                     font.nodeName !== "T" &&
-                    (font.nodeName !== "SPAN" || font.style[mode] || font.style.backgroundImage) &&
+                    (font.nodeName !== "SPAN" ||
+                        font.style[mode] ||
+                        font.style.backgroundImage ||
+                        hasTextColorClass(font, mode)) &&
                     (isColorGradient(color) ||
                         color === "" ||
                         !hasInlineGradient ||
@@ -319,6 +339,18 @@ export class ColorPlugin extends Plugin {
                             selectedChildren,
                             splitnode
                         );
+                        // After splitting we need to clear the new nodes created by
+                        // `splitElement` that contains only empty text nodes.
+                        // We also need to update the outer cursor.
+                        for (const child of font.parentElement.children) {
+                            if (
+                                child.childNodes.length &&
+                                [...child.childNodes].every((node) => isEmptyTextNode(node))
+                            ) {
+                                cursors.update(callbacksForCursorUpdate.remove(child));
+                                child.remove();
+                            }
+                        }
                         if (isGradientBeingUpdated) {
                             const classRegex =
                                 mode === "color" ? TEXT_CLASSES_REGEX : BG_CLASSES_REGEX;
@@ -393,7 +425,6 @@ export class ColorPlugin extends Plugin {
                 }
                 return font;
             });
-        };
 
         for (const fieldNode of targetedFieldNodes) {
             this.colorElement(fieldNode, color, mode);
@@ -417,6 +448,7 @@ export class ColorPlugin extends Plugin {
                 ["FONT", "SPAN"].includes(font.nodeName) &&
                 (!font.hasAttribute("style") || !color)
             ) {
+                cursors.update(callbacksForCursorUpdate.unwrap(font));
                 for (const child of [...font.childNodes]) {
                     font.parentNode.insertBefore(child, font);
                 }
@@ -424,7 +456,7 @@ export class ColorPlugin extends Plugin {
                 fontsSet.delete(font);
             }
         }
-        this.dependencies.selection.setSelection(selection, { normalize: false });
+        cursors.restore();
     }
 
     getUsedCustomColors(mode) {

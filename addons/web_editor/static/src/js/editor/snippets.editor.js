@@ -2016,15 +2016,15 @@ class SnippetsMenu extends Component {
         });
 
         useBus(this.props.bus, "INSERT_SNIPPET", ({ detail }) => {
-            const { snippetSelector, block } = detail;
+            const { snippetSelector } = detail;
             this._execWithLoadingEffect(() => {
                 const snippet = [...this.snippets.values()].find((snippet) => {
                     return snippet.baseBody.matches(snippetSelector);
                 });
-                if (snippet && block) {
+                if (snippet) {
                     const clonedBody = snippet.baseBody.cloneNode(true);
                     clonedBody.classList.remove(".oe_snippet_body");
-                    block.after(clonedBody);
+                    this.options.wysiwyg.odooEditor.execCommand("insert", clonedBody);
                     // This call will block the mutex so it is not awaited.
                     this.callPostSnippetDrop($(clonedBody));
                 }
@@ -3260,6 +3260,11 @@ class SnippetsMenu extends Component {
         if (websiteFormEditorOptionsEl) {
             websiteFormEditorOptionsEl.dataset.dropExcludeAncestor = "form";
         }
+        // TODO: Remove in master and add it in the template.
+        const filterSelectEl = $html.find("we-select").has("we-button[data-gl-filter]")[0];
+        if (filterSelectEl) {
+            filterSelectEl.dataset.name = "glfilter_select_opt";
+        }
         this.templateOptions = [];
         var selectors = [];
         var $styles = $html.find('[data-selector]');
@@ -3395,9 +3400,10 @@ class SnippetsMenu extends Component {
                 return snippet.category.id === "snippet_custom";
             });
             for (const customSnippet of customSnippets) {
-                // The "s_button" has a numeric value added to its name when it
-                // is custom, so we need to consider this in the search.
-                const customSnippetName = /s_button_\d+/.test(customSnippet.name) ?
+                // Custom "s_button" snippets add a unique suffix to their name
+                // (e.g. s_button_xxx). To reliably detect custom buttons, we
+                // normalize the name by removing this suffix.
+                const customSnippetName = customSnippet.name.startsWith("s_button_") ?
                     "s_button" :
                     customSnippet.name;
 
@@ -3797,7 +3803,12 @@ class SnippetsMenu extends Component {
                         dropped = true;
                     }
                 }
-                if (!dropped && y > 3 && x + helper.getBoundingClientRect().height < this.el.getBoundingClientRect().left) {
+                const sidebarRect = this.el.getBoundingClientRect();
+                const isRTL = document.body.classList.contains("o_rtl");
+                const isOutOfSidebar = isRTL
+                    ? sidebarRect.left + sidebarRect.width < x - helper.getBoundingClientRect().width / 2
+                    : x + helper.getBoundingClientRect().width / 2 < sidebarRect.left;
+                if (!dropped && y > 3 && isOutOfSidebar) {
                     const point = { x, y };
                     let droppedOnNotNearest = touching(doc.body.querySelectorAll('.oe_structure_not_nearest'), point);
                     // If dropped outside of a dropzone with class oe_structure_not_nearest,
@@ -4219,9 +4230,10 @@ class SnippetsMenu extends Component {
             this.lastElement = false;
         });
 
-        if (!$target.closest('we-button, we-toggler, we-select, .o_we_color_preview').length) {
+        if (!$target.closest('we-button, we-toggler, we-select, .o_we_color_preview').length && !this._isColorpickerClick) {
             this._closeWidgets();
         }
+        delete this._isColorpickerClick;
         if (!$target.closest('body > *').length || $target.is('#iframe_target')) {
             return;
         }
@@ -4533,6 +4545,9 @@ class SnippetsMenu extends Component {
             clearTimeout(enableTimeoutID);
             reenable();
         });
+        if (ev.target.closest(".o_colorpicker_widget")) {
+            this._isColorpickerClick = true;
+        }
     }
     /**
      * @private

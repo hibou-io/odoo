@@ -1243,3 +1243,106 @@ class TestAccountMove(AccountTestInvoicingCommon):
         move_duplicate = move.copy()
         self.assertTrue(move_duplicate)
         self.assertFalse(move_duplicate.partner_id)
+
+    def test_no_recompute_when_company_address_changes(self):
+        """
+        Ensure that changing the company partner address does NOT trigger
+        any recomputation on account.move or account.move.line fields
+        """
+        # Prepare patching
+        protected_models = ['account.move', 'account.move.line']
+        original_recompute = {model: self.env[model]._recompute_field for model in protected_models}
+        fields_recomputed = []
+
+        def mock_recompute(self, field, ids=None):
+            ids_to_compute = self.env.transaction.tocompute.get(field, ())
+            ids = ids_to_compute if ids is None else [id_ for id_ in ids if id_ in ids_to_compute]
+            if field.store and (
+                (self._name == 'account.move' and invoice.id in ids)
+                or (self._name == 'account.move.line' and set(invoice.line_ids.ids) & set(ids))
+            ):
+                fields_recomputed.append(str(field))
+            original_recompute[self._name](field, ids)
+
+        # Setup data
+        invoice = self.env['account.move'].create({
+            'move_type': 'entry',
+            'partner_id': self.partner_a.id,
+            'date': fields.Date.from_string('2019-01-01'),
+            'currency_id': self.other_currency.id,
+            'line_ids': [
+                Command.create(self.entry_line_vals_1),
+                Command.create(self.entry_line_vals_2),
+            ],
+        })
+        self.env.flush_all()
+
+        # Check
+        for model in protected_models:
+            self.patch(self.env.registry[model], '_recompute_field', mock_recompute)
+
+        invoice.company_id.partner_id.write({
+            'street': 'New Street',
+            'zip': '12345',
+            'country_id': invoice.company_id.partner_id.country_id.id,
+            'vat': '12345678',
+        })
+        self.env.flush_all()
+        self.assertEqual(fields_recomputed, [])
+
+    def test_post_invoice_fails_with_account_and_journal_company_inconsistency(self):
+        """
+        Ensure that an invoice cannot be posted when at least one line account
+        belongs to a different company than the journal.
+
+        The test verifies that:
+        - Using a journal from a branch company (child of the account's company) is allowed
+        - Using a journal from an unrelated company correctly raises a UserError
+        - Using a shared account between two companies works as expected
+        """
+        account = self.company_data['default_account_revenue']
+        move = self.env['account.move'].create({
+            'line_ids': [
+                Command.create({'name': 'debit_line', 'debit': 100.0, 'account_id': account.id}),
+                Command.create({'name': 'credit_line', 'credit': 100.0, 'account_id': account.id}),
+            ]
+        })
+
+        # Ensure branch company aren't considered as inconsistency
+        company_branch = self.env['res.company'].create({
+            'name': 'Company Branch',
+            'parent_id': self.env.company.id,
+        })
+        journal_branch = self.env['account.journal'].create({
+            'name': 'Company Branch Journal',
+            'type': 'general',
+            'code': 'CBrJ',
+            'company_id': company_branch.id,
+        })
+        move.write({'company_id': company_branch.id, 'journal_id': journal_branch.id})
+        move.action_post()
+        move.button_draft()
+
+        # Ensure posting fails when the account's company is different than the journal's company
+        company_b = self.env['res.company'].create({'name': 'Company B'})
+        journal_b = self.env['account.journal'].create({
+            'name': 'Company B Journal',
+            'type': 'general',
+            'code': 'CBJ',
+            'company_id': company_b.id,
+        })
+        move.write({'name': '/', 'company_id': company_b.id, 'journal_id': journal_b.id})
+        with self.assertRaisesRegex(UserError, rf"The entry is using accounts \({account.display_name}\) from a different company\."):
+            move.action_post()
+
+        # Ensure posting works for accounts shared between the two companies
+        shared_account = self.env['account.account'].create([{
+            'name': 'Shared Account',
+            'company_ids': [Command.set((self.env.company | company_b).ids)],
+            'code_mapping_ids': [
+                Command.create({'company_id': self.env.company.id, 'code': '180001'}),
+                Command.create({'company_id': company_b.id, 'code': '180001'}),
+            ],
+        }])
+        move.line_ids.account_id = shared_account
+        move.action_post()

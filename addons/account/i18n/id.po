@@ -1,25 +1,27 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* account
+# * account
 #
 # Translators:
 # Ryanto The <ry.the77@gmail.com>, 2024
 # Wil Odoo, 2025
 # Abe Manyo, 2025
-#
+# Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-15 18:36+0000\n"
-"PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Abe Manyo, 2025\n"
-"Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
+"POT-Creation-Date: 2026-02-27 18:36+0000\n"
+"PO-Revision-Date: 2026-03-02 11:18+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"Language-Team: Indonesian <https://translate.odoo.com/projects/odoo-18/"
+"account/id/>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.16.1\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -64,6 +66,16 @@ msgstr ""
 "        misal: 180 / (1 - 10%) = 200 (tidak termasuk harga)\n"
 "        misal: 200 * (1 - 10%) = 180 (termasuk harga)\n"
 "        "
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"\n"
+"Please contact your administrator."
+msgstr ""
+"\n"
+"Silakan hubungi administrator Anda."
 
 #. module: account
 #. odoo-python
@@ -198,18 +210,6 @@ msgstr "%(ref)s (%(currency_amount)s)"
 #: code:addons/account/models/account_account_tag.py:0
 msgid "%(tag)s (%(country_code)s)"
 msgstr "%(tag)s (%(country_code)s)"
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_tax.py:0
-msgid ""
-"%(tax_account)s (%(account_name)s) should be an account of type \"%"
-"(receivable)s\" or \"%(payable)s\" with both options \"%"
-"(allow_reconciliation)s\" and \"%(non_trade)s\" enabled."
-msgstr ""
-"%(tax_account)s (%(account_name)s) harus merupakan akun dengan tipe \"%"
-"(receivable)s\" atau \"%(payable)s\" dengan opsi \"%"
-"(allow_reconciliation)s\" dan \"%(non_trade)s\" yang diaktifkan."
 
 #. module: account
 #. odoo-python
@@ -987,14 +987,14 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account.portal_my_details_fields
 msgid ""
 "<small class=\"form-text text-muted\">\n"
-"                    You can choose how you want us to send your invoices, "
-"and with which electronic format.\n"
-"                </small>"
+"                        You can choose how you want us to send your "
+"invoices, and with which electronic format.\n"
+"                    </small>"
 msgstr ""
 "<small class=\"form-text text-muted\">\n"
-"                    Anda dapat memilih cara kami mengirimkan Anda faktur, "
-"dan dengan format elektronik apa.\n"
-"                </small>"
+"                        Anda dapat memilih bagaimana Anda ingin mengirim "
+"faktur Anda, dan dengan format elektronik apa.\n"
+"                    </small>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.portal_my_invoices
@@ -1924,6 +1924,16 @@ msgid "Account Chart Template"
 msgstr "Templat Bagan Akun"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_code_mapping.py:0
+msgid ""
+"Account Code Mapping cannot be accessed directly. It is designed to be used "
+"only through the Chart of Accounts."
+msgstr ""
+"Code Mapping Akun tidak dapat diakses langsung. Dirancang untuk digunakan "
+"hanya melalui Bagan Akun."
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_report_line__account_codes_formula
 msgid "Account Codes Formula Shortcut"
 msgstr "Shortcut Formula Kode Akun"
@@ -2407,11 +2417,11 @@ msgstr "Accrual Moves"
 #. odoo-python
 #: code:addons/account/wizard/accrued_orders.py:0
 msgid ""
-"Accrual entry created on %(date)s: %(accrual_entry)s.                    And "
-"its reverse entry: %(reverse_entry)s."
+"Accrual entry created on %(date)s: %(accrual_entry)s.                And its "
+"reverse entry: %(reverse_entry)s."
 msgstr ""
-"Entri akrual dibuat pada %(date)s: %(accrual_entry)s.                    Dan "
-"entri kebalikannya: %(reverse_entry)s."
+"Entri akrual dibuat pada %(date)s: %(accrual_entry)s.                Dan "
+"reverse entry: %(reverse_entry)s."
 
 #. module: account
 #. odoo-python
@@ -3368,6 +3378,11 @@ msgid "Attachments"
 msgstr "Lampiran"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_send_wizard__attachments_not_supported
+msgid "Attachments Not Supported"
+msgstr "Lampiran Tidak Didukung"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_mail_mail__account_audit_log_activated
 #: model:ir.model.fields,field_description:account.field_mail_message__account_audit_log_activated
 msgid "Audit Log Activated"
@@ -3792,6 +3807,12 @@ msgid "Bank of odoo"
 msgstr "Bank of odoo"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Bank settings"
+msgstr ""
+
+#. module: account
 #: model:ir.model,name:account.model_account_setup_bank_manual_config
 msgid "Bank setup manual config"
 msgstr "Bank setup manual config"
@@ -3899,6 +3920,26 @@ msgstr "Batch Payment Sequence"
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Batch Payments"
 msgstr "Batch Payments"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_move_send_batch_wizard.py:0
+msgid ""
+"Batch invoice sending is unavailable. Please, activate the cron to enable "
+"batch sending of invoices."
+msgstr ""
+"Mengirim faktur batch tidak tersedia. Silakan, aktifkan cron untuk "
+"mengaktifkan mengirim batch faktur."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_move_send_batch_wizard.py:0
+msgid ""
+"Batch invoice sending is unavailable. Please, contact your system "
+"administrator to activate the cron to enable batch sending of invoices."
+msgstr ""
+"Mengirim faktur batch tidak tersedia. Silakan, hubungi administrator sistem "
+"Anda untuk mengaktifkan cron untuk mengaktifkan mengirim faktur batch."
 
 #. module: account
 #. odoo-javascript
@@ -4535,6 +4576,8 @@ msgid "Chart of accounts set!"
 msgstr "Bagan akun ditetapkan!"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move_send.py:0
 #: model_terms:ir.ui.view,arch_db:account.report_hash_integrity
 msgid "Check"
 msgstr "Cek"
@@ -4662,6 +4705,7 @@ msgstr "Tutup"
 #: model:ir.model.fields,field_description:account.field_account_payment__payment_method_code
 #: model:ir.model.fields,field_description:account.field_account_payment_method__code
 #: model:ir.model.fields,field_description:account.field_account_payment_method_line__code
+#: model:ir.model.fields,field_description:account.field_account_payment_register__payment_method_code
 #: model:ir.model.fields,field_description:account.field_account_report_line__code
 #: model_terms:ir.ui.view,arch_db:account.view_account_form
 #: model_terms:ir.ui.view,arch_db:account.view_account_list
@@ -6193,6 +6237,12 @@ msgid "Default taxes used when selling the product"
 msgstr "Pajak standar yang digunakan saat menjual produk"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Default value for 'company_id' for %(record)s is not an integer"
+msgstr "Value default untuk 'company_id' untuk %(record)s bukan integer"
+
+#. module: account
 #: model:account.account,name:account.1_deferred_revenue
 msgid "Deferred Revenue"
 msgstr "Penangguhan Pendapatan"
@@ -6513,6 +6563,11 @@ msgstr "Tampilkan Field Alias"
 #: model:ir.model.fields,field_description:account.field_account_accrued_orders_wizard__display_amount
 msgid "Display Amount"
 msgstr "Tampilkan Jumlah"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_move_send_wizard__display_attachments_widget
+msgid "Display Attachments Widget"
+msgstr "Widget Tampilan Lampiran"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment_term_line__display_days_next_month
@@ -8010,6 +8065,12 @@ msgid "Global Lock Date"
 msgstr "Global Lock Date"
 
 #. module: account
+#. odoo-python
+#: code:addons/account/wizard/account_move_send_batch_wizard.py:0
+msgid "Go to cron configuration"
+msgstr "Kunjungi konfigurasi cron"
+
+#. module: account
 #: model_terms:ir.actions.act_window,help:account.action_account_audit_trail_report
 msgid "Go to the accounting settings"
 msgstr "Pergi ke pengaturan akuntansi"
@@ -8091,6 +8152,8 @@ msgid ""
 "Groupby feature isn't supported by '%(engine)s' engine. Please remove the "
 "groupby value on '%(report_line)s'"
 msgstr ""
+"Fitur-fitur groupby tidak didukung oleh engine '%(engine)s'. Silakan hapus "
+"value groupby di '%(report_line)s'"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_merge_wizard_line__grouping_key
@@ -8255,6 +8318,11 @@ msgstr "Horizontal Split Side"
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "How total tax amount is computed in orders and invoices"
 msgstr "Bagaimana jumlah pajak total dihitung pada order dan faktur"
+
+#. module: account
+#: model_terms:ir.ui.view,arch_db:account.report_invoice_document
+msgid "ICE:"
+msgstr "ICE:"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_account__id
@@ -9802,6 +9870,7 @@ msgstr "Jurnal:"
 #: model:ir.actions.act_window,name:account.action_account_journal_form
 #: model:ir.model.fields,field_description:account.field_account_report__filter_journals
 #: model:ir.ui.menu,name:account.menu_action_account_journal_form
+#: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "Journals"
 msgstr "Jurnal-jurnal"
 
@@ -9825,6 +9894,11 @@ msgstr "Juli"
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__6
 msgid "June"
 msgstr "Juni"
+
+#. module: account
+#: model:ir.model,name:account.model_kpi_provider
+msgid "KPI Provider"
+msgstr "KPI Provider"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_journal__kanban_dashboard
@@ -12401,6 +12475,12 @@ msgstr ""
 "Pembayaran terkait partner tanpa akun bank yang ditentukan akan dilewati"
 
 #. module: account
+#: model:ir.model.fields,help:account.field_account_bank_statement_line__reconciled_payment_ids
+#: model:ir.model.fields,help:account.field_account_move__reconciled_payment_ids
+msgid "Payments that have been reconciled with this invoice."
+msgstr "Pembayaran yang sudah direkonsiliasi dengan faktur ini."
+
+#. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_payment_term_line__value__percent
 msgid "Percent"
 msgstr "Persen"
@@ -13065,6 +13145,12 @@ msgstr "Reconciled Invoices"
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_invoices_type
 msgid "Reconciled Invoices Type"
 msgstr "Tipe Faktur yang Direkonsiliasi"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_bank_statement_line__reconciled_payment_ids
+#: model:ir.model.fields,field_description:account.field_account_move__reconciled_payment_ids
+msgid "Reconciled Payments"
+msgstr "Pembayaran yang Direkonsiliasi"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_payment__reconciled_statement_line_ids
@@ -15522,6 +15608,14 @@ msgstr ""
 "Akun bank dari jurnal bank harus termasuk dalam perusahaan yang sama (%s)."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The bank account of your company is not trusted. Please ask an admin or "
+"someone with approval rights to check it."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__statement_id
 msgid "The bank statement used for bank reconciliation"
 msgstr "Rekening koran yang digunakan untuk rekonsiliasi bank"
@@ -15592,6 +15686,15 @@ msgid ""
 msgstr "Partner komersil telah diupdate untuk semua entri akuntansi terkait."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The company bank account (%(account_number)s) linked to this invoice is not "
+"trusted. Go to the Bank Settings, double-check that it is yours or correct "
+"the number, and click on Send Money to trust it."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_tax_repartition_line__company_id
 msgid "The company this distribution line belongs to."
 msgstr "Perusahaan yang memiliki baris distribusi ini."
@@ -15632,6 +15735,12 @@ msgstr ""
 #: model:ir.model.fields,help:account.field_res_config_settings__account_fiscal_country_id
 msgid "The country to use the tax reports from for this company"
 msgstr "Negara di mana laporan pajak digunakan untuk perusahaan ini"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "The currency rate must be strictly positive."
+msgstr "Kurs mata uang harus selalu positif."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__currency_id
@@ -15745,6 +15854,16 @@ msgstr "Entri %(name)s (id %(id)s) harus dalam draft."
 #: model:ir.model.fields,help:account.field_account_move__secured
 msgid "The entry is secured with an inalterable hash."
 msgstr "Entri diamankan dengan hash yang tidak dapat diubah."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The entry is using accounts (%(accounts_codes_names)s) from a different "
+"company."
+msgstr ""
+"Entri ini menggunakan akun (%(accounts_codes_names)s) dari perusahaan yang "
+"berbeda."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_product_category__property_account_expense_categ_id
@@ -16220,6 +16339,16 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_move_send.py:0
+msgid ""
+"The scheduled action 'Send Invoices automatically' is archived. You won't be "
+"able to send invoices in batch."
+msgstr ""
+"Action 'Kirim Faktur otomatis' yang terjadwal telah diarsip. Anda tidak "
+"dapat mengirim faktur dalam batch."
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/account_report.py:0
 msgid "The sections defined on a report cannot have sections themselves."
 msgstr ""
@@ -16590,18 +16719,6 @@ msgstr "Tahun Ini"
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_account.py:0
-msgid ""
-"This account is configured in %(journal_names)s journal(s) (ids %"
-"(journal_ids)s) as payment debit or credit account. This means that this "
-"account's type should be reconcilable."
-msgstr ""
-"Akun ini dikonfigurasi di jurnal %(journal_names)s (id %(journal_ids)s) "
-"sebagai debit pembayaran atau akun kredit. Ini berarti tipe akun ini "
-"harusnya bisa direkonsiliasi. "
-
-#. module: account
-#. odoo-python
-#: code:addons/account/models/account_account.py:0
 msgid "This account was split off from %(account_name)s (%(company_name)s)."
 msgstr "Akun ini dipisahkan dari %(account_name)s (%(company_name)s)."
 
@@ -16916,8 +17033,8 @@ msgstr ""
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
-msgid "This setting cannot be changed after an invoice is created."
-msgstr "Pengaturan ini tidak dapat diubah setelah faktur dibuat."
+msgid "This setting locks once a journal entry is created."
+msgstr "Pengaturan ini dikunci setelah entri jurnal dibuat."
 
 #. module: account
 #. odoo-python
@@ -18567,6 +18684,15 @@ msgstr ""
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_payment.py:0
+msgid ""
+"You cannot change the amount of a payment with multiple liquidity lines."
+msgstr ""
+"Anda tidak dapat mengubah jumlah pembayaran dengan lebih dari satu baris "
+"likuiditas."
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/company.py:0
 msgid ""
 "You cannot change the currency of the company since some journal items "
@@ -18849,6 +18975,12 @@ msgstr "Anda tidak post entri di jurnal yang sudah diarsip (%(journal)s)"
 
 #. module: account
 #. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "You cannot post an entry with an archived analytic account: %s"
+msgstr ""
+
+#. module: account
+#. odoo-python
 #: code:addons/account/models/res_currency.py:0
 msgid ""
 "You cannot reduce the number of decimal places of a currency which has "
@@ -18949,8 +19081,10 @@ msgstr ""
 #. module: account
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
-msgid "You cannot switch the type of a document which has been posted once."
-msgstr "Anda tidak dapat mengganti tipe dokumen yang telah diposting sekali."
+msgid ""
+"You cannot switch the type of a document with an existing sequence number."
+msgstr ""
+"Anda tidak dapat mengganti tipe dokumen yang sudah memiliki nomor urutan."
 
 #. module: account
 #. odoo-python
@@ -19071,6 +19205,16 @@ msgstr ""
 "Anda harus mengonfigurasi 'Jurnal Forex Gain or Loss' di pengaturan "
 "perusahaan Anda, untuk mengelola secara otomatis booking dari entri "
 "akuntansi yang terkait perbedaan di antara nilai tukar mata uang."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_journal_dashboard.py:0
+msgid ""
+"You may only use samples in demo mode, try uploading one of your invoices "
+"instead."
+msgstr ""
+"Anda hanya dapat menggunakan sampel di mode demo, coba unggah salah satu "
+"faktur Anda."
 
 #. module: account
 #. odoo-python
@@ -19649,6 +19793,57 @@ msgid ""
 "{{ object.company_id.name }} Payment Receipt (Ref {{ object.name or 'n/a' }})"
 msgstr ""
 "{{ object.company_id.name }} Resi Pembayaran (Ref {{ object.name or 'n/a' }})"
+
+#~ msgid ""
+#~ "The company bank account linked to this invoice is not trusted, please "
+#~ "double-check and trust it before confirming, or remove it"
+#~ msgstr ""
+#~ "Akun bank perusahaan yang terhubung ke faktur ini tidak dapat dipercaya, "
+#~ "silakan periksa kembali dan percayai rekening tersebut sebelum "
+#~ "mengonfirmasi, atau hapus"
+
+#~ msgid "You cannot switch the type of a document which has been posted once."
+#~ msgstr ""
+#~ "Anda tidak dapat mengganti tipe dokumen yang telah diposting sekali."
+
+#~ msgid ""
+#~ "This account is configured in %(journal_names)s journal(s) (ids %"
+#~ "(journal_ids)s) as payment debit or credit account. This means that this "
+#~ "account's type should be reconcilable."
+#~ msgstr ""
+#~ "Akun ini dikonfigurasi di jurnal %(journal_names)s (id %(journal_ids)s) "
+#~ "sebagai debit pembayaran atau akun kredit. Ini berarti tipe akun ini "
+#~ "harusnya bisa direkonsiliasi. "
+
+#~ msgid "This setting cannot be changed after an invoice is created."
+#~ msgstr "Pengaturan ini tidak dapat diubah setelah faktur dibuat."
+
+#~ msgid ""
+#~ "%(tax_account)s (%(account_name)s) should be an account of type \"%"
+#~ "(receivable)s\" or \"%(payable)s\" with both options \"%"
+#~ "(allow_reconciliation)s\" and \"%(non_trade)s\" enabled."
+#~ msgstr ""
+#~ "%(tax_account)s (%(account_name)s) harus merupakan akun dengan tipe \"%"
+#~ "(receivable)s\" atau \"%(payable)s\" dengan opsi \"%"
+#~ "(allow_reconciliation)s\" dan \"%(non_trade)s\" yang diaktifkan."
+
+#~ msgid ""
+#~ "Accrual entry created on %(date)s: %(accrual_entry)s.                    "
+#~ "And its reverse entry: %(reverse_entry)s."
+#~ msgstr ""
+#~ "Entri akrual dibuat pada %(date)s: %(accrual_entry)s.                    "
+#~ "Dan entri kebalikannya: %(reverse_entry)s."
+
+#~ msgid ""
+#~ "<small class=\"form-text text-muted\">\n"
+#~ "                    You can choose how you want us to send your invoices, "
+#~ "and with which electronic format.\n"
+#~ "                </small>"
+#~ msgstr ""
+#~ "<small class=\"form-text text-muted\">\n"
+#~ "                    Anda dapat memilih cara kami mengirimkan Anda faktur, "
+#~ "dan dengan format elektronik apa.\n"
+#~ "                </small>"
 
 #~ msgid ""
 #~ "Groupby feature isn't supported by aggregation engine. Please remove the "

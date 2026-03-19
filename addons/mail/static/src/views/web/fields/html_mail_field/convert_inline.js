@@ -33,7 +33,6 @@ function commonParentGet(node1, node2, root = undefined) {
 //--------------------------------------------------------------------------
 
 const RE_COL_MATCH = /(^| )col(-[\w\d]+)*( |$)/;
-const RE_COMMAS_OUTSIDE_PARENTHESES = /,(?![^(]*?\))/g;
 const RE_OFFSET_MATCH = /(^| )offset(-[\w\d]+)*( |$)/;
 const RE_PADDING_MATCH = /[ ]*padding[^;]*;/g;
 const RE_PADDING = /([\d.]+)/;
@@ -61,7 +60,8 @@ export const TABLE_ATTRIBUTES = {
 };
 // Cancel tables default styles.
 export const TABLE_STYLES = {
-    "border-collapse": "collapse",
+    "border-collapse": "separate",
+    "border-spacing": "0px",
     "text-align": "inherit",
     "font-size": "unset",
     "line-height": "inherit",
@@ -77,6 +77,10 @@ const GROUPED_STYLES = {
         "border-right-style",
         "border-bottom-style",
         "border-left-style",
+        "border-top-color",
+        "border-right-color",
+        "border-bottom-color",
+        "border-left-color",
     ],
     padding: ["padding-top", "padding-bottom", "padding-left", "padding-right"],
     margin: ["margin-top", "margin-bottom", "margin-left", "margin-right"],
@@ -437,6 +441,7 @@ export function cardToTable(element) {
                 col.append(child);
             }
             const subTable = _createTable();
+            subTable.style.height = "100%";
             const superRow = document.createElement("tr");
             const superCol = document.createElement("td");
             row.append(col);
@@ -523,6 +528,7 @@ export function classToStyle(element, cssRules) {
                 style = `${key}:${value};${style}`;
             }
         }
+        style = correctBorderAttributes(style);
         if (Object.keys(style || {}).length === 0) {
             writes.push(() => {
                 node.removeAttribute("style");
@@ -817,6 +823,13 @@ export async function toInline(element, cssRules) {
     // Fix card-img-top heights (must happen before we transform everything).
     for (const imgTop of element.querySelectorAll(".card-img-top")) {
         imgTop.style.setProperty("height", _getHeight(imgTop) + "px");
+    }
+
+    // Fix empty element heights to be always visible as they might have borders
+    // (used as separation) and can be rendered with height 0px.
+    // like having empty div with % height and display inline-block.
+    for (const el of element.querySelectorAll(".o_not_editable[class*='border-']:empty")) {
+        el.style.height = getComputedStyle(el).height;
     }
 
     attachmentThumbnailToLinkImg(element);
@@ -1199,6 +1212,26 @@ export function formatTables(element) {
         }
     }
 }
+export function splitSelectors(str) {
+    const result = [];
+    let current = "";
+    let depth = 0;
+    for (const char of str) {
+        if (char === "(") {
+            depth++;
+        } else if (char === ")") {
+            depth--;
+        }
+        if (char === "," && depth === 0) {
+            result.push(current.trim());
+            current = "";
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
 /**
  * Parse through the given document's stylesheets, preprocess(*) them and return
  * the result as an array of objects, each containing a selector string , a
@@ -1241,7 +1274,7 @@ export function getCSSRules(doc) {
             for (const subRule of subRules) {
                 const selectorText = subRule.selectorText || "";
                 // Split selectors, making sure not to split at commas in parentheses.
-                for (const selector of selectorText.split(RE_COMMAS_OUTSIDE_PARENTHESES)) {
+                for (const selector of splitSelectors(selectorText)) {
                     if (selector && !SELECTORS_IGNORE.test(selector)) {
                         cssRules.push({ selector: selector.trim(), rawRule: subRule });
                         if (selector === "body") {
@@ -1871,7 +1904,11 @@ function _getHeight(element) {
  */
 function _hideForOutlook(node, onlyHideTag = false) {
     if (!onlyHideTag) {
-        node.setAttribute("style", `${node.getAttribute("style") || ""} mso-hide: all;`.trim());
+        let style = (node.getAttribute("style") || "").trim();
+        if (style && !style.endsWith(";")) {
+            style += ";";
+        }
+        node.setAttribute("style", `${style} mso-hide: all;`);
     }
     node[onlyHideTag === "closing" ? "append" : "before"](document.createComment("[if !mso]><!"));
     node[onlyHideTag === "opening" ? "prepend" : "after"](document.createComment("<![endif]"));
@@ -1950,4 +1987,63 @@ function removeBlacklistedStyles(rule, node) {
         styles[key] = value;
     }
     return styles;
+}
+
+/**
+ * Corrects the `border-style` attribute in the provided inline style string.
+ * This is specifically for Outlook, which displays borders even when their widths are set to 0px.
+ * If all border widths are 0, the function updates `border-style` to `none`.
+ *
+ * @param {string} style - The inline style string to correct.
+ * @returns {string} - The corrected inline style string.
+ */
+function correctBorderAttributes(style) {
+    const stylesObject = style
+        .replace(/\s+/g, " ")
+        .split(";")
+        .reduce((styles, styleString) => {
+            const [attribute, value] = styleString.split(":").map((str) => str.trim());
+            if (attribute) {
+                styles[attribute] = value;
+            }
+            return styles;
+        }, {});
+
+    const BORDER_WIDTHS_ATTRIBUTES = [
+        "border-bottom-width",
+        "border-left-width",
+        "border-right-width",
+        "border-top-width",
+    ];
+
+    const isBorderStyleApplied = BORDER_WIDTHS_ATTRIBUTES.some(
+        (attribute) => attribute in stylesObject
+    );
+
+    if (!isBorderStyleApplied) {
+        return style;
+    }
+
+    const totalBorderWidth = BORDER_WIDTHS_ATTRIBUTES.reduce((totalWidth, attribute) => {
+        const widthValue = stylesObject[attribute] || "0px";
+        const numericWidth = parseFloat(widthValue.replace("px", "")) || 0;
+        return totalWidth + numericWidth;
+    }, 0);
+
+    if (totalBorderWidth === 0) {
+        let correctedStyle = style.trim();
+        if (correctedStyle.slice(-1) != ";") {
+            correctedStyle += ";";
+        }
+        correctedStyle = correctedStyle.replace(
+            /(;|^)\s*border-style\s*:[^;]*(;|$)|$/,
+            "$1border-style:none$2"
+        );
+        return correctedStyle;
+    }
+
+    if (/border-style\s*:/i.test(style)) {
+        return style;
+    }
+    return style.trim().replace(/;?$/, "; border-style: solid;");
 }

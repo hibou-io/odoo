@@ -481,9 +481,17 @@ class AccountEdiFormat(models.Model):
             if is_overseas:
                 json_payload.update({"toStateCode": 99})
             if is_overseas and ship_to_details.state_id.country_id.code != "IN":
+                # For exports without LUT, the e-waybill total invoice value must include Reverse Charges.
+                # Reverse charge amounts are stored as a negative value,
+                # so we subtract it here to effectively add it to the total. i.e. -(-x) = +x).
+                adjusting_rc_amount = sum(
+                    amount for code, amount in tax_details_by_code.items()
+                    if code in ("cgst_rc_amount", "sgst_rc_amount", "igst_rc_amount")
+                )
                 json_payload.update({
                     "actToStateCode": 99,
                     "toPincode": 999999,
+                    "totInvValue": json_payload["totInvValue"] - adjusting_rc_amount,
                 })
             else:
                 json_payload.update({
@@ -521,9 +529,9 @@ class AccountEdiFormat(models.Model):
         extract_digits = self._l10n_in_edi_extract_digits
         tax_details_by_code = self._get_l10n_in_tax_details_by_line_code(line_tax_details.get("tax_details", {}))
         line_details = {
-            "productName": line.product_id.name,
+            "productName": line.product_id.name[:100] if line.product_id else "",
             "hsnCode": extract_digits(line.l10n_in_hsn_code),
-            "productDesc": line.name,
+            "productDesc": line.name[:100] if line.name else "",
             "quantity": line.quantity,
             "qtyUnit": line.product_uom_id.l10n_in_code and line.product_uom_id.l10n_in_code.split("-")[0] or "OTH",
             "taxableAmount": self._l10n_in_round_value(line.balance * sign),

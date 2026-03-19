@@ -1,5 +1,5 @@
 import { Plugin } from "@html_editor/plugin";
-import { cleanTrailingBR, unwrapContents } from "@html_editor/utils/dom";
+import { cleanTrailingBR, mergeAdjacentTextNodes, unwrapContents } from "@html_editor/utils/dom";
 import {
     childNodes,
     closestElement,
@@ -18,7 +18,7 @@ import { rpc } from "@web/core/network/rpc";
 import { memoize } from "@web/core/utils/functions";
 import { withSequence } from "@html_editor/utils/resource";
 import { isBlock, closestBlock } from "@html_editor/utils/blocks";
-import { FONT_SIZE_CLASSES } from "@html_editor/utils/formatting";
+import { isContentEditable } from "../../utils/dom_info";
 
 /**
  * @typedef {import("@html_editor/core/selection_plugin").EditorSelection} EditorSelection
@@ -102,7 +102,7 @@ async function fetchInternalMetaData(url) {
             const html_parser = new window.DOMParser();
             const doc = html_parser.parseFromString(content, "text/html");
             const internalUrlMetaData = await rpc("/html_editor/link_preview_internal", {
-                preview_url: urlParsed.pathname,
+                preview_url: urlParsed.href,
             });
 
             internalUrlMetaData["favicon"] = doc.querySelector("link[rel~='icon']");
@@ -245,6 +245,7 @@ export class LinkPlugin extends Plugin {
         split_element_block_overrides: this.handleSplitBlock.bind(this),
         insert_line_break_element_overrides: this.handleInsertLineBreak.bind(this),
         delete_image_overrides: this.deleteImageLink.bind(this),
+        delete_backward_overrides: withSequence(15, this.handleDeleteBackward.bind(this)),
     };
     setup() {
         this.overlay = this.dependencies.overlay.createOverlay(LinkPopover, {}, { sequence: 50 });
@@ -461,7 +462,11 @@ export class LinkPlugin extends Plugin {
             // note that data-prevent-closing-overlay also used in color picker but link popover
             // and color picker don't open at the same time so it's ok to query like this
             const popoverEl = document.querySelector("[data-prevent-closing-overlay=true]");
-            if (popoverEl?.contains(selectionData.documentSelection?.anchorNode)) {
+            if (
+                popoverEl &&
+                (!selectionData.documentSelection ||
+                    popoverEl.contains(selectionData.documentSelection.anchorNode))
+            ) {
                 return;
             }
             this.overlay.close();
@@ -581,6 +586,12 @@ export class LinkPlugin extends Plugin {
      * @return {HTMLElement}
      */
     getOrCreateLink() {
+        const deepSelection = this.dependencies.selection.getSelectionData().deepEditableSelection;
+        const anchorElement = deepSelection.anchorNode;
+        const focusElement = deepSelection.focusNode;
+        if (anchorElement === focusElement && !isContentEditable(anchorElement)) {
+            return;
+        }
         const selection = this.dependencies.selection.getEditableSelection();
         const linkElement = findInSelection(selection, "a");
         if (linkElement) {
@@ -612,26 +623,7 @@ export class LinkPlugin extends Plugin {
 
             const link = this.document.createElement("a");
             if (!selection.isCollapsed) {
-                let content;
-                const fontSizeWrapper = closestElement(
-                    selection.commonAncestorContainer,
-                    (el) =>
-                        el.tagName === "SPAN" &&
-                        (FONT_SIZE_CLASSES.some((cls) => el.classList.contains(cls)) ||
-                            el.style?.fontSize)
-                );
-                // Split selection to include font-size <span>
-                // inside <a> to preserve styling.
-                if (fontSizeWrapper) {
-                    this.dependencies.split.splitSelection();
-                    const selectedNodes = this.dependencies.selection.getSelectedNodes();
-                    content = this.dependencies.split.splitAroundUntil(
-                        selectedNodes,
-                        fontSizeWrapper
-                    );
-                } else {
-                    content = this.dependencies.selection.extractContent(selection);
-                }
+                const content = this.dependencies.selection.extractContent(selection);
                 link.append(content);
                 link.normalize();
             }
@@ -851,6 +843,19 @@ export class LinkPlugin extends Plugin {
                 ev.preventDefault();
             }
         }
+        // Firefox: avoid corrupted selection inside link.
+        const selection = this.document.getSelection();
+        if (
+            ev.inputType === "insertText" &&
+            selection.isCollapsed &&
+            selection.anchorNode.nodeType === Node.TEXT_NODE &&
+            selection.anchorNode.parentElement.tagName === "A"
+        ) {
+            // Reset hidden internal selection state.
+            const offset = selection.anchorOffset;
+            selection.collapse(selection.anchorNode, 0);
+            selection.collapse(selection.anchorNode, offset);
+        }
         this.updateCurrentLinkSyncState();
     }
 
@@ -898,7 +903,9 @@ export class LinkPlugin extends Plugin {
             selection.anchorNode.nodeType === Node.TEXT_NODE
         ) {
             // Merge adjacent text nodes.
-            selection.anchorNode.parentNode.normalize();
+            const cursor = this.dependencies.selection.preserveSelection();
+            mergeAdjacentTextNodes(selection.anchorNode.parentNode, cursor);
+            cursor.restore();
             selection = this.dependencies.selection.getEditableSelection();
             const textSliced = selection.anchorNode.textContent.slice(0, selection.anchorOffset);
             const textNodeSplitted = textSliced.split(/\s/);
@@ -975,6 +982,25 @@ export class LinkPlugin extends Plugin {
         [targetNode, targetOffset] = edge === "start" ? leftPos(targetNode) : rightPos(targetNode);
         blockToSplit = targetNode;
         splitOrLineBreakCallback({ ...params, targetNode, targetOffset, blockToSplit });
+        return true;
+    }
+
+    handleDeleteBackward({ startContainer, startOffset, endContainer, endOffset }) {
+        // Detect if selection is around FEFF after the end edge of a button.
+        if (startContainer !== endContainer || startOffset !== 0 || endOffset !== 1) {
+            return;
+        }
+        if (startContainer.nodeType !== Node.TEXT_NODE || startContainer.textContent != "\uFEFF") {
+            return;
+        }
+        if (!startContainer.previousSibling?.matches("a.btn")) {
+            return;
+        }
+        // Move before inner FEFF of the button.
+        this.dependencies.selection.setSelection({
+            anchorNode: startContainer.previousSibling,
+            anchorOffset: startContainer.previousSibling.childNodes.length - 1,
+        });
         return true;
     }
 }

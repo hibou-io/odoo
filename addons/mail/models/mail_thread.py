@@ -6,6 +6,7 @@ import datetime
 import dateutil
 import email
 import email.policy
+import encodings
 import hashlib
 import hmac
 import json
@@ -48,8 +49,15 @@ from odoo.tools.mail import (
 )
 
 MAX_DIRECT_PUSH = 5
+BAD_CONTENT_TYPES = ('binary/octet-stream', '*/*', 'bin/plain')  # replaced by application/octet-stream
 
 _logger = logging.getLogger(__name__)
+
+# monkey-patching encodings so that it will recognize `charset=cp-850` in emails
+# as a correct alias for cp850 when decoding email parts with the email python library.
+# The key "cp_850" will implicitly match "cp_850" and "cp-850"
+# See https://stackoverflow.com/a/51961225
+encodings.aliases.aliases['cp_850'] = 'cp850'
 
 
 class MailThread(models.AbstractModel):
@@ -133,6 +141,11 @@ class MailThread(models.AbstractModel):
             thread.message_partner_ids = thread.message_follower_ids.mapped('partner_id')
 
     def _inverse_message_partner_ids(self):
+        # The unsubscription is postponed until the end of the method because the
+        # message_unsubscribe() unlinks records that invalidates all the cache including
+        # `message_partner_ids` in `self`.
+        to_unsubscribe = []
+
         for thread in self:
             new_partners_ids = thread.message_partner_ids
             previous_partners_ids = thread.message_follower_ids.partner_id
@@ -141,7 +154,10 @@ class MailThread(models.AbstractModel):
             if added_patners_ids:
                 thread.message_subscribe(added_patners_ids.ids)
             if removed_partners_ids:
-                thread.message_unsubscribe(removed_partners_ids.ids)
+                to_unsubscribe.append((thread, removed_partners_ids.ids))
+
+        for thread, partner_ids in to_unsubscribe:
+            thread.message_unsubscribe(partner_ids)
 
     @api.model
     def _search_message_partner_ids(self, operator, operand):
@@ -534,9 +550,6 @@ class MailThread(models.AbstractModel):
         for record in records:
             changes, _tracking_value_ids = tracking.get(record.id, (None, None))
             record._message_track_post_template(changes)
-        # this method is called after the main flush() and just before commit();
-        # we have to flush() again in case we triggered some recomputations
-        self.env.flush_all()
 
     def _track_set_author(self, author):
         """ Set the author of the tracking message. """
@@ -549,7 +562,6 @@ class MailThread(models.AbstractModel):
     def _track_post_template_finalize(self):
         """Call the tracking template method with right values from precommit."""
         self._message_track_post_template(self.env.cr.precommit.data.pop(f'mail.tracking.create.{self._name}.{self.id}', []))
-        self.env.flush_all()
 
     def _track_set_log_message(self, message):
         """ Link tracking to a message logged as body, in addition to subtype
@@ -894,15 +906,15 @@ class MailThread(models.AbstractModel):
         If the email is related to a partner, we consider that the number of message_bounce
         is not relevant anymore as the email is valid - as we received an email from this
         address. The model is here hardcoded because we cannot know with which model the
-        incomming mail match. We consider that if a mail arrives, we have to clear bounce for
+        incoming mail match. We consider that if a mail arrives, we have to clear bounce for
         each model having bounce count.
 
         :param email_from: email address that sent the incoming email."""
-        valid_email = message_dict['email_from']
-        if valid_email:
+        normalized_from = email_normalize(message_dict['email_from'])
+        if normalized_from:
             bl_models = self.env['ir.model'].sudo().search(['&', ('is_mail_blacklist', '=', True), ('model', '!=', 'mail.thread.blacklist')])
             for model in [bl_model for bl_model in bl_models if bl_model.model in self.env]:  # transient test mode
-                self.env[model.model].sudo().search([('message_bounce', '>', 0), ('email_normalized', '=', valid_email)])._message_reset_bounce(valid_email)
+                self.env[model.model].sudo().search([('message_bounce', '>', 0), ('email_normalized', '=', normalized_from)])._message_reset_bounce(normalized_from)
 
     @api.model
     def _detect_is_bounce(self, message, message_dict):
@@ -1004,7 +1016,7 @@ class MailThread(models.AbstractModel):
 
             # search messages linked to email -> alias updating records
             if doc_ids and not loop_new:
-                base_msg_domain = [('model', '=', model._name), ('res_id', 'in', doc_ids), ('create_date', '>=', create_date_limit)]
+                base_msg_domain = [('model', '=', model._name), ('res_id', 'in', doc_ids), ('create_date', '>=', create_date_limit), ('message_type', '=', 'email')]
                 if author_id:
                     msg_domain = expression.AND([[('author_id', '=', author_id)], base_msg_domain])
                 else:
@@ -1564,8 +1576,8 @@ class MailThread(models.AbstractModel):
                     # the parent email that might be added at the end
                     # (e.g. for outlook / yahoo bounce email)
                     break
-                if part.get_content_type() == 'binary/octet-stream':
-                    _logger.warning("Message containing an unexpected Content-Type 'binary/octet-stream', assuming 'application/octet-stream'")
+                if (bad_content_type := part.get_content_type()) in BAD_CONTENT_TYPES:
+                    _logger.warning("Message containing an unexpected Content-Type %r, assuming 'application/octet-stream'", bad_content_type)
                     part.replace_header('Content-Type', 'application/octet-stream')
                 if part.get_content_type() == 'multipart/alternative':
                     alternative = True
@@ -4724,7 +4736,7 @@ class MailThread(models.AbstractModel):
             if is_request:
                 res["hasReadAccess"] = thread.sudo(False).has_access("read")
                 res["hasWriteAccess"] = thread.sudo(False).has_access("write")
-                res["canPostOnReadonly"] = self._mail_post_access == "read"
+                res["canPostOnReadonly"] = self._get_mail_message_access(self.ids, 'create') == "read"
             if (
                 request_list
                 and "activities" in request_list
@@ -4785,6 +4797,8 @@ class MailThread(models.AbstractModel):
     @api.model
     def _get_thread_with_access(self, thread_id, mode="read", **kwargs):
         thread = self.browse(thread_id)
-        if thread.exists() and thread.sudo(False).has_access(mode):
+        if thread.exists() and thread.sudo(False).with_context(
+            allowed_company_ids=[]
+        ).has_access(mode):
             return thread
         return self.browse()

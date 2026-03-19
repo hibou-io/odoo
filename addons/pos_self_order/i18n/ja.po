@@ -1,24 +1,28 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* pos_self_order
+# * pos_self_order
 #
 # Translators:
 # Wil Odoo, 2024
 # Junko Augias, 2025
 #
+# "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
+# Weblate <noreply-mt-weblate@weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-08 18:38+0000\n"
-"PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Junko Augias, 2025\n"
-"Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
+"POT-Creation-Date: 2026-02-20 18:38+0000\n"
+"PO-Revision-Date: 2026-02-07 10:36+0000\n"
+"Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
+"Language-Team: Japanese <https://translate.odoo.com/projects/odoo-18/"
+"pos_self_order/ja/>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.14.3\n"
 
 #. module: pos_self_order
 #: model:ir.actions.report,print_report_name:pos_self_order.report_self_order_qr_codes_page
@@ -74,7 +78,7 @@ msgstr ""
 #. module: pos_self_order
 #: model:ir.model.fields.selection,name:pos_self_order.selection__pos_config__status__active
 msgid "Active"
-msgstr "アクティブ"
+msgstr "有効"
 
 #. module: pos_self_order
 #: model_terms:ir.ui.view,arch_db:pos_self_order.res_config_settings_view_form_menu
@@ -338,7 +342,7 @@ msgstr "危険"
 #. module: pos_self_order
 #: model:ir.model.fields.selection,name:pos_self_order.selection__pos_self_order_custom_link__style__dark
 msgid "Dark"
-msgstr "暗い"
+msgstr "ダーク"
 
 #. module: pos_self_order
 #: model_terms:ir.ui.view,arch_db:pos_self_order.res_config_settings_view_form_menu
@@ -367,7 +371,7 @@ msgstr "キオスクモードのデフォルト言語"
 #. module: pos_self_order
 #: model:ir.model.fields.selection,name:pos_self_order.selection__pos_config__self_ordering_mode__nothing
 msgid "Disable"
-msgstr "無効にする"
+msgstr "無効化する"
 
 #. module: pos_self_order
 #. odoo-javascript
@@ -427,10 +431,12 @@ msgstr "編集"
 
 #. module: pos_self_order
 #. odoo-javascript
-#: code:addons/pos_self_order/static/src/overrides/components/qr_order_button/qr_order_button.js:0
+#: code:addons/pos_self_order/static/src/backend/qr_order_button/qr_order_button.js:0
 msgid ""
 "Enable QR menu in the Restaurant settings to get QR codes for free on tables."
 msgstr ""
+"レストランの設定で QR メニューを有効にすると、各テーブル用の QR コードを無料"
+"で取得できます。"
 
 #. module: pos_self_order
 #. odoo-javascript
@@ -463,6 +469,11 @@ msgid "Follow instructions on the terminal"
 msgstr "端末の指示に従って下さい。"
 
 #. module: pos_self_order
+#: model_terms:ir.ui.view,arch_db:pos_self_order.res_config_settings_view_form_menu
+msgid "Free Metal / Wood Stands"
+msgstr "無料メタル/ウッドスタンド"
+
+#. module: pos_self_order
 #. odoo-python
 #: code:addons/pos_self_order/models/pos_config.py:0
 msgid "Generic"
@@ -470,15 +481,16 @@ msgstr "汎用"
 
 #. module: pos_self_order
 #. odoo-javascript
-#: code:addons/pos_self_order/static/src/overrides/components/qr_order_button/qr_order_button.xml:0
+#: code:addons/pos_self_order/static/src/overrides/components/navbar/navbar.xml:0
+#: code:addons/pos_self_order/static/src/overrides/screens/floor_screen/floor_screen.xml:0
 msgid "Get QR Codes"
-msgstr ""
+msgstr "QRコードを入手"
 
 #. module: pos_self_order
 #. odoo-javascript
-#: code:addons/pos_self_order/static/src/overrides/components/qr_order_button/qr_order_button.js:0
+#: code:addons/pos_self_order/static/src/backend/qr_order_button/qr_order_button.js:0
 msgid "Get QR codes"
-msgstr ""
+msgstr "QRコードを入手"
 
 #. module: pos_self_order
 #. odoo-javascript
@@ -1296,6 +1308,14 @@ msgstr "オーダを準備しています"
 #: model_terms:ir.ui.view,arch_db:pos_self_order.qr_codes_page
 msgid "Yes"
 msgstr "はい"
+
+#. module: pos_self_order
+#. odoo-python
+#: code:addons/pos_self_order/controllers/orders.py:0
+msgid ""
+"You are not authorized to create, update, or delete records of type '%"
+"(model)s'. Only the following models are allowed: %(allowed)s"
+msgstr ""
 
 #. module: pos_self_order
 #. odoo-python

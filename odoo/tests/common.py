@@ -19,6 +19,7 @@ import os
 import pathlib
 import platform
 import pprint
+import psutil
 import re
 import shutil
 import signal
@@ -28,6 +29,7 @@ import tempfile
 import threading
 import time
 import traceback
+import types
 import unittest
 import warnings
 from collections import defaultdict, deque
@@ -94,14 +96,14 @@ except ImportError:
     freezegun = None
 
 _logger = logging.getLogger(__name__)
-if config['test_enable'] or config['test_file']:
-    _logger.info("Importing test framework", stack_info=_logger.isEnabledFor(logging.DEBUG))
-else:
+if odoo.cli.COMMAND in ('server', 'start') and not (config['test_enable'] or config['test_file']):
     _logger.error(
         "Importing test framework"
         ", avoid importing from business modules and when not running in test mode",
         stack_info=True,
     )
+else:
+    _logger.info("Importing test framework", stack_info=_logger.isEnabledFor(logging.DEBUG))
 
 
 # backward compatibility: Form was defined in this file
@@ -131,6 +133,12 @@ CHECK_BROWSER_ITERATIONS = 100
 BROWSER_WAIT = CHECK_BROWSER_SLEEP * CHECK_BROWSER_ITERATIONS # seconds
 DEFAULT_SUCCESS_SIGNAL = 'test successful'
 TEST_CURSOR_COOKIE_NAME = 'test_request_key'
+
+IGNORED_MSGS = re.compile(r"""
+    failed\ to\ fetch  # base error
+  | connectionlosterror:  # conversion by offlineFailToFetchErrorHandler
+  | assetsloadingerror: # lazy loaded bundle
+""", flags=re.VERBOSE | re.IGNORECASE).search
 
 def get_db_name():
     db = odoo.tools.config['db_name']
@@ -353,13 +361,22 @@ class BaseCase(case.TestCase, metaclass=MetaCase):
 
     @classmethod
     def setUpClass(cls):
+        def check_remaining_processes():
+            current_process = psutil.Process()
+            children = current_process.children(recursive=False)
+            for child in children:
+                _logger.warning('A child process was found, terminating it: %s', child)
+                child.terminate()
+            psutil.wait_procs(children, timeout=10)  # mainly to avoid a zombie process that would be logged again at the end.
+        cls.addClassCleanup(check_remaining_processes)
+
         def check_remaining_patchers():
             for patcher in _patch._active_patches:
                 _logger.warning("A patcher (targeting %s.%s) was remaining active at the end of %s, disabling it...", patcher.target, patcher.attribute, cls.__name__)
                 patcher.stop()
         cls.addClassCleanup(check_remaining_patchers)
         super().setUpClass()
-        if 'standard' in cls.test_tags:
+        if 'standard' in cls.test_tags or 'click_all' in cls.test_tags:
             # if the method is passed directly `patch` discards the session
             # object which we need
             # pylint: disable=unnecessary-lambda
@@ -409,16 +426,12 @@ class BaseCase(case.TestCase, metaclass=MetaCase):
 
     def patch(self, obj, key, val):
         """ Do the patch ``setattr(obj, key, val)``, and prepare cleanup. """
-        patcher = patch.object(obj, key, val)   # this is unittest.mock.patch
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        self.startPatcher(patch.object(obj, key, val))   # this is unittest.mock.patch
 
     @classmethod
     def classPatch(cls, obj, key, val):
         """ Do the patch ``setattr(obj, key, val)``, and prepare cleanup. """
-        patcher = patch.object(obj, key, val)   # this is unittest.mock.patch
-        patcher.start()
-        cls.addClassCleanup(patcher.stop)
+        cls.startClassPatcher(patch.object(obj, key, val))   # this is unittest.mock.patch
 
     def startPatcher(self, patcher):
         mock = patcher.start()
@@ -583,9 +596,6 @@ class BaseCase(case.TestCase, metaclass=MetaCase):
 
             The second form is convenient when used with :func:`users`.
         """
-        if not 'is_query_count' in self.test_tags:
-            # change into warning in master
-            self._logger.info('assertQueryCount is used but the test is not tagged `is_query_count`')
         if self.warm:
             # mock random in order to avoid random bus gc
             with patch('random.random', lambda: 1):
@@ -818,10 +828,31 @@ class BaseCase(case.TestCase, metaclass=MetaCase):
         """Guess if the test_methods is a query_count and adds an `is_query_count` tag on the test
         """
         additional_tags = []
-        method_source = inspect.getsource(test_method) if test_method else ''
-        if 'self.assertQueryCount' in method_source:
-            additional_tags.append('is_query_count')
+        if odoo.tools.config['test_tags'] and 'is_query_count' in odoo.tools.config['test_tags']:
+            method_source = inspect.getsource(test_method) if test_method else ''
+            if 'self.assertQueryCount' in method_source:
+                additional_tags.append('is_query_count')
         return additional_tags
+
+
+# maps a function name to a file in which it can exist for the setattr it
+# triggers to be allowed
+SETATTR_SOURCES = {
+    # model attributes being set from a patcher are fine
+    '__enter__': ('/unittest/mock.py',),
+    '__exit__': ('/unittest/mock.py',),
+    # lazy_classproperty sets an attribute for itself
+    '__get__': ('/odoo/tools/func.py',),
+    # mail overrides IrModel._instantiate to inject mail mixins
+    '_instanciate': ('/mail/models/ir_model.py',),
+    # account manipulates _template_register
+    '_template_register': ('/account/models/chart_template.py',),
+    '_setup_complete': ('/account/models/chart_template.py',),
+    # ...
+    'patch': ('/base_automation/models/base_automation.py',),
+    # .....
+    '_patch': ('/web_studio/models/studio_approval.py',),
+}
 
 class Like:
     """
@@ -936,6 +967,35 @@ class TransactionCase(BaseCase):
         cls.registry_start_invalidated = cls.registry.registry_invalidated
         cls.registry_start_sequence = cls.registry.registry_sequence
         cls.registry_cache_sequences = dict(cls.registry.cache_sequences)
+        cls.setattrs = {}
+
+        actual_setattr = odoo.models.MetaModel.__setattr__
+
+        def metamodel_setattr(model, key, value):
+            caller = inspect.currentframe().f_back
+            filename = inspect.getsourcefile(caller)
+
+            # special case / fastpath because this does model alterations everywhere
+            if filename.endswith('odoo/models.py'):
+                actual_setattr(model, key, value)
+                return
+
+            valid_paths = SETATTR_SOURCES.get(caller.f_code.co_name)
+            if not (valid_paths and filename.endswith(valid_paths)):
+                _logger.runbot(
+                    "%s:%s:%s setting %s.%s to %s",
+                    filename,
+                    caller.f_lineno,
+                    caller.f_code.co_name,
+                    model.__name__,
+                    key,
+                    value,
+                    stack_info=True,
+                )
+            cls.setattrs.setdefault(model._name, []).append((key, value, "".join(traceback.format_stack())))
+            actual_setattr(model, key, value)
+        cls.classPatch(odoo.models.MetaModel, '__setattr__', metamodel_setattr)
+        cls.addClassCleanup(cls.setattrs.clear)
 
         def reset_changes():
             if (cls.registry_start_sequence != cls.registry.registry_sequence) or cls.registry.registry_invalidated:
@@ -965,6 +1025,21 @@ class TransactionCase(BaseCase):
         cls._signal_changes_patcher = patch.object(cls.registry, 'signal_changes', signal_changes)
         cls.startClassPatcher(cls._signal_changes_patcher)
 
+        cls.attrs_before = {
+            model._name: {
+                *vars(model),
+                # __annotations__ pops up during testing on *some* models
+                '__annotations__',
+                # if model is transient & transient fields are accessed
+                '_transient_max_count',
+                '_transient_max_hours',
+                #
+                '_rec_name',
+            }
+            for model in cls.registry.values()
+        }
+        cls.addClassCleanup(cls.attrs_before.clear)
+
         cls.cr = cls.registry.cursor()
         cls.addClassCleanup(cls.cr.close)
 
@@ -983,13 +1058,9 @@ class TransactionCase(BaseCase):
             traceback.print_stack()
             raise AssertionError('Cannot commit or rollback a cursor from inside a test, this will lead to a broken cursor when trying to rollback the test. Please rollback to a specific savepoint instead or open another cursor if really necessary')
 
-        cls.commit_patcher = patch.object(cls.cr, 'commit', forbidden)
-        cls.startClassPatcher(cls.commit_patcher)
-        cls.rollback_patcher = patch.object(cls.cr, 'rollback', forbidden)
-        cls.startClassPatcher(cls.rollback_patcher)
-        cls.close_patcher = patch.object(cls.cr, 'close', forbidden)
-        cls.startClassPatcher(cls.close_patcher)
-
+        cls.classPatch(cls.cr, 'commit', forbidden)
+        cls.classPatch(cls.cr, 'rollback', forbidden)
+        cls.classPatch(cls.cr, 'close', forbidden)
 
         cls.env = api.Environment(cls.cr, odoo.SUPERUSER_ID, {})
 
@@ -1004,6 +1075,8 @@ class TransactionCase(BaseCase):
 
     def setUp(self):
         super().setUp()
+        self.setattrs.clear()
+        self.addCleanup(self.check_attrs)
         # restore environments after the test to avoid invoking flush() with an
         # invalid environment (inexistent user id) from another test
         envs = self.env.transaction.envs
@@ -1032,6 +1105,59 @@ class TransactionCase(BaseCase):
         self._savepoint_id = next(savepoint_seq)
         self.cr.execute('SAVEPOINT test_%d' % self._savepoint_id)
         self.addCleanup(self.cr.execute, 'ROLLBACK TO SAVEPOINT test_%d' % self._savepoint_id)
+
+    def check_attrs(self):
+        # has to be an instance level method in order to collaboratively
+        # report failures via Outcome / Result.
+
+        # If a model is patched via a classPatch, that patch is still active,
+        # ignore iff the patch is registered against class cleanup (to make
+        # it's not a patch without cleanup)
+        modelClassPatches = {
+            (patcher.target, patcher.attribute)
+            for patcher in _patch._active_patches
+            if isinstance(patcher.target, odoo.models.MetaModel)
+            if (patcher.stop, (), {}) in self._class_cleanups
+        }
+        with self._outcome.testPartExecutor(self, isTest=False):
+            # need defaults for custom models created during the test
+            default_attrs = self.attrs_before['base'] | {'_rec_name', '_active_name'}
+            # TODO: maybe retrieve all abstractmodels and either create a big
+            #       set of mixin attributes to always remove or have a mapping
+            #       of mixin: attributes to remove on a per-model basis?
+            mtv = mt._fields.keys() if (mt := self.registry.get('mail.thread')) else ()
+            mav = ma._fields.keys() if (ma := self.registry.get('mail.activity.mixin')) else ()
+            for model in self.registry.values():
+                extras = {
+                    f for f in vars(model)
+                    if f not in mtv
+                    if f not in mav
+                    # creating a custom field in a test will update the
+                    # registry in place, adding fields on leaf classes
+                    if not (f.startswith('x_') and f in model._fields)
+                    if (model, f) not in modelClassPatches
+                }.difference(self.attrs_before.get(model._name, default_attrs))
+                if extras:
+                    sets = "\n\n".join(
+                        f"======== {k} ========\n{v}:\n{tb}\n"
+                        for k, v, tb in self.setattrs.get(model._name, ())
+                        if k in extras
+                    )
+                    self._outcome.success = False
+                    frame = inspect.currentframe()
+                    tb = None
+                    while frame is not None:
+                        tb = types.TracebackType(tb, frame, frame.f_lasti, frame.f_lineno)
+                        frame = frame.f_back
+                    self._outcome.result.addFailure(
+                        self, (
+                            AssertionError,
+                            AssertionError(
+                                f"Found unexpected attributes on {model._name}: {' '.join(extras)}\n{sets}"
+                            ).with_traceback(tb),
+                            tb,
+                        )
+                    )
 
 
 class SingleTransactionCase(BaseCase):
@@ -1099,6 +1225,17 @@ def save_test_file(test_name, content, prefix, extension='png', logger=_logger, 
     with full_path.open('wb') as f:
         f.write(content)
     logger.runbot(f'{document_type} in: {full_path}')
+
+
+if os.name == 'posix' and platform.system() != 'Darwin':
+    # since the introduction of pointer compression in Chrome 80 (v8 v8.0),
+    # the memory reservation algorithm requires more than 8GiB of
+    # virtual mem for alignment this exceeds our default memory limits.
+    def _preexec():
+        import resource  # noqa: PLC0415
+        resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+else:
+    _preexec = None
 
 
 class ChromeBrowser:
@@ -1191,31 +1328,40 @@ class ChromeBrowser:
 
     def stop(self):
         if hasattr(self, 'ws'):
-            self._websocket_send('Page.stopScreencast')
-            if screencasts_frames_dir := self.screencasts_frames_dir:
-                self.screencasts_dir = None
-                if os.path.isdir(screencasts_frames_dir):
-                    shutil.rmtree(screencasts_frames_dir, ignore_errors=True)
+            try:
+                self._websocket_send('Page.stopScreencast')
+                if screencasts_frames_dir := self.screencasts_frames_dir:
+                    self.screencasts_dir = None
+                    if os.path.isdir(screencasts_frames_dir):
+                        shutil.rmtree(screencasts_frames_dir, ignore_errors=True)
 
-            self._websocket_request('Page.stopLoading')
-            self._websocket_request('Runtime.evaluate', params={'expression': """
-            ('serviceWorker' in navigator) &&
-                navigator.serviceWorker.getRegistrations().then(
-                    registrations => Promise.all(registrations.map(r => r.unregister()))
-                )
-            """, 'awaitPromise': True})
-            # wait for the screenshot or whatever
-            wait(self._responses.values(), 10)
-            self._result.cancel()
+                self._websocket_request('Page.stopLoading')
+                self._websocket_request('Runtime.evaluate', params={'expression': """
+                ('serviceWorker' in navigator) &&
+                    navigator.serviceWorker.getRegistrations().then(
+                        registrations => Promise.all(registrations.map(r => r.unregister()))
+                    )
+                """, 'awaitPromise': True})
+                # wait for the screenshot or whatever
+                wait(self._responses.values(), 10)
+                self._result.cancel()
 
-            self._logger.info("Closing chrome headless with pid %s", self.chrome.pid)
-            self._websocket_request('Browser.close')
+                self._logger.info("Closing chrome headless with pid %s", self.chrome.pid)
+                self._websocket_request('Browser.close')
+            except ChromeBrowserException as e:
+                _logger.runbot("WS error during browser shutdown: %s", e)
+            except Exception:  # noqa: BLE001
+                _logger.warning("Error during browser shutdown", exc_info=True)
             self._logger.info("Closing websocket connection")
             self.ws.close()
         if self.chrome:
             self._logger.info("Terminating chrome headless with pid %s", self.chrome.pid)
             self.chrome.terminate()
-            self.chrome.wait(15)
+            try:
+                self.chrome.wait(15)
+            except subprocess.TimeoutExpired:
+                self._logger.warning("Killing chrome headless with pid %s: still alive", self.chrome.pid)
+                self.chrome.kill()
 
         if self.user_data_dir and os.path.isdir(self.user_data_dir) and self.user_data_dir != '/':
             self._logger.info('Removing chrome user profile "%s"', self.user_data_dir)
@@ -1227,30 +1373,42 @@ class ChromeBrowser:
 
     @property
     def executable(self):
-        return _find_executable()
-
-    def _chrome_without_limit(self, cmd):
-        if os.name == 'posix' and platform.system() != 'Darwin':
-            # since the introduction of pointer compression in Chrome 80 (v8 v8.0),
-            # the memory reservation algorithm requires more than 8GiB of
-            # virtual mem for alignment this exceeds our default memory limits.
-            def preexec():
-                import resource
-                resource.setrlimit(resource.RLIMIT_AS, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-        else:
-            preexec = None
-
-        # pylint: disable=subprocess-popen-preexec-fn
-        return subprocess.Popen(cmd, stderr=subprocess.DEVNULL, preexec_fn=preexec)
+        try:
+            return _find_executable()
+        except Exception:
+            self._logger.warning('Chrome executable not found')
+            raise
 
     def _spawn_chrome(self, cmd):
-        proc = self._chrome_without_limit(cmd)
+        log_path = pathlib.Path(self.user_data_dir, 'err.log')
+        with log_path.open('wb') as log_file:
+            # pylint: disable=subprocess-popen-preexec-fn
+            proc = subprocess.Popen(
+                cmd,
+                stderr=log_file,
+                preexec_fn=_preexec,
+                env={**os.environ, 'TMPDIR': self.user_data_dir},
+            )  # noqa: PLW1509
+
         port_file = pathlib.Path(self.user_data_dir, 'DevToolsActivePort')
         for _ in range(CHECK_BROWSER_ITERATIONS):
             time.sleep(CHECK_BROWSER_SLEEP)
             if port_file.is_file() and port_file.stat().st_size > 5:
                 with port_file.open('r', encoding='utf-8') as f:
                     return proc, int(f.readline())
+
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+        self._logger.warning('Chrome headless failed to start:\n%s', log_path.read_text(encoding="utf-8"))
+        # since the chrome never started, it's not going to be `stop`-ed so we
+        # need to cleanup the directory here
+        shutil.rmtree(self.user_data_dir, ignore_errors=True)
+
         raise unittest.SkipTest(f'Failed to detect chrome devtools port after {BROWSER_WAIT :.1f}s.')
 
     def _chrome_start(
@@ -1275,6 +1433,8 @@ class ChromeBrowser:
             '--disable-translate': '',
             '--no-sandbox': '',
             '--disable-gpu': '',
+            '--enable-unsafe-swiftshader': '',
+            '--mute-audio': '',
         }
         switches = {
             # required for tours that use Youtube autoplay conditions (namely website_slides' "course_tour")
@@ -1416,7 +1576,7 @@ class ChromeBrowser:
                 continue
             except websocket.WebSocketConnectionClosedException as e:
                 if not self._result.done():
-                    self.ws = None
+                    del self.ws
                     self._result.set_exception(e)
                     for f in self._responses.values():
                         f.cancel()
@@ -1455,8 +1615,8 @@ class ChromeBrowser:
     def _websocket_request(self, method, *, params=None, timeout=10.0):
         assert threading.get_ident() != self._receiver.ident,\
             "_websocket_request must not be called from the consumer thread"
-        if self.ws is None:
-            return
+        if not hasattr(self, 'ws'):
+            return None
 
         f = self._websocket_send(method, params=params, with_future=True)
         try:
@@ -1469,8 +1629,8 @@ class ChromeBrowser:
 
         If ``with_future`` is set, returns a ``Future`` for the operation.
         """
-        if self.ws is None:
-            return
+        if not hasattr(self, 'ws'):
+            return None
 
         result = None
         request_id = next(self._request_id)
@@ -1495,7 +1655,7 @@ class ChromeBrowser:
             self._websocket_send(cmd, params={'requestId': params['requestId'], **response})
         except websocket.WebSocketConnectionClosedException:
             pass
-        except (BrokenPipeError, ConnectionResetError):
+        except (BrokenPipeError, ConnectionResetError, OSError):
             # this can happen if the browser is closed. Just ignore it.
             _logger.info("Websocket error while handling request %s", params['request']['url'])
 
@@ -1521,7 +1681,7 @@ class ChromeBrowser:
 
         log_type = type
         _logger = self._logger.getChild('browser')
-        if self._result.done() and 'failed to fetch' in message.casefold():
+        if self._result.done() and IGNORED_MSGS(message):
             log_type = 'dir'
         _logger.log(
             self._TO_LEVEL.get(log_type, logging.INFO),
@@ -1601,7 +1761,7 @@ which leads to stray network requests and inconsistencies."""
             message += '\n' + stack
 
         if self._result.done():
-            if 'failed to fetch' not in message.casefold():
+            if not IGNORED_MSGS(message):
                 self._logger.getChild('browser').error(
                     "Exception received after termination: %s", message)
             return
@@ -1666,7 +1826,8 @@ which leads to stray network requests and inconsistencies."""
 
         self._logger.info('Asking for screenshot')
         f = self._websocket_send('Page.captureScreenshot', with_future=True)
-        f.add_done_callback(handler)
+        if f:
+            f.add_done_callback(handler)
         return f
 
     def _save_screencast(self, prefix='failed'):
@@ -1879,6 +2040,9 @@ which leads to stray network requests and inconsistencies."""
 
 @lru_cache(1)
 def _find_executable():
+    browser_bin_path = os.environ.get('ODOO_BROWSER_BIN')  # used for testing specific Chrome builds
+    if browser_bin_path and os.path.exists(browser_bin_path):
+        return browser_bin_path
     system = platform.system()
     if system == 'Linux':
         for bin_ in ['google-chrome', 'chromium', 'chromium-browser', 'google-chrome-stable']:
@@ -2049,6 +2213,9 @@ class HttpCase(TransactionCase):
 
         start_time = time.time()
         request_threads = get_http_request_threads()
+        if not request_threads:
+            return
+
         self._logger.info('waiting for threads: %s', request_threads)
 
         for thread in request_threads:
@@ -2067,13 +2234,25 @@ class HttpCase(TransactionCase):
         self.session.logout(keep_db=keep_db)
         odoo.http.root.session_store.save(self.session)
 
-    def authenticate(self, user, password, browser: ChromeBrowser = None):
+    def authenticate(self, user, password, *,
+        browser: ChromeBrowser = None, session_extra: dict | None = None):
         if getattr(self, 'session', None):
             odoo.http.root.session_store.delete(self.session)
 
         self.session = session = odoo.http.root.session_store.new()
-        session.update(odoo.http.get_default_session(), db=get_db_name())
+        session.update(
+            odoo.http.get_default_session(),
+            db=get_db_name(),
+            # In order to avoid perform a query to each first `url_open`
+            # in a test (insert `res.device.log`).
+            _trace_disable=True,
+        )
         session.context['lang'] = odoo.http.DEFAULT_LANG
+
+        if session_extra:
+            if extra_ctx := session_extra.pop('context', None):
+                session.context.update(extra_ctx)
+            session.update(session_extra)
 
         if user: # if authenticated
             # Flush and clear the current transaction.  This is useful, because
@@ -2251,9 +2430,6 @@ class HttpCase(TransactionCase):
         """Wrapper for `browser_js` to start the given `tour_name` with the
         optional delay between steps `step_delay`. Other arguments from
         `browser_js` can be passed as keyword arguments."""
-        if not 'is_tour' in self.test_tags:
-            # change it into warning in master
-            self._logger.info('start_tour was called from a test not tagged `is_tour`')
         options = {
             'stepDelay': step_delay or 0,
             'keepWatchBrowser': kwargs.get('watch', False),
@@ -2287,9 +2463,10 @@ class HttpCase(TransactionCase):
         guess if the test_methods is a tour and adds an `is_tour` tag on the test
         """
         additional_tags = super().get_method_additional_tags(test_method)
-        method_source = inspect.getsource(test_method)
-        if 'self.start_tour' in method_source:
-            additional_tags.append('is_tour')
+        if odoo.tools.config['test_tags'] and 'is_tour' in odoo.tools.config['test_tags']:
+            method_source = inspect.getsource(test_method)
+            if 'self.start_tour' in method_source:
+                additional_tags.append('is_tour')
         return additional_tags
 
     def make_jsonrpc_request(self, route, params=None, headers=None):

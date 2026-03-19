@@ -512,10 +512,10 @@ class TestAccountMoveSendCommon(AccountTestInvoicingCommon):
             )
 
     def create_send_and_print(self, invoices, **kwargs):
-        wizard_model = 'account.move.send.wizard' if len(invoices) == 1 else 'account.move.send.batch.wizard'
-        return self.env[wizard_model]\
-            .with_context(active_model='account.move', active_ids=invoices.ids)\
-            .create(kwargs)
+        if len(invoices) == 1:
+            return self._create_account_move_send_wizard_single(invoices, **kwargs)
+        else:
+            return self._create_account_move_send_wizard_multi(invoices, **kwargs)
 
     def _get_mail_message(self, move):
         return self.env['mail.message'].search([('model', '=', move._name), ('res_id', '=', move.id)], limit=1)
@@ -693,6 +693,14 @@ class TestAccountMoveSend(TestAccountMoveSendCommon):
         self.assertTrue(invoice2.invoice_pdf_report_id)
         self.assertTrue(self._get_mail_message(invoice2))
 
+    def test_invoice_multi_cron_disabled_alert(self):
+        invoice1 = self.init_invoice("out_invoice", partner=self.partner_a, amounts=[1000], post=True)
+        invoice2 = self.init_invoice("out_invoice", partner=self.partner_b, amounts=[1000], post=True)
+        self.env.ref('account.ir_cron_account_move_send').active = False
+        wizard = self.create_send_and_print(invoice1 + invoice2)
+        self.assertTrue('account_send_cron_archived' in wizard.alerts)
+        self.assertEqual(wizard.alerts['account_send_cron_archived']['level'], 'warning')
+
     def test_invoice_multi_with_edi(self):
         invoice1 = self.init_invoice("out_invoice", partner=self.partner_a, amounts=[1000], post=True)
         invoice2 = self.init_invoice("out_invoice", partner=self.partner_b, amounts=[1000], post=True)
@@ -722,6 +730,21 @@ class TestAccountMoveSend(TestAccountMoveSendCommon):
                 'manual': {'count': 1, 'label': 'Manually'},
                 'email': {'count': 1, 'label': 'by Email'},
             })
+
+    def test_invoice_multi_child_contact(self):
+        """ Test bulk invoice sending will retrieve info from the main partner. """
+        self.partner_a.write({'invoice_sending_method': 'manual'})
+        partner = self.env['res.partner'].create({
+            'type': 'invoice',
+            'email': 'child@example.com',
+            'parent_id': self.partner_a.id
+        })
+        invoice1 = self.init_invoice("out_invoice", amounts=[1000], partner=partner, post=True)
+        invoice2 = self.init_invoice("out_invoice", amounts=[1000], partner=partner, post=True)
+        wizard = self.create_send_and_print(invoice1 + invoice2)
+        self.assertEqual(wizard.summary_data, {
+            'manual': {'count': 2, 'label': 'Manually'}
+        })
 
     def test_invoice_mail_attachments_widget(self):
         invoice = self.init_invoice("out_invoice", amounts=[1000], post=True)
@@ -1090,11 +1113,11 @@ class TestAccountMoveSend(TestAccountMoveSendCommon):
     def test_get_sending_settings(self):
         invoice = self.init_invoice("out_invoice", amounts=[1000], post=True)
         wizard = self.create_send_and_print(invoice)
-        
+
         expected_results = {
             'sending_methods': {'email'},
             'invoice_edi_format': False,
-            'extra_edis': {},
+            'extra_edis': set(),
             'pdf_report': self.env.ref('account.account_invoices'),
             'author_user_id': self.env.user.id,
             'author_partner_id': self.env.user.partner_id.id,

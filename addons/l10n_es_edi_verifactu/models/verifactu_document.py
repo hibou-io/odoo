@@ -314,7 +314,7 @@ class L10nEsEdiVerifactuDocument(models.Model):
     def _check_record_values(self, vals):
         errors = []
 
-        company_NIF = vals['company'].partner_id._l10n_es_edi_verifactu_get_values()['NIF']
+        company_NIF = vals['company'].partner_id._l10n_es_edi_verifactu_get_values().get('NIF')
         if not company_NIF or len(company_NIF) != 9:  # NIFType
             errors.append(_("The NIF '%(company_NIF)s' of the company is not exactly 9 characters long.",
                             company_NIF=company_NIF))
@@ -588,7 +588,7 @@ class L10nEsEdiVerifactuDocument(models.Model):
         rectified_document = vals['refunded_document'] or vals['substituted_document']
         if vals['verifactu_move_type'] == 'invoice':
             tipo_rectificativa = None
-            tipo_factura = 'F2' if vals['is_simplified'] else 'F1'
+            tipo_factura = 'F2' if vals['is_simplified'] else 'F3' if vals.get('was_simplified_invoice') else 'F1'
             delivery_date = self._format_date_type(vals['delivery_date'])
             fecha_operacion = delivery_date if delivery_date and delivery_date != invoice_date else None
         elif vals['verifactu_move_type'] == 'reversal_for_substitution':
@@ -1162,7 +1162,7 @@ class L10nEsEdiVerifactuDocument(models.Model):
         errors = []
         company = self.env.company  # sending company
 
-        company_NIF = company.partner_id._l10n_es_edi_verifactu_get_values()['NIF']
+        company_NIF = company.partner_id._l10n_es_edi_verifactu_get_values().get('NIF')
         if not company_NIF or len(company_NIF) != 9:  # NIFType
             errors.append(_("The NIF '%(company_NIF)s' of the company is not exactly 9 characters long.",
                             company_NIF=company_NIF))
