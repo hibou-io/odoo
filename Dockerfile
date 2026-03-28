@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim-trixie
 LABEL maintainer="Hibou Corp. <hello@hibou.io>"
 
 ENV NODE_MAJOR=22
@@ -36,8 +36,8 @@ RUN set -x; \
     && node --version \
     && npm install yarn --global --force \
     #  install postgresql-client from postgres itself to support newer server versions
-    && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
