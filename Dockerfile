@@ -1,7 +1,7 @@
 FROM python:3.13-slim-trixie
 LABEL maintainer="Hibou Corp. <hello@hibou.io>"
 
-ENV NODE_MAJOR=20
+ENV NODE_MAJOR=22
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
@@ -81,7 +81,7 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-COPY --from=registry.gitlab.com/hibou-io/athene:node20--python /opt/athene /opt/athene
+COPY --from=registry.gitlab.com/hibou-io/athene:node22--python /opt/athene /opt/athene
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
