@@ -58,7 +58,7 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-COPY --from=registry.gitlab.com/hibou-io/athene:node22--python /opt/athene /opt/athene
+COPY --from=registry.gitlab.com/hibou-io/athene:node22--python --chown=104 /opt/athene /opt/athene
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
