@@ -1,7 +1,7 @@
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim-trixie
 LABEL maintainer="Hibou Corp. <hello@hibou.io>"
 
-ENV NODE_MAJOR=20
+ENV NODE_MAJOR=22
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
@@ -36,8 +36,8 @@ RUN set -x; \
     && node --version \
     && npm install yarn --global --force \
     #  install postgresql-client from postgres itself to support newer server versions
-    && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
@@ -58,7 +58,7 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-COPY --from=registry.gitlab.com/hibou-io/athene:node20--python /opt/athene /opt/athene
+COPY --from=registry.gitlab.com/hibou-io/athene:node22--python --chown=104 /opt/athene /opt/athene
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
