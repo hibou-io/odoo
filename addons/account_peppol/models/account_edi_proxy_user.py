@@ -169,7 +169,7 @@ class AccountEdiProxyClientUser(models.Model):
                     ('company_id', '=', company.id),
                     ('type', '=', 'purchase')
                 ], limit=1)
-
+            journal = journal.with_company(company)
             need_retrigger = need_retrigger or len(message_uuids) > job_count
             message_uuids = message_uuids[:job_count]
             proxy_acks = []
@@ -218,6 +218,7 @@ class AccountEdiProxyClientUser(models.Model):
                         'res_id': move.id,
                     })
                     self.env['ir.attachment'].create(attachment_vals)
+                    _logger.exception('Error while processing the Peppol document with uuid %s', uuid)
                 if 'is_in_extractable_state' in move._fields:
                     move.is_in_extractable_state = False
 
