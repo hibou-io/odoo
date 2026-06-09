@@ -4,6 +4,7 @@
 from base64 import b64encode
 
 from odoo import api, fields, models, _
+from odoo.addons.account.models.company import PEPPOL_DEFAULT_COUNTRIES
 from odoo.addons.account_edi_proxy_client.models.account_edi_proxy_user import AccountEdiProxyError
 
 
@@ -45,7 +46,12 @@ class AccountMoveSend(models.TransientModel):
     @api.depends('enable_peppol')
     def _compute_checkbox_send_peppol(self):
         for wizard in self:
-            wizard.checkbox_send_peppol = wizard.enable_peppol and not wizard.peppol_warning
+            countries = wizard.move_ids.partner_id.commercial_partner_id.mapped('country_code')
+            wizard.checkbox_send_peppol = (
+                wizard.enable_peppol
+                and not wizard.peppol_warning
+                and any(country in PEPPOL_DEFAULT_COUNTRIES for country in countries)
+            )
 
     def _compute_checkbox_send_mail(self):
         super()._compute_checkbox_send_mail()
@@ -88,7 +94,7 @@ class AccountMoveSend(models.TransientModel):
                 lambda partner: not partner.is_peppol_edi_format
             )
             wizard.enable_peppol = (
-                wizard.company_id.account_peppol_proxy_state == 'active'
+                wizard.company_id.account_peppol_proxy_state in ('active', 'sender')
                 and (
                     wizard.enable_ubl_cii_xml
                     or any(m.ubl_cii_xml_id and m.peppol_move_state not in ('processing', 'done') for m in wizard.move_ids)
@@ -248,7 +254,7 @@ class AccountMoveSend(models.TransientModel):
                         for attachment in attachments_linked
                     ] + base_attachments
 
-                    new_message = invoice.with_context(no_new_invoice=True).message_post(
+                    new_message = invoice.with_context(no_new_invoice=True, no_document=True).message_post(
                         body=attachments_linked_message,
                         attachments=attachments_embedded,
                     )

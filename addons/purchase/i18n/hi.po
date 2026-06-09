@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Odoo 9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-12-29 18:36+0000\n"
-"PO-Revision-Date: 2026-03-14 08:11+0000\n"
+"PO-Revision-Date: 2026-05-16 08:14+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Hindi <https://translate.odoo.com/projects/odoo-17/purchase/"
 "hi/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 5.17\n"
 
 #. module: purchase
 #: model:ir.actions.report,print_report_name:purchase.action_report_purchase_order
@@ -28,6 +28,10 @@ msgid ""
 "Quotation - %s' % (object.name) or\n"
 "                'Purchase Order - %s' % (object.name))"
 msgstr ""
+"\n"
+"                (object.state in ('ड्राफ़्ट', 'भेजा गया') और 'कोटेशन के लिए "
+"अनुरोध - %s' % (object.name) या\n"
+"                'परचेज़ ऑर्डर - %s' % (object.name))"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__nbr_lines
@@ -60,7 +64,7 @@ msgstr ""
 #: code:addons/purchase/models/purchase_order.py:0
 #, python-format
 msgid "%s modified receipt dates for the following products:"
-msgstr ""
+msgstr "%s ने इन प्रॉडक्ट के मिलने की तारीखों में बदलाव किया गया है:"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_orders
@@ -77,17 +81,17 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.track_po_line_qty_received_template
 #: model_terms:ir.ui.view,arch_db:purchase.track_po_line_template
 msgid "-&gt;"
-msgstr ""
+msgstr "-&gt;"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "3-way matching"
-msgstr ""
+msgstr "3-वे मैचिंग"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__module_account_3way_match
 msgid "3-way matching: purchases, receptions and bills"
-msgstr ""
+msgstr "3-वे मैचिंग: परचेज़, मिले हुए सामान और बिल"
 
 #. module: purchase
 #: model:mail.template,body_html:purchase.email_template_edi_purchase_reminder
@@ -204,17 +208,17 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<i class=\"fa fa-fw fa-check\"/>Paid"
-msgstr ""
+msgstr "<i class=\"fa fa-fw fa-check\"/>भुगतान किया गया"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<i class=\"fa fa-fw fa-check\"/>Reversed"
-msgstr ""
+msgstr "<i class=\"fa fa-fw fa-check\"/>वापस किया गया"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<i class=\"fa fa-fw fa-clock-o\"/>Waiting Payment"
-msgstr ""
+msgstr "<i class=\"fa fa-fw fa-clock-o\"/>भुगतान का इंतज़ार"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_partner_kanban_view
@@ -237,6 +241,8 @@ msgid ""
 "<i class=\"fa fa-fw fa-remove\" role=\"img\" aria-label=\"Cancelled\" "
 "title=\"Cancelled\"/><span class=\"d-none d-md-inline\"> Cancelled</span>"
 msgstr ""
+"<i class=\"fa fa-fw fa-remove\" role=\"img\" aria-label=\"Cancelled\" "
+"title=\"Cancelled\"/><span class=\"d-none d-md-inline\"> रद्द किया गया</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_order
@@ -255,6 +261,8 @@ msgid ""
 "                          <span class=\"d-block d-md-none\">Confirmation</"
 "span>"
 msgstr ""
+"<span class=\"d-none d-md-inline\">पुष्टि की तारीख</span>\n"
+"                          <span class=\"d-block d-md-none\">पुष्टि</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_orders
@@ -262,6 +270,8 @@ msgid ""
 "<span class=\"d-none d-md-inline\">Purchase Order #</span>\n"
 "                          <span class=\"d-block d-md-none\">Ref.</span>"
 msgstr ""
+"<span class=\"d-none d-md-inline\">परचेज़ ऑर्डर #</span>\n"
+"                          <span class=\"d-block d-md-none\">रेफ़रेंस</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_rfqs
@@ -269,6 +279,8 @@ msgid ""
 "<span class=\"d-none d-md-inline\">Request for Quotation #</span>\n"
 "                        <span class=\"d-block d-md-none\">Ref.</span>"
 msgstr ""
+"<span class=\"d-none d-md-inline\">कोटेशन के लिए अनुरोध #</span>\n"
+"                        <span class=\"d-block d-md-none\">रेफ़रेंस</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -278,12 +290,16 @@ msgid ""
 "                        <span class=\"o_form_label\" invisible=\"state in "
 "('draft', 'sent')\">Purchase Order </span>"
 msgstr ""
+"<span class=\"o_form_label\" invisible=\"state not in ('draft', 'sent')\">"
+"कोटेशन के लिए अनुरोध </span>\n"
+"                        <span class=\"o_form_label\" invisible=\"state in "
+"('draft', 'sent')\">परचेज़ ऑर्डर</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.product_normal_form_view_inherit_purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_product_template_purchase_buttons_from
 msgid "<span class=\"o_stat_text\">Purchased</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">खरीदा गया</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -302,7 +318,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_partner_property_form
 msgid "<span> day(s) before</span>"
-msgstr ""
+msgstr "<span> दिन पहले</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -312,7 +328,7 @@ msgstr "<span>रकम</span>"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "<span>Ask confirmation</span>"
-msgstr ""
+msgstr "<span>पुष्टि के लिए पूछें</span>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -322,12 +338,12 @@ msgstr "<span>टैक्स</span>"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<strong class=\"d-block mb-1\">From:</strong>"
-msgstr ""
+msgstr "<strong class=\"d-block mb-1\">से:</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<strong class=\"d-block mb-1\">Invoices</strong>"
-msgstr ""
+msgstr "<strong class=\"d-block mb-1\">इनवॉइस</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -338,7 +354,7 @@ msgstr "<strong class=\"mr16\">सबटोटल</strong>"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 msgid "<strong>Amount</strong>"
-msgstr ""
+msgstr "<strong>राशि</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
@@ -348,7 +364,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<strong>Confirmation Date:</strong>"
-msgstr ""
+msgstr "<strong>पुष्टि की तारीख:</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
@@ -359,17 +375,17 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchasequotation_document
 msgid "<strong>Description</strong>"
-msgstr ""
+msgstr "<strong>विवरण</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 msgid "<strong>Disc.</strong>"
-msgstr ""
+msgstr "<strong>डिस्काउंट</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchasequotation_document
 msgid "<strong>Expected Date</strong>"
-msgstr ""
+msgstr "<strong>अनुमानित तारीख</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -380,7 +396,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 msgid "<strong>Order Deadline:</strong>"
-msgstr ""
+msgstr "<strong>ऑर्डर की आखिरी तारीख:</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
@@ -391,12 +407,12 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<strong>Receipt Date:</strong>"
-msgstr ""
+msgstr "<strong>रसीद की तारीख:</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
 msgid "<strong>Request For Quotation Date:</strong>"
-msgstr ""
+msgstr "<strong>कोटेशन के लिए अनुरोध की तारीख:</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
@@ -412,12 +428,12 @@ msgstr "<strong>टैक्स</strong>"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.track_po_line_template
 msgid "<strong>The ordered quantity has been updated.</strong>"
-msgstr ""
+msgstr "<strong>ऑर्डर की गई मात्रा अपडेट कर दी गई है.</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.track_po_line_qty_received_template
 msgid "<strong>The received quantity has been updated.</strong>"
-msgstr ""
+msgstr "<strong>प्राप्त मात्रा अपडेट कर दी गई है.</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_order
@@ -427,7 +443,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 msgid "<strong>Unit Price</strong>"
-msgstr ""
+msgstr "<strong>यूनिट की कीमत</strong>"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
@@ -439,7 +455,7 @@ msgstr ""
 #: code:addons/purchase/models/purchase_order.py:0
 #, python-format
 msgid "A sample email has been sent to %s."
-msgstr ""
+msgstr "%s पर एक सैंपल ईमेल भेजा गया है।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__product_type
@@ -453,7 +469,7 @@ msgstr ""
 #. module: purchase
 #: model:res.groups,name:purchase.group_warning_purchase
 msgid "A warning can be set on a product or a customer (Purchase)"
-msgstr ""
+msgstr "किसी प्रॉडक्ट या ग्राहक (खरीद) पर एक चेतावनी सेट की जा सकती है"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -490,7 +506,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.actions.act_window,name:purchase.action_accrued_expense_entry
 msgid "Accrued Expense Entry"
-msgstr ""
+msgstr "बाकी बचे हुए खर्चों का हिसाब-किताब दर्ज करना"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_needaction
@@ -535,14 +551,14 @@ msgstr "सेक्शन जोड़ें"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Add several variants to the purchase order from a grid"
-msgstr ""
+msgstr "ग्रिड से परचेज़ ऑर्डर में कई वेरिएंट जोड़ें"
 
 #. module: purchase
 #. odoo-javascript
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Add some products or services to your quotation."
-msgstr ""
+msgstr "अपने कोटेशन में कुछ प्रॉडक्ट या सर्विस जोड़ें।"
 
 #. module: purchase
 #: model:res.groups,name:purchase.group_purchase_manager
@@ -561,14 +577,14 @@ msgstr "सभी"
 #: code:addons/purchase/static/src/views/purchase_dashboard.xml:0
 #, python-format
 msgid "All Draft RFQs"
-msgstr ""
+msgstr "सभी ड्राफ़्ट RFQs"
 
 #. module: purchase
 #. odoo-javascript
 #: code:addons/purchase/static/src/views/purchase_dashboard.xml:0
 #, python-format
 msgid "All Late RFQs"
-msgstr ""
+msgstr "देर से आई सभी RFQs"
 
 #. module: purchase
 #. odoo-javascript
@@ -588,11 +604,12 @@ msgstr ""
 #: model:ir.model.fields,help:purchase.field_res_config_settings__group_send_reminder
 msgid "Allow automatically send email to remind your vendor the receipt date"
 msgstr ""
+"वेंडर को सामान की डिलीवरी की तारीख याद दिलाने के लिए ऑटोमैटिक ईमेल भेजने की अनुमति दें"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__res_company__po_lock__edit
 msgid "Allow to edit purchase orders"
-msgstr ""
+msgstr "परचेज़ ऑर्डर में बदलाव करने की अनुमति दें"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_union__amount
@@ -605,11 +622,13 @@ msgid ""
 "Amount of time between date planned and order by date for each purchase "
 "order line."
 msgstr ""
+"परचेज़ ऑर्डर की हर लाइन के लिए प्लानिंग की तारीख और ऑर्डर करने की तारीख के बीच की अवधि"
+"।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_report__delay
 msgid "Amount of time between purchase approval and order by date."
-msgstr ""
+msgstr "खरीद की मंज़ूरी और ऑर्डर करने की तारीख के बीच का समय।"
 
 #. module: purchase
 #: model:ir.model,name:purchase.model_account_analytic_account
@@ -639,7 +658,7 @@ msgstr "एनालिटिक प्रीसीज़न"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Approve Order"
-msgstr ""
+msgstr "ऑर्डर स्वीकार करें"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_attachment_count
@@ -649,7 +668,7 @@ msgstr "अटैचमेंट की संख्या"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Attributes"
-msgstr ""
+msgstr "एट्रिब्यूट"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_move_form_inherit_purchase
@@ -661,31 +680,31 @@ msgstr "ऑटो-कंप्ली"
 #: model:ir.model.fields,field_description:purchase.field_account_move__purchase_vendor_bill_id
 #: model:ir.model.fields,field_description:purchase.field_account_payment__purchase_vendor_bill_id
 msgid "Auto-complete"
-msgstr ""
+msgstr "ऑटो-कंप्लीट"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_account_bank_statement_line__purchase_vendor_bill_id
 #: model:ir.model.fields,help:purchase.field_account_move__purchase_vendor_bill_id
 #: model:ir.model.fields,help:purchase.field_account_payment__purchase_vendor_bill_id
 msgid "Auto-complete from a past bill / purchase order."
-msgstr ""
+msgstr "पिछले बिल / परचेज़ ऑर्डर से ऑटो-कंप्लीट।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_account_bank_statement_line__purchase_id
 #: model:ir.model.fields,help:purchase.field_account_move__purchase_id
 #: model:ir.model.fields,help:purchase.field_account_payment__purchase_id
 msgid "Auto-complete from a past purchase order."
-msgstr ""
+msgstr "पिछले परचेज़ ऑर्डर से ऑटो-कंप्लीट।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Automatically lock confirmed orders to prevent editing"
-msgstr ""
+msgstr "पुष्टि किए गए ऑर्डर को बदलाव से रोकने के लिए अपने-आप लॉक करें"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Automatically remind the receipt date to your vendors"
-msgstr ""
+msgstr "वेंडर को सामान मिलने की तारीख के बारे में अपने-आप याद दिलाना"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_res_partner__receipt_reminder_email
@@ -695,6 +714,8 @@ msgid ""
 "Automatically send a confirmation email to the vendor X days before the "
 "expected receipt date, asking him to confirm the exact date."
 msgstr ""
+"वेंडर को सामान मिलने की संभावित तारीख से X दिन पहले एक पुष्टिकरण ईमेल भेजें, जिसमें उनसे "
+"सटीक तारीख की पुष्टि करने के लिए कहा गया हो।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__price_average
@@ -716,7 +737,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__invoice_count
 msgid "Bill Count"
-msgstr ""
+msgstr "बिल की संख्या"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__invoice_lines
@@ -726,7 +747,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Billed"
-msgstr ""
+msgstr "बिल किया गया"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__qty_invoiced
@@ -746,7 +767,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__invoice_status
 msgid "Billing Status"
-msgstr ""
+msgstr "बिलिंग स्टेटस"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__invoice_ids
@@ -773,7 +794,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search
 msgid "Buyer"
-msgstr ""
+msgstr "खरीदार"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_calendar
@@ -804,7 +825,7 @@ msgstr "निरस्त"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 msgid "Cancelled Purchase Order #"
-msgstr ""
+msgstr "रद्द किया गया परचेज़ ऑर्डर #"
 
 #. module: purchase
 #. odoo-python
@@ -879,7 +900,7 @@ msgstr "पुष्टि करें"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Confirm Order"
-msgstr ""
+msgstr "ऑर्डर की पुष्टि करें"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -889,14 +910,14 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__res_company__po_double_validation__one_step
 msgid "Confirm purchase orders in one step"
-msgstr ""
+msgstr "एक ही स्टेप में परचेज़ ऑर्डर की पुष्टि करें"
 
 #. module: purchase
 #. odoo-javascript
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Confirm your purchase."
-msgstr ""
+msgstr "अपनी खरीद की पुष्टि करें।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__date_approve
@@ -904,17 +925,17 @@ msgstr ""
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__date_approve
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search
 msgid "Confirmation Date"
-msgstr ""
+msgstr "पुष्टि की तारीख"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search
 msgid "Confirmation Date Last Year"
-msgstr ""
+msgstr "पिछले वर्ष की पुष्टि की तारीख"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__res_company__po_lock__lock
 msgid "Confirmed purchase orders are not editable"
-msgstr ""
+msgstr "पुष्टि किए जा चुके परचेज़ ऑर्डर में बदलाव नहीं किया जा सकता"
 
 #. module: purchase
 #: model:ir.model,name:purchase.model_res_partner
@@ -926,7 +947,7 @@ msgstr "संपर्क"
 #: model:ir.model.fields,field_description:purchase.field_product_product__purchase_method
 #: model:ir.model.fields,field_description:purchase.field_product_template__purchase_method
 msgid "Control Policy"
-msgstr ""
+msgstr "कंट्रोल से जुड़ी पॉलिसी"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__product_uom_category_id
@@ -949,7 +970,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_kpis_tree
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_tree
 msgid "Create Bills"
-msgstr ""
+msgstr "बिल बनाएं"
 
 #. module: purchase
 #: model:ir.actions.server,name:purchase.action_purchase_batch_bills
@@ -959,7 +980,7 @@ msgstr "वेंडर बिल बनाएं"
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.product_product_action
 msgid "Create a new product variant"
-msgstr ""
+msgstr "नया प्रॉडक्ट वैरिएंट बनाएं"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__create_uid
@@ -999,14 +1020,14 @@ msgstr "तारीख"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__date_calendar_start
 msgid "Date Calendar Start"
-msgstr ""
+msgstr "कैलेंडर शुरू होने की तारीख"
 
 #. module: purchase
 #. odoo-python
 #: code:addons/purchase/models/purchase_order.py:0
 #, python-format
 msgid "Date Updated"
-msgstr ""
+msgstr "तारीख अपडेट हो गई"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -1025,22 +1046,22 @@ msgstr "दिन"
 #: model:ir.model.fields,field_description:purchase.field_res_partner__reminder_date_before_receipt
 #: model:ir.model.fields,field_description:purchase.field_res_users__reminder_date_before_receipt
 msgid "Days Before Receipt"
-msgstr ""
+msgstr "रसीद मिलने से पहले के दिन"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__delay
 msgid "Days to Confirm"
-msgstr ""
+msgstr "पुष्टि करने के लिए दिन"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__delay_pass
 msgid "Days to Receive"
-msgstr ""
+msgstr "प्राप्त करने में लगने वाले दिन"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Define your terms and conditions ..."
-msgstr ""
+msgstr "अपनी नियम और शर्तें परिभाषित करें..।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__date_planned
@@ -1048,6 +1069,8 @@ msgid ""
 "Delivery date expected from vendor. This date respectively defaults to "
 "vendor pricelist lead time then today's date."
 msgstr ""
+"वेंडर से डिलीवरी की अनुमानित तारीख. यह तिथि डिफ़ॉल्ट रूप से पहले वेंडर प्राइसलिस्ट के लीड "
+"टाइम और फिर आज की तारीख पर आधारित होती है।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__date_planned
@@ -1055,6 +1078,8 @@ msgid ""
 "Delivery date promised by vendor. This date is used to determine expected "
 "arrival of products."
 msgstr ""
+"वेंडर ने प्रॉडक्ट पहुंचाने के लिए जो तारीख दी है, उसी के आधार पर यह पता लगाया जाता है कि "
+"प्रॉडक्ट कब तक पहुंचने की उम्मीद है।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__date_order
@@ -1063,6 +1088,8 @@ msgid ""
 "Depicts the date within which the Quotation should be confirmed and "
 "converted into a purchase order."
 msgstr ""
+"वह तारीख दर्शाता है जिसके भीतर कोटेशन की पुष्टि की जानी चाहिए और उसे परचेज़ ऑर्डर में "
+"बदला जाना चाहिए।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__name
@@ -1082,7 +1109,7 @@ msgstr "छूट (%)"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Discount:"
-msgstr ""
+msgstr "डिस्काउंट:"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_union__display_name
@@ -1115,12 +1142,12 @@ msgstr "हो गया"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_company__po_double_validation_amount
 msgid "Double validation amount"
-msgstr ""
+msgstr "वह राशि जिसके लिए दो बार मंजूरी लेने की ज़रूरत हो"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_report__state__draft
 msgid "Draft RFQ"
-msgstr ""
+msgstr "ड्राफ़्ट आरएफक्यू"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
@@ -1136,7 +1163,7 @@ msgstr "ड्रॉपशिप का पता"
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__date_planned
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__date_planned
 msgid "Expected Arrival"
-msgstr ""
+msgstr "पहुंचने की संभावित तारीख"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search
@@ -1148,7 +1175,7 @@ msgstr "ज़्यादा फ़िल्टर"
 #: code:addons/purchase/models/purchase_order_line.py:0
 #, python-format
 msgid "Extra line with %s "
-msgstr ""
+msgstr "%s के साथ एक्स्ट्रा लाइन "
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__fiscal_position_id
@@ -1164,7 +1191,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_home_purchase
 msgid "Follow your Requests for Quotation"
-msgstr ""
+msgstr "अपने अनुरोधों के लिए कोटेशन को फ़ॉलो करें"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_follower_ids
@@ -1184,7 +1211,7 @@ msgstr "फॉन्ट के बेहतरीन आइकॉन जैस�
 #. module: purchase
 #: model:ir.model.constraint,message:purchase.constraint_purchase_order_line_non_accountable_null_fields
 msgid "Forbidden values on non-accountable purchase order line"
-msgstr ""
+msgstr "नॉन-अकाउंटेबल परचेज़ ऑर्डर लाइन में ये वैल्यू नहीं डाली जा सकती"
 
 #. module: purchase
 #. odoo-python
@@ -1203,7 +1230,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order__invoice_status__invoiced
 msgid "Fully Billed"
-msgstr ""
+msgstr "पूरी तरह से बिल किया गया"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
@@ -1214,12 +1241,12 @@ msgstr "फ्यूचर ऐक्टिविटी"
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__res_company__po_double_validation__two_step
 msgid "Get 2 levels of approvals to confirm a purchase order"
-msgstr ""
+msgstr "परचेज़ ऑर्डर की पुष्टि के लिए मंज़ूरी के 2 लेवल पाएं"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Get warnings in orders for products or vendors"
-msgstr ""
+msgstr "सामान या वेंडर से जुड़ी चेतावनियों के लिए ऑर्डर पर अलर्ट पाएं"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__weight
@@ -1242,7 +1269,7 @@ msgstr "मैसेज है"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_line_search
 msgid "Hide cancelled lines"
-msgstr ""
+msgstr "रद्द की गई लाइनों को छिपाएं"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_bill_union__id
@@ -1279,6 +1306,8 @@ msgid ""
 "If enabled, activates 3-way matching on vendor bills : the items must be "
 "received in order to pay the invoice."
 msgstr ""
+"अगर चालू है, तो वेंडर बिलों पर 3-वे मैचिंग सक्रिय करता है: इनवॉइस का भुगतान करने के लिए "
+"वस्तुओं का प्राप्त होना ज़रूरी है।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -1286,6 +1315,8 @@ msgid ""
 "If installed, the product variants will be added to purchase orders through "
 "a grid entry."
 msgstr ""
+"यदि इंस्टॉल किया गया है, तो प्रॉडक्ट वेरिएंट ग्रिड एंट्री के माध्यम से परचेज़ ऑर्डर में जोड़े "
+"जाएंगे।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_product_packaging__purchase
@@ -1297,14 +1328,14 @@ msgstr ""
 #: code:addons/purchase/models/product.py:0
 #, python-format
 msgid "Import Template for Products"
-msgstr ""
+msgstr "प्रॉडक्ट के लिए टेम्प्लेट इंपोर्ट करें"
 
 #. module: purchase
 #. odoo-python
 #: code:addons/purchase/models/purchase_order.py:0
 #, python-format
 msgid "In order to delete a purchase order, you must cancel it first."
-msgstr ""
+msgstr "परचेज़ ऑर्डर को हटाने के लिए, आपको पहले उसे रद्द करना होगा।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__incoterm_id
@@ -1316,7 +1347,7 @@ msgstr "इन्कोटर्म"
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Indicate the product quantity you want to order."
-msgstr ""
+msgstr "उस प्रॉडक्ट की मात्रा बताएं जिसे आप ऑर्डर करना चाहते हैं।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__incoterm_id
@@ -1331,7 +1362,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Invoices and Incoming Shipments"
-msgstr ""
+msgstr "इनवॉइस और आने वाली शिपमेंट"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -1395,7 +1426,7 @@ msgstr ""
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Let's create your first request for quotation."
-msgstr ""
+msgstr "आइए, आपका पहला कोटेशन अनुरोध बनाएं।"
 
 #. module: purchase
 #. odoo-javascript
@@ -1405,16 +1436,18 @@ msgid ""
 "Let's try the Purchase app to manage the flow from purchase to reception and "
 "invoice control."
 msgstr ""
+"खरीदने से लेकर पाने और इनवॉइस कंट्रोल तक की प्रक्रिया को मैनेज करने के लिए, परचेज़ ऐप का "
+"इस्तेमाल करें।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_company__po_double_validation
 msgid "Levels of Approvals"
-msgstr ""
+msgstr "अनुमति के लेवल"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__po_double_validation
 msgid "Levels of Approvals *"
-msgstr ""
+msgstr "अनुमति के लेवल *"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -1439,6 +1472,8 @@ msgstr "लॉक हो गया"
 msgid ""
 "Make sure you only pay bills for which you received the goods you ordered"
 msgstr ""
+"पक्का करें कि आप सिर्फ़ उन्हीं बिलों का भुगतान करें जिनका ऑर्डर किया गया सामान आपको "
+"प्राप्त हो गया है"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -1453,12 +1488,12 @@ msgstr "मैन्युअल"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_line_form2
 msgid "Manual Invoices"
-msgstr ""
+msgstr "मैन्युअल इनवॉइस"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__qty_received_manual
 msgid "Manual Received Qty"
-msgstr ""
+msgstr "मैन्युअल तौर पर प्राप्त मात्रा"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_res_company__po_lead
@@ -1468,6 +1503,9 @@ msgid ""
 "Orders for procuring products, they will be scheduled that many days earlier "
 "to cope with unexpected vendor delays."
 msgstr ""
+"वेंडर लीड टाइम के लिए मार्जिन ऑफ एरर. जब सिस्टम प्रॉडक्ट की खरीद के लिए परचेज़ ऑर्डर "
+"जनरेट करता है, तो वेंडर की ओर से होने वाली अप्रत्याशित देरी से निपटने के लिए उन्हें उतने दिन "
+"पहले शेड्यूल किया जाएगा।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_res_config_settings__use_po_lead
@@ -1476,6 +1514,9 @@ msgid ""
 "Orders for reordering products,they will be scheduled that many days earlier "
 "to cope with unexpected vendor delays."
 msgstr ""
+"वेंडर लीड टाइम के लिए मार्जिन ऑफ एरर. जब सिस्टम प्रॉडक्ट को फिर से ऑर्डर करने के लिए "
+"परचेज ऑर्डर जनरेट करता है, तो वेंडर की अचानक होने वाली देरी से निपटने के लिए उन्हें उतने "
+"दिन पहले शेड्यूल किया जाएगा।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_has_error
@@ -1486,13 +1527,13 @@ msgstr "मैसेज डिलीवरी में गड़बड़ी"
 #: model:ir.model.fields,field_description:purchase.field_res_partner__purchase_warn_msg
 #: model:ir.model.fields,field_description:purchase.field_res_users__purchase_warn_msg
 msgid "Message for Purchase Order"
-msgstr ""
+msgstr "परचेज़ ऑर्डर के लिए मैसेज"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_product_product__purchase_line_warn_msg
 #: model:ir.model.fields,field_description:purchase.field_product_template__purchase_line_warn_msg
 msgid "Message for Purchase Order Line"
-msgstr ""
+msgstr "परचेज़ ऑर्डर लाइन के लिए मैसेज"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_ids
@@ -1508,12 +1549,12 @@ msgstr ""
 #: model:ir.model.fields,help:purchase.field_res_company__po_double_validation_amount
 #: model:ir.model.fields,help:purchase.field_res_config_settings__po_double_validation_amount
 msgid "Minimum amount for which a double validation is required"
-msgstr ""
+msgstr "न्यूनतम राशि जिसके लिए दो बार सत्यापन की ज़रूरत है"
 
 #. module: purchase
 #: model:ir.model.constraint,message:purchase.constraint_purchase_order_line_accountable_required_fields
 msgid "Missing required fields on accountable purchase order line."
-msgstr ""
+msgstr "अकाउंटेबल परचेज़ ऑर्डर लाइन पर ज़रूरी फ़ील्ड गायब हैं।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__my_activity_date_deadline
@@ -1542,7 +1583,7 @@ msgstr "मेरे ऑर्डर"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
 msgid "My Purchases"
-msgstr ""
+msgstr "मेरा परचेज़"
 
 #. module: purchase
 #. odoo-javascript
@@ -1556,7 +1597,7 @@ msgstr ""
 #: code:addons/purchase/static/src/views/purchase_dashboard.xml:0
 #, python-format
 msgid "My Waiting RFQs"
-msgstr ""
+msgstr "मेरी पेंडिंग RFQs"
 
 #. module: purchase
 #. odoo-python
@@ -1568,7 +1609,7 @@ msgstr "नाम"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Name, TIN, Email, or Reference"
-msgstr ""
+msgstr "नाम, TIN, ईमेल या रेफ़रेंस"
 
 #. module: purchase
 #. odoo-python
@@ -1606,7 +1647,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.action_purchase_order_report_all
 msgid "No Purchase Analysis"
-msgstr ""
+msgstr "कोई परचेज़ एनालिसिस नहीं"
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.product_normal_action_puchased
@@ -1616,17 +1657,17 @@ msgstr "कोई प्रॉडक्ट नहीं मिला. चलि�
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.purchase_form_action
 msgid "No purchase order found. Let's create one!"
-msgstr ""
+msgstr "कोई परचेज़ ऑर्डर नहीं मिला. चलिए, एक बनाते हैं!"
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.action_purchase_history
 msgid "No purchase order were made for this product yet!"
-msgstr ""
+msgstr "इस प्रॉडक्ट के लिए अभी तक कोई परचेज़ ऑर्डर नहीं दिया गया है!"
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.purchase_rfq
 msgid "No request for quotation found. Let's create one!"
-msgstr ""
+msgstr "कोटेशन का कोई अनुरोध नहीं मिला. आइए, एक बनाते हैं!"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order__priority__0
@@ -1636,7 +1677,7 @@ msgstr "सामान्य"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
 msgid "Not Acknowledged"
-msgstr ""
+msgstr "स्वीकार नहीं किया गया"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order_line__display_type__line_note
@@ -1664,6 +1705,7 @@ msgstr "ऐक्शन की संख्या"
 #: model:ir.model.fields,help:purchase.field_res_users__reminder_date_before_receipt
 msgid "Number of days to send reminder email before the promised receipt date"
 msgstr ""
+"तय डिलीवरी तारीख से कितने दिन पहले वेंडर को याद दिलाने वाला ईमेल भेजा जाए"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__message_has_error_counter
@@ -1692,6 +1734,8 @@ msgid ""
 "On ordered quantities: Control bills based on ordered quantities.\n"
 "On received quantities: Control bills based on received quantities."
 msgstr ""
+"ऑर्डर की गई मात्राओं पर: ऑर्डर की गई मात्राओं के आधार पर बिलों को कंट्रोल करें.\n"
+"प्राप्त हुई मात्राओं पर: प्राप्त हुई मात्राओं के आधार पर बिलों को कंट्रोल करें।"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__product_template__purchase_method__receive
@@ -1706,6 +1750,8 @@ msgid ""
 "Once you get the price from the vendor, you can complete the purchase order "
 "with the right price."
 msgstr ""
+"एक बार जब आपको वेंडर से कीमत मिल जाए, तो आप सही कीमत के साथ परचेज़ ऑर्डर पूरा कर सकते "
+"हैं।"
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.purchase_form_action
@@ -1713,6 +1759,8 @@ msgid ""
 "Once you ordered your products to your supplier, confirm your request for "
 "quotation and it will turn into a purchase order."
 msgstr ""
+"एक बार जब आप अपने सप्लायर को प्रॉडक्ट का ऑर्डर दे देते हैं, तो अपने कोटेशन अनुरोध की पुष्टि "
+"करें और यह एक परचेज़ ऑर्डर में बदल जाएगा।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__order_id
@@ -1739,19 +1787,19 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__order_line
 msgid "Order Lines"
-msgstr ""
+msgstr "ऑर्डर लाइन"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__name
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__order_id
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_line_search
 msgid "Order Reference"
-msgstr ""
+msgstr "ऑर्डर रेफ़रेंस"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.track_po_line_template
 msgid "Ordered Quantity:"
-msgstr ""
+msgstr "ऑर्डर की गई मात्रा:"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__res_config_settings__default_purchase_method__purchase
@@ -1792,7 +1840,7 @@ msgstr "साथी"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__country_id
 msgid "Partner Country"
-msgstr ""
+msgstr "पार्टनर का देश"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__payment_term_id
@@ -1812,7 +1860,7 @@ msgstr "पोर्टल ऐक्सेस यूआरएल"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Preview the reminder email by sending it to yourself."
-msgstr ""
+msgstr "रिमाइंडर ईमेल कैसा दिखेगा, यह देखने के लिए इसे पहले खुद को भेजें।"
 
 #. module: purchase
 #. odoo-javascript
@@ -1850,7 +1898,7 @@ msgstr "उत्पाद"
 #. module: purchase
 #: model:ir.ui.menu,name:purchase.menu_product_attribute_action
 msgid "Product Attributes"
-msgstr ""
+msgstr "प्रॉडक्ट एट्रिब्यूट"
 
 #. module: purchase
 #: model:ir.ui.menu,name:purchase.menu_product_category_config_purchase
@@ -1876,7 +1924,7 @@ msgstr "उत्पाद  प्रारूप"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__product_type
 msgid "Product Type"
-msgstr ""
+msgstr "प्रॉडक्ट टाइप"
 
 #. module: purchase
 #: model:ir.model,name:purchase.model_product_product
@@ -1904,7 +1952,7 @@ msgstr "प्रॉडक्ट"
 #: model:ir.model.fields,help:purchase.field_res_company__po_double_validation
 #: model:ir.model.fields,help:purchase.field_res_config_settings__po_double_validation
 msgid "Provide a double validation mechanism for purchases"
-msgstr ""
+msgstr "खरीदारी के लिए डबल अप्रूवल सिस्टम सेट करें"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_product_packaging__purchase
@@ -1917,7 +1965,7 @@ msgstr "परचेज़"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__module_purchase_requisition
 msgid "Purchase Agreements"
-msgstr ""
+msgstr "परचेज़ अग्रीमेंट"
 
 #. module: purchase
 #: model:ir.actions.act_window,name:purchase.action_purchase_order_report_all
@@ -1925,17 +1973,17 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_graph
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_pivot
 msgid "Purchase Analysis"
-msgstr ""
+msgstr "परचेज़ एनालिसिस"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_product_supplier_inherit
 msgid "Purchase Description"
-msgstr ""
+msgstr "परचेज़ का विवरण"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__module_purchase_product_matrix
 msgid "Purchase Grid Entry"
-msgstr ""
+msgstr "परचेज़ ग्रिड एंट्री"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -1948,13 +1996,13 @@ msgstr "परचेज़ का इतिहास"
 #: code:addons/purchase/models/purchase_order_line.py:0
 #, python-format
 msgid "Purchase History for %s"
-msgstr ""
+msgstr "%s के लिए परचेज़ का इतिहास"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_company__po_lead
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__po_lead
 msgid "Purchase Lead Time"
-msgstr ""
+msgstr "परचेज़ लीड टाइम"
 
 #. module: purchase
 #. odoo-python
@@ -1985,12 +2033,12 @@ msgstr "खरीद आदेश"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.report_purchaseorder_document
 msgid "Purchase Order #"
-msgstr ""
+msgstr "परचेज़ ऑर्डर #"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__po_order_approval
 msgid "Purchase Order Approval"
-msgstr ""
+msgstr "परचेज़ ऑर्डर अप्रूवल"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_account_analytic_account__purchase_order_count
@@ -2021,17 +2069,17 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_line_tree
 msgid "Purchase Order Lines"
-msgstr ""
+msgstr "परचेज़ ऑर्डर की लाइनें"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_company__po_lock
 msgid "Purchase Order Modification"
-msgstr ""
+msgstr "परचेज़ ऑर्डर में बदलाव"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__po_lock
 msgid "Purchase Order Modification *"
-msgstr ""
+msgstr "परचेज़ ऑर्डर में बदलाव *"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_res_company__po_lock
@@ -2040,6 +2088,8 @@ msgid ""
 "Purchase Order Modification used when you want to purchase order editable "
 "after confirm"
 msgstr ""
+"परचेज़ ऑर्डर में बदलाव करने की सुविधा का उपयोग तब किया जाता है जब आप पुष्टि के बाद परचेज़ "
+"ऑर्डर को संपादन योग्य बनाना चाहते हैं"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_partner__purchase_warn
@@ -2065,22 +2115,22 @@ msgstr "परचेज़ ऑर्डर"
 #. module: purchase
 #: model:ir.model,name:purchase.model_purchase_report
 msgid "Purchase Report"
-msgstr ""
+msgstr "परचेज़ रिपोर्ट"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__group_warning_purchase
 msgid "Purchase Warnings"
-msgstr ""
+msgstr "परचेज़ से जुड़ी चेतावनियां"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
 msgid "Purchase orders that have been invoiced."
-msgstr ""
+msgstr "जिन परचेज़ ऑर्डर का इनवॉइस भेजा जा चुका है।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
 msgid "Purchase orders that include lines not invoiced."
-msgstr ""
+msgstr "परचेज़ ऑर्डर जिनमें ऐसी लाइनें शामिल हैं जिनका इनवॉइस नहीं भेजा गया है।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
@@ -2090,27 +2140,28 @@ msgstr ""
 #. module: purchase
 #: model:ir.actions.server,name:purchase.purchase_send_reminder_mail_ir_actions_server
 msgid "Purchase reminder"
-msgstr ""
+msgstr "परचेज़ के लिए रिमाइंडर"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Purchase variants of a product using attributes (size, color, etc.)"
 msgstr ""
+"विशेषताओं (जैसे आकार, रंग, वगैरह) का उपयोग करके प्रॉडक्ट के अलग-अलग वैरिएंट खरीदें"
 
 #. module: purchase
 #: model:mail.template,name:purchase.email_template_edi_purchase_done
 msgid "Purchase: Purchase Order"
-msgstr ""
+msgstr "परचेज़: परचेज़ ऑर्डर"
 
 #. module: purchase
 #: model:mail.template,name:purchase.email_template_edi_purchase
 msgid "Purchase: Request For Quotation"
-msgstr ""
+msgstr "परचेज़: कोटेशन के लिए अनुरोध"
 
 #. module: purchase
 #: model:mail.template,name:purchase.email_template_edi_purchase_reminder
 msgid "Purchase: Vendor Reminder"
-msgstr ""
+msgstr "परचेज़: वेंडर रिमाइंडर"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_product_product__purchased_product_qty
@@ -2140,7 +2191,7 @@ msgstr "परचेज़"
 #. module: purchase
 #: model:ir.model,name:purchase.model_purchase_bill_union
 msgid "Purchases & Bills Union"
-msgstr ""
+msgstr "परचेज़ और बिल यूनियन"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__dest_address_id
@@ -2148,6 +2199,8 @@ msgid ""
 "Put an address if you want to deliver directly from the vendor to the "
 "customer. Otherwise, keep empty to deliver to your own company."
 msgstr ""
+"अगर आप वेंडर से सीधे ग्राहक तक डिलीवरी करना चाहते हैं, तो एक पता डालें. अन्यथा, अपनी "
+"कंपनी को डिलीवर करने के लिए इसे खाली छोड़ दें।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__qty_billed
@@ -2193,12 +2246,12 @@ msgstr ""
 #. module: purchase
 #: model:mail.message.subtype,name:purchase.mt_rfq_approved
 msgid "RFQ Approved"
-msgstr ""
+msgstr "RFQ की अनुमति मिल गई"
 
 #. module: purchase
 #: model:mail.message.subtype,name:purchase.mt_rfq_confirmed
 msgid "RFQ Confirmed"
-msgstr ""
+msgstr "RFQ की पुष्टि हो गई"
 
 #. module: purchase
 #: model:mail.message.subtype,name:purchase.mt_rfq_done
@@ -2210,7 +2263,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_report__state__sent
 #: model:mail.message.subtype,name:purchase.mt_rfq_sent
 msgid "RFQ Sent"
-msgstr ""
+msgstr "RFQ भेजा गया"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
@@ -2227,7 +2280,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.actions.act_window,name:purchase.act_res_partner_2_purchase_order
 msgid "RFQs and Purchases"
-msgstr ""
+msgstr "RFQs और परचेज़"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__rating_ids
@@ -2254,7 +2307,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__receipt_reminder_email
 msgid "Receipt Reminder Email"
-msgstr ""
+msgstr "रसीद के लिए याद दिलाने वाला ईमेल"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -2269,7 +2322,7 @@ msgstr ""
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__qty_received_method
 msgid "Received Qty Method"
-msgstr ""
+msgstr "सामान की प्राप्त मात्रा को रिकॉर्ड करने का तरीका"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -2309,12 +2362,12 @@ msgstr "संदर्भ"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_bill_union_tree
 msgid "Reference Document"
-msgstr ""
+msgstr "रेफ़रेंस दस्तावेज़"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__product_uom
 msgid "Reference Unit of Measure"
-msgstr ""
+msgstr "रेफ़रेंस यूनिट ऑफ़ मेज़र"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__origin
@@ -2322,6 +2375,8 @@ msgid ""
 "Reference of the document that generated this purchase order request (e.g. a "
 "sales order)"
 msgstr ""
+"उस दस्तावेज़ का रेफ़रेंस जिसने यह परचेज़ ऑर्डर के लिए अनुरोध जनरेट किया था (जैसे कि एक सेल्स "
+"ऑर्डर)"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__partner_ref
@@ -2330,6 +2385,9 @@ msgid ""
 "matching when you receive the products as this reference is usually written "
 "on the delivery order sent by your vendor."
 msgstr ""
+"वेंडर द्वारा भेजे गए सेल्स ऑर्डर या बिड का रेफ़रेंस. इसका इस्तेमाल प्रॉडक्ट मिलने पर मैच के लिए "
+"किया जाता है, क्योंकि यह रेफ़रेंस आमतौर पर वेंडर द्वारा भेजे गए डिलीवरी ऑर्डर पर लिखा "
+"होता है।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__mail_reminder_confirmed
@@ -2360,6 +2418,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:purchase.res_config_settings_view_form_purchase
 msgid "Request managers to approve orders above a minimum amount"
 msgstr ""
+"एक न्यूनतम राशि से ऊपर के ऑर्डर को मंजूरी देने के लिए मैनेजरों से अनुरोध करें"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_rfqs
@@ -2384,6 +2443,10 @@ msgid ""
 "                Once an agreement has been found with the supplier, they "
 "will be confirmed and turned into purchase orders."
 msgstr ""
+"कोटेशन के लिए अनुरोध (RFQ) वे दस्तावेज़ हैं जो आपके सप्लायरों को उन प्रॉडक्ट की कीमतें जानने "
+"के लिए भेजे जाते हैं जिन्हें आप खरीदना चाहते हैं.\n"
+"                एक बार जब सप्लायर के साथ समझौता हो जाता है, तो उनकी पुष्टि कर दी "
+"जाएगी और उन्हें परचेज़ ऑर्डर में बदल दिया जाएगा।"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__activity_user_id
@@ -2405,19 +2468,19 @@ msgstr "अनुसूचित तिथि"
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
 msgid "Search Purchase Order"
-msgstr ""
+msgstr "परचेज़ ऑर्डर खोजें"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_bill_union_filter
 msgid "Search Reference Document"
-msgstr ""
+msgstr "रेफ़रेंस दस्तावेज़ खोजें"
 
 #. module: purchase
 #. odoo-javascript
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Search a vendor name, or create one on the fly."
-msgstr ""
+msgstr "वेंडर का नाम खोजें या तुरंत एक नया बनाएं।"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order_line__display_type__line_section
@@ -2427,12 +2490,12 @@ msgstr "सेक्शन"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Section Name (eg. Products, Services)"
-msgstr ""
+msgstr "सेक्शन का नाम (जैसे, प्रॉडक्ट, सर्विस)"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_config_settings__use_po_lead
 msgid "Security Lead Time for Purchase"
-msgstr ""
+msgstr "परचेज़ के लिए सिक्योरिटी लीड टाइम"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__access_token
@@ -2444,12 +2507,12 @@ msgstr "सिक्योरिटी टोकन"
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Select a product, or create a new one on the fly."
-msgstr ""
+msgstr "एक प्रॉडक्ट चुनें या तुरंत एक नया बनाएं।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_move_form_inherit_purchase
 msgid "Select a purchase order or an old bill"
-msgstr ""
+msgstr "एक परचेज़ ऑर्डर या एक पुराना बिल चुनें"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_product_product__purchase_line_warn
@@ -2480,7 +2543,7 @@ msgstr ""
 #. module: purchase
 #: model:res.groups,name:purchase.group_send_reminder
 msgid "Send an automatic reminder email to confirm delivery"
-msgstr ""
+msgstr "डिलीवरी की पुष्टि के लिए एक ऑटोमैटिक रिमाइंडर ईमेल भेजें"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -2497,23 +2560,25 @@ msgstr "मैसेज भेजें"
 #: code:addons/purchase/static/src/js/tours/purchase.js:0
 #, python-format
 msgid "Send the request for quotation to your vendor."
-msgstr ""
+msgstr "अपने वेंडर को कोटेशन का अनुरोध भेजें।"
 
 #. module: purchase
 #: model:mail.template,description:purchase.email_template_edi_purchase
 msgid "Sent manually to vendor to request a quotation"
-msgstr ""
+msgstr "वेंडर से कोटेशन का अनुरोध करने के लिए मैन्युअल रूप से भेजा गया"
 
 #. module: purchase
 #: model:mail.template,description:purchase.email_template_edi_purchase_done
 msgid "Sent to vendor with the purchase order in attachment"
-msgstr ""
+msgstr "वेंडर को परचेज़ ऑर्डर अटैचमेंट के साथ भेजा गया"
 
 #. module: purchase
 #: model:mail.template,description:purchase.email_template_edi_purchase_reminder
 msgid ""
 "Sent to vendors before expected arrival, based on the purchase order setting"
 msgstr ""
+"परचेज़ ऑर्डर की सेटिंग के आधार पर, सामान मिलने की तय तारीख से पहले वेंडर को भेजा गया "
+"रिमाइंडर"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__sequence
@@ -2608,13 +2673,13 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_report_view_tree
 msgid "Sum of Untaxed Total"
-msgstr ""
+msgstr "बिना टैक्स वाली सभी कीमतों का कुल योग"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_res_partner__property_purchase_currency_id
 #: model:ir.model.fields,field_description:purchase.field_res_users__property_purchase_currency_id
 msgid "Supplier Currency"
-msgstr ""
+msgstr "सप्लायर करेंसी"
 
 #. module: purchase
 #: model:ir.model,name:purchase.model_product_supplierinfo
@@ -2640,7 +2705,7 @@ msgstr "टैक्स कंट्री"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__tax_totals
 msgid "Tax Totals"
-msgstr ""
+msgstr "टैक्स का कुल योग"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__tax_calculation_rounding_method
@@ -2656,7 +2721,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Tax excl.:"
-msgstr ""
+msgstr "टैक्स शामिल नहीं:"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -2666,7 +2731,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "Tax incl.:"
-msgstr ""
+msgstr "टैक्स शामिल:"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__amount_tax
@@ -2677,7 +2742,7 @@ msgstr "टैक्स"
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__display_type
 msgid "Technical field for UX purpose."
-msgstr ""
+msgstr "UX उद्देश्य के लिए टेक्निकल फ़ील्ड।"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_purchase_order__tax_country_id
@@ -2685,6 +2750,7 @@ msgid ""
 "Technical field to filter the available taxes depending on the fiscal "
 "country and fiscal position."
 msgstr ""
+"वित्तीय देश और वित्तीय स्थिति के आधार पर उपलब्ध टैक्स को फ़िल्टर करने के लिए टेक्निकल फ़ील्ड।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_portal_content
@@ -2720,16 +2786,19 @@ msgid ""
 "control the receipt\n"
 "                    of the products and the vendor bill."
 msgstr ""
+"कोटेशन के लिए अनुरोध खरीदने की प्रक्रिया का पहला स्टेप है. एक बार\n"
+"                    परचेज़ ऑर्डर में बदलने के बाद, आप प्रॉडक्ट की प्राप्ति और वेंडर बिल \n"
+"                    को कंट्रोल कर सकेंगे।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_orders
 msgid "There are currently no purchase orders for your account."
-msgstr ""
+msgstr "आपके खाते के लिए वर्तमान में कोई परचेज़ ऑर्डर नहीं हैं।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_rfqs
 msgid "There are currently no requests for quotation for your account."
-msgstr ""
+msgstr "वर्तमान में आपके खाते के लिए कोटेशन के लिए कोई अनुरोध नहीं है।"
 
 #. module: purchase
 #. odoo-python
@@ -2748,6 +2817,10 @@ msgid ""
 "                You can track your negotiation performance, the delivery "
 "performance of your vendors, etc"
 msgstr ""
+"यह विश्लेषण आपको अपनी कंपनी के खरीदारी का इतिहास और प्रदर्शन को आसानी से जांचने और "
+"उसका विश्लेषण करने की अनुमति देता है.\n"
+"                आप अपनी बातचीत के प्रदर्शन, अपने वेंडर के डिलीवरी प्रदर्शन वगैरह को "
+"ट्रैक कर सकते हैं"
 
 #. module: purchase
 #: model:ir.model.fields,help:purchase.field_res_partner__property_purchase_currency_id
@@ -2768,7 +2841,7 @@ msgstr ""
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_product_supplier_inherit
 msgid "This note is added to purchase orders."
-msgstr ""
+msgstr "यह नोट परचेज़ ऑर्डर में जोड़ा जाता है।"
 
 #. module: purchase
 #. odoo-python
@@ -2784,31 +2857,31 @@ msgstr ""
 #: code:addons/purchase/models/account_invoice.py:0
 #, python-format
 msgid "This vendor bill has been created from: "
-msgstr ""
+msgstr "यह वेंडर बिल इससे बनाया गया है: "
 
 #. module: purchase
 #. odoo-python
 #: code:addons/purchase/models/account_invoice.py:0
 #, python-format
 msgid "This vendor bill has been modified from: "
-msgstr ""
+msgstr "इस वेंडर बिल में इससे बदलाव किया गया है: "
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.act_res_partner_2_purchase_order
 msgid "This vendor has no purchase order. Create a new RfQ"
-msgstr ""
+msgstr "इस वेंडर का कोई परचेज़ ऑर्डर नहीं है. एक नया RfQ बनाएं"
 
 #. module: purchase
 #: model:digest.tip,name:purchase.digest_tip_purchase_0
 #: model_terms:digest.tip,tip_description:purchase.digest_tip_purchase_0
 msgid "Tip: How to keep late receipts under control?"
-msgstr ""
+msgstr "सुझाव: लेट होने वाली रसीदों को कैसे कंट्रोल करें?"
 
 #. module: purchase
 #: model:digest.tip,name:purchase.digest_tip_purchase_1
 #: model_terms:digest.tip,tip_description:purchase.digest_tip_purchase_1
 msgid "Tip: Never miss a purchase order"
-msgstr ""
+msgstr "सुझाव: कभी भी कोई परचेज़ ऑर्डर न चूकें"
 
 #. module: purchase
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order__state__to_approve
@@ -2820,7 +2893,7 @@ msgstr "मंज़ूरी देने के लिए"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__qty_to_invoice
 msgid "To Invoice Quantity"
-msgstr ""
+msgstr "इनवॉइस मात्रा के लिए"
 
 #. module: purchase
 #. odoo-javascript
@@ -2857,7 +2930,7 @@ msgstr "कुल मात्रा"
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_tree
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_tree
 msgid "Total Untaxed amount"
-msgstr ""
+msgstr "बिना टैक्स वाली कुल राशि"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_kpis_tree
@@ -2905,7 +2978,7 @@ msgstr "यूनिट प्राइस"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order_line__price_unit_discounted
 msgid "Unit Price (Discounted)"
-msgstr ""
+msgstr "यूनिट की कीमत (छूट के साथ)"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -2947,7 +3020,7 @@ msgstr "अनलॉक करें"
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_tree
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_tree
 msgid "Untaxed"
-msgstr ""
+msgstr "बिना टैक्स के"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__amount_untaxed
@@ -2957,7 +3030,7 @@ msgstr "बिना टैक्स वाली राशि"
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_report__untaxed_total
 msgid "Untaxed Total"
-msgstr ""
+msgstr "बिना टैक्स के कुल"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
@@ -3015,12 +3088,12 @@ msgstr "वेंडर बिल"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_search
 msgid "Vendor Country"
-msgstr ""
+msgstr "वेंडर का देश"
 
 #. module: purchase
 #: model:ir.ui.menu,name:purchase.menu_product_pricelist_action2_purchase
 msgid "Vendor Pricelists"
-msgstr ""
+msgstr "वेंडर प्राइसलिस्ट"
 
 #. module: purchase
 #: model:ir.model.fields,field_description:purchase.field_purchase_order__partner_ref
@@ -3040,6 +3113,10 @@ msgid ""
 "                    you receive from your vendor according to the draft\n"
 "                    document in Odoo."
 msgstr ""
+"वेंडर बिल परचेज़ ऑर्डर या रसीदों के आधार पर पहले से तैयार \n"
+"                    किए जा सकते हैं. यह आपको Odoo में ड्राफ़्ट दस्तावेज़\n"
+"                     के अनुसार अपने वेंडर से प्राप्त होने वाले बिलों को \n"
+"                    कंट्रोल करने की अनुमति देता है।"
 
 #. module: purchase
 #. odoo-python
@@ -3069,7 +3146,7 @@ msgstr "इंतज़ार किया जा रहा है"
 #: model:ir.model.fields.selection,name:purchase.selection__purchase_order__invoice_status__to_invoice
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_view_search
 msgid "Waiting Bills"
-msgstr ""
+msgstr "वेटिंग बिल"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.view_purchase_order_filter
@@ -3091,7 +3168,7 @@ msgstr "चेतावनी"
 #: code:addons/purchase/models/purchase_order_line.py:0
 #, python-format
 msgid "Warning for %s"
-msgstr ""
+msgstr "%s के लिए चेतावनी"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.res_partner_view_purchase_buttons
@@ -3130,6 +3207,11 @@ msgid ""
 "dates and keep you informed in case of any delays. To get the vendor's "
 "performance statistics, click on the OTD rate."
 msgstr ""
+"परचेज़ ऑर्डर बनाते समय, वेंडर की <i>ऑन टाइम डिलीवरी</i> रेट देखें: समय पर शिप किए गए "
+"प्रॉडक्ट का प्रतिशत. अगर यह बहुत कम है, तो <i>ऑटोमेटेड रिमाइंडर</i> सक्रिय करें. तय किए "
+"गए शिपमेंट से कुछ दिन पहले, Odoo शिपमेंट तारीखों की पुष्टि करने और किसी भी देरी के मामले में "
+"आपको सूचित रखने के लिए वेंडर को एक ईमेल भेजेगा. वेंडर के प्रदर्शन के आंकड़े प्राप्त करने के लिए, "
+"OTD दर पर क्लिक करें।"
 
 #. module: purchase
 #: model_terms:digest.tip,tip_description:purchase.digest_tip_purchase_1
@@ -3148,6 +3230,7 @@ msgstr ""
 #: model:ir.model.fields,help:purchase.field_purchase_order_line__partner_id
 msgid "You can find a vendor by its Name, TIN, Email or Internal Reference."
 msgstr ""
+"आप किसी वेंडर को उसके नाम, TIN, ईमेल या इंटरनल रेफरेंस से ढूंढ सकते हैं।"
 
 #. module: purchase
 #. odoo-python
@@ -3157,6 +3240,8 @@ msgid ""
 "You cannot change the type of a purchase order line. Instead you should "
 "delete the current line and create a new line of the proper type."
 msgstr ""
+"आप परचेज़ ऑर्डर लाइन का प्रकार नहीं बदल सकते. इसके बजाय आपको वर्तमान लाइन को हटाना "
+"चाहिए और सही प्रकार की एक नई लाइन बनानी चाहिए।"
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.product_product_action
@@ -3164,6 +3249,9 @@ msgid ""
 "You must define a product for everything you sell or purchase,\n"
 "                whether it's a storable product, a consumable or a service."
 msgstr ""
+"बेचने या खरीदने वाली हर चीज़ के लिए एक प्रॉडक्ट बनाना ज़रूरी है,\n"
+"                चाहे वह स्टॉक में रखने वाला सामान हो, इस्तेमाल होने वाली सामग्री या "
+"कोई सेवा।"
 
 #. module: purchase
 #: model_terms:ir.actions.act_window,help:purchase.product_normal_action_puchased
@@ -3171,6 +3259,9 @@ msgid ""
 "You must define a product for everything you sell or purchase,\n"
 "            whether it's a storable product, a consumable or a service."
 msgstr ""
+"बेचने या खरीदने वाली हर चीज़ के लिए एक प्रॉडक्ट बनाना ज़रूरी है,\n"
+"                चाहे वह स्टॉक में रखने वाला सामान हो, इस्तेमाल होने वाली सामग्री या "
+"कोई सेवा।"
 
 #. module: purchase
 #. odoo-python
@@ -3182,6 +3273,10 @@ msgid ""
 " Please change the company of your quotation or remove the products from "
 "other companies (%(bad_products)s)."
 msgstr ""
+"आपके कोटेशन में कंपनी %(product_company)s के प्रॉडक्ट शामिल हैं, जबकि आपका कोटेशन कंपनी %"
+"(quote_company)s का है. \n"
+" कृपया अपने कोटेशन की कंपनी बदलें या अन्य कंपनियों के प्रॉडक्ट (%(bad_products)s) को हटा "
+"दें।"
 
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.portal_my_purchase_order
@@ -3191,7 +3286,7 @@ msgstr "बंद करें"
 #. module: purchase
 #: model_terms:ir.ui.view,arch_db:purchase.purchase_order_form
 msgid "day(s) before"
-msgstr ""
+msgstr "दिन पहले"
 
 #. module: purchase
 #: model:mail.template,subject:purchase.email_template_edi_purchase

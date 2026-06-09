@@ -68,6 +68,7 @@ class ResCompany(models.Model):
             ('sent_verification', 'Verification code sent'),
             ('pending', 'Pending'),
             ('active', 'Active'),
+            ('sender', 'Can send but not receive'),
             ('rejected', 'Rejected'),
             ('canceled', 'Canceled'),
         ],
@@ -93,8 +94,7 @@ class ResCompany(models.Model):
 
         error_message = _(
             "Please enter the mobile number in the correct international format.\n"
-            "For example: +32123456789, where +32 is the country code.\n"
-            "Currently, only European countries are supported.")
+            "For example: +32123456789, where +32 is the country code.")
 
         if not phonenumbers:
             raise ValidationError(_("Please install the phonenumbers library."))
@@ -111,8 +111,7 @@ class ResCompany(models.Model):
         except phonenumbers.phonenumberutil.NumberParseException:
             raise ValidationError(error_message)
 
-        country_code = phonenumbers.phonenumberutil.region_code_for_number(phone_nbr)
-        if country_code not in PEPPOL_LIST or not phonenumbers.is_valid_number(phone_nbr):
+        if not phonenumbers.is_valid_number(phone_nbr):
             raise ValidationError(error_message)
 
     def _reset_peppol_configuration(self):
@@ -162,7 +161,7 @@ class ResCompany(models.Model):
     @api.depends('account_peppol_proxy_state')
     def _compute_peppol_purchase_journal_id(self):
         for company in self:
-            if not company.peppol_purchase_journal_id and company.account_peppol_proxy_state not in ('not_registered', 'rejected'):
+            if not company.peppol_purchase_journal_id and company.account_peppol_proxy_state not in ('not_registered', 'rejected', 'sender'):
                 company.peppol_purchase_journal_id = self.env['account.journal'].search([
                     *self.env['account.journal']._check_company_domain(company),
                     ('type', '=', 'purchase'),

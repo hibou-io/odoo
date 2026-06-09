@@ -225,7 +225,7 @@ registry.category("web_tour.tours").add("PosSettleCustomPrice", {
             ProductScreen.selectFirstOrder(),
             ProductScreen.selectedOrderlineHas('product_a', '1', '100'),
             ProductScreen.clickPartnerButton(),
-            ProductScreen.clickCustomer("Test Partner AAA"),
+            ProductScreen.clickCustomer("AAA Test Partner"),
             ProductScreen.selectedOrderlineHas('product_a', '1', '100'),
         ].flat(),
 });
@@ -363,7 +363,7 @@ registry.category("web_tour.tours").add("PoSDownPaymentFixedTax", {
             Order.hasLine({
                 productName: "Down Payment",
                 quantity: "1.0",
-                price: "22.00",
+                price: "20.00",
             }),
         ].flat(),
 });

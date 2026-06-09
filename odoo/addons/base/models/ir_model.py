@@ -2264,6 +2264,7 @@ class IrModelData(models.Model):
 
         # query xml_ids by prefix
         result = []
+        self.flush_model()
         cr = self.env.cr
         for prefix, suffixes in bymodule.items():
             query = """
@@ -2422,7 +2423,10 @@ class IrModelData(models.Model):
                         field_.setup(model)
                         has_shared_field = True
         if has_shared_field:
-            lazy_property.reset_all(self.env.registry)
+            registry = self.env.registry
+            lazy_property.reset_all(registry)
+            registry._field_trigger_trees.clear()
+            registry._is_modifying_relations.clear()
 
         # to collect external ids of records that cannot be deleted
         undeletable_ids = []

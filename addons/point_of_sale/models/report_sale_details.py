@@ -126,6 +126,18 @@ class ReportSaleDetails(models.AbstractModel):
             for session in sessions:
                 configs.append(session.config_id)
 
+        cash_rounding_total = 0.0
+        for order in orders:
+            order_currency = order.session_id.currency_id
+            rounding_diff = order.amount_paid - order.amount_total
+            if user_currency != order_currency:
+                cash_rounding_total += order_currency._convert(
+                    rounding_diff, user_currency, order.company_id,
+                    order.date_order or fields.Date.today())
+            else:
+                cash_rounding_total += rounding_diff
+        cash_rounding_total = user_currency.round(cash_rounding_total)
+
         for payment in payments:
             payment['count'] = False
 
@@ -138,10 +150,14 @@ class ReportSaleDetails(models.AbstractModel):
                 account_payments = self.env['account.payment'].search([('pos_session_id', '=', session.id)])
                 if payment['session'] == session.id:
                     if not payment['cash']:
+                        payment_method = self.env['pos.payment.method'].browse(payment['id'])
                         ref_value = "Closing difference in %s (%s)" % (payment['name'], session.name)
-                        account_move = self.env['account.move'].search([("ref", "=", ref_value)], limit=1)
+                        # We add the journal to the query to benefit from index `account_move_journal_id_company_id_idx`
+                        account_move = self.env['account.move'].search([
+                            ('ref', '=', ref_value),
+                            ('journal_id', '=', payment_method.journal_id.id),
+                        ], limit=1)
                         if account_move:
-                            payment_method = self.env['pos.payment.method'].browse(payment['id'])
                             is_loss = any(l.account_id == payment_method.journal_id.loss_account_id for l in account_move.line_ids)
                             is_profit = any(l.account_id == payment_method.journal_id.profit_account_id for l in account_move.line_ids)
                             payment['final_count'] = payment['total']
@@ -331,6 +347,7 @@ class ReportSaleDetails(models.AbstractModel):
             'discount_amount': discount_amount,
             'invoiceList': invoiceList,
             'invoiceTotal': invoiceTotal,
+            'cash_rounding_total': cash_rounding_total,
         }
 
     def _get_product_total_amount(self, line):

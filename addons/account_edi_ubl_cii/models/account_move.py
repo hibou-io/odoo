@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 
+from collections import defaultdict
+
 from odoo import _, api, fields, models, Command
 from odoo.exceptions import UserError
 
@@ -45,11 +47,12 @@ class AccountMove(models.Model):
             raise UserError(error_message)
 
         file_data = self.ubl_cii_xml_id._unwrap_edi_attachments()[0]
-        ubl_cii_xml_builder = self._get_ubl_cii_builder_from_xml_tree(file_data['xml_tree'])
-        if ubl_cii_xml_builder is None:
-            raise UserError(_("Cannot decode the origin file, try by importing it again"))
+        decoder = self._get_edi_decoder(file_data)
+        if decoder is None:
+            raise UserError(_("Cannot decode origin file, try by importing it again"))
+
         self.invoice_line_ids = [Command.clear()]
-        if ubl_cii_xml_builder.with_context(ungroup_lines=True)._import_invoice_ubl_cii(self, file_data):
+        if decoder(self, file_data):
             self._message_log(body=_("Ungrouped lines from %s", file_data['attachment'].name))
         else:
             raise UserError(error_message)
@@ -59,10 +62,47 @@ class AccountMove(models.Model):
         Group lines by tax, based on the invoice lines
         """
         self.ensure_one()
+        if not self.is_invoice(include_receipts=True):
+            raise UserError(_("You can only group lines of an invoice"))
+
+        tax_lines = self.line_ids.filtered('tax_line_id')
+        tax_amounts = defaultdict(lambda: {
+            'tax_amount_currency': 0.0,
+            'tax_amount': 0.0,
+        })
+        for tax_line in tax_lines:
+            tax_amounts[tax_line.tax_key]['tax_amount_currency'] += tax_line.amount_currency
+            tax_amounts[tax_line.tax_key]['tax_amount'] += tax_line.balance
+
+        currency = self.currency_id
+        old_tax_amount = currency.round(sum(tax_line.amount_currency for tax_line in self.line_ids.filtered('tax_line_id')))
+
         line_vals = self._get_line_vals_group_by_tax(self.partner_id, fields.Date.to_string(self.date))
         self.invoice_line_ids = [Command.clear()]
         self.invoice_line_ids = line_vals
+
         self._message_log(body=_("Grouped lines by tax"))
+
+        # Correct Tax Amount if a difference of 0.01 or less is detected
+        new_tax_amount = currency.round(sum(tax_line.amount_currency for tax_line in self.line_ids.filtered('tax_line_id')))
+        difference = currency.round(new_tax_amount - old_tax_amount)
+        if currency.is_zero(difference) or currency.compare_amounts(difference, 0.01) > 0:
+            return
+
+        line_commands = []
+        for tax_line in self.line_ids.filtered('tax_line_id'):
+            tax_key = tax_line.tax_key
+            if tax_key not in tax_amounts:
+                continue
+
+            expected_amounts = tax_amounts[tax_key]
+            line_commands.append(Command.update(tax_line.id, {
+                'amount_currency': expected_amounts['tax_amount_currency'],
+                'balance': expected_amounts['tax_amount'],
+            }))
+
+        if line_commands:
+            self.line_ids = line_commands
 
     def _get_line_vals_group_by_tax(self, partner, date):
         """
@@ -142,8 +182,7 @@ class AccountMove(models.Model):
             return
 
         if (
-            self.env.context.get('ungroup_lines')
-            or not invoice.partner_id
+            not invoice.partner_id
             or not invoice.ubl_cii_xml_id
         ):
             return
@@ -173,11 +212,6 @@ class AccountMove(models.Model):
         if tree.tag == '{urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100}CrossIndustryInvoice':
             return self.env['account.edi.xml.cii']
         ubl_version = tree.find('{*}UBLVersionID')
-        if ubl_version is not None:
-            if ubl_version.text == '2.0':
-                return self.env['account.edi.xml.ubl_20']
-            if ubl_version.text in ('2.1', '2.2', '2.3'):
-                return self.env['account.edi.xml.ubl_21']
         if customization_id is not None:
             if 'xrechnung' in customization_id.text:
                 return self.env['account.edi.xml.ubl_de']
@@ -187,6 +221,14 @@ class AccountMove(models.Model):
                 return self.env['account.edi.xml.ubl_a_nz']
             if customization_id.text == 'urn:cen.eu:en16931:2017#conformant#urn:fdc:peppol.eu:2017:poacc:billing:international:sg:3.0':
                 return self.env['account.edi.xml.ubl_sg']
+            if customization_id.text == 'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0':
+                return self.env['account.edi.xml.ubl_bis3']
+        if ubl_version is not None:
+            if ubl_version.text == '2.0':
+                return self.env['account.edi.xml.ubl_20']
+            if ubl_version.text in ('2.1', '2.2', '2.3'):
+                return self.env['account.edi.xml.ubl_21']
+        if customization_id is not None:
             if 'urn:cen.eu:en16931:2017' in customization_id.text:
                 return self.env['account.edi.xml.ubl_bis3']
 
