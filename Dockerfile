@@ -1,5 +1,5 @@
-FROM python:3.12-slim-bullseye
-LABEL maintainer="Hibou Corp. <hello@hibou.io>"
+FROM python:3.12-slim-trixie
+MAINTAINER Hibou Corp. <hello@hibou.io>
 
 ENV NODE_MAJOR=22
 
@@ -42,6 +42,7 @@ RUN set -x; \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
+
     #  install Python Requirements
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
     && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
