@@ -45,13 +45,14 @@ RUN set -x; \
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
     && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
     && pip3 install git+https://github.com/OCA/openupgradelib.git \
+    && pip install -U "setuptools==69.5.1" wheel \
     #  magento has old suds-jurko dependency but we have a newer suds
     && pip3 install magento==3.1 --no-deps \
     #  install wkhtmltox
     && cd /tmp \
-    && curl -o wkhtmltox.deb -4 -sSfL --retry 5 --retry-all-errors https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
-    && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \
-    && dpkg --force-depends -i wkhtmltox.deb \
+    && curl -o wkhtmltox.deb -4 -sSfL --retry 5 --retry-all-errors https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && echo 'e9f95436298c77cc9406bd4bbd242f4771d0a4b2 wkhtmltox.deb' | sha1sum -c - \
+    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
     && rm -rf wkhtmltox.deb \
     # Clean Up
     && rm -rf /root/.cache \
