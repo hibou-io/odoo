@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-22 18:37+0000\n"
-"PO-Revision-Date: 2026-02-14 08:07+0000\n"
+"POT-Creation-Date: 2026-04-24 17:38+0000\n"
+"PO-Revision-Date: 2026-06-04 09:28+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-17/"
 "spreadsheet/ja/>\n"
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 5.17\n"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -31,7 +31,8 @@ msgstr ""
 msgid ""
 " A string, possible empty, or a reference to a valid string. If empty, the "
 "text will be simply concatenated."
-msgstr " 文字列は、空または有効な文字列への参照が可能です。空の場合、文字列は単に連結"
+msgstr ""
+" 文字列は、空または有効な文字列への参照が可能です。空の場合、文字列は単に連結"
 "されます。"
 
 #. module: spreadsheet
@@ -117,21 +118,13 @@ msgstr ""
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 #, python-format
 msgid ""
-"(1) Search starting at first item. \n"
-"      (-1) Search starting at last item. \n"
-"      (2) Perform a binary search that relies on lookup_array being sorted "
-"in ascending order. If not sorted, invalid results will be returned. \n"
-"      (-2) Perform a binary search that relies on lookup_array being sorted "
-"in descending order. If not sorted, invalid results will be returned.\n"
-"      "
+"(1) Search starting at first item.       (-1) Search starting at last "
+"item.       (2) Perform a binary search that relies on lookup_array being "
+"sorted in ascending order. If not sorted, invalid results will be "
+"returned.       (-2) Perform a binary search that relies on lookup_array "
+"being sorted in descending order. If not sorted, invalid results will be "
+"returned.      "
 msgstr ""
-"(1) 最初の項目から検索します。 \n"
-"      (-1) 最後の項目から検索します。 \n"
-"      (2)lookup_array が昇順にソートされていることを前提としたバイナリ検索を"
-"実行。ソートされていない場合は、無効な結果が返されます。 \n"
-"      (-2) Pookup_array が降順にソートされていることを前提としたバイナリ検索"
-"を実行。ソートされていない場合は、無効な結果が返されます。\n"
-"      "
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -184,6 +177,13 @@ msgstr "2行"
 
 #. module: spreadsheet
 #. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
+#, python-format
+msgid "A"
+msgstr "A"
+
+#. module: spreadsheet
+#. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 #, python-format
 msgid ""
@@ -200,7 +200,8 @@ msgstr ""
 msgid ""
 "A boolean; if TRUE, empty cells selected in the text arguments won't be "
 "included in the result."
-msgstr "ブール値:TRUE の場合、文字列引数で選択された空のセルは結果に含まれません。"
+msgstr ""
+"ブール値:TRUE の場合、文字列引数で選択された空のセルは結果に含まれません。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -2759,7 +2760,8 @@ msgstr "フィールド %s は存在しません"
 #: code:addons/spreadsheet/static/src/pivot/pivot_model.js:0
 #, python-format
 msgid "Field %s is not supported because of its type (%s)"
-msgstr "フィールド「%(field)s」は、型「%(type)s」に対応していないためサポートされてい"
+msgstr ""
+"フィールド「%(field)s」は、型「%(type)s」に対応していないためサポートされてい"
 "ません"
 
 #. module: spreadsheet
@@ -2873,7 +2875,8 @@ msgstr "検索対象の文字列が文字列内で最初に見つかった位置
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 #, python-format
 msgid "First position of string found in text, ignoring case."
-msgstr "検索対象の文字列が文字列内で最初に見つかった位置(大文字と小文字を区別しない)"
+msgstr ""
+"検索対象の文字列が文字列内で最初に見つかった位置(大文字と小文字を区別しない)"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3110,24 +3113,6 @@ msgstr "関数[[FUNCTION_NAME]]は、ゼロ除算エラーを引き起こしま�
 #, python-format
 msgid "Function [[FUNCTION_NAME]] didn't find any result."
 msgstr "関数 [[FUNCTION_NAME]] の結果が見つかりませんでした。"
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-#, python-format
-msgid ""
-"Function [[FUNCTION_NAME]] expects criteria_range and criterion to be in "
-"pairs."
-msgstr "関数 [[FUNCTION_NAME]] では、criteria_range と criterion はペアで指定する必要"
-"があります。"
-
-#. module: spreadsheet
-#. odoo-javascript
-#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
-#, python-format
-msgid ""
-"Function [[FUNCTION_NAME]] expects criteria_range to have the same dimension"
-msgstr "関数 [[FUNCTION_NAME]] では、criteria_range の次元が同一である必要があります"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -3542,12 +3527,8 @@ msgstr "[[FUNCTION_NAME]]の検証で '%s' が見つかりません( '%s' 内)�
 #, python-format
 msgid ""
 "In [[FUNCTION_NAME]], the number of columns of the first matrix (%s) must be "
-"equal to the \n"
-"        number of rows of the second matrix (%s)."
+"equal to the         number of rows of the second matrix (%s)."
 msgstr ""
-" [[FUNCTION_NAME]]内で the number of columns of the first matrix初めのマトリ"
-"クス (%s)の行数は\n"
-"        2つ目のマトリクス (%s)の列数と同等である必要があります。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -4202,7 +4183,7 @@ msgstr "より小さい"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 #, python-format
 msgid "Line"
-msgstr "ライン"
+msgstr "折れ線"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -5361,7 +5342,7 @@ msgstr "名前の変更"
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 #, python-format
 msgid "Replace"
-msgstr "置き換える"
+msgstr "置換"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -7501,7 +7482,8 @@ msgstr "引用符で囲まれたリンクの完全なURL"
 msgid ""
 "The function [[FUNCTION_NAME]] expects a boolean value, but '%s' is a text, "
 "and cannot be coerced to a number."
-msgstr "関数[[FUNCTION_NAME]]は、ブール値を想定していますが、 '%s' は文字列であり、数"
+msgstr ""
+"関数[[FUNCTION_NAME]]は、ブール値を想定していますが、 '%s' は文字列であり、数"
 "値にすることはできません。"
 
 #. module: spreadsheet
@@ -10830,13 +10812,9 @@ msgstr "区切り文字に含まれる各文字の周囲で文字列を分割す
 #, python-format
 msgid ""
 "Whether or not to remove empty text messages from the split results. The "
-"default behavior is to treat \n"
-"        consecutive delimiters as one (if TRUE). If FALSE, empty cells "
-"values are added between consecutive delimiters."
+"default behavior is to treat         consecutive delimiters as one (if "
+"TRUE). If FALSE, empty cells values are added between consecutive delimiters."
 msgstr ""
-"分割結果から空のテキストメッセージを削除するかどうか。デフォルトでは \n"
-"       連続する区切り文字を1つにします (TRUEの場合)。FALSE の場合、連続する区"
-"切り文字の間に空のセルの値が追加されます。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -10852,12 +10830,8 @@ msgstr "支払期日が各期末 (0) か期首 (1) か"
 #, python-format
 msgid ""
 "Whether the array should be scanned by column. True scans the array by "
-"column and false (default) \n"
-"      scans the array by row."
+"column and false (default)       scans the array by row."
 msgstr ""
-"配列を列ごとにスキャンするかどうか。TRUEは配列を列ごとにスキャンし、FALSE (デ"
-"フォルト) \n"
-"      は行ごとにスキャンします。"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11059,6 +11033,13 @@ msgstr "重複するフィルタは作成できません"
 msgid ""
 "You don't have the rights to export data. Please contact an Administrator."
 msgstr "データをエクスポートする権限がありません。管理者に連絡してください。"
+
+#. module: spreadsheet
+#. odoo-javascript
+#: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
+#, python-format
+msgid "Z"
+msgstr ""
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -11298,10 +11279,84 @@ msgstr "明日"
 
 #. module: spreadsheet
 #. odoo-javascript
+#: code:addons/spreadsheet/static/src/public_readonly_app/public_readonly.xml:0
+#, python-format
+msgid "x"
+msgstr "x"
+
+#. module: spreadsheet
+#. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.js:0
 #, python-format
 msgid "yesterday"
 msgstr "昨日"
+
+#, python-format
+#~ msgid ""
+#~ "(1) Search starting at first item. \n"
+#~ "      (-1) Search starting at last item. \n"
+#~ "      (2) Perform a binary search that relies on lookup_array being "
+#~ "sorted in ascending order. If not sorted, invalid results will be "
+#~ "returned. \n"
+#~ "      (-2) Perform a binary search that relies on lookup_array being "
+#~ "sorted in descending order. If not sorted, invalid results will be "
+#~ "returned.\n"
+#~ "      "
+#~ msgstr ""
+#~ "(1) 最初の項目から検索します。 \n"
+#~ "      (-1) 最後の項目から検索します。 \n"
+#~ "      (2)lookup_array が昇順にソートされていることを前提としたバイナリ検索"
+#~ "を実行。ソートされていない場合は、無効な結果が返されます。 \n"
+#~ "      (-2) Pookup_array が降順にソートされていることを前提としたバイナリ検"
+#~ "索を実行。ソートされていない場合は、無効な結果が返されます。\n"
+#~ "      "
+
+#, python-format
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] expects criteria_range and criterion to be in "
+#~ "pairs."
+#~ msgstr ""
+#~ "関数 [[FUNCTION_NAME]] では、criteria_range と criterion はペアで指定する"
+#~ "必要があります。"
+
+#, python-format
+#~ msgid ""
+#~ "Function [[FUNCTION_NAME]] expects criteria_range to have the same "
+#~ "dimension"
+#~ msgstr ""
+#~ "関数 [[FUNCTION_NAME]] では、criteria_range の次元が同一である必要がありま"
+#~ "す"
+
+#, python-format
+#~ msgid ""
+#~ "In [[FUNCTION_NAME]], the number of columns of the first matrix (%s) must "
+#~ "be equal to the \n"
+#~ "        number of rows of the second matrix (%s)."
+#~ msgstr ""
+#~ " [[FUNCTION_NAME]]内で the number of columns of the first matrix初めのマト"
+#~ "リクス (%s)の行数は\n"
+#~ "        2つ目のマトリクス (%s)の列数と同等である必要があります。"
+
+#, python-format
+#~ msgid ""
+#~ "Whether or not to remove empty text messages from the split results. The "
+#~ "default behavior is to treat \n"
+#~ "        consecutive delimiters as one (if TRUE). If FALSE, empty cells "
+#~ "values are added between consecutive delimiters."
+#~ msgstr ""
+#~ "分割結果から空のテキストメッセージを削除するかどうか。デフォルトでは \n"
+#~ "       連続する区切り文字を1つにします (TRUEの場合)。FALSE の場合、連続す"
+#~ "る区切り文字の間に空のセルの値が追加されます。"
+
+#, python-format
+#~ msgid ""
+#~ "Whether the array should be scanned by column. True scans the array by "
+#~ "column and false (default) \n"
+#~ "      scans the array by row."
+#~ msgstr ""
+#~ "配列を列ごとにスキャンするかどうか。TRUEは配列を列ごとにスキャンし、FALSE "
+#~ "(デフォルト) \n"
+#~ "      は行ごとにスキャンします。"
 
 #, python-format
 #~ msgid ""

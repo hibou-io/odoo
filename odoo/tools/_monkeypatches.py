@@ -1,10 +1,16 @@
 import ast
 import os
+import re
 import logging
+import requests
+import json
 from email._policybase import _PolicyBase
 from odoo import MIN_PY_VERSION
+from odoo.tools.parse_version import parse_version
 from shutil import copyfileobj
 from types import CodeType
+from importlib.metadata import version
+from markupsafe import Markup
 
 _logger = logging.getLogger(__name__)
 
@@ -90,10 +96,15 @@ def literal_eval(expr):
 ast.literal_eval = literal_eval
 
 if MIN_PY_VERSION >= (3, 12):
-    raise RuntimeError("The num2words monkey patch is obsolete. Bump the version of the library to the latest available in the official package repository, if it hasn't already been done, and remove the patch.")
+    raise RuntimeError("The num2words monkey patch for Arabic is obsolete. Bump the version of the library to the latest available in the official package repository, if it hasn't already been done, and remove the patch.")
+if MIN_PY_VERSION >= (3, 13):
+    raise RuntimeError("The num2words monkey patch for Czech is obsolete. Bump the version of the library to the latest available in the official package repository, if it hasn't already been done, and remove the patch.")
 
 if num2words:
     num2words.CONVERTER_CLASSES["ar"] = Num2Word_AR_Fixed()
+    if 'cz' in num2words.CONVERTER_CLASSES and not 'cs' in num2words.CONVERTER_CLASSES:
+        # There is a mistake in the Czech language code in versions < 0.5.14. Map it to the correct code here.
+        num2words.CONVERTER_CLASSES['cs'] = num2words.CONVERTER_CLASSES['cz']
 
 _soap_clients = {}
 
@@ -170,3 +181,56 @@ def policy_add(self, other):
 orig_policy_clone = _PolicyBase.clone
 _PolicyBase.clone = policy_clone
 _PolicyBase.__add__ = policy_add
+
+orig_request_json = requests.Response.json
+
+# The requests library uses different libraries to parse json objects depending on
+# whether or not the simplejson library is installed
+# (https://github.com/psf/requests/blob/dc9dbdfb3434c6e58d48fd102f93e5342308817e/src/requests/compat.py#L74).
+# This in turn causes our try/excepts to fail if the simplejson library is installed in the env
+# we simply re-raise the json error in case the simplejson library is installed so our try/excepts flows
+# are not broken by the existence of a random package
+# This is only valid for python versions < 3.10 that install requests==2.25.  This issue
+# was fixed in requests==2.27
+
+try:
+    import simplejson
+except ImportError:
+    pass    # no need to change anything if simplejson isn't installed
+else:
+    def new_json(self, **kwargs):
+        try:
+            return orig_request_json(self, **kwargs)
+        except simplejson.JSONDecodeError as e:
+            raise json.JSONDecodeError(e.msg, e.doc, e.pos)
+    requests.Response.json = new_json
+
+orig_markupsafe_striptags = Markup.striptags
+# No need for patching in older versions
+if parse_version(version("markupsafe")) >= parse_version("2.1.4"):
+    MARKUPSAFE_STRIP_COMMENTS_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+    MARKUPSAFE_STRIP_TAGS_RE = re.compile(r"<.*?>", re.DOTALL)
+
+    def striptags(self) -> str:
+        """
+        ---------------------------------------------------------
+        MarkupSafe changed the implementation of striptags starting
+        version 2.1.4, which is causing a significant performance
+        regression for large inputs.
+        The following patch reverts the striptags implementation to
+        the one from version 2.1.3, which is more efficient for large
+        inputs.
+        ---------------------------------------------------------
+        :meth:`unescape` the markup, remove tags, and normalize
+        whitespace to single spaces.
+
+        >>> Markup("Main &raquo;\t<em>About</em>").striptags()
+        'Main » About'
+        """
+        # Use two regexes to avoid ambiguous matches.
+        value = MARKUPSAFE_STRIP_COMMENTS_RE.sub("", self)  # noqa: RUF052
+        value = MARKUPSAFE_STRIP_TAGS_RE.sub("", value)  # noqa: RUF052
+        value = " ".join(value.split())
+        return self.__class__(value).unescape()
+
+    Markup.striptags = striptags

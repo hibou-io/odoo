@@ -1822,7 +1822,7 @@ class _String(Field):
 
         # not dirty fields
         if not dirty:
-            if self.compute and self.inverse:
+            if self.compute and self.inverse and any(records._ids):
                 # invalidate the values in other languages to force their recomputation
                 lang = self._lang(records.env)
                 values = [{lang: cache_value} for _id in records._ids]
@@ -3590,7 +3590,7 @@ class Properties(Field):
 
     def _compute(self, records):
         """Add the default properties value when the container is changed."""
-        for record in records:
+        for record in records.sudo():
             record[self.name] = self._add_default_values(
                 record.env,
                 {self.name: record[self.name], self.definition_record: record[self.definition_record]},

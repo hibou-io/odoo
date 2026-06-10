@@ -562,7 +562,7 @@ class PosOrder(models.Model):
 
     def _get_partner_bank_id(self):
         bank_partner_id = False
-        if self.amount_total <= 0 and self.partner_id.bank_ids:
+        if self.amount_total < 0 and self.partner_id.bank_ids:
             bank_partner_id = self.partner_id.bank_ids[0].id
         elif self.amount_total >= 0 and self.company_id.partner_id.bank_ids:
             bank_partner_id = self.company_id.partner_id.bank_ids[0].id
@@ -1023,6 +1023,8 @@ class PosOrder(models.Model):
 
     def _create_order_picking(self):
         self.ensure_one()
+        if self.picking_ids:
+            return
         if self.shipping_date:
             self.sudo().lines._launch_stock_rule_from_pos_order_lines()
         else:

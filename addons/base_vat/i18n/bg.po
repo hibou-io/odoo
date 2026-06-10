@@ -1,26 +1,28 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* base_vat
+# * base_vat
 #
 # Translators:
 # KeyVillage, 2023
 # Maria Boyadjieva <marabo2000@gmail.com>, 2023
 # aleksandar ivanov, 2023
 # Albena Mincheva <albena_vicheva@abv.bg>, 2023
-#
+# Weblate <noreply-mt-weblate@weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12 18:36+0000\n"
-"PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Albena Mincheva <albena_vicheva@abv.bg>, 2023\n"
-"Language-Team: Bulgarian (https://app.transifex.com/odoo/teams/41243/bg/)\n"
+"POT-Creation-Date: 2026-05-22 17:40+0000\n"
+"PO-Revision-Date: 2026-05-02 12:13+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"Language-Team: Bulgarian <https://translate.odoo.com/projects/odoo-17/"
+"base_vat/bg/>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.17\n"
 
 #. module: base_vat
 #. odoo-python
@@ -47,13 +49,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/base_vat/models/res_partner.py:0
 #, python-format
-msgid "3101012009"
-msgstr ""
-
-#. module: base_vat
-#. odoo-python
-#: code:addons/base_vat/models/res_partner.py:0
-#, python-format
 msgid "310175397400003 [Fifteen digits, first and last digits should be \"3\"]"
 msgstr ""
 
@@ -69,6 +64,11 @@ msgstr ""
 #: code:addons/base_vat/models/res_partner.py:0
 #, python-format
 msgid "AR200-5536168-2 or 20055361682"
+msgstr ""
+
+#. module: base_vat
+#: model:ir.actions.server,name:base_vat.vies_iap_check_update_ir_actions_server
+msgid "Base VAT: Sync updates from IAP VIES"
 msgstr ""
 
 #. module: base_vat
@@ -94,15 +94,6 @@ msgstr "Фирми"
 #: model:ir.model,name:base_vat.model_res_config_settings
 msgid "Config Settings"
 msgstr "Настройки"
-
-#. module: base_vat
-#. odoo-python
-#: code:addons/base_vat/models/res_partner.py:0
-#, python-format
-msgid ""
-"Connection with the VIES server failed. The VAT number %s could not be "
-"validated."
-msgstr ""
 
 #. module: base_vat
 #: model:ir.model,name:base_vat.model_res_partner
@@ -173,6 +164,13 @@ msgstr ""
 #. odoo-python
 #: code:addons/base_vat/models/res_partner.py:0
 #, python-format
+msgid "Invalid IAP VIES endpoint"
+msgstr ""
+
+#. module: base_vat
+#. odoo-python
+#: code:addons/base_vat/models/res_partner.py:0
+#, python-format
 msgid "MXGODE561231GR8 or GODE561231GR8"
 msgstr ""
 
@@ -210,8 +208,22 @@ msgstr ""
 #. odoo-python
 #: code:addons/base_vat/models/res_partner.py:0
 #, python-format
-msgid "The VAT number %s could not be interpreted by the VIES server."
+msgid "The Intra-Community validity has been updated to: %s."
 msgstr ""
+
+#. module: base_vat
+#. odoo-python
+#: code:addons/base_vat/models/res_partner.py:0
+#, python-format
+msgid "The VIES check failed. Please check the Tax ID manually."
+msgstr ""
+
+#. module: base_vat
+#. odoo-python
+#: code:addons/base_vat/models/res_partner.py:0
+#, python-format
+msgid "The VIES check is pending. The status will be updated soon."
+msgstr "Изчаква се проверка във VIES. Състоянието ще бъде обновено скоро."
 
 #. module: base_vat
 #. odoo-python
@@ -229,15 +241,6 @@ msgstr ""
 msgid ""
 "The country of the foreign VAT number could not be detected. Please assign a "
 "country to the fiscal position or set a country group"
-msgstr ""
-
-#. module: base_vat
-#. odoo-python
-#: code:addons/base_vat/models/res_partner.py:0
-#, python-format
-msgid ""
-"The request for VAT validation was not processed. VIES service has responded "
-"with the following error: %s"
 msgstr ""
 
 #. module: base_vat
@@ -275,7 +278,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/base_vat/models/res_partner.py:0
 #, python-format
-msgid "either 11 digits for CPF or 14 digits for CNPJ"
+msgid "either 11 digits for CPF or 14 characters for CNPJ"
 msgstr ""
 
 #. module: base_vat

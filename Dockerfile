@@ -1,7 +1,7 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.12-slim-trixie
 MAINTAINER Hibou Corp. <hello@hibou.io>
 
-ENV NODE_MAJOR=20
+ENV NODE_MAJOR=22
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
@@ -36,20 +36,21 @@ RUN set -x; \
     && node --version \
     && npm install yarn --global --force \
     #  install postgresql-client from postgres itself to support newer server versions
-    && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
+
     #  install Python Requirements
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
     && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
     && pip3 install git+https://github.com/OCA/openupgradelib.git \
     #  install wkhtmltox
     && cd /tmp \
-    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \
-    && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \
-    && dpkg --force-depends -i wkhtmltox.deb \
+    && curl -o wkhtmltox.deb -4 -sSfL --retry 5 --retry-all-errors https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && echo 'e9f95436298c77cc9406bd4bbd242f4771d0a4b2 wkhtmltox.deb' | sha1sum -c - \
+    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
     && rm -rf wkhtmltox.deb \
     # Clean Up
     && rm -rf /root/.cache \
@@ -58,7 +59,7 @@ RUN set -x; \
     && rm -rf /var/lib/apt/lists/* \
     ;
 
-COPY --from=registry.gitlab.com/hibou-io/athene:node20--python /opt/athene /opt/athene
+COPY --from=registry.gitlab.com/hibou-io/athene:node22--python /opt/athene /opt/athene
 
 USER 0
 COPY --chown=104 . /opt/odoo/odoo
