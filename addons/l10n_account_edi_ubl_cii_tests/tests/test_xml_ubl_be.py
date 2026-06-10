@@ -417,7 +417,7 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
                 'currency_id': self.env.ref('base.GBP').id,
                 'amount_total': 1200,
                 'amount_tax': 0,
-                'invoice_lines': [{'price_subtotal': 1200}],
+                'invoice_lines': [{'price_subtotal': 1200.0}],
             },
         )
 
@@ -528,11 +528,11 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
                         'discount': 0,
                         'tax_ids': tax.ids,
                     } for (price_unit, tax) in [
-                        (-4, self.tax_6),
-                        (-48, tax_21),
-                        (52, self.tax_0),
-                        (200, self.tax_6),
-                        (2400, tax_21),
+                        (52.0, self.tax_0),
+                        (-4.0, self.tax_6),
+                        (-48.0, tax_21),
+                        (200.0, self.tax_6),
+                        (2400.0, tax_21),
                     ]
                 ]
             },
@@ -627,8 +627,8 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
             filename='bis3_out_invoice_quantity_and_or_unit_price_zero.xml',
             move_type='out_invoice',
             invoice_vals={
-                'amount_total': 3630,
-                'amount_tax': 630,
+                'amount_total': 3630.0,
+                'amount_tax': 630.0,
                 'currency_id': self.other_currency.id,
                 'invoice_lines': [
                     {
@@ -640,4 +640,33 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
                     } for price_unit, quantity in [(1000, 1), (100, 10), (10, 100)]
                 ]
             }
+        )
+
+    def test_import_invoice_ubl_bis3_full_discount_line(self):
+        """ A line whose LineExtensionAmount is 0 because of a 100% AllowanceCharge
+        must be imported with the right quantity / price / 100% discount, and must NOT
+        be filtered out by the zero-amount line filter
+        """
+        self._assert_imported_invoice_from_file(
+            subfolder='tests/test_files/from_odoo',
+            filename='bis3_invoice_full_discount_line.xml',
+            invoice_vals={
+                'amount_untaxed': 100.0,
+                'amount_tax': 21.0,
+                'amount_total': 121.0,
+                'invoice_lines': [
+                    {
+                        'quantity': 1.0,
+                        'price_unit': 100.0,
+                        'discount': 0.0,
+                        'price_subtotal': 100.0,
+                    },
+                    {
+                        'quantity': 5.0,
+                        'price_unit': 330.0,
+                        'discount': 100.0,
+                        'price_subtotal': 0.0,
+                    },
+                ],
+            },
         )
