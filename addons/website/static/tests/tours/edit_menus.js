@@ -13,7 +13,6 @@ import {
 } from "@website/js/tours/tour_utils";
 
 registry.category("web_tour.tours").add("parent_child_menu", {
-    url: "/odoo/action-website.action_website_menu",
     steps: () => [
         {
             content: "Open Menu Form View",
@@ -34,6 +33,10 @@ registry.category("web_tour.tours").add("parent_child_menu", {
             content: "Click on Save Button",
             trigger: ".o_form_button_save",
             run: "click",
+        },
+        {
+            content: "Wait for the record to be saved",
+            trigger: ".o_form_button_save:not(:visible)",
         },
         {
             content: "Click on Add a line button",
@@ -131,7 +134,7 @@ registerWebsitePreviewTour(
         },
         // Add a menu item in edit mode.
         ...clickOnEditAndWaitEditMode(),
-        ...openLinkPopup(":iframe .top_menu .nav-item a:contains('Home')", "Home"),
+        ...openLinkPopup(":iframe .top_menu .nav-item a:contains('Home')", "Home", 1),
         {
             content: "Click on Edit Menu",
             trigger: ".o-we-linkpopover .js_edit_menu",
@@ -196,7 +199,7 @@ registerWebsitePreviewTour(
         },
         // Edit the new menu item from the "edit link" popover button
         clickOnExtraMenuItem({}, true),
-        ...openLinkPopup(":iframe .top_menu .nav-item a:contains('Random!')", "Random!"),
+        ...openLinkPopup(":iframe .top_menu .nav-item a:contains('Random!')", "Random!", 1),
         {
             content: "navbar shouldn't have any zwnbsp and no o_link_in_selection class",
             trigger: ':iframe nav.navbar:not(:has(.o_link_in_selection)):not(:contains("\ufeff"))',
@@ -241,7 +244,7 @@ registerWebsitePreviewTour(
             },
         },
         clickOnExtraMenuItem({}, true),
-        ...openLinkPopup(":iframe .top_menu .nav-item a:contains('Modnar')", "Modnar"),
+        ...openLinkPopup(":iframe .top_menu .nav-item a:contains('Modnar')", "Modnar", 1),
         {
             content: "Click on the popover Edit Menu button",
             trigger: ".o-we-linkpopover .js_edit_menu",

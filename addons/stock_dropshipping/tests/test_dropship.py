@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from datetime import datetime
+from freezegun import freeze_time
+
 from odoo import Command
 
 from odoo.tests import common, tagged, Form
@@ -460,6 +463,46 @@ class TestDropship(common.TransactionCase):
         self.assertEqual(len(po), 2)
         self.assertEqual(po[1].order_line.product_uom_qty, 2)
 
+    @freeze_time('2026-01-01')
+    def test_mixed_dropship_product_sale_order(self):
+        """Test confirming an SO with both dropship and dropship+subscription products
+        and ensure the expected purchase line dates are correctly set."""
+        if self.env['ir.module.module']._get('sale_subscription').state != 'installed':
+            self.skipTest('This test requires the following module: sale_subscription')
+        self.dropship_product.route_ids = [Command.set(self.dropshipping_route.ids)]
+        subscription_dropship_product = self.env['product.product'].create({
+            'name': 'Subscription Dropship Product',
+            'recurring_invoice': True,
+            'route_ids': [Command.set(self.dropshipping_route.ids)],
+            'seller_ids': [Command.create({
+                'partner_id': self.supplier.id,
+                'price': 100.0,
+            })],
+        })
+        sale_order = self.env['sale.order'].create({
+            'partner_id': self.customer.id,
+            'order_line': [
+                Command.create({
+                    'name': self.dropship_product.name,
+                    'product_id': self.dropship_product.id,
+                    'product_uom_qty': 2.0,
+                }),
+                Command.create({
+                    'name': subscription_dropship_product.name,
+                    'product_id': subscription_dropship_product.id,
+                    'product_uom_qty': 1.0,
+                }),
+            ],
+        })
+        sale_order.plan_id = sale_order.plan_id.create({})
+        sale_order.action_confirm()
+        self.assertEqual(sale_order.state, 'sale')
+        po = sale_order._get_purchase_orders()
+        self.assertRecordValues(po.order_line, [
+            {'product_id': self.dropship_product.id, 'date_planned': datetime(2026, 1, 1)},
+            {'product_id': subscription_dropship_product.id, 'date_planned': datetime(2026, 1, 1)},
+        ])
+
 
 @tagged('post_install', '-at_install')
 class TestDropshipPostInstall(common.TransactionCase):
@@ -600,3 +643,24 @@ class TestDropshipPostInstall(common.TransactionCase):
         self.assertFalse(po.dest_address_id)
         po.picking_type_id = self.env['stock.picking.type'].search([('name', '=', 'Dropship'), ('company_id', '=', self.env.company.id)], limit=1)
         self.assertEqual(po.dest_address_id, self.customer)
+
+    def test_so_line_delivered_qty_for_dropshipping(self):
+        """
+        Ensure that the delivered quantity on a Sale Order line remains 0
+        and does not become -1 when the purchase order picking type (location
+        address) is changed to warehouse during a dropshipping instead of delivering
+        directly to the customer.
+        """
+        so = self.env['sale.order'].create({
+            'partner_id': self.customer.id,
+            'order_line': [Command.create({
+                'product_id':  self.dropship_product.id,
+                'product_uom_qty': 1,
+            })],
+        })
+        so.action_confirm()
+        po = so._get_purchase_orders()
+        po.picking_type_id = po._default_picking_type()
+        po.button_confirm()
+        po.picking_ids.button_validate()
+        self.assertEqual(so.order_line.qty_delivered, 0)

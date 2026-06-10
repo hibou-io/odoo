@@ -301,3 +301,29 @@ class StockMove(models.Model):
                             if existing_lot:
                                 move._update_reserved_quantity(qty, move.location_id, lot_id=existing_lot)
                                 continue
+
+    @api.depends("product_id")
+    def _compute_description_picking(self):
+        super()._compute_description_picking()
+        seen = set()
+        for move in self:
+            if not (pos_order := move.reference_ids.pos_order_ids) or move.description_picking_manual:
+                continue
+
+            product = move.product_id
+            line = pos_order.lines.filtered(
+                lambda l: l.product_id == product
+                and l.id not in seen
+                and any(av.attribute_id.create_variant == "no_variant" or av.is_custom for av in l.attribute_value_ids)
+            )[:1]
+
+            if line and move.description_picking == product.display_name:
+                never_values = line.attribute_value_ids.filtered(
+                    lambda av: av.attribute_id.create_variant == 'no_variant' and not av.is_custom
+                )
+                descriptions = never_values.mapped("display_name")
+                for custom_value in line.custom_attribute_value_ids:
+                    descriptions.append(f"{custom_value.display_name}")
+
+                move.description_picking = "\n".join(descriptions) if descriptions else ""
+                seen.add(line.id)

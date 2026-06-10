@@ -129,7 +129,7 @@ class AccountEdiFormat(models.Model):
 
             else:
                 # Vendor bills
-                if tax_values['l10n_es_type'] in ('sujeto', 'sujeto_isp', 'no_sujeto', 'no_sujeto_loc', 'dua'):
+                if tax_values['l10n_es_type'] in ('sujeto', 'sujeto_isp', 'no_sujeto', 'no_sujeto_loc', 'dua', 'sujeto_agricultura'):
                     tax_amount_deductible += tax_values['tax_amount']
                 elif tax_values['l10n_es_type'] == 'retencion':
                     tax_amount_retention += tax_values['tax_amount']
@@ -213,7 +213,7 @@ class AccountEdiFormat(models.Model):
             info = {
                 'PeriodoLiquidacion': {
                     'Ejercicio': str(invoice.date.year),
-                    'Periodo': str(invoice.date.month).zfill(2),
+                    'Periodo': invoice._l10n_es_edi_get_period(),
                 },
                 'IDFactura': {
                     'FechaExpedicionFacturaEmisor': invoice.invoice_date.strftime('%d-%m-%Y'),
