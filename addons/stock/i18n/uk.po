@@ -1,29 +1,31 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* stock
+# * stock
 #
 # Translators:
 # Martin Trigaux, 2024
 # Kseina Tyshchenko, 2024
 # Wil Odoo, 2024
 # Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2025
-#
+# Weblate <noreply-mt-weblate@weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-03 18:38+0000\n"
-"PO-Revision-Date: 2023-10-26 23:09+0000\n"
-"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2025\n"
-"Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
+"PO-Revision-Date: 2026-08-04 21:49+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
+"Language-Team: Ukrainian <https://translate.odoo.com/projects/odoo-17/stock/"
+"uk/>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != "
-"11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % "
-"100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || "
-"(n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 "
+"? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > "
+"14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % "
+"100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: stock
 #. odoo-python
@@ -58,6 +60,8 @@ msgid ""
 "\n"
 "Package: %s"
 msgstr ""
+"\n"
+"Упаковка: %s"
 
 #. module: stock
 #. odoo-python
@@ -205,8 +209,7 @@ msgstr "'Таблиця підрахунку'"
 #. module: stock
 #: model:ir.actions.report,print_report_name:stock.action_report_delivery
 msgid "'Delivery Slip - %s - %s' % (object.partner_id.name or '', object.name)"
-msgstr ""
-"'Лист доставки - %s - %s' % (object.partner_id.name or '', object.name)"
+msgstr "'Лист доставки - %s - %s' % (object.partner_id.name or '', object.name)"
 
 #. module: stock
 #: model:ir.actions.report,print_report_name:stock.action_report_location_barcode
@@ -477,8 +480,8 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        Вітаємо <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</"
-"t>,<br><br>\n"
+"        Вітаємо <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t>"
+",<br><br>\n"
 "        Ми раді повідомити вам, що ваше замовлення відправлено.\n"
 "        <t t-if=\"hasattr(object, 'carrier_tracking_ref') and "
 "object.carrier_tracking_ref\">\n"
@@ -488,8 +491,8 @@ msgstr ""
 "                <t t-set=\"multiple_carrier_tracking\" t-"
 "value=\"object.get_multiple_carrier_tracking()\"></t>\n"
 "                <t t-if=\"multiple_carrier_tracking\">\n"
-"                    <t t-foreach=\"multiple_carrier_tracking\" t-"
-"as=\"line\">\n"
+"                    <t t-foreach=\"multiple_carrier_tracking\" t-as=\"line\">"
+"\n"
 "                        <br><a t-att-href=\"line[1]\" target=\"_blank\" t-"
 "out=\"line[0] or ''\"></a>\n"
 "                    </t>\n"
@@ -1677,6 +1680,8 @@ msgid ""
 "Changing the Lot/Serial number for move lines with different products is not "
 "allowed."
 msgstr ""
+"Зміна номера партії/серійного номера для рядка переміщення з різними "
+"товарами не дозволяється."
 
 #. module: stock
 #. odoo-python
@@ -1859,6 +1864,9 @@ msgid ""
 "                                    <strong>(please go to Home&gt;Apps to "
 "install)</strong>"
 msgstr ""
+"Розрахуйте вартість доставки та відправте її через DHL<br/>\n"
+"                                    <strong>(перейдіть на Головну&gt;Додати "
+"до встановлення)</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -1877,6 +1885,9 @@ msgid ""
 "                                    <strong>(please go to Home&gt;Apps to "
 "install)</strong>"
 msgstr ""
+"Розрахуйте вартість доставки та відправте її за допомогою FedEx<br/>\n"
+"                                    <strong>(перейдіть на Головну&gt;Додати "
+"до встановлення)</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -1900,6 +1911,9 @@ msgid ""
 "                                    <strong>(please go to Home&gt;Apps to "
 "install)</strong>"
 msgstr ""
+"Розрахуйте вартість доставки та відправте її за допомогою UPS<br/>\n"
+"                                    <strong>(перейдіть на Головну&gt;Додати "
+"до встановлення)</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -1913,6 +1927,9 @@ msgid ""
 "                                    <strong>(please go to Home&gt;Apps to "
 "install)</strong>"
 msgstr ""
+"Розрахуйте вартість доставки та відправте її через USPS<br/>\n"
+"                                    <strong>(перейдіть на Головну&gt;Додатки "
+"до встановлення)</strong>"
 
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
@@ -2414,7 +2431,7 @@ msgstr "DEMO_UOM"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.res_config_settings_view_form
 msgid "DHL Connector"
-msgstr ""
+msgstr "Конектор DHL"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_res_config_settings__module_delivery_dhl
@@ -3233,8 +3250,7 @@ msgstr "Шаблон електронного листа підтверджен�
 #. module: stock
 #: model:ir.model.fields,help:stock.field_res_company__stock_mail_confirmation_template_id
 msgid "Email sent to the customer once the order is done."
-msgstr ""
-"Електронний лист надсилається клієнту після того, як замовлення готове."
+msgstr "Електронний лист надсилається клієнту після того, як замовлення готове."
 
 #. module: stock
 #: model_terms:digest.tip,tip_description:stock.digest_tip_stock_0
@@ -3292,8 +3308,7 @@ msgstr "Винятки:"
 #: code:addons/stock/models/stock_move.py:0
 #, python-format
 msgid "Existing Serial numbers. Please correct the serial numbers encoded:"
-msgstr ""
-"Існуючі серійні номери. Будь ласка, виправте закодовані серійні номери:"
+msgstr "Існуючі серійні номери. Будь ласка, виправте закодовані серійні номери:"
 
 #. module: stock
 #. odoo-javascript
@@ -4552,8 +4567,7 @@ msgstr "Неможливо відновити більше товарів %s н�
 #. module: stock
 #: model:ir.model.fields,help:stock.field_stock_picking__move_type
 msgid "It specifies goods to be deliver partially or all at once"
-msgstr ""
-"Це вказує товари, які можуть бути доставлені частково або все одночасно"
+msgstr "Це вказує товари, які можуть бути доставлені частково або все одночасно"
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_picking__json_popover
@@ -6560,6 +6574,8 @@ msgid ""
 "Press the \"New\" button to define the quantity for a product in your stock "
 "or import quantities from a spreadsheet via the Actions menu"
 msgstr ""
+"Натисніть кнопку «Нове», щоб визначити кількість товару на вашому складі, "
+"або імпортуйте кількість з електронної таблиці через меню «Дії»"
 
 #. module: stock
 #. odoo-javascript
@@ -8598,8 +8614,7 @@ msgstr "Відкладено"
 #. module: stock
 #: model_terms:ir.ui.view,arch_db:stock.inventory_warning_set_view
 msgid "Some selected lines already have quantities set, they will be ignored."
-msgstr ""
-"Деякі вибрані рядки вже мають задані кількості, вони будуть ігноровані."
+msgstr "Деякі вибрані рядки вже мають задані кількості, вони будуть ігноровані."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move_line__origin
@@ -9046,7 +9061,7 @@ msgstr ""
 #: code:addons/stock/models/stock_quant.py:0
 #, python-format
 msgid "The Lot/Serial number (%s) is linked to another product."
-msgstr ""
+msgstr "Партійний/серійний номер (%s) привʼязаний до іншого товару."
 
 #. module: stock
 #. odoo-python
@@ -9056,6 +9071,8 @@ msgid ""
 "The Picking Operations report has been deleted so you cannot print at this "
 "time unless the report is restored."
 msgstr ""
+"Звіт про комплектування видалено, тому наразі ви не можете його "
+"роздрукувати, доки звіт не буде відновлено."
 
 #. module: stock
 #. odoo-python
@@ -9088,8 +9105,7 @@ msgstr "Дозамовлення %s створене."
 #. module: stock
 #: model:ir.model.constraint,message:stock.constraint_stock_location_barcode_company_uniq
 msgid "The barcode for a location must be unique per company!"
-msgstr ""
-"Штрих-код для розташування повинен бути унікальним для кожної компанії!"
+msgstr "Штрих-код для розташування повинен бути унікальним для кожної компанії!"
 
 #. module: stock
 #: model_terms:res.company,invoice_terms_html:stock.res_company_1
@@ -9604,8 +9620,7 @@ msgstr ""
 #: model:ir.model.fields,help:stock.field_stock_change_product_qty__new_quantity
 msgid ""
 "This quantity is expressed in the Default Unit of Measure of the product."
-msgstr ""
-"Ця кількість виражається в одиниці вимірювання за замовчуванням товару."
+msgstr "Ця кількість виражається в одиниці вимірювання за замовчуванням товару."
 
 #. module: stock
 #. odoo-javascript
@@ -11056,7 +11071,7 @@ msgstr ""
 #: code:addons/stock/models/stock_quant.py:0
 #, python-format
 msgid "You cannot duplicate stock quants."
-msgstr ""
+msgstr "Ви не можете дублювати кількість запасів."
 
 #. module: stock
 #. odoo-python
@@ -11175,6 +11190,9 @@ msgid ""
 "You cannot validate a transfer if no quantities are reserved, or if only non-"
 "reserved moves are picked.To force the transfer, encode quantities."
 msgstr ""
+"Ви не можете підтвердити переміщення, якщо не зарезервовано жодної кількості "
+"або якщо вибрано лише незарезервовані переміщення. Щоб примусово здійснити "
+"переміщення, закодуйте кількості."
 
 #. module: stock
 #. odoo-python
@@ -11301,8 +11319,7 @@ msgstr ""
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "You still have ongoing operations for picking types %s in warehouse %s"
-msgstr ""
-"У вас усе ще є вихідні операції для типу комплектування %s на складі %s"
+msgstr "У вас усе ще є вихідні операції для типу комплектування %s на складі %s"
 
 #. module: stock
 #. odoo-python

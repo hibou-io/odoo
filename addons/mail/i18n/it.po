@@ -13,8 +13,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-03 18:38+0000\n"
-"PO-Revision-Date: 2026-04-10 13:25+0000\n"
+"POT-Creation-Date: 2026-07-17 17:36+0000\n"
+"PO-Revision-Date: 2026-08-08 06:56+0000\n"
 "Last-Translator: \"Marianna Ciofani (cima)\" <cima@odoo.com>\n"
 "Language-Team: Italian <https://translate.odoo.com/projects/odoo-17/mail/it/>"
 "\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n != 0 && n % 1000000 == "
 "0) ? 1 : 2);\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: mail
 #. odoo-python
@@ -135,10 +135,9 @@ msgid ""
 "%(bold_start)s/command%(bold_end)s to execute a command."
 msgstr ""
 "%(new_line)s%(new_line)sDigita %(bold_start)s@username%(bold_end)s per "
-"menzionare qualcuno e catturarne l'attenzione.%(new_line)sDigita "
-"%(bold_start)s#channel%(bold_end)s per menzionare un canale."
-"%(new_line)sDigita %(bold_start)s/command%(bold_end)s per eseguire un "
-"comando."
+"menzionare qualcuno e catturarne l'attenzione.%(new_line)sDigita %"
+"(bold_start)s#channel%(bold_end)s per menzionare un canale.%(new_line)"
+"sDigita %(bold_start)s/command%(bold_end)s per eseguire un comando."
 
 #. module: mail
 #. odoo-javascript
@@ -158,10 +157,9 @@ msgid ""
 "%(open_cancel)scancel%(close_cancel)s%(close_em)s, %(open_samp)sCTRL-"
 "Enter%(close_samp)s %(open_em)sto %(open_save)ssave%(close_save)s%(close_em)s"
 msgstr ""
-"%(open_samp)sEsc%(close_samp)s %(open_em)sper "
-"%(open_cancel)sannullare%(close_cancel)s%(close_em)s, %(open_samp)sCTRL-"
-"Invio%(close_samp)s %(open_em)sper "
-"%(open_save)ssalvare%(close_save)s%(close_em)s"
+"%(open_samp)sEsc%(close_samp)s %(open_em)sper %(open_cancel)sannullare%"
+"(close_cancel)s%(close_em)s, %(open_samp)sCTRL-Invio%(close_samp)s %(open_em)"
+"sper %(open_save)ssalvare%(close_save)s%(close_em)s"
 
 #. module: mail
 #. odoo-javascript
@@ -173,9 +171,8 @@ msgid ""
 "%(open_samp)sEnter%(close_samp)s %(open_em)sto "
 "%(open_save)ssave%(close_save)s%(close_em)s"
 msgstr ""
-"%(open_samp)sEsc%(close_samp)s %(open_em)sper "
-"%(open_cancel)sannullare%(close_cancel)s%(close_em)s, "
-"%(open_samp)sInvio%(close_samp)s %(open_em)sper "
+"%(open_samp)sEsc%(close_samp)s %(open_em)sper %(open_cancel)sannullare%"
+"(close_cancel)s%(close_em)s, %(open_samp)sInvio%(close_samp)s %(open_em)sper "
 "%(open_save)ssalvare%(close_save)s%(close_em)s"
 
 #. module: mail
@@ -599,8 +596,7 @@ msgstr ""
 #. module: mail
 #: model:ir.model.constraint,message:mail.constraint_mail_message_reaction_partner_or_guest_exists
 msgid "A message reaction must be from a partner or from a guest."
-msgstr ""
-"La reazione a un messaggio deve provenire da un partner o da un ospite."
+msgstr "La reazione a un messaggio deve provenire da un partner o da un ospite."
 
 #. module: mail
 #. odoo-python
@@ -891,25 +887,35 @@ msgid "Add Users"
 msgstr "Aggiungi utenti"
 
 #. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid ""
+"Add a Klipy GIF API key to enable GIFs support. If you were using a Tenor "
+"GIF API key (service shutdown on June 30, 2026), please replace it here with "
+"a Klipy GIF API key"
+msgstr ""
+"Aggiungi una chiave API Klipy GIF per abilitare il supporto delle GIF. Se "
+"stavi utilizzando una chiave API Tenor GIF (servizio disattivato il 30 "
+"giugno 2026), sostituiscila qui con una chiave API Klipy GIF"
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_res_config_settings__tenor_api_key
+msgid ""
+"Add a Klipy GIF API key to enable GIFs support. https://docs.klipy.com/"
+"getting-started\n"
+"If you were using a Tenor GIF API key (service shutdown on June 30, 2026), "
+"please replace it here with a Klipy GIF API key"
+msgstr ""
+"Aggiungi una chiave API GIF di Klipy per abilitare il supporto delle GIF. "
+"https://docs.klipy.com/getting-started\n"
+"Se stavi utilizzando una chiave API GIF di Tenor (servizio disattivato il 30 "
+"giugno 2026), sostituiscila qui con una chiave API GIF di Klipy"
+
+#. module: mail
 #. odoo-javascript
 #: code:addons/mail/static/src/core/common/message_reaction_button.xml:0
 #, python-format
 msgid "Add a Reaction"
 msgstr "Aggiungi una reazione"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Add a Tenor GIF API key to enable GIFs support."
-msgstr "Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF."
-
-#. module: mail
-#: model:ir.model.fields,help:mail.field_res_config_settings__tenor_api_key
-msgid ""
-"Add a Tenor GIF API key to enable GIFs support. https://"
-"developers.google.com/tenor/guides/quickstart#setup"
-msgstr ""
-"Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF. "
-"https://developers.google.com/tenor/guides/quickstart#setup"
 
 #. module: mail
 #. odoo-javascript
@@ -1076,9 +1082,9 @@ msgid ""
 "%(alias_model_name)s (%(matching_id)s) and used by the %(parent_name)s "
 "%(parent_model_name)s."
 msgstr ""
-"L'alias %(matching_name)s (%(current_id)s) è già collegato "
-"%(alias_model_name)s (%(matching_id)s) e utilizzato da %(parent_name)s "
-"%(parent_model_name)s."
+"L'alias %(matching_name)s (%(current_id)s) è già collegato %"
+"(alias_model_name)s (%(matching_id)s) e utilizzato da %(parent_name)s %"
+"(parent_model_name)s."
 
 #. module: mail
 #. odoo-python
@@ -1088,8 +1094,8 @@ msgid ""
 "Alias %(matching_name)s (%(current_id)s) is already linked with "
 "%(alias_model_name)s (%(matching_id)s)."
 msgstr ""
-"L'alias %(matching_name)s (%(current_id)s) è già collegato con "
-"%(alias_model_name)s (%(matching_id)s)"
+"L'alias %(matching_name)s (%(current_id)s) è già collegato con %"
+"(alias_model_name)s (%(matching_id)s)"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_alias__alias_contact
@@ -1737,8 +1743,8 @@ msgid ""
 "Bounce/Catchall '%(matching_alias_name)s' is already used by "
 "%(document_name)s. Choose another alias or change it on the other document."
 msgstr ""
-"Rimbalzo/richiamo '%(matching_alias_name)s' è già utilizzato da "
-"%(document_name)s. Scegli un altro alias o modificalo nell'altro documento."
+"Rimbalzo/richiamo '%(matching_alias_name)s' è già utilizzato da %"
+"(document_name)s. Scegli un altro alias o modificalo nell'altro documento."
 
 #. module: mail
 #. odoo-python
@@ -2852,8 +2858,7 @@ msgstr "Utente predefinito"
 #. module: mail
 #: model:ir.model.fields,help:mail.field_fetchmail_server__priority
 msgid "Defines the order of processing, lower values mean higher priority"
-msgstr ""
-"Definisce l'ordine di elaborazione, valori bassi indicano alta priorità"
+msgstr "Definisce l'ordine di elaborazione, valori bassi indicano alta priorità"
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_activity_type__delay_label
@@ -4708,6 +4713,17 @@ msgid "If you want to use twilio as TURN/STUN server provider"
 msgstr "Se vuoi utilizzare twilio come fornitore del server TURN/STUN"
 
 #. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+#, python-format
+msgid ""
+"If you were using a Tenor API key, please replace it with a Klipy API key in "
+"the General Settings."
+msgstr ""
+"Se stavi utilizzando una chiave API Tenor, sostituiscila con una chiave API "
+"Klipy nelle Impostazioni generali."
+
+#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_resend_message_view_form
 msgid "Ignore all"
 msgstr "Ignora tutto"
@@ -4961,8 +4977,7 @@ msgstr ""
 #, python-format
 msgid ""
 "Invalid template or view source Xml ID %(source_ref)s does not exist anymore"
-msgstr ""
-"Modello o vista origine Xml ID non valido %(source_ref)s non esiste più"
+msgstr "Modello o vista origine Xml ID non valido %(source_ref)s non esiste più"
 
 #. module: mail
 #. odoo-python
@@ -5179,8 +5194,8 @@ msgid ""
 "of Odoo"
 msgstr ""
 "Si riferisce alle chiavi del browser utilizzate dalla notifica: \n"
-"- p256dh: è la chiave d'iscrizione pubblica generata dal browser. Il "
-"browser \n"
+"- p256dh: è la chiave d'iscrizione pubblica generata dal browser. Il browser "
+"\n"
 "          manterrà segreta la chiave privata e l'utilizzerà per "
 "decrittografare il payload\n"
 "- auth: il valore auth deve essere trattato come valore segreto e non "
@@ -5274,6 +5289,32 @@ msgstr "Chiave"
 #, python-format
 msgid "Kind Regards"
 msgstr "Cordiali saluti"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
+msgid "Klipy API key"
+msgstr "Chiave API Klipy"
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF API key"
+msgstr "Chiave API Klipy GIF"
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF content filter"
+msgstr "Filtro contenuti GIF Klipy"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_gif_limit
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF limits"
+msgstr "Limiti GIF Klipy"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_content_filter
+msgid "Klipy content filter"
+msgstr "Filtro contenuti Klipy"
 
 #. module: mail
 #. odoo-javascript
@@ -5754,8 +5795,8 @@ msgid ""
 "found (model %(model_name)s)."
 msgstr ""
 "Lo strumento per la scrittura di e-mail, in modalità commento dovrebbe "
-"funzionare almeno su un record. Non è stato trovato nessun record (modello "
-"%(model_name)s)."
+"funzionare almeno su un record. Non è stato trovato nessun record (modello %"
+"(model_name)s)."
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_mail__is_notification
@@ -6110,8 +6151,8 @@ msgid ""
 msgstr ""
 "Il sottotipo fornisce un tipo di messaggio più preciso, in particolare per "
 "le notifiche di sistema. Ad esempio, può essere una notifica che riguarda un "
-"nuovo record (Nuovo) oppure un cambio di fase di un processo (Cambio di "
-"fase). I sottotipi consentono di calibrare le notifiche che l'utente vuole "
+"nuovo record (Nuovo) oppure un cambio di fase di un processo (Cambio di fase)"
+". I sottotipi consentono di calibrare le notifiche che l'utente vuole "
 "ricevere nella bacheca."
 
 #. module: mail
@@ -6562,8 +6603,8 @@ msgstr ""
 msgid ""
 "No responsible specified for %(activity_type_name)s: %(activity_summary)s."
 msgstr ""
-"Nessun responsabile specificato per %(activity_type_name)s: "
-"%(activity_summary)s."
+"Nessun responsabile specificato per %(activity_type_name)s: %"
+"(activity_summary)s."
 
 #. module: mail
 #. odoo-javascript
@@ -6728,8 +6769,8 @@ msgid ""
 "Notification should receive partners given as a list of IDs (received "
 "%(pids)s)"
 msgstr ""
-"La notifica dovrebbe ricevere i partner come un elenco degli ID (ricevuto "
-"%(pids)s)"
+"La notifica dovrebbe ricevere i partner come un elenco degli ID (ricevuto %"
+"(pids)s)"
 
 #. module: mail
 #: model:ir.actions.server,name:mail.ir_cron_delete_notification_ir_actions_server
@@ -8402,6 +8443,13 @@ msgstr "Ricerca server posta in arrivo"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+#, python-format
+msgid "Search Klipy"
+msgstr "Cerca su Klipy"
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/core/common/search_messages_panel.xml:0
 #: code:addons/mail/static/src/core/common/thread_actions.js:0
 #: code:addons/mail/static/src/core/web/chatter.xml:0
@@ -8420,13 +8468,6 @@ msgstr "Cerca sessione RTC"
 #, python-format
 msgid "Search button"
 msgstr "Pulsante cerca"
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
-#, python-format
-msgid "Search for a GIF"
-msgstr "Cerca una GIF"
 
 #. module: mail
 #. odoo-javascript
@@ -9283,36 +9324,6 @@ msgid "Templates"
 msgstr "Modelli"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
-msgid "Tenor API key"
-msgstr "Chiave API Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF API key"
-msgstr "Chiave API GIF Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF content filter"
-msgstr "Filtro contenuto GIF Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF limits"
-msgstr "Numero limitato di GIF Tenor"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_gif_limit
-msgid "Tenor Gif Limit"
-msgstr "Limite GIF Tenor"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_content_filter
-msgid "Tenor content filter"
-msgstr "Filtro contenuto Tenor"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
 msgid "Test & Confirm"
 msgstr "Prova e conferma"
@@ -9375,8 +9386,8 @@ msgid ""
 "\"%(activity_type_model)s\"."
 msgstr ""
 "Il tipo di attività \"%(activity_type_name)s\" non è compativile con il "
-"piano \"%(plan_name)s\" perché limitato al modello "
-"\"%(activity_type_model)s\"."
+"piano \"%(plan_name)s\" perché limitato al modello \"%(activity_type_model)"
+"s\"."
 
 #. module: mail
 #. odoo-python
@@ -9485,8 +9496,8 @@ msgid ""
 "%(alias_display_name)s.\n"
 "Please try again later or contact %(company_name)s instead."
 msgstr ""
-"Non è stato possibile accettare il messaggio di seguito dall'indirizzo "
-"%(alias_display_name)s.\n"
+"Non è stato possibile accettare il messaggio di seguito dall'indirizzo %"
+"(alias_display_name)s.\n"
 "Prova di nuovo più tardi o contatta %(company_name)s."
 
 #. module: mail
@@ -9575,8 +9586,7 @@ msgstr "Il modello appartiene all'utente"
 #: model:ir.model.fields,help:mail.field_mail_mail__preview
 #: model:ir.model.fields,help:mail.field_mail_message__preview
 msgid "The text-only beginning of the body used as email preview."
-msgstr ""
-"L'inizio di solo testo del corpo utilizzato come anteprima dell'e-mail."
+msgstr "L'inizio di solo testo del corpo utilizzato come anteprima dell'e-mail."
 
 #. module: mail
 #. odoo-javascript
@@ -9647,8 +9657,7 @@ msgstr "In questa conversazione non ci sono messaggi fissati."
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.res_partner_view_form_inherit_mail
 msgid "This email is blacklisted for mass mailings. Click to unblacklist."
-msgstr ""
-"L'e-mail è nella lista nera dell'invio massivo, fai clic per toglierla."
+msgstr "L'e-mail è nella lista nera dell'invio massivo, fai clic per toglierla."
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_blacklist__email
@@ -10667,8 +10676,8 @@ msgid ""
 "%(alias_domain_name)s belongs to company %(alias_company_names)s while the "
 "owner document belongs to company %(company_name)s."
 msgstr ""
-"Non è stato possibile creare alias %(alias_name)s perché il dominio "
-"%(alias_domain_name)s appartiene all'azienda %(alias_company_names)s mentre "
+"Non è stato possibile creare alias %(alias_name)s perché il dominio %"
+"(alias_domain_name)s appartiene all'azienda %(alias_company_names)s mentre "
 "il documento proprietario appartiene all'azienda %(company_name)s."
 
 #. module: mail
@@ -10680,8 +10689,8 @@ msgid ""
 "%(alias_domain_name)s belongs to company %(alias_company_names)s while the "
 "target document belongs to company %(company_name)s."
 msgstr ""
-"Non è stato possibile creare alias %(alias_name)s perché il dominio "
-"%(alias_domain_name)s appartiene all'azienda %(alias_company_names)s mentre "
+"Non è stato possibile creare alias %(alias_name)s perché il dominio %"
+"(alias_domain_name)s appartiene all'azienda %(alias_company_names)s mentre "
 "il documento bersaglio appartiene all'azienda %(company_name)s."
 
 #. module: mail
@@ -11075,8 +11084,8 @@ msgstr "&amp;nbsp;"
 msgid ""
 "Your account email has been changed from %(old_email)s to %(new_email)s."
 msgstr ""
-"L'indirizzo e-mail del tuo account è stato modificato da %(old_email)s a "
-"%(new_email)s."
+"L'indirizzo e-mail del tuo account è stato modificato da %(old_email)s a %"
+"(new_email)s."
 
 #. module: mail
 #. odoo-python
@@ -11429,8 +11438,8 @@ msgstr "ti ha appena assegnato la seguente attivita:"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_res_config_settings__tenor_content_filter
-msgid "https://developers.google.com/tenor/guides/content-filtering"
-msgstr "https://developers.google.com/tenor/guides/content-filtering"
+msgid "https://docs.klipy.com/migrate-from-tenor/content-filtering"
+msgstr "https://docs.klipy.com/migrate-from-tenor/content-filtering"
 
 #. module: mail
 #. odoo-python
@@ -11444,8 +11453,7 @@ msgstr "alias configurato non correttamente"
 #: code:addons/mail/models/models.py:0
 #, python-format
 msgid "incorrectly configured alias (unknown reference record)"
-msgstr ""
-"alias configurato non correttamente (record di riferimento sconosciuto)"
+msgstr "alias configurato non correttamente (record di riferimento sconosciuto)"
 
 #. module: mail
 #. odoo-python
@@ -11761,6 +11769,42 @@ msgstr "“%(member_name)s” in “%(channel_name)s”"
 #, python-format
 msgid "“%s”"
 msgstr "“%s”"
+
+#, python-format
+#~ msgid "Search for a GIF"
+#~ msgstr "Cerca una GIF"
+
+#~ msgid "Add a Tenor GIF API key to enable GIFs support."
+#~ msgstr ""
+#~ "Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF."
+
+#~ msgid ""
+#~ "Add a Tenor GIF API key to enable GIFs support. https://"
+#~ "developers.google.com/tenor/guides/quickstart#setup"
+#~ msgstr ""
+#~ "Aggiungi una chiave API GIF Tenor per abilitare il supporto delle GIF. "
+#~ "https://developers.google.com/tenor/guides/quickstart#setup"
+
+#~ msgid "Tenor API key"
+#~ msgstr "Chiave API Tenor"
+
+#~ msgid "Tenor GIF API key"
+#~ msgstr "Chiave API GIF Tenor"
+
+#~ msgid "Tenor GIF content filter"
+#~ msgstr "Filtro contenuto GIF Tenor"
+
+#~ msgid "Tenor GIF limits"
+#~ msgstr "Numero limitato di GIF Tenor"
+
+#~ msgid "Tenor Gif Limit"
+#~ msgstr "Limite GIF Tenor"
+
+#~ msgid "Tenor content filter"
+#~ msgstr "Filtro contenuto Tenor"
+
+#~ msgid "https://developers.google.com/tenor/guides/content-filtering"
+#~ msgstr "https://developers.google.com/tenor/guides/content-filtering"
 
 #, python-format
 #~ msgid ""

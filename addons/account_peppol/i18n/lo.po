@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-24 17:37+0000\n"
-"PO-Revision-Date: 2026-05-20 11:46+0000\n"
+"POT-Creation-Date: 2026-07-31 17:38+0000\n"
+"PO-Revision-Date: 2026-08-19 14:21+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Lao <https://translate.odoo.com/projects/odoo-17/"
 "account_peppol/lo/>\n"
@@ -17,13 +17,21 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
+#, python-format
+msgid "%(proxy_type)s document has been received successfully"
+msgstr ""
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.mail_notification_layout_with_responsible_signature_and_peppol
 msgid ""
 "<br/>\n"
-"                                In Belgium, electronic invoicing is <u>mandatory as of January 2026</u> - don't wait to register."
+"                                In Belgium, electronic invoicing is "
+"<u>mandatory as of January 2026</u> - don't wait to register."
 msgstr ""
 "<br/>\n"
 "                                ໃນປະເທດແບນຊິກ, ການອອກໃບເກັບເງິນແບບເອເລັກໂຕຣນິກແມ່ນ "
@@ -33,7 +41,8 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_peppol.account_peppol_view_move_form
 msgid ""
 "<span class=\"mx-1\" invisible=\"not peppol_is_demo_uuid\"> (Demo)</span>\n"
-"                    <span class=\"text-muted mx-3\" invisible=\"peppol_move_state != 'to_send'\">\n"
+"                    <span class=\"text-muted mx-3\" "
+"invisible=\"peppol_move_state != 'to_send'\">\n"
 "                        The invoice will be sent automatically to PEPPOL\n"
 "                    </span>"
 msgstr ""
@@ -44,31 +53,53 @@ msgid ""
 "<span class=\"o_form_label\">\n"
 "                                    Peppol Details\n"
 "                                </span>\n"
-"                                <span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-specific.\"/>"
+"                                <span class=\"fa fa-lg fa-building-o\" "
+"title=\"Values set here are company-specific.\"/>"
 msgstr ""
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid ""
-"<span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'demo'\"> (Demo)</span>\n"
-"                                        <span class=\"text-info\" invisible=\"not account_peppol_edi_mode == 'test'\"> (Test)</span>"
+"<span class=\"text-info\" invisible=\"not account_peppol_edi_mode == "
+"'demo'\"> (Demo)</span>\n"
+"                                        <span class=\"text-info\" "
+"invisible=\"not account_peppol_edi_mode == 'test'\"> (Test)</span>"
 msgstr ""
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid ""
 "<span>\n"
-"                                    I want to migrate my Peppol connection to Odoo (optional):\n"
+"                                    I want to migrate my Peppol connection "
+"to Odoo (optional):\n"
 "                                </span>"
 msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"A 0% tax cannot use Tax Category 'S' (Standard). Please update the Tax "
+"Category in the Advanced Options of the tax configuration."
+msgstr ""
+"ອາກອນ 0% ບໍ່ສາມາດໃຊ້ໝວດໝູ່ອາກອນ 'S' (ມາດຕະຖານ) ໄດ້. ກະລຸນາອັບເດດໝວດໝູ່ອາກອນໃນຕົວເລືອກຂັ້ນສູງ"
+"ຂອງການຕັ້ງຄ່າອາກອນ."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid "A connection to '%s' already exists."
+msgstr "ມີການເຊື່ອມຕໍ່ກັບ '%s' ແລ້ວ."
 
 #. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
 #, python-format
 msgid ""
-"A participant with these details has already been registered on the network."
-" If you continue, Odoo will register this company as sender only."
+"A participant with these details has already been registered on the network. "
+"If you continue, Odoo will register this company as sender only."
 msgstr ""
 
 #. module: account_peppol
@@ -106,6 +137,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:account_peppol.field_account_move_send__account_peppol_edi_mode_info
 msgid "Account Peppol Edi Mode Info"
 msgstr ""
+
+#. module: account_peppol
+#: model:ir.model.fields,field_description:account_peppol.field_res_company__account_peppol_edi_user
+msgid "Account Peppol Edi User"
+msgstr "ຜູ້ໃຊ້ Edi ຂອງບັນຊີ Peppol"
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_config_settings__account_peppol_mode_constraint
@@ -204,7 +240,8 @@ msgstr ""
 #: model:ir.model.fields,help:account_peppol.field_res_config_settings__account_peppol_eas
 msgid ""
 "Code used to identify the Endpoint for BIS Billing 3.0 and its derivatives.\n"
-"             List available at https://docs.peppol.eu/poacc/billing/3.0/codelist/eas/"
+"             List available at https://docs.peppol.eu/poacc/billing/3.0/"
+"codelist/eas/"
 msgstr ""
 "ລະຫັດທີ່ໃຊ້ເພື່ອລະບຸ Endpoint ສຳລັບ BIS Billing 3.0 ແລະ ລາຍການອື່ນໆ.\n"
 "             ເບິ່ງລາຍຊື່ໄດ້ທີ່ https://docs.peppol.eu/poacc/billing/3.0/codelist/"
@@ -214,6 +251,13 @@ msgstr ""
 #: model:ir.model,name:account_peppol.model_res_company
 msgid "Companies"
 msgstr "ບໍລິສັດ"
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.xml:0
+#, python-format
+msgid "Complete your registration"
+msgstr "ເຮັດການລົງທະບຽນຂອງທ່ານໃຫ້ສຳເລັດ"
 
 #. module: account_peppol
 #: model:ir.model,name:account_peppol.model_res_config_settings
@@ -229,7 +273,7 @@ msgstr "ຢືນຢັນ"
 
 #. module: account_peppol
 #. odoo-python
-#: code:addons/account_peppol/models/res_config_settings.py:0
+#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
 #, python-format
 msgid "Connection error, please try again later."
 msgstr "ການເຊື່ອມຕໍ່ຜິດພາດ, ກະລຸນາລອງໃໝ່ໃນພາຍຫຼັງ."
@@ -285,6 +329,13 @@ msgid "EDI user"
 msgstr "ຜູ້ໃຊ້ EDI"
 
 #. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
+#, python-format
+msgid "EDI user should be of one of the following types: %s"
+msgstr "ຜູ້ໃຊ້ EDI ຄວນຈະເປັນໜຶ່ງໃນປະເພດຕໍ່ໄປນີ້: %s"
+
+#. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_config_settings__account_peppol_edi_identification
 msgid "Edi Identification"
 msgstr "ການລະບຸຕົວຕົນ EDI"
@@ -310,6 +361,29 @@ msgid "Fetch from Peppol"
 msgstr "ດຶງຂໍ້ມູນຈາກ Peppol"
 
 #. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"For tax(es) %(taxes)s: Tax Category 'O' must be used when the exemption "
+"reason code is 'VATEX-EU-O'. You can change this in the Advanced Options of "
+"the tax configuration."
+msgstr ""
+"ສຳລັບອາກອນ %(taxes)s: ຕ້ອງໃຊ້ໝວດໝູ່ອາກອນ 'O' ເມື່ອລະຫັດເຫດຜົນການຍົກເວັ້ນແມ່ນ 'VATEX-EU-"
+"O'. ເຈົ້າສາມາດປ່ຽນແປງສິ່ງນີ້ໄດ້ໃນຕົວເລືອກຂັ້ນສູງຂອງການຕັ້ງຄ່າອາກອນ."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"If you are not subject to VAT, you should not have a VAT number on your "
+"company/contacts and your clients should not have one either."
+msgstr ""
+"ຖ້າເຈົ້າບໍ່ໄດ້ຢູ່ໃນຂ່າຍເສຍອາກອນມູນຄ່າເພີ່ມ, ເຈົ້າບໍ່ຄວນມີເລກປະຈຳຕົວຜູ້ເສຍອາກອນໃນບໍລິສັດ/ຜູ້ຕິດຕໍ່ຂອງເຈົ້າ ແລ"
+"ະ ລູກຄ້າຂອງເຈົ້າກໍບໍ່ຄວນມີເຊັ່ນກັນ."
+
+#. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid ""
 "In demo mode sending and receiving invoices is simulated. There will be no "
@@ -327,6 +401,39 @@ msgstr "ປຶ້ມບັນຊີໃບເກັບເງິນຂາເຂົ
 #, python-format
 msgid "Invoice %s is too big to send via peppol (64MB limit)"
 msgstr "ໃບເກັບເງິນ %s ມີຂະໜາດໃຫຍ່ເກີນໄປທີ່ຈະສົ່ງຜ່ານ Peppol (ຈຳກັດ 64MB)"
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Invoice lines using Tax Category 'O' cannot use a percentage-based tax. "
+"Please update the tax type in Advanced Options."
+msgstr ""
+"ລາຍການໃບແຈ້ງໜີ້ທີ່ໃຊ້ໝວດໝູ່ອາກອນ 'O' ບໍ່ສາມາດໃຊ້ອາກອນແບບຄິດໄລ່ເປັນເປີເຊັນໄດ້. ກະລຸນາອັບເດດປະເພດອ"
+"າກອນໃນຕົວເລືອກຂັ້ນສູງ."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Invoice lines with Tax Category 'Exempt from VAT' must have a tax rate of 0. "
+"You can change this in the Advanced Options of the tax configuration."
+msgstr ""
+"ລາຍການໃບແຈ້ງໜີ້ທີ່ມີໝວດໝູ່ອາກອນ 'ຍົກເວັ້ນອາກອນມູນຄ່າເພີ່ມ' ຕ້ອງມີອັດຕາອາກອນເປັນ 0. ເຈົ້າສາມາດປ່ຽນແປ"
+"ງສິ່ງນີ້ໄດ້ໃນຕົວເລືອກຂັ້ນສູງຂອງການຕັ້ງຄ່າອາກອນ."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Invoice lines with Tax Category 'Reverse charge' must have a tax rate of 0. "
+"You can change this in the Advanced Options of the tax configuration."
+msgstr ""
+"ລາຍການໃບແຈ້ງໜີ້ທີ່ມີໝວດໝູ່ອາກອນ 'ການຄິດໄລ່ອາກອນແບບປີ້ນກັບ' ຕ້ອງມີອັດຕາອາກອນເປັນ 0. ເຈົ້າສາມາດປ່ຽນ"
+"ແປງສິ່ງນີ້ໄດ້ໃນຕົວເລືອກຂັ້ນສູງຂອງການຕັ້ງຄ່າອາກອນ."
 
 #. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_partner__is_peppol_edi_format
@@ -368,6 +475,49 @@ msgid "Migration key"
 msgstr ""
 
 #. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Missing Buyer Country. Please add the Country Code to the client's contact "
+"information."
+msgstr ""
+"ບໍ່ພົບປະເທດຜູ້ຊື້. ກະລຸນາເພີ່ມລະຫັດປະເທດເຂົ້າໃນຂໍ້ມູນການຕິດຕໍ່ຂອງລູກຄ້າ."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Missing Invoiced Item VAT category code. Action Required: Install the module "
+"account_edi_ubl_cii_tax_extension."
+msgstr ""
+"ບໍ່ພົບລະຫັດໝວດໝູ່ອາກອນມູນຄ່າເພີ່ມຂອງລາຍການໃນໃບແຈ້ງໜີ້. ການດຳເນີນການທີ່ຈຳເປັນ: ຕິດຕັ້ງໂມດູນ "
+"account_edi_ubl_cii_tax_extension."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Missing Reverse Charge details. Please set the Exemption Reason to 'Reverse "
+"charge' in the Advanced Options of the tax configuration."
+msgstr ""
+"ບໍ່ພົບລາຍລະອຽດການຄິດໄລ່ອາກອນແບບປີ້ນກັບ. ກະລຸນາຕັ້ງຄ່າເຫດຜົນການຍົກເວັ້ນເປັນ 'Reverse charge' ໃນ"
+"ຕົວເລືອກຂັ້ນສູງຂອງການຕັ້ງຄ່າອາກອນ."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"Missing VAT category code. Action Required: Install the module "
+"account_edi_ubl_cii_tax_extension."
+msgstr ""
+"ບໍ່ພົບລະຫັດໝວດໝູ່ອາກອນມູນຄ່າເພີ່ມ. ການດຳເນີນການທີ່ຈຳເປັນ: ຕິດຕັ້ງໂມດູນ "
+"account_edi_ubl_cii_tax_extension."
+
+#. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Mobile Number"
 msgstr ""
@@ -386,7 +536,7 @@ msgstr "ຍັງບໍ່ທັນລົງທະບຽນ"
 #. module: account_peppol
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_company__account_peppol_proxy_state__not_verified
 msgid "Not verified"
-msgstr ""
+msgstr "ຍັງບໍ່ໄດ້ຢືນຢັນ"
 
 #. module: account_peppol
 #. odoo-javascript
@@ -508,6 +658,13 @@ msgid "Peppol Is Demo Uuid"
 msgstr ""
 
 #. module: account_peppol
+#: model:ir.model.fields,field_description:account_peppol.field_account_bank_statement_line__peppol_is_sent
+#: model:ir.model.fields,field_description:account_peppol.field_account_move__peppol_is_sent
+#: model:ir.model.fields,field_description:account_peppol.field_account_payment__peppol_is_sent
+msgid "Peppol Is Sent"
+msgstr "Peppol ຖືກສົ່ງແລ້ວ"
+
+#. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.account_peppol_view_account_invoice_filter
 msgid "Peppol Ready"
 msgstr "ພ້ອມສຳລັບ Peppol"
@@ -530,13 +687,6 @@ msgid "Peppol Validity"
 msgstr ""
 
 #. module: account_peppol
-#. odoo-python
-#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
-#, python-format
-msgid "Peppol document has been received successfully"
-msgstr ""
-
-#. module: account_peppol
 #: model:ir.model.fields,field_description:account_peppol.field_res_company__peppol_eas
 #: model:ir.model.fields,field_description:account_peppol.field_res_config_settings__account_peppol_eas
 msgid "Peppol e-address (EAS)"
@@ -544,7 +694,13 @@ msgstr "ທີ່ຢູ່ເອເລັກໂຕຣນິກ Peppol (EAS)"
 
 #. module: account_peppol
 #. odoo-python
-#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid "Peppol error:"
+msgstr "ຂໍ້ຜິດພາດ Peppol:"
+
+#. module: account_peppol
+#. odoo-python
 #: code:addons/account_peppol/models/account_edi_proxy_user.py:0
 #, python-format
 msgid "Peppol error: %s"
@@ -572,8 +728,7 @@ msgstr "ອັບເດດສະຖານະ Peppol: %s"
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid ""
-"Please do not hesitate to contact our support if you need further "
-"assistance."
+"Please do not hesitate to contact our support if you need further assistance."
 msgstr ""
 
 #. module: account_peppol
@@ -607,6 +762,16 @@ msgstr ""
 #, python-format
 msgid "Please fill in the EAS code and the Participant ID code."
 msgstr "ກະລຸນາຕື່ມລະຫັດ EAS ແລະ ລະຫັດ Participant ID."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"Please install the 'France - E-Invoicing (Approved Platform)' module "
+"(l10n_fr_pdp) first"
+msgstr ""
+"ກະລຸນາຕິດຕັ້ງໂມດູນ 'France - E-Invoicing (Approved Platform)' (l10n_fr_pdp) ກ່ອນ"
 
 #. module: account_peppol
 #. odoo-python
@@ -659,6 +824,13 @@ msgstr ""
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_company__account_peppol_proxy_state__rejected
 msgid "Rejected"
 msgstr "ຖືກປະຕິເສດ"
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid "Remove from Approved Platform"
+msgstr "ລຶບອອກຈາກແພລດຟອມທີ່ໄດ້ຮັບອະນຸມັດ"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
@@ -730,7 +902,8 @@ msgstr "ທົດສອບ"
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid ""
 "Test mode allows registration of the user on the test Peppol network.\n"
-"                                        By clicking the button below I accept that Odoo may process my e-invoices."
+"                                        By clicking the button below I "
+"accept that Odoo may process my e-invoices."
 msgstr ""
 
 #. module: account_peppol
@@ -742,10 +915,32 @@ msgstr "ເລກລະບຸຕົວຕົນ Peppol endpoint ບໍ່ຖື�
 
 #. module: account_peppol
 #. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"The Peppol endpoint is missing in the XML file. Action Required: Update the "
+"account and account_edi_ubl_cii modules to resolve this."
+msgstr ""
+"ບໍ່ພົບ Peppol endpoint ໃນໄຟລ໌ XML. ການດຳເນີນການທີ່ຈຳເປັນ: ອັບເດດໂມດູນ account ແລະ "
+"account_edi_ubl_cii ເພື່ອແກ້ໄຂບັນຫານີ້."
+
+#. module: account_peppol
+#. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
 #, python-format
 msgid "The Peppol service that is used is likely to be %s."
 msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"The Tax Category must be 'AE' when using Exemption Reason code 'VATEX-EU-"
+"AE'. You can change this in the Advanced Options of the tax configuration."
+msgstr ""
+"ໝວດໝູ່ອາກອນຕ້ອງເປັນ 'AE' ເມື່ອໃຊ້ລະຫັດເຫດຜົນການຍົກເວັ້ນ 'VATEX-EU-AE'. ເຈົ້າສາມາດປ່ຽນແປງສິ່ງນີ້ໄ"
+"ດ້ໃນຕົວເລືອກຂັ້ນສູງຂອງການຕັ້ງຄ່າອາກອນ."
 
 #. module: account_peppol
 #. odoo-python
@@ -756,6 +951,17 @@ msgid ""
 "right identification number."
 msgstr ""
 "ເລກ Endpoint ອາດຈະບໍ່ຖືກຕ້ອງ. ກະລຸນາກວດສອບວ່າທ່ານໄດ້ປ້ອນເລກລະບຸຕົວຕົນທີ່ຖືກຕ້ອງແລ້ວບໍ່."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_errors.py:0
+#, python-format
+msgid ""
+"The exemption reason code is invalid. Action Required: Install the module "
+"account_edi_ubl_cii_tax_extension."
+msgstr ""
+"ລະຫັດເຫດຜົນການຍົກເວັ້ນບໍ່ຖືກຕ້ອງ. ການດຳເນີນການທີ່ຈຳເປັນ: ຕິດຕັ້ງໂມດູນ "
+"account_edi_ubl_cii_tax_extension."
 
 #. module: account_peppol
 #. odoo-python
@@ -822,7 +1028,7 @@ msgstr "ໄອດີທີ່ເປັນເອກະລັກທີ່ລະບ
 
 #. module: account_peppol
 #. odoo-python
-#: code:addons/account_peppol/models/res_config_settings.py:0
+#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
 #, python-format
 msgid "The verification code is not correct"
 msgstr "ລະຫັດຢືນຢັນບໍ່ຖືກຕ້ອງ"
@@ -839,8 +1045,7 @@ msgstr ""
 #: code:addons/account_peppol/models/res_config_settings.py:0
 #, python-format
 msgid ""
-"This feature is deprecated. Contact odoo support if you need a migration "
-"key."
+"This feature is deprecated. Contact odoo support if you need a migration key."
 msgstr ""
 
 #. module: account_peppol
@@ -850,19 +1055,24 @@ msgstr "ໃບເກັບເງິນນີ້ຍັງໄດ້ຖືກ"
 
 #. module: account_peppol
 #. odoo-python
-#: code:addons/account_peppol/models/res_config_settings.py:0
-#, python-format
-msgid ""
-"This peppol identification is already used by %(parent_name)s. Please use "
-"something else."
-msgstr ""
-
-#. module: account_peppol
-#. odoo-python
-#: code:addons/account_peppol/models/res_config_settings.py:0
+#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
 #, python-format
 msgid "This verification code has expired. Please request a new one."
 msgstr "ລະຫັດຢືນຢັນນີ້ໝົດອາຍຸແລ້ວ. ກະລຸນາຮ້ອງຂໍລະຫັດໃໝ່."
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid "This will delete your Approved Platform registration."
+msgstr "ສິ່ງນີ້ຈະລຶບການລົງທະບຽນແພລດຟອມທີ່ໄດ້ຮັບອະນຸມັດຂອງທ່ານ."
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid "This will delete your Peppol registration."
+msgstr "ສິ່ງນີ້ຈະລຶບການລົງທະບຽນ Peppol ຂອງທ່ານ."
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_partner_form_account_peppol
@@ -874,7 +1084,7 @@ msgstr ""
 
 #. module: account_peppol
 #. odoo-python
-#: code:addons/account_peppol/models/res_config_settings.py:0
+#: code:addons/account_peppol/models/account_edi_proxy_user.py:0
 #, python-format
 msgid "Too many attempts to request an SMS code. Please try again later."
 msgstr "ມີການຮ້ອງຂໍລະຫັດ SMS ຫຼາຍເກີນໄປ. ກະລຸນາລອງໃໝ່ໃນພາຍຫຼັງ."
@@ -916,7 +1126,6 @@ msgstr ""
 
 #. module: account_peppol
 #. odoo-javascript
-#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
 #: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
 #, python-format
 msgid "Validate registration"
@@ -979,8 +1188,10 @@ msgstr ""
 #: code:addons/account_peppol/models/account_journal.py:0
 #, python-format
 msgid ""
-"You can't change the type of a journal used for Peppol invoice reception toa type different than 'Purchase'.\n"
-"Please change the journal used for Peppol reception before changing the type of this journal."
+"You can't change the type of a journal used for Peppol invoice reception toa "
+"type different than 'Purchase'.\n"
+"Please change the journal used for Peppol reception before changing the type "
+"of this journal."
 msgstr ""
 "ທ່ານບໍ່ສາມາດປ່ຽນປະເພດຂອງປຶ້ມບັນຊີທີ່ໃຊ້ສຳລັບການຮັບໃບເກັບເງິນ Peppol ໄປເປັນປະເພດອື່ນນອກຈາກ 'ຊື້' "
 "(Purchase) ໄດ້.\n"
@@ -991,10 +1202,37 @@ msgstr ""
 #: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
 #, python-format
 msgid ""
+"You will not be able to send Peppol documents in Odoo anymore. Are you sure "
+"you want to proceed?"
+msgstr ""
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid ""
+"You will not be able to send documents via the Odoo Approved Platform "
+"anymore. Are you sure you want to proceed?"
+msgstr ""
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid ""
 "You will not be able to send or receive Peppol documents in Odoo anymore. "
 "Are you sure you want to proceed?"
 msgstr ""
 "ທ່ານຈະບໍ່ສາມາດສົ່ງ ຫຼື ຮັບເອກະສານ Peppol ໃນ Odoo ໄດ້ອີກຕໍ່ໄປ. ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການດຳເນີນການຕໍ່?"
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid ""
+"You will not be able to send or receive documents via the Odoo Approved "
+"Platform anymore. Are you sure you want to proceed?"
+msgstr ""
 
 #. module: account_peppol
 #: model:ir.model.fields,help:account_peppol.field_res_company__account_peppol_phone_number
@@ -1012,7 +1250,7 @@ msgstr ""
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Your Peppol identification is:"
-msgstr ""
+msgstr "ການລະບຸຕົວຕົນ Peppol ຂອງທ່ານແມ່ນ:"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form

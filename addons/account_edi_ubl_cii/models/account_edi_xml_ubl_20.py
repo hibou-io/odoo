@@ -4,6 +4,7 @@ from lxml import etree
 
 from odoo import models, _
 from odoo.tools import html2plaintext, cleanup_xml_node
+from odoo.addons.account_edi_ubl_cii.models.account_edi_common import FloatFmt
 
 UBL_NAMESPACES = {
     'cbc': "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
@@ -445,6 +446,9 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         if not line.discount:
             return fixed_tax_charge_vals_list
 
+        is_charge = line.discount < 0
+        factor = -1 if is_charge else 1
+
         # Price subtotal with discount subtracted:
         net_price_subtotal = line.price_subtotal
         # Price subtotal without discount subtracted:
@@ -458,17 +462,16 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             'currency_dp': self._get_currency_decimal_places(line.currency_id),
             'multiplier_factor': abs(line.discount),
 
-            # Must be 'false' since this method is for allowances.
-            'charge_indicator': 'false',
+            'charge_indicator': 'true' if is_charge else 'false',
 
             # A reason should be provided. In Odoo, we only manage discounts.
             # Full code list is available here:
             # https://docs.peppol.eu/poacc/billing/3.0/codelist/UNCL5189/
-            'allowance_charge_reason_code': 95,
+            'allowance_charge_reason_code': 'ADK' if is_charge else 95,
             'allowance_charge_reason': 'Discount',
 
             # The discount should be provided as an amount.
-            'amount': gross_price_subtotal - net_price_subtotal,
+            'amount': (gross_price_subtotal - net_price_subtotal) * factor,
             'base_amount': gross_price_subtotal,
         }
 
@@ -493,13 +496,14 @@ class AccountEdiXmlUBL20(models.AbstractModel):
 
         uom = super()._get_uom_unece_code(line)
 
+        product_price_dp = self.env['decimal.precision'].precision_get('Product Price')
         return {
             'currency': line.currency_id,
             'currency_dp': self._get_currency_decimal_places(line.currency_id),
 
             # The price of an item, exclusive of VAT, after subtracting item price discount.
-            'price_amount': round(gross_price_unit, 10),
-            'product_price_dp': self.env['decimal.precision'].precision_get('Product Price'),
+            'price_amount': FloatFmt(gross_price_unit, 1, 10),
+            'product_price_dp': product_price_dp,
 
             # The number of item units to which the price applies.
             # setting to None -> the xml will not comprise the BaseQuantity (it's not mandatory)
@@ -541,12 +545,6 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             for vals in allowance_charge_vals_list
             if vals.get('from_fixed_tax')
         )
-        period_vals = {}
-        # deferred_start_date & deferred_end_date are enterprise-only fields
-        if line._fields.get('deferred_start_date') and (line.deferred_start_date or line.deferred_end_date):
-            period_vals.update({'start_date': line.deferred_start_date})
-            period_vals.update({'end_date': line.deferred_end_date})
-
         return self._add_invoice_extra_line_vals(line, {
             'currency': line.currency_id,
             'currency_dp': self._get_currency_decimal_places(line.currency_id),
@@ -558,7 +556,6 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             'tax_total_vals': self._get_invoice_line_tax_totals_vals_list(line, taxes_vals),
             'item_vals': self._get_invoice_line_item_vals(line, taxes_vals),
             'price_vals': self._get_invoice_line_price_vals(line),
-            'invoice_period_vals_list': [period_vals] if period_vals else []
         })
 
     def _get_invoice_monetary_total_vals(self, invoice, taxes_vals, line_extension_amount, allowance_total_amount, charge_total_amount):
@@ -770,7 +767,6 @@ class AccountEdiXmlUBL20(models.AbstractModel):
                     'base_quantity_attrs': {'unitCode': 'C62'},
                     'product_price_dp': self.env['decimal.precision'].precision_get('Product Price'),
                 },
-                'invoice_period_vals_list': []
             })
             line_extension_amount += tax_vals['tax_amount_currency']
 
@@ -1091,15 +1087,6 @@ class AccountEdiXmlUBL20(models.AbstractModel):
             elif name_node is not None:
                 invoice_line.name = name_node.text  # Fallback on Name if Description is not found.
 
-            # Start and End date (enterprise fields)
-            if invoice_line._fields.get('deferred_start_date'):
-                start_date = tree.find('./{*}InvoicePeriod/{*}StartDate')
-                end_date = tree.find('./{*}InvoicePeriod/{*}EndDate')
-                if start_date is not None and end_date is not None:  # there is a constraint forcing none or the two to be set
-                    invoice_line.write({
-                        'deferred_start_date': start_date.text,
-                        'deferred_end_date': end_date.text,
-                    })
             xpath_dict = {
                 'basis_qty': [
                     './{*}Price/{*}BaseQuantity',
@@ -1147,15 +1134,6 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         elif name_node is not None:
             invoice_line.name = name_node.text  # Fallback on Name if Description is not found.
 
-        # Start and End date (enterprise fields)
-        if invoice_line._fields.get('deferred_start_date'):
-            start_date = tree.find('./{*}InvoicePeriod/{*}StartDate')
-            end_date = tree.find('./{*}InvoicePeriod/{*}EndDate')
-            if start_date is not None and end_date is not None:  # there is a constraint forcing none or the two to be set
-                invoice_line.write({
-                    'deferred_start_date': start_date.text,
-                    'deferred_end_date': end_date.text,
-                })
         xpath_dict = {
             'basis_qty': [
                 './{*}Price/{*}BaseQuantity',
@@ -1225,7 +1203,7 @@ class AccountEdiXmlUBL20(models.AbstractModel):
         of each quantity in the invoice.
         """
         if tree.tag == '{urn:oasis:names:specification:ubl:schema:xsd:Invoice-2}Invoice':
-            amount_node = tree.find('.//{*}LegalMonetaryTotal/{*}TaxExclusiveAmount')
+            amount_node = tree.find('.//{*}LegalMonetaryTotal/{*}TaxInclusiveAmount')
             if amount_node is not None and float(amount_node.text) < 0:
                 return 'refund', -1
             return 'invoice', 1

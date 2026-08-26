@@ -22,8 +22,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-03 18:38+0000\n"
-"PO-Revision-Date: 2026-04-09 10:41+0000\n"
+"POT-Creation-Date: 2026-07-17 17:36+0000\n"
+"PO-Revision-Date: 2026-08-03 02:51+0000\n"
 "Last-Translator: Cristina Paniagua Ramiro <crpan@odoo.com>\n"
 "Language-Team: Portuguese <https://translate.odoo.com/projects/odoo-17/mail/"
 "pt/>\n"
@@ -33,7 +33,7 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : ((n != 0 && n % "
 "1000000 == 0) ? 1 : 2);\n"
-"X-Generator: Weblate 5.16.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: mail
 #. odoo-python
@@ -60,8 +60,8 @@ msgstr ""
 "            </p><p>\n"
 "                Para te proteger de spam e loops de respostas, o Odoo "
 "automaticamente bloqueia e-mails\n"
-"                que chegam ao seu gateway acima do limite de "
-"<b>%(threshold)i</b> e-mails a cada <b>%(minutes)i</b>\n"
+"                que chegam ao seu gateway acima do limite de <b>%(threshold)"
+"i</b> e-mails a cada <b>%(minutes)i</b>\n"
 "                minutos. Caso hajam e-mails dos quais você precise receber "
 "atualizações\n"
 "                frequentes, você pode adicioná-los abaixo e o Odoo não "
@@ -151,8 +151,8 @@ msgstr ""
 msgid ""
 "%(open_button)s%(icon)s%(open_em)sDiscard editing%(close_em)s%(close_button)s"
 msgstr ""
-"%(open_button)s%(icon)s%(open_em)sDescartar "
-"edição%(close_em)s%(close_button)s"
+"%(open_button)s%(icon)s%(open_em)sDescartar edição%(close_em)s%(close_button)"
+"s"
 
 #. module: mail
 #. odoo-javascript
@@ -163,10 +163,9 @@ msgid ""
 "%(open_cancel)scancel%(close_cancel)s%(close_em)s, %(open_samp)sCTRL-"
 "Enter%(close_samp)s %(open_em)sto %(open_save)ssave%(close_save)s%(close_em)s"
 msgstr ""
-"%(open_samp)sEsc%(close_samp)s %(open_em)spara "
-"%(open_cancel)scancelar%(close_cancel)s%(close_em)s, %(open_samp)sCTRL-"
-"Enter%(close_samp)s %(open_em)spara "
-"%(open_save)ssalvar%(close_save)s%(close_em)s"
+"%(open_samp)sEsc%(close_samp)s %(open_em)spara %(open_cancel)scancelar%"
+"(close_cancel)s%(close_em)s, %(open_samp)sCTRL-Enter%(close_samp)s %(open_em)"
+"spara %(open_save)ssalvar%(close_save)s%(close_em)s"
 
 #. module: mail
 #. odoo-javascript
@@ -178,10 +177,9 @@ msgid ""
 "%(open_samp)sEnter%(close_samp)s %(open_em)sto "
 "%(open_save)ssave%(close_save)s%(close_em)s"
 msgstr ""
-"%(open_samp)sEsc%(close_samp)s %(open_em)spara "
-"%(open_cancel)scancelar%(close_cancel)s%(close_em)s, "
-"%(open_samp)sEnter%(close_samp)s %(open_em)spara "
-"%(open_save)ssalvar%(close_save)s%(close_em)s"
+"%(open_samp)sEsc%(close_samp)s %(open_em)spara %(open_cancel)scancelar%"
+"(close_cancel)s%(close_em)s, %(open_samp)sEnter%(close_samp)s %(open_em)"
+"spara %(open_save)ssalvar%(close_save)s%(close_em)s"
 
 #. module: mail
 #. odoo-javascript
@@ -887,6 +885,23 @@ msgstr "Adicionar Seguidores"
 #: code:addons/mail/static/src/discuss/core/common/thread_actions.js:0
 #, python-format
 msgid "Add Users"
+msgstr "Adicionar utilizadores"
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid ""
+"Add a Klipy GIF API key to enable GIFs support. If you were using a Tenor "
+"GIF API key (service shutdown on June 30, 2026), please replace it here with "
+"a Klipy GIF API key"
+msgstr ""
+
+#. module: mail
+#: model:ir.model.fields,help:mail.field_res_config_settings__tenor_api_key
+msgid ""
+"Add a Klipy GIF API key to enable GIFs support. https://docs.klipy.com/"
+"getting-started\n"
+"If you were using a Tenor GIF API key (service shutdown on June 30, 2026), "
+"please replace it here with a Klipy GIF API key"
 msgstr ""
 
 #. module: mail
@@ -895,20 +910,6 @@ msgstr ""
 #, python-format
 msgid "Add a Reaction"
 msgstr "Adicionar reação"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Add a Tenor GIF API key to enable GIFs support."
-msgstr "Adicione uma API de GIF do Tenor para habilitar o uso de GIFs."
-
-#. module: mail
-#: model:ir.model.fields,help:mail.field_res_config_settings__tenor_api_key
-msgid ""
-"Add a Tenor GIF API key to enable GIFs support. https://"
-"developers.google.com/tenor/guides/quickstart#setup"
-msgstr ""
-"Adicione uma API de GIF do Tenor para habilitar o uso de GIFs. https://"
-"developers.google.com/tenor/guides/quickstart#setup"
 
 #. module: mail
 #. odoo-javascript
@@ -1074,9 +1075,9 @@ msgid ""
 "%(alias_model_name)s (%(matching_id)s) and used by the %(parent_name)s "
 "%(parent_model_name)s."
 msgstr ""
-"O alias %(matching_name)s (%(current_id)s) já está vinculado a "
-"%(alias_model_name)s (%(matching_id)s) e é usado por %(parent_name)s "
-"%(parent_model_name)s."
+"O alias %(matching_name)s (%(current_id)s) já está vinculado a %"
+"(alias_model_name)s (%(matching_id)s) e é usado por %(parent_name)s %"
+"(parent_model_name)s."
 
 #. module: mail
 #. odoo-python
@@ -1086,8 +1087,8 @@ msgid ""
 "Alias %(matching_name)s (%(current_id)s) is already linked with "
 "%(alias_model_name)s (%(matching_id)s)."
 msgstr ""
-"O alias %(matching_name)s (%(current_id)s) já está vinculado a "
-"%(alias_model_name)s (%(matching_id)s)."
+"O alias %(matching_name)s (%(current_id)s) já está vinculado a %"
+"(alias_model_name)s (%(matching_id)s)."
 
 #. module: mail
 #: model:ir.model.fields,field_description:mail.field_mail_alias__alias_contact
@@ -1299,8 +1300,7 @@ msgstr "Arquivados"
 #, python-format
 msgid ""
 "Archived because %(user_name)s (#%(user_id)s) deleted the portal account"
-msgstr ""
-"Arquivado porque %(user_name)s (#%(user_id)s) deletou a conta do portal"
+msgstr "Arquivado porque %(user_name)s (#%(user_id)s) deletou a conta do portal"
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_template_view_form_confirm_delete
@@ -1656,8 +1656,8 @@ msgid ""
 "Blocked by deletion of portal account %(portal_user_name)s by %(user_name)s "
 "(#%(user_id)s)"
 msgstr ""
-"Bloqueado pela exclusão da conta do portal %(portal_user_name)s por "
-"%(user_name)s (nº %(user_id)s)"
+"Bloqueado pela exclusão da conta do portal %(portal_user_name)s por %"
+"(user_name)s (nº %(user_id)s)"
 
 #. module: mail
 #. odoo-javascript
@@ -4603,8 +4603,7 @@ msgstr ""
 msgid ""
 "If set, the member will not receive notifications from the channel until "
 "this date."
-msgstr ""
-"Se definido, o membro não receberá notificações do canal até esta data."
+msgstr "Se definido, o membro não receberá notificações do canal até esta data."
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_mail__scheduled_date
@@ -4684,6 +4683,15 @@ msgstr ""
 #: model:ir.model.fields,help:mail.field_res_config_settings__use_twilio_rtc_servers
 msgid "If you want to use twilio as TURN/STUN server provider"
 msgstr "Se você deseja usar o Twilio como provedor de servidor TURN/STUN"
+
+#. module: mail
+#. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+#, python-format
+msgid ""
+"If you were using a Tenor API key, please replace it with a Klipy API key in "
+"the General Settings."
+msgstr ""
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.mail_resend_message_view_form
@@ -4946,8 +4954,8 @@ msgstr ""
 #, python-format
 msgid "Invalid template or view source record %(svalue)s, is %(model)s instead"
 msgstr ""
-"Modelo ou registro de origem de visualização %(svalue)s inválido, deve ser "
-"%(model)s"
+"Modelo ou registro de origem de visualização %(svalue)s inválido, deve ser %"
+"(model)s"
 
 #. module: mail
 #. odoo-python
@@ -5249,6 +5257,32 @@ msgstr "Chave"
 #, python-format
 msgid "Kind Regards"
 msgstr "Atenciosamente"
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
+msgid "Klipy API key"
+msgstr ""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF API key"
+msgstr ""
+
+#. module: mail
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF content filter"
+msgstr ""
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_gif_limit
+#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
+msgid "Klipy GIF limits"
+msgstr ""
+
+#. module: mail
+#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_content_filter
+msgid "Klipy content filter"
+msgstr ""
 
 #. module: mail
 #. odoo-javascript
@@ -6676,8 +6710,8 @@ msgid ""
 "Notification should receive attachments as a list of list or tuples "
 "(received %(aids)s)"
 msgstr ""
-"A notificação deve receber anexos como uma lista de listas ou tuplas "
-"(%(aids)s recebidos)"
+"A notificação deve receber anexos como uma lista de listas ou tuplas (%(aids)"
+"s recebidos)"
 
 #. module: mail
 #. odoo-python
@@ -6687,8 +6721,8 @@ msgid ""
 "Notification should receive attachments records as a list of IDs (received "
 "%(aids)s)"
 msgstr ""
-"A notificação deve receber registros de anexos como uma lista de IDs "
-"(%(aids)srecebidos)"
+"A notificação deve receber registros de anexos como uma lista de IDs (%(aids)"
+"srecebidos)"
 
 #. module: mail
 #. odoo-python
@@ -7031,8 +7065,8 @@ msgid ""
 msgstr ""
 "Idioma de tradução (ISO code) opcional para selecionar no envio de um e-"
 "mail. Se não atribuído, a versão inglesa será utilizada. Deverá usualmente "
-"ser uma expressão substituta que providencie o idioma apropriado, ex. "
-"{{ object.partner_id.lang }}."
+"ser uma expressão substituta que providencie o idioma apropriado, ex. {{ "
+"object.partner_id.lang }}."
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_mail_compose_message__reply_to_mode
@@ -8372,6 +8406,13 @@ msgstr "Pesquisar Incoming Mail dos Servidores"
 
 #. module: mail
 #. odoo-javascript
+#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
+#, python-format
+msgid "Search Klipy"
+msgstr ""
+
+#. module: mail
+#. odoo-javascript
 #: code:addons/mail/static/src/core/common/search_messages_panel.xml:0
 #: code:addons/mail/static/src/core/common/thread_actions.js:0
 #: code:addons/mail/static/src/core/web/chatter.xml:0
@@ -8390,13 +8431,6 @@ msgstr "Buscar sessão RTC"
 #, python-format
 msgid "Search button"
 msgstr "Botão de pesquisa"
-
-#. module: mail
-#. odoo-javascript
-#: code:addons/mail/static/src/discuss/gif_picker/common/gif_picker.xml:0
-#, python-format
-msgid "Search for a GIF"
-msgstr "Buscar um GIF"
 
 #. module: mail
 #. odoo-javascript
@@ -9246,36 +9280,6 @@ msgid "Templates"
 msgstr "Modelos"
 
 #. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_api_key
-msgid "Tenor API key"
-msgstr "Chave de API do Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF API key"
-msgstr "Chave de API de GIF do Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF content filter"
-msgstr "Filtro de conteúdo GIF do Tenor"
-
-#. module: mail
-#: model_terms:ir.ui.view,arch_db:mail.res_config_settings_view_form
-msgid "Tenor GIF limits"
-msgstr "Limites de GIFs do Tenor"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_gif_limit
-msgid "Tenor Gif Limit"
-msgstr "Limite de GIFs do Tenor"
-
-#. module: mail
-#: model:ir.model.fields,field_description:mail.field_res_config_settings__tenor_content_filter
-msgid "Tenor content filter"
-msgstr "Filtro de conteúdo do Tenor"
-
-#. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_email_server_form
 msgid "Test & Confirm"
 msgstr "Testar & Confirmar"
@@ -9430,8 +9434,8 @@ msgid ""
 "                 Please make sure you are using the correct address or "
 "contact us at %(default_email)s instead."
 msgstr ""
-"A mensagem abaixo não pôde ser aceita pelo endereço de e-mail "
-"%(alias_display_name)s.\n"
+"A mensagem abaixo não pôde ser aceita pelo endereço de e-mail %"
+"(alias_display_name)s.\n"
 "                 Somente %(contact_description)s têm permissão para contatar "
 "este e-mail.<br /><br />\n"
 "                 Utilize o endereço de e-mail correto ou entre em contato "
@@ -9446,8 +9450,8 @@ msgid ""
 "%(alias_display_name)s.\n"
 "Please try again later or contact %(company_name)s instead."
 msgstr ""
-"A mensagem abaixo não pôde ser aceita pelo endereço de e-mail "
-"%(alias_display_name)s.\n"
+"A mensagem abaixo não pôde ser aceita pelo endereço de e-mail %"
+"(alias_display_name)s.\n"
 "Tente novamente mais tarde ou entre em contato com %(company_name)s."
 
 #. module: mail
@@ -10605,8 +10609,7 @@ msgstr "Volume de outros usuários"
 msgid ""
 "Want to spice up your conversations with GIFs? Activate the feature in the "
 "settings!"
-msgstr ""
-"Quer animar suas conversas com GIFs? Ative o recurso nas configurações!"
+msgstr "Quer animar suas conversas com GIFs? Ative o recurso nas configurações!"
 
 #. module: mail
 #. odoo-javascript
@@ -10625,8 +10628,8 @@ msgid ""
 "%(alias_domain_name)s belongs to company %(alias_company_names)s while the "
 "owner document belongs to company %(company_name)s."
 msgstr ""
-"Não foi possível criar o alias %(alias_name)s porque o domínio "
-"%(alias_domain_name)s pertence à empresa %(alias_company_names)s, enquanto o "
+"Não foi possível criar o alias %(alias_name)s porque o domínio %"
+"(alias_domain_name)s pertence à empresa %(alias_company_names)s, enquanto o "
 "documento titular pertence à empresa %(company_name)s."
 
 #. module: mail
@@ -10638,8 +10641,8 @@ msgid ""
 "%(alias_domain_name)s belongs to company %(alias_company_names)s while the "
 "target document belongs to company %(company_name)s."
 msgstr ""
-"Não foi possível criar o alias %(alias_name)s porque o domínio "
-"%(alias_domain_name)s pertence à empresa %(alias_company_names)s, enquanto o "
+"Não foi possível criar o alias %(alias_name)s porque o domínio %"
+"(alias_domain_name)s pertence à empresa %(alias_company_names)s, enquanto o "
 "documento de destino pertence à empresa %(company_name)s."
 
 #. module: mail
@@ -10906,8 +10909,8 @@ msgid ""
 "You cannot use anything else than unaccented latin characters in the alias "
 "address %(alias_name)s."
 msgstr ""
-"Você só pode usar caracteres latinos não acentuados no endereço do alias "
-"%(alias_name)s."
+"Você só pode usar caracteres latinos não acentuados no endereço do alias %"
+"(alias_name)s."
 
 #. module: mail
 #. odoo-python
@@ -10917,8 +10920,8 @@ msgid ""
 "You cannot use anything else than unaccented latin characters in the domain "
 "name %(domain_name)s."
 msgstr ""
-"Você só pode usar caracteres latinos não acentuados no nome do domínio "
-"%(domain_name)s."
+"Você só pode usar caracteres latinos não acentuados no nome do domínio %"
+"(domain_name)s."
 
 #. module: mail
 #: model_terms:ir.ui.view,arch_db:mail.view_mail_form
@@ -11033,8 +11036,7 @@ msgstr "O Seu Registo de"
 #, python-format
 msgid ""
 "Your account email has been changed from %(old_email)s to %(new_email)s."
-msgstr ""
-"O e-mail da sua conta foi alterado de %(old_email)s para %(new_email)s."
+msgstr "O e-mail da sua conta foi alterado de %(old_email)s para %(new_email)s."
 
 #. module: mail
 #. odoo-python
@@ -11387,8 +11389,8 @@ msgstr "acabou de atribuir a você a seguinte atividade:"
 
 #. module: mail
 #: model:ir.model.fields,help:mail.field_res_config_settings__tenor_content_filter
-msgid "https://developers.google.com/tenor/guides/content-filtering"
-msgstr "https://developers.google.com/tenor/guides/content-filtering"
+msgid "https://docs.klipy.com/migrate-from-tenor/content-filtering"
+msgstr ""
 
 #. module: mail
 #. odoo-python
@@ -11718,6 +11720,41 @@ msgstr "\"%(member_name)s\" em \"%(channel_name)s\""
 #, python-format
 msgid "“%s”"
 msgstr ""
+
+#, python-format
+#~ msgid "Search for a GIF"
+#~ msgstr "Buscar um GIF"
+
+#~ msgid "Add a Tenor GIF API key to enable GIFs support."
+#~ msgstr "Adicione uma API de GIF do Tenor para habilitar o uso de GIFs."
+
+#~ msgid ""
+#~ "Add a Tenor GIF API key to enable GIFs support. https://"
+#~ "developers.google.com/tenor/guides/quickstart#setup"
+#~ msgstr ""
+#~ "Adicione uma API de GIF do Tenor para habilitar o uso de GIFs. https://"
+#~ "developers.google.com/tenor/guides/quickstart#setup"
+
+#~ msgid "Tenor API key"
+#~ msgstr "Chave de API do Tenor"
+
+#~ msgid "Tenor GIF API key"
+#~ msgstr "Chave de API de GIF do Tenor"
+
+#~ msgid "Tenor GIF content filter"
+#~ msgstr "Filtro de conteúdo GIF do Tenor"
+
+#~ msgid "Tenor GIF limits"
+#~ msgstr "Limites de GIFs do Tenor"
+
+#~ msgid "Tenor Gif Limit"
+#~ msgstr "Limite de GIFs do Tenor"
+
+#~ msgid "Tenor content filter"
+#~ msgstr "Filtro de conteúdo do Tenor"
+
+#~ msgid "https://developers.google.com/tenor/guides/content-filtering"
+#~ msgstr "https://developers.google.com/tenor/guides/content-filtering"
 
 #, python-format
 #~ msgid ""

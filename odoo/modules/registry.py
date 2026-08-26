@@ -12,7 +12,6 @@ from operator import attrgetter
 
 import inspect
 import logging
-import os
 import threading
 import time
 import warnings
@@ -25,12 +24,13 @@ from odoo.osv.expression import get_unaccent_wrapper
 from .. import SUPERUSER_ID
 from odoo.sql_db import TestCursor
 from odoo.tools import (
-    config, existing_tables, lazy_classproperty,
+    existing_tables,
     lazy_property, sql, Collector, OrderedSet, SQL,
     format_frame
 )
 from odoo.tools.func import locked
 from odoo.tools.lru import LRU
+from odoo.tools.version_tag_reset import reset_classes_tp_versions_used
 
 _logger = logging.getLogger(__name__)
 _schema = logging.getLogger('odoo.schema')
@@ -64,21 +64,8 @@ class Registry(Mapping):
     _lock = threading.RLock()
     _saved_lock = None
 
-    @lazy_classproperty
-    def registries(cls):
-        """ A mapping from database names to registries. """
-        size = config.get('registry_lru_size', None)
-        if not size:
-            # Size the LRU depending of the memory limits
-            if os.name != 'posix':
-                # cannot specify the memory limit soft on windows...
-                size = 42
-            else:
-                # A registry takes 10MB of memory on average, so we reserve
-                # 10Mb (registry) + 5Mb (working memory) per registry
-                avgsz = 15 * 1024 * 1024
-                size = int(config['limit_memory_soft'] / avgsz)
-        return LRU(size)
+    registries = LRU(42)  # random default value
+    """ A mapping from database names to registries. """
 
     def __new__(cls, db_name):
         """ Return the registry for the given database name."""
@@ -105,9 +92,11 @@ class Registry(Mapping):
         cls.registries[db_name] = registry  # pylint: disable=unsupported-assignment-operation
         try:
             registry.setup_signaling()
+            from odoo.http import borrow_request  # noqa: PLC0415
             # This should be a method on Registry
             try:
-                odoo.modules.load_modules(registry, force_demo, status, update_module)
+                with borrow_request():
+                    odoo.modules.load_modules(registry, force_demo, status, update_module)
             except Exception:
                 odoo.modules.reset_modules_state(db_name)
                 raise
@@ -122,6 +111,7 @@ class Registry(Mapping):
         registry = cls.registries[db_name]  # pylint: disable=unsubscriptable-object
 
         registry._init = False
+        reset_classes_tp_versions_used(registry.values(), reset_above_ratio=0.3)  # cpython optimisation
         registry.ready = True
         registry.registry_invalidated = bool(update_module)
 
@@ -338,6 +328,8 @@ class Registry(Mapping):
             for model in env.values():
                 model._register_hook()
             env.flush_all()
+
+        reset_classes_tp_versions_used(self.values())  # cpython optimisation
 
     @lazy_property
     def field_computed(self):
