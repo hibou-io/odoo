@@ -461,6 +461,7 @@ _SAFE_QWEB_OPCODES = _EXPR_OPCODES.union(to_opcodes([
     # 3.14 c.f. safe_eval
     'LOAD_FAST_BORROW', 'LOAD_FAST_BORROW_LOAD_FAST_BORROW',
     'POP_ITER', 'LOAD_COMMON_CONSTANT', 'NOT_TAKEN',
+    'JUMP_BACKWARD_NO_INTERRUPT',
 ])) - _BLACKLIST
 
 
@@ -616,12 +617,22 @@ class QwebContent:
     params__: QwebCallParameters  # not available for the python expression inside the xml
 
     def __init__(self, irQweb: IrQweb, params: QwebCallParameters):
-        self.irQweb = irQweb
+        self.__irQweb = irQweb
         self.html = None
         self.params__ = params
 
+    @property
+    def irQweb(self):
+        irQweb = self.__irQweb
+        thread_dbname = getattr(threading.current_thread(), 'dbname', None)
+        if thread_dbname and thread_dbname != irQweb.env.cr.dbname:
+            return None
+        return irQweb
+
     def __str__(self):
         if self.html is None:
+            if self.irQweb is None:
+                return ''
             params = self.params__
             self.html = ''.join(self.irQweb._render_iterall(
                params.view_ref, params.method, params.values, params.directive,
@@ -1126,7 +1137,8 @@ class IrQweb(models.AbstractModel):
                 """, 0)]
 
         code_lines = []
-        code_lines.append(f'template_options = {pprint.pformat(options, indent=4)}')
+        json_options = json.scriptsafe.loads(json.scriptsafe.dumps(options, default=str))
+        code_lines.append(f'template_options = {pprint.pformat(json_options, indent=4)}')
         code_lines.append('code = None')
         code_lines.append('template_functions = {}')
 

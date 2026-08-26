@@ -293,7 +293,16 @@ class SaleOrder(models.Model):
         fpos_before = self.fiscal_position_id
         pricelist_before = self.pricelist_id
 
-        self.write(dict.fromkeys(fnames, partner_id))
+        address_vals = dict.fromkeys(fnames, partner_id)
+        if "partner_id" in fnames:
+            commercial_partner = self.env["res.partner"].browse(partner_id).commercial_partner_id
+            address_vals.update({
+                fname: self[fname].id
+                for fname in ("partner_invoice_id", "partner_shipping_id")
+                if fname not in fnames and self[fname].commercial_partner_id == commercial_partner
+            })
+
+        self.write(address_vals)
 
         fpos_changed = fpos_before != self.fiscal_position_id
         if fpos_changed:
@@ -815,7 +824,8 @@ class SaleOrder(models.Model):
 
     def _remove_delivery_line(self):
         super()._remove_delivery_line()
-        self.pickup_location_data = {}  # Reset the pickup location data.
+        if not self.env.context.get("keep_pickup_location"):
+            self.pickup_location_data = {}  # Reset the pickup location data.
 
     def _get_preferred_delivery_method(self, available_delivery_methods):
         """ Get the preferred delivery method based on available delivery methods for the order.
@@ -900,7 +910,7 @@ class SaleOrder(models.Model):
 
         :rtype: bool
         """
-        return bool(self)
+        return bool(self.order_line)
 
     def _check_cart_is_ready_to_be_paid(self):
         """ Whether the cart is valid and the user can proceed to the payment
@@ -924,6 +934,8 @@ class SaleOrder(models.Model):
         """Recompute taxes and prices for the current cart."""
         self._recompute_taxes()
         self._recompute_prices()
+        if self.carrier_id:
+            self.with_context(keep_pickup_location=True)._set_delivery_method(self.carrier_id)
 
     def _allow_express_checkout(self):
         return True
