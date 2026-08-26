@@ -72,7 +72,9 @@ class SaleOrder(models.Model):
             if order.invoice_status == 'invoiced':
                 continue
             # We need to account for the downpayment paid in POS with and without invoice
-            order_amount = sum(order.sudo().pos_order_line_ids.filtered(lambda pol: pol.order_id.state in ['paid', 'done', 'invoiced'] and pol.sale_order_line_id.is_downpayment).mapped('price_subtotal_incl'))
+            order_lines = order.sudo().pos_order_line_ids.filtered(lambda pol: pol.sale_order_line_id.is_downpayment)
+            pos_lines = order_lines | order_lines.refund_orderline_ids
+            order_amount = sum(pos_lines.filtered(lambda pol: pol.order_id.state in ['paid', 'done', 'invoiced']).mapped('price_subtotal_incl'))
             order.amount_invoiced += order_amount
 
 
@@ -107,12 +109,14 @@ class SaleOrderLine(models.Model):
             refund_lines = sale_line.pos_order_line_ids.refund_orderline_ids.filtered(lambda order_line: order_line.order_id.state not in ['cancel', 'draft'])
             update_qty_delivered_from_pickings(sale_line, refund_lines)
 
-    @api.depends('pos_order_line_ids.qty', 'pos_order_line_ids.order_id.state')
+    @api.depends('pos_order_line_ids.qty', 'pos_order_line_ids.order_id.state', 'pos_order_line_ids.refund_orderline_ids.order_id.state')
     def _compute_qty_invoiced(self):
         super()._compute_qty_invoiced()
         for sale_line in self:
             pos_lines = sale_line.pos_order_line_ids.filtered(lambda order_line: order_line.order_id.state not in ['cancel', 'draft'])
-            sale_line.qty_invoiced += sum([self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in pos_lines], 0)
+            sale_line.qty_invoiced += sum(self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in pos_lines)
+            refund_lines = sale_line.pos_order_line_ids.refund_orderline_ids.filtered(lambda order_line: order_line.order_id.state not in ['cancel', 'draft'])
+            sale_line.qty_invoiced += sum(self._convert_qty(sale_line, pos_line.qty, 'p2s') for pos_line in refund_lines)
 
     def _get_sale_order_fields(self):
         return ["product_id", "display_name", "price_unit", "product_uom_qty", "tax_id", "qty_delivered", "qty_invoiced", "discount", "qty_to_invoice", "price_total", "is_downpayment"]
@@ -143,6 +147,7 @@ class SaleOrderLine(models.Model):
                         if line.lot_id:
                             lot_qty_by_name[line.lot_id.name] = lot_qty_by_name.get(line.lot_id.name, 0.0) + line.quantity
                     item['lot_qty_by_name'] = lot_qty_by_name
+                item['has_valued_move_ids'] = sale_line.has_valued_move_ids()
                 if product_uom == sale_line_uom:
                     results.append(item)
                     continue

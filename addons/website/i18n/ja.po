@@ -7,7 +7,7 @@
 # Yoshi Tashiro (Quartile) <tashiro@roomsfor.hk>, 2024
 # Wil Odoo, 2025
 # Junko Augias, 2025
-# Ryoko Tsuda <ryoko@quartile.co>, 2025
+# Ryoko Tsuda <ryoko@quartile.co>, 2025, 2026.
 # "Junko Augias (juau)" <juau@odoo.com>, 2025, 2026.
 # Yoshi Tashiro <tashiro@quartile.co>, 2025.
 # Weblate <noreply-mt-weblate@weblate.org>, 2025, 2026.
@@ -15,8 +15,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-24 17:38+0000\n"
-"PO-Revision-Date: 2026-05-26 04:55+0000\n"
+"POT-Creation-Date: 2026-07-31 17:39+0000\n"
+"PO-Revision-Date: 2026-08-17 10:05+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-18/website/"
 "ja/>\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: website
 #. odoo-javascript
@@ -2965,7 +2965,7 @@ msgstr "素敵なページ"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_map
 msgid "An address must be specified for a map to be embedded"
-msgstr "マップを埋め込むにはアドレスを特定する必要があります"
+msgstr "地図を埋め込むには住所を指定する必要があります"
 
 #. module: website
 #. odoo-javascript
@@ -3400,12 +3400,12 @@ msgstr "大きな数"
 #. module: website
 #: model:ir.model.fields,help:website.field_ir_model_fields__website_form_blacklisted
 msgid "Blacklist this field for web forms"
-msgstr "ウエブフォームにこのフィールドをブラックリストに登録"
+msgstr "このフィールドをWebフォームでブラックリストに登録する"
 
 #. module: website
 #: model:ir.model.fields,field_description:website.field_ir_model_fields__website_form_blacklisted
 msgid "Blacklisted in web forms"
-msgstr "ウェブフォームでブラックリストに載せてます"
+msgstr "Webフォームでのブラックリスト登録"
 
 #. module: website
 #. odoo-javascript
@@ -4426,7 +4426,7 @@ msgstr "条件付き"
 #. module: website
 #: model:ir.model,name:website.model_res_config_settings
 msgid "Config Settings"
-msgstr "コンフィグ設定"
+msgstr "構成設定"
 
 #. module: website
 #: model:ir.ui.menu,name:website.menu_website_global_configuration
@@ -5471,7 +5471,7 @@ msgstr "全ての特徴について"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_cover
 msgid "Discover more"
-msgstr "詳細をご覧ください"
+msgstr "さらに詳しく"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_media_list
@@ -6049,7 +6049,7 @@ msgstr "action_server_id又はfilter_idを提供する必要があります。"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_mega_menu_odoo_menu
 msgid "Electronics"
-msgstr "エレクトロニクス"
+msgstr "電子機器"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_product_list
@@ -6839,7 +6839,7 @@ msgstr "フォーカス"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.template_footer_headline
 msgid "Follow Us"
-msgstr "よかったらフォローお願いします"
+msgstr "フォローする"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.footer_custom
@@ -6851,7 +6851,7 @@ msgstr "よかったらフォローお願いします"
 #: model_terms:ir.ui.view,arch_db:website.template_footer_links
 #: model_terms:ir.ui.view,arch_db:website.template_footer_minimalist
 msgid "Follow us"
-msgstr "よかったらフォローお願いします"
+msgstr "フォローする"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -7305,6 +7305,14 @@ msgid "Google Maps API Key"
 msgstr "GoogleマップAPIキー"
 
 #. module: website
+#. odoo-javascript
+#: code:addons/website/static/src/js/editor/snippets.editor.js:0
+msgid ""
+"Google Maps configuration has changed. Please reload the page for changes to "
+"take effect."
+msgstr ""
+
+#. module: website
 #: model:ir.model.fields,field_description:website.field_res_config_settings__has_google_search_console
 #: model:ir.model.fields,field_description:website.field_website__google_search_console
 msgid "Google Search Console"
@@ -7344,10 +7352,11 @@ msgid ""
 "story will sound fake and lack emotion. No one will be interested. Write for "
 "one person. If it’s genuine for the one, it’s genuine for the rest."
 msgstr ""
-"<b>一人</b>のために書いたものの、素晴らしい物語は<b>全てのひと</b>に響きま"
-"す。一般的なオーディエンスを念頭に置いて書いた物語は虚偽、又は感情がないもの"
-"と感じられるかもしれませんので、誰も興味を持ちません。一人のために書きましょ"
-"う、きっと他のみんなも届かれます。"
+"素晴らしいストーリーは、<b>たった一人</b>のためだけに書かれたものであっても"
+"、<b>すべての人</b>に届きます。幅広く一般的な読者を意識して書こうとすると、"
+"ストーリーは作りものめいて感情が欠落してしまいます。それでは誰も興味を持ちま"
+"せん。一人のために書くのです。その一人にとって本物であれば、他のすべての人に"
+"とっても本物になります。"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_text_block
@@ -8774,7 +8783,7 @@ msgstr "職位"
 #: model_terms:ir.ui.view,arch_db:website.s_cta_mockups
 #: model_terms:ir.ui.view,arch_db:website.template_footer_call_to_action
 msgid "Join us and make your company a better place."
-msgstr "私たちに参加して、会社をより良い場所にしていきましょう。"
+msgstr "私たちと共に、一歩進んだ企業づくりを。"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_cta_box
@@ -9121,7 +9130,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website.s_shape_image
 #: model_terms:ir.ui.view,arch_db:website.s_text_image
 msgid "Learn more"
-msgstr "もっと知る"
+msgstr "さらに詳しく"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.bs_debug_view
@@ -9250,7 +9259,7 @@ msgstr "制限"
 #: model_terms:ir.ui.view,arch_db:website.s_chart_options
 #: model_terms:ir.ui.view,arch_db:website.s_process_steps_options
 msgid "Line"
-msgstr "ライン"
+msgstr "線"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippet_options
@@ -9479,7 +9488,7 @@ msgstr "マネジメント"
 #: model_terms:ir.ui.view,arch_db:website.s_map
 #: model_terms:ir.ui.view,arch_db:website.snippets
 msgid "Map"
-msgstr "マップ"
+msgstr "地図"
 
 #. module: website
 #. odoo-javascript
@@ -11407,8 +11416,8 @@ msgstr "プレースホルダ"
 #. module: website
 #. odoo-javascript
 #: code:addons/website/static/src/xml/website.editor.xml:0
-msgid "Places API"
-msgstr "プレイスAPI"
+msgid "Places API (NEW)"
+msgstr ""
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_countdown_options
@@ -11679,7 +11688,7 @@ msgstr ""
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_tabs
 msgid "Profile"
-msgstr "プロファイル"
+msgstr "プロフィール"
 
 #. module: website
 #. odoo-javascript
@@ -13357,7 +13366,7 @@ msgstr "今すぐ開始<span class=\"fa fa-angle-right ms-2\"/>"
 #: model_terms:ir.ui.view,arch_db:website.s_tabs
 #: model_terms:ir.ui.view,arch_db:website.s_text_image
 msgid "Start with the customer – find out what they want and give it to them."
-msgstr "お客様を第一に – 顧客が望むものを見極めて提供しましょう。"
+msgstr "お客様のニーズを起点に。求めるものを把握し、最適な形でお届けします。"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_carousel
@@ -13446,7 +13455,7 @@ msgstr "同じ高さに引き伸ばす"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_progress_bar_options
 msgid "Striped"
-msgstr "縦縞"
+msgstr "ストライプ"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.snippets
@@ -14875,7 +14884,7 @@ msgstr "ホバー時に下線"
 msgid ""
 "Understand how visitors engage with our website, via Google Analytics.\n"
 "                                                Learn more about"
-msgstr "訪問者はどうGoogle Analyticsでサイトにつながるかについてもっと知る"
+msgstr "訪問者はどうGoogle Analyticsでサイトにつながるかについてさらに詳しく"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_quadrant
@@ -15695,7 +15704,7 @@ msgid ""
 "more about our cookies and how we use them in our"
 msgstr ""
 "クッキーを使って、サイトにより良い経験を提供いたします。クッキー及びクッキー"
-"の使用についてもっと知る: "
+"の使用についてさらに詳しく: "
 
 #. module: website
 #. odoo-javascript
@@ -17673,7 +17682,7 @@ msgstr "⌙ 猶予"
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_rating_options
 msgid "⌙ Inactive"
-msgstr "⌙ 無効"
+msgstr "⌙ 非アクティブ"
 
 #. module: website
 #: model_terms:ir.ui.view,arch_db:website.s_google_map_options
@@ -17694,6 +17703,9 @@ msgstr "✽  ピザ"
 #: model_terms:ir.ui.view,arch_db:website.s_key_benefits
 msgid "✽  What We Offer"
 msgstr "✽  当社が提供するもの"
+
+#~ msgid "Places API"
+#~ msgstr "プレイスAPI"
 
 #~ msgid "<u>Wednesday</u><br/>8.00am-12.00am"
 #~ msgstr "<u>水曜日</u><br/>8.00am-12.00am"

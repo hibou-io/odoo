@@ -327,6 +327,9 @@ class StockMove(models.Model):
         for move in self:
             move.reference = move.picking_id.name if move.picking_id else move.name
 
+    def _should_count_for_quantity_received(self):
+        return self.location_usage in ('supplier', 'transit')
+
     @api.depends('move_line_ids')
     def _compute_move_lines_count(self):
         for move in self:
@@ -421,14 +424,14 @@ class StockMove(models.Model):
                     continue
                 if float_is_zero(quantity, precision_rounding=move.product_uom.rounding):
                     break
-                qty_ml_dec = min(ml.quantity, ml.product_uom_id._compute_quantity(quantity, ml.product_uom_id, round=False))
+                qty_ml_dec = min(ml.quantity, move.product_uom._compute_quantity(quantity, ml.product_uom_id, round=False))
                 if float_is_zero(qty_ml_dec, precision_rounding=ml.product_uom_id.rounding):
                     continue
                 if float_compare(ml.quantity, qty_ml_dec, precision_rounding=ml.product_uom_id.rounding) == 0 and ml.state not in ['done', 'cancel']:
                     mls_to_unlink.add(ml.id)
                 else:
                     ml.quantity -= qty_ml_dec
-                quantity -= move.product_uom._compute_quantity(qty_ml_dec, move.product_uom, round=False)
+                quantity -= ml.product_uom_id._compute_quantity(qty_ml_dec, move.product_uom, round=False)
             self.env['stock.move.line'].browse(mls_to_unlink).unlink()
 
         def _process_increase(move, quantity):
@@ -532,9 +535,7 @@ Please change the quantity done or the rounding precision of your unit of measur
             if not warehouse:  # No prediction possible if no warehouse.
                 continue
             moves = self.browse(moves_ids)
-            moves_per_location = defaultdict(lambda: self.env['stock.move'])
-            for move in moves:
-                moves_per_location[move.location_id] |= move
+            moves_per_location = moves.grouped('location_id')
             for location, mvs in moves_per_location.items():
                 forecast_info = mvs._get_forecast_availability_outgoing(warehouse, location)
                 for move in mvs:
@@ -2447,8 +2448,8 @@ Please change the quantity done or the rounding precision of your unit of measur
             return
 
         domains = [
-            [('product_id', '=', move.product_id.id), ('location_id', '=', move.location_dest_id.id)]
-            for move in self
+            [('product_id', 'in', moves.product_id.ids), ('location_id', '=', location_dest.id)]
+            for location_dest, moves in self.grouped('location_dest_id').items()
         ]
         static_domain = [('state', 'in', ['confirmed', 'partially_available']),
                          ('procure_method', '=', 'make_to_stock'),
@@ -2611,7 +2612,7 @@ Please change the quantity done or the rounding precision of your unit of measur
                     ),
                 ),
             ),
-            'readOnly': False,
+            'readOnly': len(self) > 1,
         }
 
     def _is_incoming(self):

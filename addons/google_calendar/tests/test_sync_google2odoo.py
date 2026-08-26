@@ -1461,6 +1461,42 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         }, timeout=3)
 
     @patch_api
+    def test_attendee_not_dropped_when_other_email_matches_alias(self):
+        """ Ensure no attendees are dropped when one Google attendee's email matches a mail alias """
+        alias_domain = self.env['mail.alias.domain'].create({'name': 'test-alias.example.com'})
+        model_id = self.env['ir.model']._get_id('calendar.event')
+        alias = self.env['mail.alias'].create({
+            'alias_name': 'calendar-events',
+            'alias_model_id': model_id,
+            'alias_domain_id': alias_domain.id,
+        })
+        alias_email = alias.alias_full_name  # 'calendar-events@test-alias.example.com'
+
+        partner_a, partner_b = self.env['res.partner'].create([
+            {'name': 'Partner A', 'email': 'partner.a@example.com'},
+            {'name': 'Partner B', 'email': 'partner.b@example.com'},
+        ])
+
+        synced = self.env['calendar.event']._sync_google2odoo(GoogleEvent([{
+            'id': 'test_alias_attendee_sync',
+            'summary': 'Test Alias Attendee',
+            'updated': self.now,
+            'organizer': {'email': partner_a.email},
+            'attendees': [
+                {'email': partner_a.email, 'responseStatus': 'accepted'},
+                {'email': alias_email, 'responseStatus': 'accepted'},
+                {'email': partner_b.email, 'responseStatus': 'needsAction'},
+            ],
+            'reminders': {'useDefault': True},
+            'start': {'dateTime': '2020-01-13T16:00:00+01:00', 'timeZone': 'Europe/Brussels', 'date': None},
+            'end': {'dateTime': '2020-01-13T17:00:00+01:00', 'timeZone': 'Europe/Brussels', 'date': None},
+            'visibility': 'public',
+        }]))
+        self.assertEqual(len(synced.partner_ids), 2, "The alias-matched attendee must not be added as a partner")
+        self.assertIn(partner_a, synced.partner_ids, "partner_a must not be dropped when another attendee email matches an alias")
+        self.assertIn(partner_b, synced.partner_ids, "partner_b must not be dropped when another attendee email matches an alias")
+
+    @patch_api
     def test_attendee_recurrence_answer(self):
         """ Write on a recurrence to update all attendee answers """
         other_user = new_test_user(self.env, login='calendar-user')
@@ -2546,4 +2582,33 @@ class TestSyncGoogle2Odoo(TestSyncGoogle):
         events = recurrence.calendar_event_ids.sorted('start')
         self.assertEqual(len(events), 3, "The new recurrence must have three events.")
         check_organizer_as_single_attendee(self, recurrence, self.organizer_user)
+
+    @patch_api
+    def test_recurrence_until_utc_boundary_negative_timezone(self):
+        """
+        When Google sends UNTIL=...Z, the UTC datetime must be converted to the
+        recurrence's local timezone before extracting the cutoff date.
+
+        UNTIL=20231026T025959Z = 2023-10-25T23:59:59-03:00 in America/Argentina/Buenos_Aires.
+        Local cutoff date: Oct 25. Last valid Thursday: Oct 19.
+        """
+        google_id = 'recurrence_until_tz_test'
+        values = [{
+            'id': google_id,
+            'summary': 'Weekly Thursday',
+            'recurrence': ['RRULE:FREQ=WEEKLY;BYDAY=TH;UNTIL=20231026T025959Z'],
+            'start': {'dateTime': '2023-10-05T12:00:00-03:00', 'timeZone': 'America/Argentina/Buenos_Aires', 'date': None},
+            'end': {'dateTime': '2023-10-05T13:00:00-03:00', 'timeZone': 'America/Argentina/Buenos_Aires', 'date': None},
+            'reminders': {'useDefault': True},
+            'updated': self.now,
+        }]
+        recurrence = self.env['calendar.recurrence']._sync_google2odoo(GoogleEvent(values))
+        self.assertEqual(recurrence.event_tz, 'America/Argentina/Buenos_Aires')
+        # Local cutoff is Oct 25 -> last valid Thursday is Oct 19
+        self.assertEqual(recurrence.until, date(2023, 10, 25), "until must be the local date, not the UTC date")
+        event_starts = recurrence.calendar_event_ids.mapped('start')
+        self.assertFalse(
+            any(e.date() == date(2023, 10, 26) for e in event_starts),
+            "No event should be created on Oct 26 (the UTC boundary date)",
+        )
         self.assertGoogleAPINotCalled()

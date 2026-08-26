@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 18.0+e\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-02-16 16:38+0000\n"
-"PO-Revision-Date: 2026-05-22 08:16+0000\n"
+"PO-Revision-Date: 2026-08-14 04:09+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-18/base/"
 "ja/>\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_at_reports
@@ -442,8 +442,8 @@ msgid ""
 msgstr ""
 "\n"
 "\n"
-"メモ: これは複数の会社による問題の可能性があります。Odoo内で会社を変更するこ"
-"とで解決するかもしれません。"
+"メモ: マルチカンパニーの設定による問題かもしれません。Odoo内で会社を切り替え"
+"てみてください。"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_jp
@@ -560,8 +560,8 @@ msgid ""
 msgstr ""
 "\n"
 "\n"
-"これは複数の会社による問題のようですが、いずれにせよレコードにアクセスするた"
-"めの適切な会社へのアクセス権がありません。"
+"これはマルチカンパニーに起因する問題のようですが、いずれにせよ、このレコード"
+"にアクセスするための適切な会社へのアクセス権がありません。"
 
 #. module: base
 #. odoo-python
@@ -574,8 +574,8 @@ msgid ""
 msgstr ""
 "\n"
 "\n"
-"これは複数の会社による問題のようです。会社を切替えることでレコードにアクセス"
-"できるかもしれません: %s."
+"これはマルチカンパニーに起因する問題のようです。会社を「%s」に切り替えると、"
+"このレコードにアクセスできる可能性があります。"
 
 #. module: base
 #: model:ir.module.module,description:base.module_pos_epson_printer
@@ -861,7 +861,7 @@ msgid ""
 "European Union."
 msgstr ""
 "\n"
-"統計内レポートに在庫管理を追加するモジュール。\n"
+"Intrastatレポートに在庫管理を追加するモジュール。\n"
 "================================================== ==========\n"
 "\n"
 "このモジュールは、欧州連合の国間で取引される商品の詳細を提供します。"
@@ -6740,9 +6740,9 @@ msgid ""
 "VAT in the Intrastat XML report.\n"
 msgstr ""
 "\n"
-"申告用のイントラスタットXMLレポートを作成します。\n"
-"イントラスタットXMLレポートに、商品の原産国およびパートナーVATを指定する可能"
-"性を追加しました。\n"
+"申告用のintrastatXMLレポートを作成します。\n"
+"intrastatXMLレポートに、商品の原産国およびパートナーVATを指定する可能性を追加"
+"しました。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_nl_intrastat
@@ -8160,8 +8160,8 @@ msgstr ""
 "一括メールイベントセッションスピーカー\n"
 "==============================\n"
 "\n"
-"ブリッジモジュールは、イベントトセッションスピーカーの一括メールを容易にする"
-"ためにUX要件を追加します。\n"
+"ブリッジモジュールは、イベントセッションスピーカーの一括メールを容易にするた"
+"めにUX要件を追加します。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_mrp_mps
@@ -8200,6 +8200,7 @@ msgstr ""
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_mr_reports
+#, fuzzy
 msgid ""
 "\n"
 "Mauritania accounting reports.\n"
@@ -8207,14 +8208,22 @@ msgid ""
 "-Profit and Loss\n"
 "-Balance Sheet\n"
 msgstr ""
+"\n"
+"モーリタニアの会計報告書。\n"
+"====================================================\n"
+"-損益計算書\n"
+"-貸借対照表\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_mr
+#, fuzzy
 msgid ""
 "\n"
 "Mauritania basic package that contains the chart of accounts, the taxes, tax "
 "reports, etc.\n"
 msgstr ""
+"\n"
+"勘定科目表、税金、税務報告書などを含むモーリタニア向け基本パッケージ。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_mx_hr_payroll
@@ -14767,10 +14776,13 @@ msgstr ""
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_hr_edi
+#, fuzzy
 msgid ""
 "\n"
 "e-invoicing for Croatia\n"
 msgstr ""
+"\n"
+"クロアチア向け電子請求書\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_rs_edi
@@ -16714,30 +16726,43 @@ msgstr "会計/フリートブリッジ"
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_2
 #: model_terms:res.partner,website_description:base.res_partner_4
+#, fuzzy
 msgid ""
 "Acme Corporation designs, develops, integrates and supports HR and Supply\n"
 "                Chain processes in order to make our customers more "
 "productive,\n"
 "                responsive and profitable."
 msgstr ""
+"Acme Corporationは、顧客の生産性、\n"
+"                対応力、収益性を高めるため、\n"
+"                人事およびサプライチェーンプロセスの設計、開発、統合、および"
+"サポートを行っています。"
 
 #. module: base
 #: model:res.partner,website_short_description:base.res_partner_2
 #: model:res.partner,website_short_description:base.res_partner_4
+#, fuzzy
 msgid ""
 "Acme Corporation designs, develops, integrates and supports HR and Supply "
 "Chain processes in order to make our customers more productive, responsive "
 "and profitable."
 msgstr ""
+"Acme Corporationは、顧客の生産性、対応力、収益性を高めるため、人事および"
+"サプライチェーンプロセスの設計、開発、統合、およびサポートを行っています。"
 
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_2
 #: model_terms:res.partner,website_description:base.res_partner_4
+#, fuzzy
 msgid ""
 "Acme Corporation integrates ERP for Global Companies and supports PME\n"
 "                with Open Sources software to manage their businesses. Our\n"
 "                consultants are experts in the following areas:"
 msgstr ""
+"Acme Corporationは、グローバル企業向けにERPを統合するとともに、\n"
+"                オープンソースソフトウェアを活用して中小企業(PME)のビジネス管"
+"理を支援しています。\n"
+"                当社のコンサルタントは、以下の分野における専門家です："
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_act_window_view__act_window_id
@@ -17147,8 +17172,9 @@ msgstr "追加"
 
 #. module: base
 #: model:res.partner,website_short_description:base.res_partner_address_31
+#, fuzzy
 msgid "Addison Olson is a mighty sales representative at Acme Corporation."
-msgstr ""
+msgstr "アディソン・オルソンは、Acme Corporationの非常に優秀な営業担当者です。"
 
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_address_31
@@ -17157,9 +17183,9 @@ msgid ""
 "    notably for selling mouse traps. With that trick he cut\n"
 "    IT budget by almost half within the last 2 years."
 msgstr ""
-"Addison Olsonは、<b>10年以来</b>IT部門で働いています。\n"
-"彼は特にネズミ捕りを売ることで知られています。\n"
-"その技術で、彼は過去2年間でIT予算をほぼ半分に削減しました。"
+"アディソン・オルソンは、IT業界で<b>10年以上</b>のキャリアの持ち主です。\n"
+"彼は特に、無駄を徹底的に排除する画期的なアプローチで知られています。\n"
+"この独自の手法により、過去2年間でIT予算をほぼ半減させることに成功しました。"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_ro_efactura_synchronize
@@ -18077,7 +18103,7 @@ msgstr "会計小切手印刷で照合機能を使用できるようにします
 #: model:ir.module.module,summary:base.module_website_delivery_sendcloud
 #: model:ir.module.module,summary:base.module_website_sale_fedex
 msgid "Allows website customers to choose delivery pick-up points"
-msgstr "ウェブサイト顧客が配送ピックアップ地点を選択できるようにします。"
+msgstr "ウェブサイトの顧客が、配送の受取拠点を選択できるようにします。"
 
 #. module: base
 #: model:ir.module.category,description:base.module_category_productivity_documents
@@ -19166,7 +19192,7 @@ msgstr "アポイントメントリード生成"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_appointment_microsoft_calendar
 msgid "Appointment Microsoft Calendar"
-msgstr "アポイントメントMicrosoftカレンダ"
+msgstr "アポイントメントMicrosoftカレンダー"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_appointment_sms
@@ -20353,8 +20379,9 @@ msgstr "Avataxブラジル"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_br_edi_fiscal_reform
+#, fuzzy
 msgid "Avatax Brazil Fiscal Reform"
-msgstr ""
+msgstr "AvaTaxブラジル税制改革対応"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_br_avatax_sale
@@ -20363,13 +20390,15 @@ msgstr "Avataxブラジル販売"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_br_edi_sale_fiscal_reform
+#, fuzzy
 msgid "Avatax Brazil Sale Fiscal Reform"
-msgstr ""
+msgstr "AvaTaxブラジル販売税制改革対応"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_br_website_sale_fiscal_reform
+#, fuzzy
 msgid "Avatax Brazil eCommerce Fiscal Reform"
-msgstr ""
+msgstr "AvaTaxブラジルeコマース税制改革対応"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_avatax_stock
@@ -20412,8 +20441,8 @@ msgid ""
 "Azure Interior brings honesty and seriousness to wood industry while helping "
 "customers deal with trees, flowers and fungi."
 msgstr ""
-"Azure Interiorは、顧客が木、花、菌類を扱うのを支援しながら、木材産業に誠実さ"
-"と真剣さをもたらします。"
+"木材業界に誠実さと真摯なモノづくりを。Azure Interiorは、木や花、菌類といった"
+"自然の恵みと向き合うお客様をサポートします。"
 
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_B
@@ -21244,9 +21273,11 @@ msgid ""
 "                notably for selling mouse traps. With that trick he cut\n"
 "                IT budget by almost half within the last 2 years."
 msgstr ""
-"Brandonは<b>10年以来</b>IT部門で働いています。\n"
-"彼は特にネズミ捕りを売ることで知られています。\n"
-"その技術で、彼は過去2年間でIT予算をほぼ半分に削減しました。"
+"ブランドンはIT業界で<b>10年以上</b>のキャリアの持ち主です。\n"
+"                彼は特に、無駄を徹底的に排除する画期的なアプローチで知られて"
+"います。\n"
+"                この独自の手法により、過去2年間でIT予算をほぼ半減させることに"
+"成功しました。"
 
 #. module: base
 #: model:res.country,name:base.br
@@ -22099,10 +22130,10 @@ msgid ""
 "the legislation of the country in which the client is located."
 msgstr ""
 "一部の国では、国内法に従い、請求書の金額に対して源泉徴収が適用されます。源泉"
-"徴収は、クライアントが税務当局に支払うことになります。いかなる場合において"
-"も、My Company（San Francisco）は、その国の法律に関連する費用に関与することは"
-"できません。従って、請求書の金額は、その全額がMy Company (San Francisco)に対"
-"するものであり、顧客が所在する国の法律に関連する費用は含まれません。"
+"徴収は、顧客が税務当局に支払うことになります。いかなる場合においても、My "
+"Company（San Francisco）は、その国の法律に関連する費用に関与することはできま"
+"せん。従って、請求書の金額は、その全額がMy Company (San Francisco)に対するも"
+"のであり、顧客が所在する国の法律に関連する費用は含まれません。"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_certificate
@@ -22552,9 +22583,11 @@ msgid ""
 "                notably for selling mouse traps. With that trick he cut\n"
 "                IT budget by almost half within the last 2 years."
 msgstr ""
-"Colleen Diazは、<b>10年以来</b>IT部門で働いています。\n"
-"彼は特にネズミ捕りを売ることで知られています。\n"
-"その技術で、彼は過去2年間でIT予算をほぼ半分に削減しました。"
+"Colleen DiazはIT業界で<b>10年以上</b>のキャリアの持ち主です。\n"
+"                彼は特に、無駄を徹底的に排除する画期的なアプローチで知られて"
+"います。\n"
+"                この独自の手法により、過去2年間でIT予算をほぼ半減させることに"
+"成功しました。"
 
 #. module: base
 #: model:res.country,name:base.co
@@ -22932,7 +22965,7 @@ msgstr "構成"
 #. module: base
 #: model:ir.model,name:base.model_res_config_settings
 msgid "Config Settings"
-msgstr "コンフィグ設定"
+msgstr "構成設定"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.config_wizard_step_view_form
@@ -23317,11 +23350,15 @@ msgstr "メールアドレスのない連絡先は作成できません！"
 #. module: base
 #. odoo-python
 #: code:addons/fields.py:0
+#, fuzzy
 msgid ""
 "Couldn't generate a company-dependent domain for field %s. The model doesn't "
 "have a 'company_id' or 'company_ids' field, and isn't company-dependent "
 "either."
 msgstr ""
+"フィールド %s の会社依存ドメインを生成できませんでした。モデルに "
+"'company_id' または 'company_ids' フィールドが存在せず、会社依存（company-"
+"dependent）の設定にもなっていません。"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model__count
@@ -23846,8 +23883,9 @@ msgstr "クロアチア - 会計レポート"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_hr_edi
+#, fuzzy
 msgid "Croatia - e-invoicing"
-msgstr ""
+msgstr "クロアチア - 電子請求書"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_cron_progress__cron_id
@@ -24509,10 +24547,13 @@ msgstr "削除権限"
 #. module: base
 #. odoo-python
 #: code:addons/base/models/res_users.py:0
+#, fuzzy
 msgid ""
 "Deleting the public user is not allowed. Deleting this profile will "
 "compromise critical functionalities."
 msgstr ""
+"一般ユーザを削除することは許可されていません。このプロファイルを削除すると、"
+"重要な関数が損なわれます。"
 
 #. module: base
 #. odoo-python
@@ -24887,7 +24928,7 @@ msgstr "破棄"
 #: model_terms:res.partner,website_description:base.res_partner_12
 #: model_terms:res.partner,website_description:base.res_partner_5
 msgid "Discover more"
-msgstr "詳細をご覧ください"
+msgstr "さらに詳しく"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_productivity_discuss
@@ -25363,8 +25404,9 @@ msgstr "ドン"
 
 #. module: base
 #: model:res.partner,website_short_description:base.res_partner_address_3
+#, fuzzy
 msgid "Douglas Fletcher is a mighty functional consultant at Acme Corporation"
-msgstr ""
+msgstr "Douglas FletcherはAcme Corporationの非常に優秀な機能コンサルタントです"
 
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_address_3
@@ -26052,8 +26094,11 @@ msgid ""
 "* Traceability report\n"
 "* Cost Structure report (mrp_account)"
 msgstr ""
-"MRPの企業版拡張*作業オーダ計画。製造指図/作業区ごとにグループ化されたガント"
-"ビューによる計画の確認*トレーサビリティレポート*原価構造レポート(mrp_account)"
+"MRP用エンタープライズ拡張機能\n"
+"* 作業オーダの計画。製造オーダ/作業区ごとにグループ化された"
+"ガントチャートビューで計画を確認\n"
+"* トレーサビリティレポート\n"
+"* 原価構造レポート (mrp_account)"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_contacts_enterprise
@@ -26222,7 +26267,7 @@ msgstr "エストニア - 丸め"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_ee_intrastat
 msgid "Estonia Intrastat Declaration"
-msgstr "エストニアイントラスタット申告"
+msgstr "エストニアintrastat申告"
 
 #. module: base
 #: model:res.country,name:base.sz
@@ -27003,9 +27048,10 @@ msgstr "エクスポート完了"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_pl_edi
+#, fuzzy
 msgid ""
 "Export FA(3) compliant XML invoices and prepare for integration with KSeF."
-msgstr ""
+msgstr "FA(3)準拠のXML請求書をエクスポートし、KSeFとの統合に備えます。"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_exports__export_fields
@@ -27475,7 +27521,7 @@ msgstr "フィールドサービスレポート-販売"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_industry_fsm_stock
 msgid "Field Service Stock"
-msgstr "フィールドサービスストック"
+msgstr "フィールドサービス在庫"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_actions_server__update_field_type
@@ -27871,8 +27917,9 @@ msgstr "花屋、庭園、花、自然、緑、美しさ、店舗"
 
 #. module: base
 #: model:res.partner,website_short_description:base.res_partner_address_4
+#, fuzzy
 msgid "Floyd Steward is a mighty analyst at Acme Corporation."
-msgstr ""
+msgstr "Floyd StewardはAcme Corporationの優秀なアナリストです。"
 
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_address_4
@@ -27881,9 +27928,11 @@ msgid ""
 "    notably for selling mouse traps. With that trick he cut\n"
 "    IT budget by almost half within the last 2 years."
 msgstr ""
-"Floyd Stewardは、<b>10年以来</b>IT部門で働いています。\n"
-"彼は特にネズミ捕りを売ることで知られています。\n"
-"その技術で、彼は過去2年間でIT予算をほぼ半分に削減しました。"
+"Floyd StewardはIT業界で<b>10年以上</b>のキャリアの持ち主です。\n"
+"                彼は特に、無駄を徹底的に排除する画期的なアプローチで知られて"
+"います。\n"
+"                この独自の手法により、過去2年間でIT予算をほぼ半減させることに"
+"成功しました。"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__report_paperformat__format__folio
@@ -28129,7 +28178,7 @@ msgstr "フランス領ギアナ"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_fr_intrastat
 msgid "French Intrastat Declaration"
-msgstr "フランスイントラスタット申告"
+msgstr "フランスintrastat申告"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_fr_intrastat_services
@@ -28458,7 +28507,7 @@ msgstr "ジョージア"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_de_intrastat
 msgid "German Intrastat Declaration"
-msgstr "ドイツイントラスタット申告"
+msgstr "ドイツintrastat申告"
 
 #. module: base
 #: model:res.country,name:base.de
@@ -28636,9 +28685,11 @@ msgid ""
 "                IT budget by almost half within the last 2 years.\n"
 "                Famous Senior Consultant."
 msgstr ""
-"Gordon Owensは、IT領域で<b>10年</b>働いています。\n"
-"                彼はネズミ捕りを販売することで知られています。\n"
-"                彼はその手腕で過去2年間でIT予算をほぼ半分にしました。\n"
+"Gordon OwensはIT業界で<b>10年以上</b>のキャリアの持ち主です。\n"
+"                彼は特に、無駄を徹底的に排除する画期的なアプローチで知られて"
+"います。\n"
+"                この独自の手法により、過去2年間でIT予算をほぼ半減させることに"
+"成功しました。\n"
 "                有名なシニアコンサルタントです。"
 
 #. module: base
@@ -29001,7 +29052,7 @@ msgstr "便利屋サービス"
 #: model_terms:res.partner,website_description:base.res_partner_12
 #: model_terms:res.partner,website_description:base.res_partner_5
 msgid "Happy to be Sponsor"
-msgstr "スポンサーになりたい"
+msgstr "協賛スポンサーです"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_hw_escpos
@@ -30149,7 +30200,7 @@ msgstr "アプリ内課金"
 #: model_terms:ir.ui.view,arch_db:base.view_currency_search
 #: model_terms:ir.ui.view,arch_db:base.view_view_search
 msgid "Inactive"
-msgstr "無効"
+msgstr "非アクティブ"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_search
@@ -32077,7 +32128,7 @@ msgstr "ソーシャルにおけるリードの統計と生成"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.module_view_kanban
 msgid "Learn More"
-msgstr "もっと知る"
+msgstr "さらに詳しく"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_in_hr_holidays
@@ -32243,7 +32294,7 @@ msgstr "制限"
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_logging__line
 msgid "Line"
-msgstr "ライン"
+msgstr "行"
 
 #. module: base
 #. odoo-python
@@ -32435,7 +32486,7 @@ msgstr "リトアニア - SAF-T インポート"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_lt_intrastat
 msgid "Lithuanian Intrastat Declaration"
-msgstr "リトアニアイントラスタット申告"
+msgstr "リトアニアintrastat申告"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_lt_saft
@@ -33471,13 +33522,15 @@ msgstr "モーリタニア"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_mr
+#, fuzzy
 msgid "Mauritania - Accounting"
-msgstr ""
+msgstr "モーリタニア - 会計"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_mr_reports
+#, fuzzy
 msgid "Mauritania - Accounting Reports"
-msgstr ""
+msgstr "モーリタニア - 会計レポート"
 
 #. module: base
 #: model:res.country,name:base.mu
@@ -33890,8 +33943,9 @@ msgstr "ミス"
 #. module: base
 #. odoo-python
 #: code:addons/template_inheritance.py:0
+#, fuzzy
 msgid "Missing 'expr' attribute in xpath specification"
-msgstr ""
+msgstr "xpath 仕様で 'expr' 属性が未設定です"
 
 #. module: base
 #. odoo-python
@@ -34626,7 +34680,7 @@ msgstr "オランダ - SBRステータス情報サービス"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_nl_intrastat
 msgid "Netherlands Intrastat Declaration"
-msgstr "オランダイントラスタット申告"
+msgstr "オランダintrastat申告"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_users_form_simple_modif
@@ -34750,10 +34804,13 @@ msgid ""
 "                from 1 to 55 employees mostly by reselling services on\n"
 "                Odoo."
 msgstr ""
-"ニコール<b>は20年以来</b>IT部門で働いています。彼女はウェブサイトの開発を支援"
-"するソフトウェアを開発しています。彼女は30歳で最初の会社を売却し、主にOdooで"
-"サービスを再販することにより、AzureInteriorを1人から55人の従業員に成長させる"
-"ことができました。"
+"Nicoleは、IT業界で<b>20年のキャリア</b>を持っています。彼女は\n"
+"                ウェブサイト制作を支援するソフトウェアを開発しています。  30"
+"歳で最初の会社を\n"
+"                売却し、主にOdoo上でのサービス転売によって、Azure Interior社"
+"を\n"
+"                従業員1名から55名規模の企業へと成長\n"
+"                させました。"
 
 #. module: base
 #: model:res.country,name:base.ne
@@ -34815,8 +34872,9 @@ msgstr "現在、この操作を許可しているグループはありません
 #. module: base
 #. odoo-python
 #: code:addons/fields.py:0
+#, fuzzy
 msgid "No inverse field \"%(inverse_field)s\" found for \"%(comodel)s\""
-msgstr ""
+msgstr "逆フィールド「%(inverse_field)s」(「%(comodel)s」用)が見つかりません"
 
 #. module: base
 #. odoo-python
@@ -34983,7 +35041,7 @@ msgstr "外部IDに十分なアクセス権がありません \"%(module)s.%(xml
 #: model_terms:ir.ui.view,arch_db:base.view_groups_form
 #: model_terms:ir.ui.view,arch_db:base.view_model_form
 msgid "Notes"
-msgstr "ノート"
+msgstr "メモ"
 
 #. module: base
 #: model:ir.module.module,description:base.module_theme_notes
@@ -39394,8 +39452,9 @@ msgstr ""
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_pl_edi
+#, fuzzy
 msgid "Polish E-Invoicing FA(3)"
-msgstr ""
+msgstr "ポーランド電子請求書 FA(3)"
 
 #. module: base
 #: model:res.groups,name:base.group_portal
@@ -40456,7 +40515,7 @@ msgstr "ライブイベントセッションのクイズ"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_event_track_quiz
 msgid "Quizzes on Tracks"
-msgstr "トラックのクイズ"
+msgstr "セッションのクイズ"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_event_track_quiz
@@ -41496,7 +41555,7 @@ msgstr "SEPA諸国"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_iso20022
 msgid "SEPA Credit Transfer / ISO20022"
-msgstr "SEPAクレジット振替 / ISO20022"
+msgstr "SEPA送金(SCT) / ISO20022"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_sepa_direct_debit
@@ -43966,8 +44025,9 @@ msgstr "サプライチェーン"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_pl_edi
+#, fuzzy
 msgid "Support for FA(3) electronic invoices in Poland via KSeF"
-msgstr ""
+msgstr "ポーランドにおけるKSeF経由のFA(3)電子請求書のサポート"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_event_track_live
@@ -44053,8 +44113,9 @@ msgstr "Swissdec認定給与計算(ELM 5.0)"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_ch_hr_payroll_elm_transmission_5_3
+#, fuzzy
 msgid "Swissdec Certified Payroll ELM 5.3"
-msgstr ""
+msgstr "Swissdec認定給与計算 ELM 5.3"
 
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.language_install_view_form_lang_switch
@@ -44221,8 +44282,9 @@ msgstr "台湾 - 電子請求"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_tw_edi_ecpay_website_sale
+#, fuzzy
 msgid "Taiwan - E-invoicing Ecommerce"
-msgstr ""
+msgstr "台湾 - 電子請求書 eコマース"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_company__font__tajawal
@@ -44253,7 +44315,7 @@ msgstr "人材獲得の経験"
 #: model_terms:res.partner,website_description:base.res_partner_2
 #: model_terms:res.partner,website_description:base.res_partner_4
 msgid "Talent Management"
-msgstr "タレントマネジメント"
+msgstr "人材管理"
 
 #. module: base
 #: model:res.currency,currency_subunit_label:base.MWK
@@ -44500,7 +44562,7 @@ msgstr "全CRMフローをテストする"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_test_event_full
 msgid "Test Full Event Flow"
-msgstr "全てのイベントフローをテストする"
+msgstr "イベントの全フローテスト"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_test_website_slides_full
@@ -44741,8 +44803,8 @@ msgid ""
 "The Jackson Group brings honesty and seriousness to wood industry while "
 "helping customers deal with trees, flowers and fungi."
 msgstr ""
-"ジャクソングループは、顧客が木、花、菌類を扱うのをお手伝いしながら、木材産業"
-"で誠実に真剣に向き合っています。"
+"Jackson Groupは、樹木や草花、菌類のケアを通じてお客様の課題を解決し、木材業界"
+"に「誠実」と「信頼」をお届けします。"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_res_lang__url_code
@@ -45897,8 +45959,8 @@ msgid ""
 "This module allows ecommerce users to choose to deliver to Pick-Up points "
 "for the FEDEX connector."
 msgstr ""
-"このモジュールにより、eコマースユーザはFEDEXコネクタのピックアップ地点への配"
-"送を選択することができます。"
+"このモジュールにより、eコマースユーザはFEDEXコネクタの受取拠点への配送を選択"
+"することができます。"
 
 #. module: base
 #: model:ir.module.module,description:base.module_website_delivery_sendcloud
@@ -45906,8 +45968,8 @@ msgid ""
 "This module allows ecommerce users to choose to deliver to Pick-Up points "
 "for the Sendcloud connector."
 msgstr ""
-"このモジュールにより、eコマースユーザはSendcloudコネクタのピックアップ地点へ"
-"の配送を選択できるようになります。"
+"このモジュールにより、eコマースユーザはSendcloudコネクタの受取拠点への配送を"
+"選択できるようになります。"
 
 #. module: base
 #: model:ir.module.module,description:base.module_website_hr_recruitment
@@ -46481,7 +46543,7 @@ msgstr "終了日"
 #: model:ir.model.fields.selection,name:base.selection__res_users_deletion__state__todo
 #: model_terms:ir.ui.view,arch_db:base.config_wizard_step_view_search
 msgid "To Do"
-msgstr "未処理"
+msgstr "未着手"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_module_module__state__to_install
@@ -46564,10 +46626,12 @@ msgid ""
 "                IT budget by almost half within the last 2 years.\n"
 "                Famous Managing Partner."
 msgstr ""
-"Toni Rhodesは、<b>10年以来</b>IT部門で働いています。\n"
-"彼は特にネズミ捕りを売ることで知られています。\n"
-"その技術で、彼は過去2年間でIT予算をほぼ半分に削減しました。有名なマネージング"
-"パートナー。"
+"Toni Rhodesは、IT業界で<b>10年以上</b>のキャリアの持ち主です。\n"
+"                彼は特に、無駄を徹底的に排除する画期的なアプローチで知られて"
+"います。\n"
+"                この独自の手法により、過去2年間でIT予算をほぼ半減させることに"
+"成功しました。\n"
+"                有名なマネージング・パートナーです。"
 
 #. module: base
 #. odoo-python
@@ -46987,8 +47051,9 @@ msgstr "URLコード"
 #. module: base
 #. odoo-python
 #: code:addons/base/models/ir_attachment.py:0
+#, fuzzy
 msgid "URL attachment (%s) shouldn't be migrated to local."
-msgstr ""
+msgstr "添付のURL (%s) はローカルに移行しないでください。"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_actions_server__webhook_url
@@ -47316,7 +47381,7 @@ msgstr "不明"
 #. odoo-python
 #: code:addons/models.py:0
 msgid "Unknown database error: '%s'"
-msgstr "未知のデータベースエラー: '%s'"
+msgstr "不明なデータベースエラー: '%s'"
 
 #. module: base
 #. odoo-python
@@ -47498,8 +47563,9 @@ msgstr "ウルグアイ-会計"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_uy_edi_stock
+#, fuzzy
 msgid "Uruguay - E-Remitos"
-msgstr ""
+msgstr "ウルグアイ - E-Remitos"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_uy_edi
@@ -48501,8 +48567,9 @@ msgstr "ウェブサイト支払い"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_website_sale
+#, fuzzy
 msgid "Website Sale"
-msgstr ""
+msgstr "ウェブサイト販売"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_test_website_sale_full
@@ -48831,8 +48898,8 @@ msgid ""
 "Wood Corner brings honesty and seriousness to wood industry while helping "
 "customers deal with trees, flowers and fungi."
 msgstr ""
-"ウッドコーナーは、顧客が木、花、菌類を扱うのを助けながら、木材産業に誠実さと"
-"真剣さをもたらします。"
+"Wood Cornerは、樹木や草花、菌類のケアを通じてお客様の課題を解決し、木材業界に"
+"「誠実」と「信頼」をお届けしています。"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_hr_work_entry
@@ -49916,12 +49983,12 @@ msgstr "多対多"
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_model_fields__ttype__many2one
 msgid "many2one"
-msgstr "多対1"
+msgstr "many2one"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_model_fields__ttype__many2one_reference
 msgid "many2one_reference"
-msgstr "多対1_参照"
+msgstr "many2one_reference"
 
 #. module: base
 #. odoo-python

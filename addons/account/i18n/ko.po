@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 17:37+0000\n"
-"PO-Revision-Date: 2026-05-16 09:06+0000\n"
+"POT-Creation-Date: 2026-07-10 17:38+0000\n"
+"PO-Revision-Date: 2026-07-11 18:32+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Korean <https://translate.odoo.com/projects/odoo-18/account/"
 "ko/>\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -9145,7 +9145,7 @@ msgstr "청구서 오류"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_journal_dashboard_kanban_view
 msgid "Invoices late"
-msgstr "청구서 지연"
+msgstr "연체 중인 청구서"
 
 #. module: account
 #. odoo-python
@@ -10071,6 +10071,7 @@ msgid "Looks great!"
 msgstr "입력 성공!"
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__loss
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Loss"
 msgstr "손실"
@@ -11046,7 +11047,7 @@ msgstr "메모"
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 msgid "Nothing to export."
-msgstr ""
+msgstr "내보낼 항목이 없습니다."
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__res_company__fiscalyear_last_month__11
@@ -11622,6 +11623,7 @@ msgstr ""
 "값을 재정의합니다."
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.view_account_analytic_line_filter_inherit_account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "P&L Accounts"
 msgstr "손익 계정"
@@ -12627,6 +12629,11 @@ msgid "Profit Account"
 msgstr "이익 계정"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_analytic_line__analytic_profitability
+msgid "Profitability"
+msgstr "수익성"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_res_partner__property_inbound_payment_method_line_id
 #: model:ir.model.fields,field_description:account.field_res_users__property_inbound_payment_method_line_id
 msgid "Property Inbound Payment Method Line"
@@ -13197,6 +13204,7 @@ msgstr "제한"
 #. odoo-python
 #: code:addons/account/wizard/accrued_orders.py:0
 #: model:ir.model.fields,field_description:account.field_digest_digest__kpi_account_total_revenue
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__revenue
 #: model:ir.model.fields.selection,name:account.selection__account_automatic_entry_wizard__account_type__income
 msgid "Revenue"
 msgstr "매출액"
@@ -13398,7 +13406,7 @@ msgstr "조정 모델 규칙"
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_bank_statement_line__running_balance
 msgid "Running Balance"
-msgstr "미사용 잔액"
+msgstr "누적 잔액"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__module_account_iso20022
@@ -15995,7 +16003,7 @@ msgstr "회사 통화로 표시된 전표 상의 잔존가액입니다."
 #. odoo-python
 #: code:addons/account/models/account_bank_statement.py:0
 msgid "The running balance (%s) doesn't match the specified ending balance."
-msgstr "현재 잔액 (%s)이 지정되어 있는 기말 잔액과 일치하지 않습니다."
+msgstr "누적 잔액(%s)이 지정되어 있는 기말 잔액과 일치하지 않습니다."
 
 #. module: account
 #. odoo-python
@@ -17118,6 +17126,11 @@ msgid ""
 msgstr ""
 "거래 내역 중 누락된 항목이 있어서 명세서를 생성할 수 없습니다. 계속하려면 거"
 "래 순서를 다시 조정하십시오."
+
+#. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__uncategorized
+msgid "Uncategorized"
+msgstr "미분류"
 
 #. module: account
 #. odoo-python

@@ -1,7 +1,8 @@
-from datetime import datetime
 from markupsafe import Markup
+from lxml import etree
 
 from odoo import _, api, models
+from odoo.addons.account.tools import dict_to_xml
 from odoo.addons.base.models.res_bank import sanitize_account_number
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare, float_is_zero, float_repr, format_list, html2plaintext
@@ -47,6 +48,7 @@ UOM_TO_UNECE_CODE = {
 # -------------------------------------------------------------------------
 # ELECTRONIC ADDRESS SCHEME (EAS), see https://docs.peppol.eu/poacc/billing/3.0/codelist/eas/
 # -------------------------------------------------------------------------
+DEPRECATED_PEPPOL_EAS = {'0037', '0213', '9955', '0193'}
 EAS_MAPPING = {
     'AD': {'9922': 'vat'},
     'AE': {'0235': 'vat'},
@@ -102,13 +104,13 @@ EAS_MAPPING = {
     # DOM-TOM
     'BL': {'0009': 'siret', '9957': 'vat', '0002': None},  # Saint Barthélemy
     'GF': {'0009': 'siret', '9957': 'vat', '0002': None},  # French Guiana
-    'GP': {'0009': 'siret', '9957': 'vat', '0002': None},  # Guadeloupe
+    'GP': {'0225': 'peppol_endpoint', '0009': 'siret', '9957': 'vat', '0002': None},  # Guadeloupe
     'MF': {'0009': 'siret', '9957': 'vat', '0002': None},  # Saint Martin
-    'MQ': {'0009': 'siret', '9957': 'vat', '0002': None},  # Martinique
+    'MQ': {'0225': 'peppol_endpoint', '0009': 'siret', '9957': 'vat', '0002': None},  # Martinique
     'NC': {'0009': 'siret', '9957': 'vat', '0002': None},  # New Caledonia
     'PF': {'0009': 'siret', '9957': 'vat', '0002': None},  # French Polynesia
     'PM': {'0009': 'siret', '9957': 'vat', '0002': None},  # Saint Pierre and Miquelon
-    'RE': {'0009': 'siret', '9957': 'vat', '0002': None},  # Réunion
+    'RE': {'0225': 'peppol_endpoint', '0009': 'siret', '9957': 'vat', '0002': None},  # Réunion
     'TF': {'0009': 'siret', '9957': 'vat', '0002': None},  # French Southern and Antarctic Lands
     'WF': {'0009': 'siret', '9957': 'vat', '0002': None},  # Wallis and Futuna
     'YT': {'0009': 'siret', '9957': 'vat', '0002': None},  # Mayotte
@@ -126,7 +128,7 @@ GST_COUNTRY_CODES = {
 EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES = {
     # EU Member States
     'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE',
-    'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH',
+    'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
 
     # EFTA Countries in the EEA
     'IS', 'LI', 'NO',
@@ -185,6 +187,25 @@ class AccountEdiCommon(models.AbstractModel):
     # HELPERS
     # -------------------------------------------------------------------------
 
+    def _vals_to_etree(self, vals):
+        document_node = vals['document_node']
+        return dict_to_xml(document_node, nsmap=document_node['_nsmap'], template=document_node['_template'])
+
+    def _etree_to_string(self, tree):
+        return etree.tostring(tree, xml_declaration=True, encoding='UTF-8')
+
+    def _define_document_type(self, vals, document_type):
+        vals['_document_type'] = {
+            'name': document_type,
+            'model': self,
+        }
+
+    def _get_document_type(self, vals):
+        return vals.get('_document_type', {}).get('name')
+
+    def _is_document(self, vals, *document_types):
+        return self._get_document_type(vals) in document_types
+
     def module_installed(self, module_name):
         return self.env['ir.module.module']._get(module_name).state == 'installed'
 
@@ -223,7 +244,7 @@ class AccountEdiCommon(models.AbstractModel):
     def _get_belgian_cocontractant_note(self, customer, supplier):
 
         if (invoice := self.env.context.get('tax_exemption_reason_invoice')) and customer.country_id.code == 'BE' and supplier.country_id == customer.country_id:
-            co_contractant = self.env['account.chart.template'].ref('fiscal_position_template_4', raise_if_not_found=False)
+            co_contractant = self.env['account.chart.template'].with_company(invoice.company_id).ref('fiscal_position_template_4', raise_if_not_found=False)
             if co_contractant and invoice.fiscal_position_id == co_contractant:
                 note = html2plaintext(invoice.fiscal_position_id.note) if invoice.fiscal_position_id.note else ''
                 return note or COCONTRACTANT_DEFAULT_NOTE
@@ -271,15 +292,12 @@ class AccountEdiCommon(models.AbstractModel):
             if customer.zip[:2] in ('51', '52'):
                 return create_dict(tax_category_code='M')  # Ceuta & Mellila
 
-        cocontractant_note = self._get_belgian_cocontractant_note(customer, supplier)
-        if cocontractant_note:
-            if not tax.amount:
-                return create_dict(
-                    tax_category_code='AE',
-                    tax_exemption_reason_code='VATEX-EU-AE',
-                    tax_exemption_reason=cocontractant_note
-                )
-            raise UserError(_("Invalid Tax Setup for Co-Contractor. Please apply the standard co-contractor tax, or ensure your custom tax uses a tax amount of 0"))
+        if cocontractant_note := not tax.amount and self._get_belgian_cocontractant_note(customer, supplier):
+            return create_dict(
+                tax_category_code='AE',
+                tax_exemption_reason_code='VATEX-EU-AE',
+                tax_exemption_reason=cocontractant_note
+            )
 
         if supplier.country_id == customer.country_id:
             if not tax or tax.amount == 0:
@@ -297,24 +315,26 @@ class AccountEdiCommon(models.AbstractModel):
             else:
                 return create_dict(tax_category_code='S')  # standard VAT
 
-        if supplier.country_id.code in EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES and supplier.vat:
+        supplier_in_eea = supplier.country_id.code in EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES
+        customer_in_eea = customer.country_id.code in EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES
+
+        if (supplier_in_eea or customer_in_eea) and supplier.vat:
             if tax.amount != 0 and not tax.has_negative_factor:
                 # otherwise, the validator will complain because G and K code should be used with 0% tax
                 # For purchase reverse-charge taxes for self-billed invoices, we put the zero-percent tax
                 # with code 'G' or 'K' that the buyer would have used, see explanation above.
                 return create_dict(tax_category_code='S')
-            if customer.country_id.code not in EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES:
-                return create_dict(
-                    tax_category_code='G',
-                    tax_exemption_reason_code='VATEX-EU-G',
-                    tax_exemption_reason=_('Export outside the EU'),
-                )
-            if customer.country_id.code in EUROPEAN_ECONOMIC_AREA_COUNTRY_CODES:
+            if supplier_in_eea and customer_in_eea:
                 return create_dict(
                     tax_category_code='K',
                     tax_exemption_reason_code='VATEX-EU-IC',
                     tax_exemption_reason=_('Intra-Community supply'),
                 )
+            return create_dict(
+                tax_category_code='G',
+                tax_exemption_reason_code='VATEX-EU-G',
+                tax_exemption_reason=_('Export outside the EU'),
+            )
 
         if tax.amount != 0:
             return create_dict(tax_category_code='S')
@@ -675,29 +695,11 @@ class AccountEdiCommon(models.AbstractModel):
         return lines_values, logs
 
     def _retrieve_invoice_line_vals(self, tree, document_type=False, qty_factor=1):
-        # Start and End date (enterprise fields)
-        xpath_dict = self._get_invoice_line_xpaths(document_type, qty_factor)
-        deferred_values = {}
-        start_date = end_date = None
-        if self.env['account.move.line']._fields.get('deferred_start_date'):
-            start_date_node = tree.find(xpath_dict['deferred_start_date'])
-            end_date_node = tree.find(xpath_dict['deferred_end_date'])
-            if start_date_node is not None and end_date_node is not None:  # there is a constraint forcing none or the two to be set
-                start_date = datetime.strptime(start_date_node.text.strip(), xpath_dict['date_format'])
-                end_date = datetime.strptime(end_date_node.text.strip(), xpath_dict['date_format'])
-            deferred_values = {
-                'deferred_start_date': start_date,
-                'deferred_end_date': end_date,
-            }
-
         line_vals = self._retrieve_line_vals(tree, document_type, qty_factor)
         if not line_vals.get('price_subtotal'):
             return None
 
-        return {
-            **line_vals,
-            **deferred_values,
-        }
+        return line_vals
 
     @api.model
     def _retrieve_rebate_val(self, tree, xpath_dict, quantity):
@@ -732,6 +734,13 @@ class AccountEdiCommon(models.AbstractModel):
             else:
                 discount_amount += amount
         return discount_amount, charges
+
+    def _get_basis_qty(self, tree, xpath_dict):
+        """ Return the base quantity used to derive the unit price from PriceAmount.
+        The standard UBL/CII divides PriceAmount by BaseQuantity to obtain the unit price upon
+        import.
+        """
+        return float(self._find_value(xpath_dict['basis_qty'], tree) or 1) or 1.0
 
     def _retrieve_line_vals(self, tree, document_type=False, qty_factor=1):
         """
@@ -775,7 +784,7 @@ class AccountEdiCommon(models.AbstractModel):
         """
         xpath_dict = self._get_line_xpaths(document_type, qty_factor)
         # basis_qty (optional)
-        basis_qty = float(self._find_value(xpath_dict['basis_qty'], tree) or 1) or 1.0
+        basis_qty = self._get_basis_qty(tree, xpath_dict)
 
         # gross_price_unit (optional)
         gross_price_unit = None

@@ -113,6 +113,10 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
     ####################################################
 
     def test_export_import_invoice(self):
+        company = self.company_data['company']
+        if "predict_bill_product" in company._fields:
+            company.predict_bill_product = True
+
         self.env['ir.config_parameter'].sudo().set_param('account_edi_ubl_cii.use_new_dict_to_xml_helpers', True)
         invoice = self._generate_move(
             self.partner_1,
@@ -173,6 +177,10 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
         self._assert_imported_invoice_from_etree(invoice, attachment)
 
     def test_export_import_refund(self):
+        company = self.company_data['company']
+        if "predict_bill_product" in company._fields:
+            company.predict_bill_product = True
+
         self.env['ir.config_parameter'].sudo().set_param('account_edi_ubl_cii.use_new_dict_to_xml_helpers', True)
         refund = self._generate_move(
             self.partner_1,
@@ -640,33 +648,4 @@ class TestUBLBE(TestUBLCommon, TestAccountMoveSendCommon):
                     } for price_unit, quantity in [(1000, 1), (100, 10), (10, 100)]
                 ]
             }
-        )
-
-    def test_import_invoice_ubl_bis3_full_discount_line(self):
-        """ A line whose LineExtensionAmount is 0 because of a 100% AllowanceCharge
-        must be imported with the right quantity / price / 100% discount, and must NOT
-        be filtered out by the zero-amount line filter
-        """
-        self._assert_imported_invoice_from_file(
-            subfolder='tests/test_files/from_odoo',
-            filename='bis3_invoice_full_discount_line.xml',
-            invoice_vals={
-                'amount_untaxed': 100.0,
-                'amount_tax': 21.0,
-                'amount_total': 121.0,
-                'invoice_lines': [
-                    {
-                        'quantity': 1.0,
-                        'price_unit': 100.0,
-                        'discount': 0.0,
-                        'price_subtotal': 100.0,
-                    },
-                    {
-                        'quantity': 5.0,
-                        'price_unit': 330.0,
-                        'discount': 100.0,
-                        'price_subtotal': 0.0,
-                    },
-                ],
-            },
         )

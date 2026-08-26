@@ -156,6 +156,26 @@ class ResPartner(models.Model):
                 country_code.lower() in _region_specific_vat_codes
             ) and self._fix_vat_number(vat_prefix + number, partner.country_id.id) or ''
 
+    @api.model
+    def _get_country_specific_vat_variants(self, normalized_vat, country_prefix):
+        """
+        Return additional formatted VAT values to consider during EDI partner matching.
+        Should stay consistent with `_check_customer_vat_match` to ensure
+        correct partner matching when importing EDI documents.
+        """
+        vat_variants = super()._get_country_specific_vat_variants(normalized_vat, country_prefix)
+        if country_prefix.upper() == 'CH':
+            normalized_vat = normalized_vat.replace('-', '')
+            country = self.env.ref('base.ch')
+            if (
+                (vat_formatted := self._fix_vat_number(normalized_vat, country.id))
+                # Incorrect VAT must not match to raise an error
+                and self.simple_vat_check(country.code, vat_formatted[2:])
+            ):
+                vat_base = re.sub(r"\s*(TVA|IVA|MWST)?$", "", vat_formatted.upper())
+                vat_variants.extend([f'{vat_base} {suffix}' for suffix in ('TVA', 'IVA', 'MWST')])
+        return vat_variants
+
     @api.depends_context('company')
     @api.depends('vies_vat_to_check')
     def _compute_perform_vies_validation(self):
@@ -487,7 +507,7 @@ class ResPartner(models.Model):
         # Check the vat number
         return stdnum.util.get_cc_module('hu', 'vat').is_valid(vat)
 
-    __check_vat_ch_re = re.compile(r'E([0-9]{9}|-[0-9]{3}\.[0-9]{3}\.[0-9]{3})(MWST|TVA|IVA)$')
+    __check_vat_ch_re = re.compile(r'E([0-9]{9}|-[0-9]{3}\.[0-9]{3}\.[0-9]{3})( )?(MWST|TVA|IVA)$')
 
     def check_vat_ch(self, vat):
         '''
@@ -920,7 +940,7 @@ class ResPartner(models.Model):
 
     @api.model
     def _convert_hu_local_to_eu_vat(self, local_vat):
-        if self.__check_tin_hu_companies_re.match(local_vat):
+        if self.__check_tin_hu_companies_re.match(local_vat) or self.__check_tin_hu_european_re.match(local_vat):
             return f'HU{local_vat[:8]}'
         return False
 
@@ -931,8 +951,7 @@ class ResPartner(models.Model):
                 country_id = values.get('country_id')
                 values['vat'] = self._fix_vat_number(values['vat'], country_id)
         res = super().create(vals_list)
-        if self.env.context.get('import_file'):
-            res.env.remove_to_compute(self._fields['vies_valid'], res)
+        res.env.remove_to_compute(self._fields['vies_valid'], res)
         return res
 
     def write(self, values):

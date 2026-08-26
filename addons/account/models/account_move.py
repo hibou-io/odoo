@@ -12,6 +12,7 @@ from markupsafe import Markup
 import math
 import re
 import os
+import warnings
 from textwrap import shorten
 from urllib.parse import urlencode
 
@@ -793,7 +794,8 @@ class AccountMove(models.Model):
                         move.invoice_user_id
                         or move.partner_id.user_id
                         or move.partner_id.commercial_partner_id.user_id
-                        or self.env.user
+                        or self.env.user._is_internal() and self.env.user
+                        or move.create_uid
                     )
             else:
                 move.invoice_user_id = False
@@ -964,12 +966,15 @@ class AccountMove(models.Model):
         unposted = self.filtered(lambda move: move.sequence_number != 0 and move.state != 'posted')
         unposted.made_sequence_gap = True
         for (journal, prefix), moves in (self - unposted).grouped(lambda m: (m.journal_id, m.sequence_prefix)).items():
-            previous_numbers = set(self.env['account.move'].sudo().search([
-                ('journal_id', '=', journal.id),
-                ('sequence_prefix', '=', prefix),
-                ('sequence_number', '>=', min(moves.mapped('sequence_number')) - 1),
-                ('sequence_number', '<=', max(moves.mapped('sequence_number')) - 1),
-            ]).mapped('sequence_number'))
+            expected_previous_numbers = [n - 1 for n in moves.mapped('sequence_number') if n > 1]
+            previous_numbers = set(self.env['account.move'].sudo().search_fetch(
+                domain=[
+                    ('journal_id', '=', journal.id),
+                    ('sequence_prefix', '=', prefix),
+                    ('sequence_number', 'in', expected_previous_numbers),
+                ],
+                field_names=['sequence_number'],
+            ).mapped('sequence_number'))
             for move in moves:
                 move.made_sequence_gap = move.sequence_number > 1 and (move.sequence_number - 1) not in previous_numbers
 
@@ -1352,7 +1357,7 @@ class AccountMove(models.Model):
                         untaxed_amount = invoice.amount_untaxed_signed
                     invoice_payment_terms = invoice.invoice_payment_term_id._compute_terms(
                         date_ref=invoice.invoice_date or invoice.date or fields.Date.context_today(invoice),
-                        currency=invoice.currency_id,
+                        currency=invoice.currency_id or invoice.journal_id.currency_id or invoice.company_currency_id,
                         tax_amount_currency=tax_amount_currency,
                         tax_amount=tax_amount,
                         untaxed_amount_currency=untaxed_amount_currency,
@@ -1407,7 +1412,7 @@ class AccountMove(models.Model):
             domain = [
                 ('account_id', 'in', pay_term_lines.account_id.ids),
                 ('parent_state', '=', 'posted'),
-                *move._check_company_domain(move.company_id),
+                '|', *move._check_company_domain(move.company_id), ('company_id', 'child_of', move.company_id.id),
                 ('partner_id', '=', move.commercial_partner_id.id),
                 ('reconciled', '=', False),
                 '|', ('amount_residual', '!=', 0.0), ('amount_residual_currency', '!=', 0.0),
@@ -1523,16 +1528,22 @@ class AccountMove(models.Model):
         is_invoice = self.is_invoice(include_receipts=True)
         sign = self.direction_sign if is_invoice else 1
 
-        return self.env['account.tax']._prepare_base_line_for_taxes_computation(
-            product_line,
-            price_unit=product_line.price_unit if is_invoice else product_line.amount_currency,
-            quantity=product_line.quantity if is_invoice else 1.0,
-            discount=product_line.discount if is_invoice else 0.0,
-            rate=self._get_product_base_line_currency_rate(product_line),
-            sign=sign,
-            special_mode=False if is_invoice else 'total_excluded',
-            name=product_line.name,
-        )
+        kwargs = {
+            'price_unit': product_line.price_unit if is_invoice else product_line.amount_currency,
+            'quantity': product_line.quantity if is_invoice else 1.0,
+            'discount': product_line.discount if is_invoice else 0.0,
+            'rate': self._get_product_base_line_currency_rate(product_line),
+            'sign': sign,
+            'special_mode': False if is_invoice else 'total_excluded',
+            'name': product_line.name,
+        }
+
+        if product_line in product_line._get_discount_lines():
+            kwargs['special_type'] = 'global_discount'
+        elif product_line in product_line._get_downpayment_lines():
+            kwargs['special_type'] = 'down_payment'
+
+        return self.env['account.tax']._prepare_base_line_for_taxes_computation(product_line, **kwargs)
 
     def _prepare_epd_base_line_for_taxes_computation(self, epd_line):
         """ Convert an account.move.line having display_type='epd' into a base line for the taxes computation.
@@ -1847,7 +1858,7 @@ class AccountMove(models.Model):
     @api.depends('company_id', 'partner_id', 'tax_totals', 'currency_id')
     def _compute_partner_credit_warning(self):
         for move in self:
-            move.with_company(move.company_id)
+            move = move.with_company(move.company_id)
             move.partner_credit_warning = ''
             show_warning = move.state == 'draft' and \
                            move.move_type == 'out_invoice' and \
@@ -2811,10 +2822,12 @@ class AccountMove(models.Model):
                 })
 
             elif self.invoice_cash_rounding_id.strategy == 'add_invoice_line':
-                if diff_balance > 0.0 and self.invoice_cash_rounding_id.loss_account_id:
-                    account_id = self.invoice_cash_rounding_id.loss_account_id.id
+                # profit_account_id / loss_account_id are company-dependent
+                cash_rounding = self.invoice_cash_rounding_id.with_company(self.company_id)
+                if diff_balance > 0.0 and cash_rounding.loss_account_id:
+                    account_id = cash_rounding.loss_account_id.id
                 else:
-                    account_id = self.invoice_cash_rounding_id.profit_account_id.id
+                    account_id = cash_rounding.profit_account_id.id
                 rounding_line_vals.update({
                     'name': self.invoice_cash_rounding_id.name,
                     'account_id': account_id,
@@ -2959,7 +2972,7 @@ class AccountMove(models.Model):
         fake_base_line = AccountTax._prepare_base_line_for_taxes_computation(None)
 
         def get_base_lines(move):
-            return move.line_ids.filtered(lambda line: line.display_type in ('product', 'epd', 'rounding', 'cogs'))
+            return move.line_ids.filtered(lambda line: line.display_type in ('product', 'epd', 'rounding'))
 
         def get_tax_lines(move):
             return move.line_ids.filtered('tax_repartition_line_id')
@@ -3119,6 +3132,15 @@ class AccountMove(models.Model):
     @contextmanager
     def _sync_dynamic_line(self, existing_key_fname, needed_vals_fname, needed_dirty_fname, line_type, container):
         def existing():
+            if line_type == 'epd':
+                # Keep keyless EPD lines in the sync map so they can be cleaned/rebuilt
+                # when invoice lines/taxes are overwritten (e.g. PO auto-complete on OCR bills).
+                return {
+                    line: (line[existing_key_fname] or frozendict({'epd_line_id': line.id}))
+                    for line in container['records'].line_ids
+                    if line.display_type == 'epd'
+                    if line[existing_key_fname] or line.id
+                }
             return {
                 line: line[existing_key_fname]
                 for line in container['records'].line_ids
@@ -3369,6 +3391,8 @@ class AccountMove(models.Model):
     def _get_protected_vals(self, vals, records):
         protected = set()
         for fname in vals:
+            if fname == 'tax_totals':
+                continue  # Skip protecting tax_totals since it is updated explicitly after create/write
             field = records._fields[fname]
             if field.inverse or (field.compute and not field.readonly):
                 protected.update(self.pool.field_computed.get(field, [field]))
@@ -5599,6 +5623,7 @@ class AccountMove(models.Model):
         self.sending_data = False
 
         self._detach_attachments()
+        return True
 
     def _get_fields_to_detach(self):
         """"
@@ -6073,7 +6098,7 @@ class AccountMove(models.Model):
                 line[2]['partner_id'] = self.env['res.partner'].browse(line[2]['partner_id']).sudo().display_name
             line[2]['account_id'] = self.env['account.account'].browse(line[2]['account_id']).display_name or _('Destination Account')
             line[2]['debit'] = currency_id and formatLang(self.env, line[2]['debit'], currency_obj=currency_id) or line[2]['debit']
-            line[2]['credit'] = currency_id and formatLang(self.env, line[2]['credit'], currency_obj=currency_id) or line[2]['debit']
+            line[2]['credit'] = currency_id and formatLang(self.env, line[2]['credit'], currency_obj=currency_id) or line[2]['credit']
         return preview_vals
 
     def _generate_qr_code(self, silent_errors=False):
@@ -6218,6 +6243,14 @@ class AccountMove(models.Model):
         file_name = safe_eval(report_id.print_report_name, {'object': self})
         return f"{file_name.replace('/', '_')}.{extension}"
 
+    def _get_invoice_mail_template_dynamic_report_filename(self, report, extension='pdf'):
+        """ Get the filename of the generated invoice report for a dynamic report. """
+        self.ensure_one()
+        if not report.print_report_name:
+            return False
+        file_name = safe_eval(report.print_report_name, {'object': self})
+        return f"{file_name.replace('/', '_')}.{extension}"
+
     def _get_invoice_proforma_pdf_report_filename(self):
         """ Get the filename of the generated proforma PDF invoice report. """
         self.ensure_one()
@@ -6341,9 +6374,11 @@ class AccountMove(models.Model):
                 'company_email': journal_alias_company.email or self.env.company.email,
                 'company_name': journal_alias_company.name or self.env.company.name,
             })
-            self._routing_create_bounce_email(
+            reply_to_journal_company = journal_alias_company.email or self.env.company.email
+            self.with_company(journal_alias_company)._routing_create_bounce_email(
                 message_dict['from'], body, message,
-                references=f'{message_dict["message_id"]} {generate_tracking_message_id("loop-detection-bounce-email")}')
+                references=f'{message_dict["message_id"]} {generate_tracking_message_id("loop-detection-bounce-email")}',
+                reply_to=reply_to_journal_company)
             return ()
         return super()._routing_check_route(message, message_dict, route, raise_exception=raise_exception)
 
@@ -6476,6 +6511,8 @@ class AccountMove(models.Model):
             attachments_in_invoices += attachment
         # Unlink the unused attachments (prevents storing marketing images sent with emails)
         if self._context.get('from_alias'):
+            if not attachments_in_invoices:
+                attachments_in_invoices += attachments.filtered(lambda att: att.mimetype in ALLOWED_MIMETYPES)
             (attachments - attachments_in_invoices).unlink()
         return move_per_decodable_attachment
 
@@ -6561,6 +6598,7 @@ class AccountMove(models.Model):
     # -------------------------------------------------------------------------
 
     def _get_moves_zip_export_docs(self):
+        warnings.warn("The '_get_moves_zip_export_docs' method is deprecated and has been removed in future versions.", DeprecationWarning)
         docs = set()
         for move in self.filtered(lambda m: m.state == 'posted' and m.is_sale_document()):
             try:
@@ -6573,6 +6611,7 @@ class AccountMove(models.Model):
         return docs, filename
 
     def action_export_zip(self):
+        warnings.warn("The 'action_export_zip' method is deprecated and has been removed in future versions.", DeprecationWarning)
         attachment_ids, filename = self._get_moves_zip_export_docs()
         if not attachment_ids:
             raise UserError(_('Nothing to export.'))

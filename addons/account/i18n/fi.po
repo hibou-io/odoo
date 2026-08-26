@@ -56,8 +56,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-29 17:37+0000\n"
-"PO-Revision-Date: 2026-05-09 09:11+0000\n"
+"POT-Creation-Date: 2026-07-10 17:38+0000\n"
+"PO-Revision-Date: 2026-08-10 07:09+0000\n"
 "Last-Translator: Saara Hakanen <sahak@odoo.com>\n"
 "Language-Team: Finnish <https://translate.odoo.com/projects/odoo-18/account/"
 "fi/>\n"
@@ -66,7 +66,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -1228,7 +1228,7 @@ msgstr "<span> eräpäivä: </span>"
 #: model_terms:ir.ui.view,arch_db:account.document_tax_totals_company_currency_template
 #: model_terms:ir.ui.view,arch_db:account.document_tax_totals_template
 msgid "<span> on </span>"
-msgstr "<span> päivänä </span>"
+msgstr "<span> summasta </span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.bill_preview
@@ -1282,7 +1282,7 @@ msgstr "<span>Kuvaus</span>"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "<span>Disc.%</span>"
-msgstr "<span>Ale%</span>"
+msgstr "<span>Ale %</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_payment_form
@@ -1322,7 +1322,7 @@ msgstr "<span>Toimenpiteet</span>"
 #: model_terms:ir.ui.view,arch_db:account.bill_preview
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "<span>Quantity</span>"
-msgstr "<span>Määrä</span>"
+msgstr "<span>Lukumäärä</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.report_payment_receipt_document
@@ -3966,7 +3966,7 @@ msgstr "Estoviesti"
 #: model:ir.model.fields.selection,name:account.selection__account_report_column__figure_type__boolean
 #: model:ir.model.fields.selection,name:account.selection__account_report_expression__figure_type__boolean
 msgid "Boolean"
-msgstr "Boolean"
+msgstr "Boolen"
 
 #. module: account
 #. odoo-javascript
@@ -4448,12 +4448,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:account.field_res_company__chart_template
 #: model:ir.model.fields,field_description:account.field_res_config_settings__chart_template
 msgid "Chart Template"
-msgstr "Tilikarttamalli"
+msgstr "Kaaviopohja"
 
 #. module: account
 #: model:ir.actions.act_window,name:account.open_account_charts_modules
 msgid "Chart Templates"
-msgstr "Tilikarttamallit"
+msgstr "Kaaviopohjat"
 
 #. module: account
 #. odoo-python
@@ -6756,7 +6756,7 @@ msgstr "Luonnoskirjaus"
 #: model_terms:ir.ui.view,arch_db:account.portal_my_invoices
 #: model_terms:ir.ui.view,arch_db:account.report_invoice_document
 msgid "Draft Invoice"
-msgstr "Luonnoslasku"
+msgstr "Laskuluonnos"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_invoice_report_search
@@ -10221,6 +10221,7 @@ msgid "Looks great!"
 msgstr "Näyttää hyvältä!"
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__loss
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form
 msgid "Loss"
 msgstr "Tappio"
@@ -11785,6 +11786,7 @@ msgstr ""
 "laskuissa käyttämäsi hinta tämän veron."
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.view_account_analytic_line_filter_inherit_account
 #: model_terms:ir.ui.view,arch_db:account.view_account_move_line_filter
 msgid "P&L Accounts"
 msgstr "Tuloslaskelmatilit"
@@ -12799,6 +12801,11 @@ msgid "Profit Account"
 msgstr "Voittotili"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_analytic_line__analytic_profitability
+msgid "Profitability"
+msgstr "Kannattavuus"
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_res_partner__property_inbound_payment_method_line_id
 #: model:ir.model.fields,field_description:account.field_res_users__property_inbound_payment_method_line_id
 msgid "Property Inbound Payment Method Line"
@@ -13371,9 +13378,10 @@ msgstr "Rajoitettu"
 #. odoo-python
 #: code:addons/account/wizard/accrued_orders.py:0
 #: model:ir.model.fields,field_description:account.field_digest_digest__kpi_account_total_revenue
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__revenue
 #: model:ir.model.fields.selection,name:account.selection__account_automatic_entry_wizard__account_type__income
 msgid "Revenue"
-msgstr "Tulot"
+msgstr "Liikevaihto"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_automatic_entry_wizard__revenue_accrual_account
@@ -15355,7 +15363,7 @@ msgid ""
 "You can use this field for quick search."
 msgstr ""
 "Kaksimerkkinen ISO-maaakoodi. \n"
-"Voit käyttää tätä kenttää pikahakuun."
+"Voit käyttää tätä kenttää nopeaa hakua varten."
 
 #. module: account
 #. odoo-python
@@ -17378,6 +17386,11 @@ msgstr ""
 "järjestää tapahtumat uudelleen ennen jatkamista."
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_analytic_line__analytic_profitability__uncategorized
+msgid "Uncategorized"
+msgstr "Luokittelemattomat"
+
+#. module: account
 #. odoo-python
 #: code:addons/account/models/account_journal.py:0
 msgid "Undefined Yet"
@@ -17561,7 +17574,7 @@ msgstr "Epäluotettavien maksujen määrä"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "UoM"
-msgstr "Yksikkö"
+msgstr "Mittayksikkö"
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_cash_rounding__rounding_method__up
@@ -19102,7 +19115,7 @@ msgstr ""
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.account_default_terms_and_conditions
 msgid "You should update this document to reflect your T&amp;C."
-msgstr "Päivitä tämä asiakirja vastaamaan käyttöehtojasi."
+msgstr "Sinun tulisi päivittää tämä asiakirja vastaamaan käyttöehtojasi."
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.portal_my_home_invoice

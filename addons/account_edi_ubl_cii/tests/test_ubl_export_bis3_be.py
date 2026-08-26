@@ -35,6 +35,27 @@ class TestUblExportBis3BE(TestUblBis3Common, TestUblCiiBECommon):
         self._generate_invoice_ubl_file(invoice)
         self._assert_invoice_ubl_file(invoice, 'test_invoice_item_description_name')
 
+    def test_invoice_buyer_reference_uses_partner_ref(self):
+        tax_21 = self.percent_tax(21.0)
+        product = self._create_product(lst_price=100.0, taxes_id=tax_21)
+
+        customer_company = self.partner_be
+        customer_contact = self._create_partner(name='Customer contact 1', parent_id=customer_company.id, country_code='BE', ref='CONTACT-REF')
+        customer_company.ref = 'PARENT-REF'
+
+        invoice = self._create_invoice_one_line(
+            product_id=product,
+            partner_id=customer_contact,
+            post=True,
+        )
+
+        self._generate_invoice_ubl_file(invoice)
+
+        xml_tree = etree.fromstring(invoice.ubl_cii_xml_id.raw)
+        buyer_reference = xml_tree.find('.//{*}BuyerReference')
+        self.assertIsNotNone(buyer_reference)
+        self.assertEqual(buyer_reference.text, customer_contact.ref)
+
     def test_invoice_payee_financial_account(self):
         bank_kbc = self.env['res.bank'].create({
             'name': 'KBC',
@@ -532,7 +553,7 @@ class TestUblExportBis3BE(TestUblBis3Common, TestUblCiiBECommon):
         self._generate_invoice_ubl_file(invoice)
         self._assert_invoice_ubl_file(invoice, 'test_invoice_early_pay_discount_with_0_tax')
 
-    def test_global_discount_exported_as_allowance_charge_sale_order(self):
+    def test_invoice_with_global_discount_line_sale_order(self):
         self.ensure_installed('sale')
 
         tax_21 = self.percent_tax(21.0)

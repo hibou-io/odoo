@@ -26,6 +26,9 @@ export class PosOrderline extends Base {
             hasChange: true,
         };
         this.saved_quantity = 0;
+        if (this.discount === undefined) {
+            this.discount = 0;
+        }
     }
 
     set_full_product_name() {
@@ -184,6 +187,9 @@ export class PosOrderline extends Base {
                 : parseFloat("" + discount);
 
         const disc = Math.min(Math.max(parsed_discount || 0, 0), 100);
+        if (this.discount === disc) {
+            return;
+        }
         this.discount = disc;
         this.order_id.recomputeOrderData();
         this.setDirty();
@@ -392,7 +398,7 @@ export class PosOrderline extends Base {
             tax_ids: this.tax_ids,
             product_id: product,
             product_uom_id: product_uom,
-            is_refund: this.qty * priceUnit < 0,
+            is_refund: this.is_refund(),
             ...customValues,
         };
         if (order.fiscal_position_id) {
@@ -403,6 +409,10 @@ export class PosOrderline extends Base {
             );
         }
         return values;
+    }
+
+    is_refund() {
+        return this.qty * this.price_unit < 0;
     }
 
     set_unit_price(price) {
