@@ -31,6 +31,7 @@ from . import test_ir_module
 from . import test_ir_sequence
 from . import test_ir_sequence_date_range
 from . import test_ir_default
+from . import test_logging
 from . import test_mail
 from . import test_menu
 from . import test_mimetypes
@@ -72,3 +73,4 @@ from . import test_neutralize
 from . import test_config_parameter
 from . import test_ir_module_category
 from . import test_num2words_ar
+from . import test_num2words_es

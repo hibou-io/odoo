@@ -1,4 +1,5 @@
 import uuid
+from base64 import b64decode
 from markupsafe import Markup
 from urllib.parse import quote, urlencode, urlparse
 
@@ -126,28 +127,29 @@ class AccountMove(models.Model):
         )
 
     def _l10n_tr_nilvera_get_submitted_document_status(self):
-        with _get_nilvera_client(self.env.company) as client:
-            for invoice in self:
-                response = client.request(
-                    "GET",
-                    f"/einvoice/sale/{invoice.l10n_tr_nilvera_uuid}/Status",
-                )
+        for company, invoices in self.grouped('company_id').items():
+            with _get_nilvera_client(company) as client:
+                for invoice in invoices:
+                    response = client.request(
+                        "GET",
+                        f"/einvoice/sale/{invoice.l10n_tr_nilvera_uuid}/Status",
+                    )
 
-                nilvera_status = response.get('InvoiceStatus', {}).get('Code')
-                if nilvera_status in dict(invoice._fields['l10n_tr_nilvera_send_status'].selection):
-                    invoice.l10n_tr_nilvera_send_status = nilvera_status
-                    if nilvera_status == 'error':
-                        invoice.message_post(
-                            body=Markup(
-                                "%s<br/>%s - %s<br/>"
-                            ) % (
-                                _("The invoice couldn't be sent to the recipient."),
-                                response['InvoiceStatus'].get('Description'),
-                                response['InvoiceStatus'].get('DetailDescription'),
+                    nilvera_status = response.get('InvoiceStatus', {}).get('Code')
+                    if nilvera_status in dict(invoice._fields['l10n_tr_nilvera_send_status'].selection):
+                        invoice.l10n_tr_nilvera_send_status = nilvera_status
+                        if nilvera_status == 'error':
+                            invoice.message_post(
+                                body=Markup(
+                                    "%s<br/>%s - %s<br/>"
+                                ) % (
+                                    _("The invoice couldn't be sent to the recipient."),
+                                    response['InvoiceStatus'].get('Description'),
+                                    response['InvoiceStatus'].get('DetailDescription'),
+                                )
                             )
-                        )
-                else:
-                    invoice.message_post(body=_("The invoice status couldn't be retrieved from Nilvera."))
+                    else:
+                        invoice.message_post(body=_("The invoice status couldn't be retrieved from Nilvera."))
 
     def _l10n_tr_nilvera_get_documents(self):
         with _get_nilvera_client(self.env.company) as client:
@@ -233,7 +235,7 @@ class AccountMove(models.Model):
             'name': filename,
             'res_id': invoice.id,
             'res_model': 'account.move',
-            'raw': response,
+            'raw': b64decode(response),
             'type': 'binary',
             'mimetype': 'application/pdf',
         })
@@ -281,11 +283,17 @@ class AccountMove(models.Model):
     # CRONS
     # -------------------------------------------------------------------------
 
+    def _l10n_tr_nilvera_company_get_documents(self):
+        for company in self.env.companies:
+            if company.country_code != 'TR' or not company.l10n_tr_nilvera_api_key:
+                continue
+            self.with_company(company)._l10n_tr_nilvera_get_documents()
+
     def _cron_nilvera_get_new_documents(self):
-        self._l10n_tr_nilvera_get_documents()
+        self._l10n_tr_nilvera_company_get_documents()
 
     def _cron_nilvera_get_invoice_status(self):
         invoices_to_update = self.env['account.move'].search([
-            ('l10n_tr_nilvera_send_status', 'in', ['waiting', 'sent']),
+            ('l10n_tr_nilvera_send_status', 'in', ['waiting', 'sent', 'unknown']),
         ])
         invoices_to_update._l10n_tr_nilvera_get_submitted_document_status()

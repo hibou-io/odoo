@@ -166,7 +166,7 @@ class AccountMove(models.Model):
         # EXTENDS 'account'
         super()._compute_show_reset_to_draft_button()
         for move in self:
-            move.show_reset_to_draft_button = not move.l10n_it_edi_transaction and move.show_reset_to_draft_button
+            move.show_reset_to_draft_button = not (move.is_sale_document() and move.l10n_it_edi_transaction) and move.show_reset_to_draft_button
 
     def _get_edi_decoder(self, file_data, new=False):
         # EXTENDS 'account'
@@ -818,7 +818,7 @@ class AccountMove(models.Model):
             return False
 
         # Create the attachment, an empty move, then attach the two and commit
-        move = self.with_company(proxy_user.company_id).create({})
+        move = self.with_company(proxy_user.company_id).create({'move_type': 'in_invoice'})
         attachment = Attachment.create({
             'name': filename,
             'raw': decrypted_content,
@@ -1265,11 +1265,18 @@ class AccountMove(models.Model):
     def _l10n_it_edi_export_taxes_check(self):
         return self._l10n_it_edi_check_lines_for_tax_kind('vat', _('VAT'))
 
+    def _l10n_it_edi_get_max_limit_per_tax(self, kind_code):
+        return 1
+
     def _l10n_it_edi_check_lines_for_tax_kind(self, kind_code, kind_desc, min_len=1):
         assert min_len in (0, 1)
+
+        # TODO: pass this as a parameter of the function in master
+        max_len = self._l10n_it_edi_get_max_limit_per_tax(kind_code)
+
         if self.invoice_line_ids.filtered(lambda line:
             line.display_type == 'product'
-            and not (min_len <= len(line.tax_ids._l10n_it_filter_kind(kind_code)) <= 1)
+            and not (min_len <= len(line.tax_ids._l10n_it_filter_kind(kind_code)) <= max_len)
         ):
             return {
                 f'move_{kind_code}_tax_per_line': {
