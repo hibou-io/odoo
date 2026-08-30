@@ -96,6 +96,12 @@ patch(PosStore.prototype, {
             return;
         }
         updateRewardsMutex.exec(() => {
+            // Remove stale reward lines from a draft order loaded from another POS session.
+            for (const line of order._get_reward_lines()) {
+                if (!line.coupon_id) {
+                    line.delete();
+                }
+            }
             return this.orderUpdateLoyaltyPrograms().then(async () => {
                 // Try auto claiming rewards
                 const claimableRewards = order.getClaimableRewards(false, false, true);
@@ -437,23 +443,21 @@ patch(PosStore.prototype, {
             selectedProgram = linkedPrograms[0];
         }
 
-        const orderTotal = this.get_order().get_total_with_tax();
-        if (
-            selectedProgram &&
-            ["gift_card", "ewallet"].includes(selectedProgram.program_type) &&
-            orderTotal < 0
-        ) {
-            opt.price_unit = -orderTotal;
-        }
-        if (selectedProgram && selectedProgram.program_type == "gift_card") {
-            const shouldProceed = await this._setupGiftCardOptions(selectedProgram, opt);
-            if (!shouldProceed) {
-                return;
+        if (selectedProgram) {
+            const orderTotal = this.get_order().get_total_with_tax();
+            if (["gift_card", "ewallet"].includes(selectedProgram.program_type) && orderTotal < 0) {
+                opt.price_unit = -orderTotal;
             }
-        } else if (selectedProgram && selectedProgram.program_type == "ewallet") {
-            const shouldProceed = await this.setupEWalletOptions(selectedProgram, opt);
-            if (!shouldProceed) {
-                return;
+            if (selectedProgram.program_type == "gift_card") {
+                const shouldProceed = await this._setupGiftCardOptions(selectedProgram, opt);
+                if (!shouldProceed) {
+                    return;
+                }
+            } else if (selectedProgram.program_type == "ewallet") {
+                const shouldProceed = await this.setupEWalletOptions(selectedProgram, opt);
+                if (!shouldProceed) {
+                    return;
+                }
             }
         }
         const potentialRewards = this.getPotentialFreeProductRewards();
@@ -642,7 +646,7 @@ patch(PosStore.prototype, {
     computePartnerCouponIds(loyaltyCards = null) {
         const cards = loyaltyCards || this.models["loyalty.card"].getAll();
         for (const card of cards) {
-            if (!card.partner_id || card.id < 0) {
+            if (!card.partner_id || card.id < 0 || !card.program_id) {
                 continue;
             }
 
@@ -816,8 +820,12 @@ patch(PosStore.prototype, {
         const rewardLines = order._get_reward_lines();
         const partner = order.get_partner();
         let couponData = Object.values(order.uiState.couponPointChanges).reduce((agg, pe) => {
+            const earnedPoints =
+                pe.points - order._getPointsCorrection(ProgramModel.get(pe.program_id));
             agg[pe.coupon_id] = Object.assign({}, pe, {
-                points: pe.points - order._getPointsCorrection(ProgramModel.get(pe.program_id)),
+                points: earnedPoints,
+                points_earned: earnedPoints,
+                points_spent: 0,
             });
             const program = ProgramModel.get(pe.program_id);
             if (
@@ -832,11 +840,16 @@ patch(PosStore.prototype, {
             return agg;
         }, {});
         for (const line of rewardLines) {
+            if (!line.coupon_id) {
+                continue;
+            }
             const reward = line.reward_id;
             const couponId = line.coupon_id.id;
             if (!couponData[couponId]) {
                 couponData[couponId] = {
                     points: 0,
+                    points_earned: 0,
+                    points_spent: 0,
                     program_id: reward.program_id.id,
                     coupon_id: couponId,
                     barcode: false,
@@ -852,6 +865,7 @@ patch(PosStore.prototype, {
                 !couponData[couponId].line_codes.push(line.reward_identifier_code);
             }
             couponData[couponId].points -= line.points_cost;
+            couponData[couponId].points_spent += line.points_cost;
         }
         // We actually do not care about coupons for 'current' programs that did not claim any reward, they will be lost if not validated
         couponData = Object.fromEntries(

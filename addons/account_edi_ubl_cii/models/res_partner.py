@@ -4,7 +4,7 @@ from stdnum.fr import siret
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-from odoo.addons.account_edi_ubl_cii.models.account_edi_common import EAS_MAPPING
+from odoo.addons.account_edi_ubl_cii.models.account_edi_common import EAS_MAPPING, DEPRECATED_PEPPOL_EAS
 from odoo.addons.account.models.company import PEPPOL_DEFAULT_COUNTRIES
 
 
@@ -225,6 +225,10 @@ class ResPartner(models.Model):
 
     def _get_peppol_endpoint_value(self, country_code, field):
         self.ensure_one()
+        # Field `peppol_endpoint` can be used as placeholer for custom logic (by extending this function)
+        if field == 'peppol_endpoint':
+            return None
+
         value = field in self._fields and self[field]
 
         if (
@@ -262,10 +266,15 @@ class ResPartner(models.Model):
             country_code = partner._deduce_country_code()
             if country_code in EAS_MAPPING:
                 eas_to_field = EAS_MAPPING[country_code]
-                if partner.peppol_eas not in eas_to_field.keys():
-                    new_eas = next(iter(EAS_MAPPING[country_code].keys()))
+                if partner.peppol_eas not in eas_to_field:
+                    candidates = {
+                        eas: field
+                        for eas, field in eas_to_field.items()
+                        if eas not in DEPRECATED_PEPPOL_EAS
+                    } or eas_to_field
+                    new_eas = next(iter(candidates))
                     # Iterate on the possible EAS until a valid one is found
-                    for eas, field in eas_to_field.items():
+                    for eas, field in candidates.items():
                         if field and field in partner._fields:
                             value = partner._get_peppol_endpoint_value(country_code, field)
                             if value and not partner._build_error_peppol_endpoint(eas, value):
@@ -274,10 +283,14 @@ class ResPartner(models.Model):
                     partner.peppol_eas = new_eas
 
     @api.depends_context('company')
-    @api.depends('company_id')
+    @api.depends('company_id', 'peppol_eas')
     def _compute_available_peppol_eas(self):
         # TO OVERRIDE
-        self.available_peppol_eas = list(dict(self._fields['peppol_eas'].selection))
+        for partner in self:
+            partner.available_peppol_eas = [
+                eas for eas in dict(partner._fields['peppol_eas'].selection)
+                if eas not in DEPRECATED_PEPPOL_EAS or eas == partner.peppol_eas
+            ]
 
     def _build_error_peppol_endpoint(self, eas, endpoint):
         """ This function contains all the rules regarding the peppol_endpoint."""
@@ -305,3 +318,16 @@ class ResPartner(models.Model):
             return self.env['account.edi.xml.ubl_bis3']
         if invoice_edi_format == 'ubl_sg':
             return self.env['account.edi.xml.ubl_sg']
+
+    @api.model
+    def _import_retrieve_customer_from_eas_endpoint(self, customer_values):
+        peppol_eas = customer_values.get('peppol_eas')
+        peppol_endpoint = customer_values.get('peppol_endpoint')
+        if not peppol_eas or not peppol_endpoint:
+            return
+
+        return {
+            'criteria': [{
+                'domain': [('peppol_eas', '=', peppol_eas), ('peppol_endpoint', '=', peppol_endpoint)],
+            }],
+        }

@@ -232,7 +232,14 @@ class AccountEdiXmlUBL21Zatca(models.AbstractModel):
                 filter_tax_values_to_apply=lambda l, t: not self.env['account.tax'].browse(t.get('id')).l10n_sa_is_retention
             )
             base_amount = abs(sum(tax_vals['tax_details_per_record'][l]['base_amount_currency'] for l in downpayment_lines))
-            tax_amount = abs(sum(tax_vals['tax_details_per_record'][l]['tax_amount_currency'] for l in downpayment_lines))
+            # Sum raw values before rounding to avoid cumulative rounding errors from individual line rounding
+            tax_amount = abs(sum(
+                values['raw_tax_amount_currency']
+                for downpayment_line in downpayment_lines
+                for values in tax_vals['tax_details_per_record'][downpayment_line]
+                ['tax_details'].values()
+            ))
+            tax_amount = invoice.currency_id.round(tax_amount)
             return {
                 'total_amount': base_amount + tax_amount,
                 'base_amount': base_amount,
@@ -351,16 +358,17 @@ class AccountEdiXmlUBL21Zatca(models.AbstractModel):
     def _l10n_sa_get_additional_tax_total_vals(self, invoice, vals):
         """
             For ZATCA, an additional TaxTotal element needs to be included in the UBL file
-            (Only for the Invoice, not the lines)
-
-            If the invoice is in a different currency from the one set on the company (SAR), then the additional
-            TaxAmount element needs to hold the tax amount converted to the company's currency.
+            (Only for the Invoice, not the lines), but only when the invoice is in a different
+            currency from the one set on the company (SAR): the additional TaxAmount element
+            holds the tax amount converted to the company's currency (BT-111), and per BR-KSA-97
+            it must not be included at all when the invoice currency matches the company's,
+            otherwise it results in two identical TaxTotal nodes.
 
             Business Rules: BT-110 & BT-111
         """
-        curr_amount = abs(vals['taxes_vals']['tax_amount_currency'])
-        if invoice.currency_id != invoice.company_currency_id:
-            curr_amount = abs(vals['taxes_vals']['tax_amount'])
+        if invoice.currency_id == invoice.company_currency_id:
+            return vals['vals']['tax_total_vals']
+        curr_amount = abs(vals['taxes_vals']['tax_amount'])
         return vals['vals']['tax_total_vals'] + [{
             'currency': invoice.company_currency_id,
             'currency_dp': invoice.company_currency_id.decimal_places,
@@ -380,6 +388,8 @@ class AccountEdiXmlUBL21Zatca(models.AbstractModel):
         """
         if not line.move_id._is_downpayment() and line.sale_line_ids and all(sale_line.is_downpayment for sale_line in line.sale_line_ids):
             prepayment_move_id = line.sale_line_ids.invoice_lines.move_id.filtered(lambda m: m.move_type == 'out_invoice' and m._is_downpayment())
+            if non_reversed := prepayment_move_id.filtered(lambda m: m.payment_state != 'reversed'):
+                prepayment_move_id = non_reversed
             return {
                 'prepayment_id': prepayment_move_id.name,
                 'issue_date': fields.Datetime.context_timestamp(self.with_context(tz='Asia/Riyadh'),
@@ -420,7 +430,7 @@ class AccountEdiXmlUBL21Zatca(models.AbstractModel):
 
         line_vals = super()._get_invoice_line_vals(line, line_id, taxes_vals)
         total_amount_sa = abs(taxes_vals['tax_amount_currency'] + taxes_vals['base_amount_currency'])
-        extension_amount = abs(line_vals['line_extension_amount'])
+        extension_amount = abs(taxes_vals['base_amount_currency'])
         if not line.move_id._is_downpayment() and line._get_downpayment_lines():
             total_amount_sa = extension_amount = 0
             line_vals['price_vals']['price_amount'] = 0

@@ -202,7 +202,7 @@ will update the cost of every lot/serial number in stock."),
             "value_svl": value_svl,
             "quantity_svl": quantity_sum,
             "avg_cost": avg_cost,
-            "total_value": avg_cost * self.sudo(False)._with_valuation_context().qty_available if avg_cost else 0
+            "total_value": avg_cost * self.with_context(allowed_company_ids=self.env.company.ids).qty_available if avg_cost else 0
         }
 
     @api.depends('stock_valuation_layer_ids')
@@ -217,10 +217,6 @@ will update the cost of every lot/serial number in stock."),
             aggregates = group_mapping.get(product._origin, (0, 0))
             vals = product._prepare_valuation_layer_field_values(aggregates)
             product.update(vals)
-
-    def _with_valuation_context(self):
-        valued_locations = self.env['stock.location'].search([('company_id', 'in', self.env.companies.ids), ('usage', 'in', ['internal', 'transit'])])
-        return self.with_context(location=valued_locations.ids)
 
     # -------------------------------------------------------------------------
     # Actions
@@ -589,7 +585,7 @@ will update the cost of every lot/serial number in stock."),
             # If delivered quantity is not invoiced then no need to create this entry
             if not account_move:
                 continue
-            accounts = svl_to_vacuum.product_id.product_tmpl_id.get_product_accounts(fiscal_pos=account_move.fiscal_position_id)
+            accounts = svl_to_vacuum.product_id.product_tmpl_id.with_company(vacuum_svl.company_id).get_product_accounts(fiscal_pos=account_move.fiscal_position_id)
             if not accounts.get('stock_output') or not accounts.get('expense'):
                 continue
             svls_accounts[svl_to_vacuum.id] = accounts

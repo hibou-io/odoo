@@ -14,6 +14,7 @@ import freezegun
 import pytz
 import re
 import base64
+import vobject
 
 
 class TestCalendar(SavepointCaseWithUserDemo):
@@ -381,13 +382,13 @@ class TestCalendar(SavepointCaseWithUserDemo):
         Check that mail have extra attachement added by the user
         """
 
-        def _test_one_mail_per_attendee(self, partners):
+        def _test_mail_per_attendee(self, partners, target=1):
             # check that every attendee receive a (single) mail for the event
             for partner in partners:
                 mail = self.env['mail.message'].sudo().search([
                     ('notified_partner_ids', 'in', partner.id),
                     ])
-                self.assertEqual(len(mail), 1)
+                self.assertEqual(len(mail), target, "This attendee has an unexpected amount of mails")
 
         def _test_emails_has_attachment(self, partners, attachments_names=["fileText_attachment.txt"]):
             # check that every email has specified extra attachments
@@ -425,7 +426,7 @@ class TestCalendar(SavepointCaseWithUserDemo):
             })
 
         # every partner should have 1 mail sent
-        _test_one_mail_per_attendee(self, partners)
+        _test_mail_per_attendee(self, partners, target=1)
         _test_emails_has_attachment(self, partners)
 
         # adding more partners to the event
@@ -441,10 +442,10 @@ class TestCalendar(SavepointCaseWithUserDemo):
         })
 
         # more email should be sent
-        _test_one_mail_per_attendee(self, partners)
+        _test_mail_per_attendee(self, partners, target=1)
 
         # create a new event in the past
-        self.CalendarEvent.create({
+        past_event = self.CalendarEvent.create({
             'name': "NOmailTest",
             'allday': False,
             'recurrency': False,
@@ -454,7 +455,23 @@ class TestCalendar(SavepointCaseWithUserDemo):
         })
 
         # no more email should be sent
-        _test_one_mail_per_attendee(self, partners)
+        _test_mail_per_attendee(self, partners, target=1)
+
+        # adding more partners to the event in past, SHOULD NOT trigger notification
+        partners_added_after_past_date = [
+            self.env['res.partner'].create({'name': 'testuser5', 'email': 'jean@example.com'}),
+            self.env['res.partner'].create({'name': 'testuser6', 'email': 'claude@example.com'}),
+            self.env['res.partner'].create({'name': 'testuser7', 'email': 'vandamme@example.com'}),
+            ]
+        partners.extend(partners_added_after_past_date)
+        partner_ids = [(6, False, [p.id for p in partners])]
+        past_event.write({
+            'partner_ids': partner_ids,
+        })
+
+        _test_mail_per_attendee(
+            self, list(set(partners) - set(partners_added_after_past_date)), target=1)
+        _test_mail_per_attendee(self, partners_added_after_past_date, target=0)
 
         partner_staff, new_partner = self.env['res.partner'].create([{
             'name': 'partner_staff',
@@ -477,6 +494,7 @@ class TestCalendar(SavepointCaseWithUserDemo):
         })
         _test_emails_has_attachment(self, partners=[partner_staff, new_partner], attachments_names=[a.name for a in attachments])
 
+    @freezegun.freeze_time('2011-04-29 10:00:00')
     def test_event_creation_internal_user_invitation_ics(self):
         """ Check that internal user can read invitation.ics attachment """
         internal_user = new_test_user(self.env, login='internal_user', groups='base.group_user')
@@ -698,6 +716,51 @@ class TestCalendar(SavepointCaseWithUserDemo):
             attendee_model.with_context(default_event_id=self.event_tech_presentation.id).create([{
                 'partner_id': self.partner_demo.id,
             }])
+
+    def test_ics_file_with_videocall_location(self):
+        """ The videocall_location should be exported as a clickable URL in the ICS file. """
+        event = self.env['calendar.event'].create({
+            'name': 'Test Meeting with URL',
+            'start': datetime(2024, 1, 1, 10, 0),
+            'stop': datetime(2024, 1, 1, 11, 0),
+            'partner_ids': [Command.link(self.partner_demo.id)],
+            'videocall_location': 'https://meet.example.com/test-meeting',
+        })
+        ics_files = event._get_ics_file()
+        self.assertIn(event.id, ics_files)
+        cal = vobject.readOne(ics_files[event.id].decode('utf-8'))
+        self.assertTrue(hasattr(cal.vevent, 'url'))
+        self.assertEqual(cal.vevent.url.value, 'https://meet.example.com/test-meeting')
+
+    def test_ics_file_without_videocall_location(self):
+        """ The URL property should not be present when videocall_location is not set. """
+        event = self.env['calendar.event'].create({
+            'name': 'Test Meeting without URL',
+            'start': datetime(2024, 1, 1, 10, 0),
+            'stop': datetime(2024, 1, 1, 11, 0),
+            'partner_ids': [Command.link(self.partner_demo.id)],
+        })
+        ics_files = event._get_ics_file()
+        self.assertIn(event.id, ics_files)
+        cal = vobject.readOne(ics_files[event.id].decode('utf-8'))
+        self.assertFalse(hasattr(cal.vevent, 'url'))
+
+    def test_ics_file_videocall_location_preserves_location(self):
+        """ Exporting the videocall URL should not clobber the physical LOCATION field. """
+        event = self.env['calendar.event'].create({
+            'name': 'Test Meeting with Location and URL',
+            'start': datetime(2024, 1, 1, 10, 0),
+            'stop': datetime(2024, 1, 1, 11, 0),
+            'partner_ids': [Command.link(self.partner_demo.id)],
+            'location': 'Conference Room A',
+            'videocall_location': 'https://meet.example.com/room-a',
+        })
+        ics_files = event._get_ics_file()
+        cal = vobject.readOne(ics_files[event.id].decode('utf-8'))
+        self.assertTrue(hasattr(cal.vevent, 'location'))
+        self.assertEqual(cal.vevent.location.value, 'Conference Room A')
+        self.assertTrue(hasattr(cal.vevent, 'url'))
+        self.assertEqual(cal.vevent.url.value, 'https://meet.example.com/room-a')
 
 @tagged('post_install', '-at_install')
 class TestCalendarTours(HttpCaseWithUserDemo):
