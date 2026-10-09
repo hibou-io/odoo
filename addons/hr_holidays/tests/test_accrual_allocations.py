@@ -4869,6 +4869,8 @@ class TestAccrualAllocations(TestHrHolidaysCommon):
             allocation = self._create_form_test_accrual_allocation(
                 self.leave_type, '2024-01-01', self.employee_emp, self.accrual_plan_yearly_max_postponed_days_start)
             allocation.action_approve()
+            # The amount accrued by the onchange must be saved, otherwise the yearly cap is bypassed
+            self.assertEqual(allocation.yearly_accrued_amount, 21)
 
             # take 10 days in the past
             leave = self._take_leave(self.employee_emp, self.leave_type, '2024-12-09', '2024-12-20')
@@ -5207,3 +5209,29 @@ class TestAccrualAllocations(TestHrHolidaysCommon):
             with freeze_time(test_date):
                 allocation._update_accrual()
                 self.assert_remaining_leaves_equal(self.leave_type_day, expected_days, self.employee_emp, test_date, 2)
+
+    def test_hr_leave_after_adding_accrual_plan_levels(self):
+        accrual_plan = self.env['hr.leave.accrual.plan'].create({
+            'name': 'Accrual Plan 1 start',
+            'is_based_on_worked_time': False,
+            'accrued_gain_time': 'start',
+            'carryover_date': 'allocation',
+        })
+        accrual_allocation = self.env['hr.leave.allocation'].create({
+            'name': 'Accrual allocation for employee',
+            'accrual_plan_id': accrual_plan.id,
+            'employee_id': self.employee_emp.id,
+            'holiday_status_id': self.leave_type.id,
+            'number_of_days': 10,
+            'allocation_type': 'accrual',
+            'date_from': '2026-08-01',
+        })
+        accrual_allocation.action_approve()
+        accrual_plan.level_ids = [Command.link(self.accrual_plan_start1.level_ids[0].id)]
+        leave = self.env['hr.leave'].create({
+            'employee_id': self.employee_emp.id,
+            'holiday_status_id': self.leave_type.id,
+            'request_date_from': '2026-08-10',
+            'request_date_to': '2026-08-15',
+        })
+        self.assertTrue(leave.action_approve())

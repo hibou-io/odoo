@@ -362,6 +362,26 @@ test("[text composer] show other channel member in @ mention", async () => {
     await contains(".o-mail-Composer-suggestion strong", { text: "TestPartner" });
 });
 
+test("show other channel member in @ mention before the member list is loaded", async () => {
+    const pyEnv = await startServer();
+    const partnerId = pyEnv["res.partner"].create({
+        email: "testpartner@odoo.com",
+        name: "TestPartner",
+    });
+    const channelId = pyEnv["discuss.channel"].create({
+        name: "general",
+        channel_member_ids: [
+            Command.create({ partner_id: serverState.partnerId }),
+            Command.create({ partner_id: partnerId }),
+        ],
+    });
+    onRpcBefore("/discuss/channel/members", () => new Deferred());
+    await start();
+    await openDiscuss(channelId);
+    await insertText(".o-mail-Composer-input", "@Test");
+    await contains(".o-mail-Composer-suggestion strong:text('TestPartner')");
+});
+
 test.tags("html composer");
 test("show other channel member in @ mention", async () => {
     const pyEnv = await startServer();
@@ -457,6 +477,9 @@ test("select @ mention from the suggestion list being filtered", async () => {
     patchWithCleanup(ImStatus.prototype, {
         setup() {
             super.setup();
+            if (!this.env.inNavigableList) {
+                return;
+            }
             // Simulate a slow render, keeping the previous search on screen.
             onWillUpdateProps(() => {
                 filtering.resolve();

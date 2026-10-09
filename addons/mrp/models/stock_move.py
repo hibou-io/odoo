@@ -276,7 +276,13 @@ class StockMove(models.Model):
                 if not values.get('location_dest_id'):
                     values['location_dest_id'] = mo.location_dest_id.id
                 if not values.get('location_final_id'):
-                    values['location_final_id'] = mo.location_dest_id.id
+                    warehouse = mo.location_dest_id.warehouse_id
+                    if warehouse.sam_loc_id and mo.location_dest_id._child_of(warehouse.sam_loc_id):
+                        # in 3 steps, the finished product is pushed afterwards
+                        sam_rule = warehouse.pbm_route_id.rule_ids.filtered(lambda r: r.picking_type_id == warehouse.sam_type_id)[:1]
+                        values['location_final_id'] = sam_rule.location_dest_id.id or mo.location_dest_id.id
+                    else:
+                        values['location_final_id'] = mo.location_dest_id.id
         return super().create(vals_list)
 
     def write(self, vals):
@@ -364,6 +370,10 @@ class StockMove(models.Model):
 
     def _should_bypass_reservation(self, forced_location=False):
         return super()._should_bypass_reservation(forced_location) or self.product_id.with_company(self.company_id).is_kits
+
+    def _should_be_auto_picked(self):
+        self.ensure_one()
+        return (self.manual_consumption or (self.has_tracking != 'none' and self.move_orig_ids and self.lot_ids)) and not self.picked
 
     def action_explode(self):
         """ Explodes pickings """
@@ -553,7 +563,16 @@ class StockMove(models.Model):
 
     def _key_assign_picking(self):
         keys = super(StockMove, self)._key_assign_picking()
-        return keys + (self.created_production_id, self.production_group_id)
+        keys += (self.created_production_id,)
+        if self._feeds_raw_material_production():
+            keys += (self.production_group_id,)
+        return keys
+
+    def _feeds_raw_material_production(self):
+        """Whether this move directly or indirectly supplies components for a production
+        (i.e. ends up in a `raw_material_production_id`).
+        """
+        return bool(self.browse(self._rollup_move_dests()).raw_material_production_id)
 
     @api.model
     def _prepare_merge_moves_distinct_fields(self):
@@ -646,6 +665,8 @@ class StockMove(models.Model):
         return domain
 
     def _get_production_assignation_domain(self):
+        if not self._feeds_raw_material_production():
+            return []
         return [('production_group_id', '=', self.production_group_id.id)]
 
     def action_open_reference(self):

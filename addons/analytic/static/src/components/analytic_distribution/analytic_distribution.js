@@ -267,7 +267,7 @@ export class AnalyticDistribution extends Component {
             })
         }
         this.state.formattedData = distribution;
-        if (accountNotFound) {
+        if (accountNotFound && this.editingRecord) {
             // Analytic accounts in the json were not found, save the json without them
             await this.save();
         }
@@ -665,7 +665,7 @@ export class AnalyticDistribution extends Component {
         if (this.isDropdownOpen
             && !this.widgetRef.el.contains(ev.target)
             && (!ev.target.closest(selectors.join(",")) ||
-                document.querySelector(".modal:not(.o_inactive_modal)").contains(this.widgetRef.el))
+                document.querySelector(".modal:not(.o_inactive_modal)")?.contains(this.widgetRef.el))
             && !ev.target.isSameNode(document.documentElement)
            ) {
             this.forceCloseEditor();

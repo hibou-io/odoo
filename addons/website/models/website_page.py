@@ -308,6 +308,14 @@ class WebsitePage(models.Model):
             'view_id': self.env.ref('website.view_view_form_extend').id,
         }
 
+    def open_website_url(self):
+        default_website = self.env.ref('website.default_website', raise_if_not_found=False)
+        current_website_id = self.env['website'].get_current_website()
+        website_id = self.website_id.id
+        if current_website_id != default_website or website_id != default_website.id:
+            return super().open_website_url()
+        return self.env['website'].get_client_action(self.website_url, False, website_id)
+
     # website cache
 
     @api.model
@@ -339,6 +347,9 @@ class WebsitePage(models.Model):
         html = response.response[0]
         html = re.sub(r'csrf_token: "[^"]+"', f'csrf_token: {csrf_token!r}', html)
         html = re.sub(r'name="csrf_token" value="[^"]+"', f'name="csrf_token" value={csrf_token!r}', html)
+        # the page may have been cached while the translations hash wasn't
+        translation_hash = self.env['ir.http']._get_cached_frontend_translations_hash(request.lang.code)
+        html = re.sub(r'"translation_hash": "[^"]*"', f'"translation_hash": "{translation_hash}"', html)
         response.response = [html]
 
         # used for _register_website_track
