@@ -742,11 +742,19 @@ class AccountMove(models.Model):
             The maximum threshold is 400 Euro, except for the forfettario tax regime (RF19), which can
             issue simplified invoices without the amount limit.
 
-            Deprecated since 18.0: use `not _l10n_it_edi_is_simplified_checks`.
-            It will be removed in ``20.0``.
+            A simplified invoice is chosen automatically only when the move and partner
+            checks pass and the partner's address is incomplete: with a complete address
+            an ordinary invoice is preferred.
         """
         self.ensure_one()
-        return not self._l10n_it_edi_is_simplified_checks()
+        partner = self.commercial_partner_id
+        return (
+            not self._l10n_it_edi_is_simplified_checks()
+            and partner._l10n_it_edi_export_check([
+                'partner_address_missing',
+                'partner_simplified',
+            ]).keys() == {'l10n_it_edi_partner_address_missing'}
+        )
 
     def _l10n_it_edi_is_simplified_checks(self):
         """ Warnings can be ignored by setting `l10n_it_document_type == 'TD07'`
@@ -755,16 +763,6 @@ class AccountMove(models.Model):
         errors = {}
         build_error = self._l10n_it_edi_build_move_error
 
-        if wrong_partner_moves := self.filtered(lambda move:
-            not move.commercial_partner_id._l10n_it_edi_is_italian()
-            or move.commercial_partner_id._l10n_it_edi_is_public_administration()
-        ):
-            errors['l10n_it_edi_move_simplified_partner'] = build_error(self.env._(
-                "Simplified Invoices (TD07) can only be used with domestic partners"
-                " that do not belong to the Public Administration."
-                " Please issue an ordinary invoice instead."),
-                records=wrong_partner_moves,
-            )
         if wrong_amount_moves := self.filtered(lambda move:
             move.company_id.l10n_it_tax_system != 'RF19' and move.amount_total > 400
         ):
@@ -778,15 +776,6 @@ class AccountMove(models.Model):
                 "Simplified Invoices (TD07) cannot be used for self-invoices."
                 " Please issue an ordinary invoice instead."),
                 records=reverse_charge_moves,
-            )
-        if incomplete_address_moves := self.filtered(lambda move:
-            'l10n_it_edi_partner_address_missing' not in move.commercial_partner_id._l10n_it_edi_export_check()
-        ):
-            errors['l10n_it_edi_move_simplified_address_complete'] = build_error(self.env._(
-                "Simplified Invoices (TD07) are generally preferred when partner address"
-                " is incomplete, so please issue an ordinary invoice instead."),
-                records=incomplete_address_moves,
-                level='info',
             )
         return errors
 
@@ -1109,9 +1098,10 @@ class AccountMove(models.Model):
         need to depend on account_edi_ubl_cii for the FatturaPA import flow.
         """
         logs = []
+        has_vat = vat and vat not in ('/', 'na', 'NA')
         partner = self.env['res.partner'] \
             .with_company(company_id) \
-            ._retrieve_partner(name=name, phone=phone, email=email, vat=vat)
+            ._retrieve_partner(name=name, phone=phone, email=email, vat=vat if has_vat else False)
         if not partner and name and vat:
             partner_vals = {
                 'name': name, 'email': email, 'phone': phone,
@@ -1424,12 +1414,17 @@ class AccountMove(models.Model):
 
             # Invoice lines ---------------------------------------
             tag_name = './/DettaglioLinee' if not extra_info['simplified'] else './/DatiBeniServizi'
+            invoice_line_vals = []
             for element in tree.xpath(tag_name):
-                move_line = self.invoice_line_ids.create({
+                # Use `new` to avoid intermediary write calls to the database
+                move_line = self.invoice_line_ids.new({
                     'move_id': self.id,
                     'tax_ids': [fields.Command.clear()]})
                 if move_line:
                     message_to_log += self._l10n_it_edi_import_line(element, move_line, extra_info)
+                    invoice_line_vals.append(move_line._convert_to_write(move_line._cache))
+
+            self.invoice_line_ids.create(invoice_line_vals)
 
             for element in tree.xpath('.//Allegati'):
                 attachment_64 = self.env['ir.attachment'].create({
@@ -1452,12 +1447,24 @@ class AccountMove(models.Model):
 
     @api.model
     def _is_prediction_enabled(self):
-        return self.env['ir.module.module'].search([('name', '=', 'account_accountant'), ('state', '=', 'installed')])
+        return 'account_accountant' in self.env['ir.module.module']._installed()
+
+    def _get_prediction_cache_value(self, key, predict_function):
+        self.ensure_one()
+        if not callable(predict_function):
+            return
+
+        predict_cache = self.env.cr.cache.setdefault(f'_l10n_it_edi_predict_cache_{self.id}', {})
+        if key in predict_cache:
+            return predict_cache[key]
+        predict_cache[key] = predict_function()
+        return predict_cache[key]
 
     def _l10n_it_edi_import_line(self, element, move_line, extra_info=None):
         extra_info = extra_info or {}
         company = move_line.company_id
         partner = move_line.partner_id
+        type_tax_use_domain = extra_info.get('type_tax_use_domain', [('type_tax_use', '=', 'purchase')])
         message_to_log = []
         predict_enabled = self._is_prediction_enabled()
 
@@ -1467,7 +1474,8 @@ class AccountMove(models.Model):
             move_line.sequence = int(line_elements[0].text)
 
         # Name.
-        move_line.name = " ".join(get_text(element, './/Descrizione').split())
+        move_name = " ".join(get_text(element, './/Descrizione').split())
+        move_line.name = move_name
 
         # Product.
         company_domain = self.env['res.company']._check_company_domain(company)
@@ -1497,7 +1505,8 @@ class AccountMove(models.Model):
 
         # If no product is found, try to find a product that may be fitting
         if predict_enabled and not move_line.product_id:
-            fitting_product = move_line._predict_product()
+            prediction_key = ('product', company.id, partner.id, move_name)
+            fitting_product = self._get_prediction_cache_value(prediction_key, move_line._predict_product)
             if fitting_product:
                 name = move_line.name
                 move_line.product_id = fitting_product
@@ -1505,7 +1514,9 @@ class AccountMove(models.Model):
 
         if predict_enabled:
             # Fitting account for the line
-            fitting_account = move_line._predict_account()
+            product_id = move_line.product_id.id if move_line.product_id else False
+            prediction_key = ('account', company.id, partner.id, move_name, product_id)
+            fitting_account = self._get_prediction_cache_value(prediction_key, move_line._predict_account)
             if fitting_account:
                 move_line.account_id = fitting_account
 
@@ -1542,7 +1553,7 @@ class AccountMove(models.Model):
         move_line.tax_ids = [Command.clear()]
         if percentage is not None:
             l10n_it_exempt_reason = get_text(element, './/Natura').upper() or False
-            extra_domain = extra_info.get('type_tax_use_domain', [('type_tax_use', '=', 'purchase')])
+            extra_domain = type_tax_use_domain
             if move_line.product_id:
                 extra_domain = list(extra_domain)
                 tax_scope = 'service' if move_line.product_id.type == 'service' else 'consu'
@@ -1558,7 +1569,10 @@ class AccountMove(models.Model):
 
         # If no taxes were found, try to find taxes that may be fitting
         if predict_enabled and not move_line.tax_ids:
-            fitting_taxes = move_line._predict_taxes()
+            prediction_key = ('taxes', company.id, partner.id, move_name, move_line.product_id.id if move_line.product_id else False, percentage, str(type_tax_use_domain))
+            move_line.price_unit = move_line.price_unit or 0.0
+            move_line.quantity = move_line.quantity or 1.0
+            fitting_taxes = self._get_prediction_cache_value(prediction_key, move_line._predict_taxes)
             if fitting_taxes:
                 move_line.tax_ids = [Command.set(fitting_taxes)]
 
@@ -1614,8 +1628,8 @@ class AccountMove(models.Model):
 
         companies = self.mapped("company_id")
         companies_partners = companies.mapped("partner_id")
-        moves_full = self.filtered(lambda m: not m._l10n_it_edi_is_simplified())
         moves_simplified = self.filtered(lambda m: m._l10n_it_edi_is_simplified())
+        moves_full = self - moves_simplified
 
         full = moves_full.mapped("commercial_partner_id").filtered(lambda p: p not in companies_partners)
         simplified = moves_simplified.mapped("commercial_partner_id").filtered(lambda p: p not in companies_partners | full)
@@ -1624,7 +1638,7 @@ class AccountMove(models.Model):
         return {
             **companies._l10n_it_edi_export_check(),
             **full._l10n_it_edi_export_check(['partner_address_missing']),
-            **simplified._l10n_it_edi_export_check(['partner_country_missing']),
+            **simplified._l10n_it_edi_export_check(['partner_country_missing', 'partner_simplified']),
             **(simplified | full)._l10n_it_edi_export_check(['partner_vat_codice_fiscale_missing']),
             **representatives._l10n_it_edi_export_check(['partner_vat_missing']),
             **self._l10n_it_edi_base_export_check(),
@@ -1778,9 +1792,11 @@ class AccountMove(models.Model):
         ''' Create the xml file content.
             :return:    The XML content as bytestring.
         '''
-        qweb_template_name = (
-            'l10n_it_edi.account_invoice_it_FatturaPA_export' if not self._l10n_it_edi_is_simplified()
-            else 'l10n_it_edi.account_invoice_it_simplified_FatturaPA_export')
+        document_type = self._l10n_it_edi_get_document_type()
+        if self._l10n_it_edi_is_simplified_document_type(document_type):
+            qweb_template_name = 'l10n_it_edi.account_invoice_it_simplified_FatturaPA_export'
+        else:
+            qweb_template_name = 'l10n_it_edi.account_invoice_it_FatturaPA_export'
         xml_content = self.env['ir.qweb']._render(qweb_template_name, {
             **self._l10n_it_edi_get_values(pdf_values),
             **self._l10n_it_edi_get_formatters()})

@@ -1660,6 +1660,7 @@ class Float(Field[float]):
         return self._min_display_digits
 
     _related__digits = property(attrgetter('_digits'))
+    _related__min_display_digits = property(attrgetter('_min_display_digits'))
 
     def _description_digits(self, env):
         return self.get_digits(env)
@@ -4962,8 +4963,15 @@ class Many2many(_RelationalMulti[M]):
             **kwargs
         )
 
+    def setup_related(self, model):
+        super().setup_related(model)
+        self._setup_relation(model)
+
     def setup_nonrelated(self, model):
         super().setup_nonrelated(model)
+        self._setup_relation(model)
+
+    def _setup_relation(self, model):
         # 2 cases:
         # 1) The ondelete attribute is defined and its definition makes sense
         # 2) The ondelete attribute is explicitly defined as 'set null' for a m2m,
