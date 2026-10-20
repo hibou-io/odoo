@@ -118,12 +118,12 @@ class ResourceCalendar(models.Model):
 
     @api.depends('company_id')
     def _compute_attendance_ids(self):
-        for calendar in self.filtered(lambda c: not c._origin or c._origin.company_id != c.company_id and c.company_id):
+        for calendar in self.filtered(lambda c: (not c._origin or c._origin.company_id != c.company_id and c.company_id) and not c.attendance_ids):
             company_calendar = calendar.company_id.resource_calendar_id
             calendar.update({
                 'two_weeks_calendar': company_calendar.two_weeks_calendar,
                 'tz': company_calendar.tz,
-                'attendance_ids': [(5, 0, 0)] + [
+                'attendance_ids': [
                     (0, 0, attendance._copy_attendance_vals()) for attendance in company_calendar.attendance_ids if not attendance.resource_id]
             })
 
@@ -562,7 +562,7 @@ class ResourceCalendar(models.Model):
             if resource and resource._is_flexible():
                 leaves = self._leave_intervals_batch(start_dt, end_dt, resource, domain, tz=tz)
                 if res_leaves := leaves.get(resource.id, []):
-                    result[resource.id] = [(i[0], i[1]) for i in res_leaves]
+                    result[resource.id] = self._get_flexible_leaves_date(res_leaves, resource, tz)
                 continue
             work_intervals = [(start, stop) for start, stop, meta in resources_work_intervals[resource.id]]
             # start + flatten(intervals) + end
@@ -705,6 +705,9 @@ class ResourceCalendar(models.Model):
             return {fields.Date.to_string(day.date()): (day.date() in works) for day in rrule(DAILY, start_dt, until=end_dt)}
         works = {d[0].date() for d in self._work_intervals_batch(start_dt, end_dt, domain=domain)[False]}
         return {fields.Date.to_string(day.date()): (day.date() not in works) for day in rrule(DAILY, start_dt, until=end_dt)}
+
+    def _get_flexible_leaves_date(self, res_leaves, resource, tz):
+        return []
 
     # --------------------------------------------------
     # External API

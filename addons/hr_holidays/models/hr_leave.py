@@ -777,6 +777,9 @@ Attempting to double-book your time off won't magically make your vacation 2x be
         if any(not vals.get('employee_id') for vals in vals_list):
             raise UserError(_("There is no employee set on the time off. Please make sure you're logged in the correct company."))
         holidays = super(HolidaysRequest, self.with_context(mail_create_nosubscribe=True)).create(vals_list)
+        # A base.automation during create can flush duration before dates are set (storing 0);
+        # recompute now that create returned and date_from/date_to are correct.
+        holidays._compute_duration()
         holidays._check_validity()
 
         for holiday in holidays:
@@ -822,10 +825,11 @@ Attempting to double-book your time off won't magically make your vacation 2x be
                     else:
                         employees = self.mapped('employee_id')
                     self._check_double_validation_rules(employees, values['state'])
+            employee = self.env['hr.employee'].browse(employee_id) or self.employee_id
             if 'date_from' in values:
-                values['request_date_from'] = values['date_from']
+                values['request_date_from'] = datetime.date(values['date_from'].astimezone(pytz.timezone(employee.tz)))
             if 'date_to' in values:
-                values['request_date_to'] = values['date_to']
+                values['request_date_to'] = datetime.date(values['date_to'].astimezone(pytz.timezone(employee.tz)))
         result = super(HolidaysRequest, self).write(values)
         if any(field in values for field in ['request_date_from', 'date_from', 'request_date_from', 'date_to', 'holiday_status_id', 'employee_id', 'state']):
             if not values.get('state') or values.get('state') not in ('refuse', 'cancel'):
@@ -974,7 +978,7 @@ Attempting to double-book your time off won't magically make your vacation 2x be
 
             meeting_values = {
                 'name': meeting_name,
-                'duration': holiday.number_of_days * (holiday.resource_calendar_id.hours_per_day or HOURS_PER_DAY),
+                'duration': self.env['calendar.event']._get_duration(start_value, stop_value),
                 'description': holiday.notes,
                 'user_id': user.id,
                 'start': start_value,

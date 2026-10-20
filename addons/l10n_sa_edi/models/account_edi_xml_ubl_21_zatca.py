@@ -3,6 +3,7 @@ from hashlib import sha256
 from base64 import b64encode
 from lxml import etree
 from odoo import models, fields
+from odoo.tools.float_utils import float_is_zero
 from odoo.tools.misc import file_path
 import re
 
@@ -358,17 +359,16 @@ class AccountEdiXmlUBL21Zatca(models.AbstractModel):
     def _l10n_sa_get_additional_tax_total_vals(self, invoice, vals):
         """
             For ZATCA, an additional TaxTotal element needs to be included in the UBL file
-            (Only for the Invoice, not the lines), but only when the invoice is in a different
-            currency from the one set on the company (SAR): the additional TaxAmount element
-            holds the tax amount converted to the company's currency (BT-111), and per BR-KSA-97
-            it must not be included at all when the invoice currency matches the company's,
-            otherwise it results in two identical TaxTotal nodes.
+            (Only for the Invoice, not the lines)
+
+            If the invoice is in a different currency from the one set on the company (SAR), then the additional
+            TaxAmount element needs to hold the tax amount converted to the company's currency.
 
             Business Rules: BT-110 & BT-111
         """
-        if invoice.currency_id == invoice.company_currency_id:
-            return vals['vals']['tax_total_vals']
-        curr_amount = abs(vals['taxes_vals']['tax_amount'])
+        curr_amount = abs(vals['taxes_vals']['tax_amount_currency'])
+        if invoice.currency_id != invoice.company_currency_id:
+            curr_amount = abs(vals['taxes_vals']['tax_amount'])
         return vals['vals']['tax_total_vals'] + [{
             'currency': invoice.company_currency_id,
             'currency_dp': invoice.company_currency_id.decimal_places,
@@ -459,7 +459,11 @@ class AccountEdiXmlUBL21Zatca(models.AbstractModel):
             'tax_subtotal_vals': [{
                 'currency': invoice.currency_id,
                 'currency_dp': invoice.currency_id.decimal_places,
-                'taxable_amount': vals['base_amount_currency'] if vals['tax_amount'] == 0 else abs(vals['base_amount_currency']),
+                'taxable_amount': (
+                    vals['base_amount_currency']
+                    if float_is_zero(vals['tax_amount'], precision_digits=2) and not self.env.context.get('is_downpayment')
+                    else abs(vals['base_amount_currency'])
+                ),
                 'tax_amount': abs(vals['tax_amount_currency']),
                 'percent': vals['_tax_category_vals_']['percent'],
                 'tax_category_vals': vals['_tax_category_vals_'],
