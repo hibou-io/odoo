@@ -48,9 +48,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-17 18:36+0000\n"
-"PO-Revision-Date: 2026-08-08 06:34+0000\n"
-"Last-Translator: Ulevičienė <vilma.uleviciene@mededu.lt>\n"
+"POT-Creation-Date: 2026-09-18 17:37+0000\n"
+"PO-Revision-Date: 2026-09-19 11:33+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Lithuanian <https://translate.odoo.com/projects/odoo-17/"
 "account/lt/>\n"
 "Language: lt\n"
@@ -60,7 +60,7 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < "
 "11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? 1 "
 ": n % 1 != 0 ? 2: 3);\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: account
 #. odoo-python
@@ -509,15 +509,16 @@ msgstr ""
 "        <t t-if=\"object.invoice_origin\">\n"
 "            (nuoroda: <t t-out=\"object.invoice_origin or ''\">SUB003</t>)\n"
 "        </t>\n"
-"        kuriosm suma <span style=\"font-weight:bold;\" t-out=\"format_amount"
-"(object.amount_total, object.currency_id) or ''\">$ 143,750.00</span>\n"
+"        kuriosm suma <span style=\"font-weight:bold;\" t-"
+"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+"143,750.00</span>\n"
 "        nuo <t t-out=\"object.company_id.name or ''\">Jūsų įm.y</t>.\n"
 "        <br><br>\n"
 "        Nedvejodami susisiekite su mumis, jei turite klausimų.\n"
 "        <t t-if=\"not is_html_empty(object.invoice_user_id.signature)\">\n"
 "            <br><br>\n"
-"            <t t-out=\"object.invoice_user_id.signature or ''\">--<br>"
-"Mitchell Admin</t>\n"
+"            <t t-out=\"object.invoice_user_id.signature or ''\">--"
+"<br>Mitchell Admin</t>\n"
 "        </t>\n"
 "    </p>\n"
 "</div>\n"
@@ -609,8 +610,9 @@ msgstr ""
 "        <t t-if=\"object.invoice_origin\">\n"
 "            (nuoroda: <t t-out=\"object.invoice_origin or ''\">SUB003</t>)\n"
 "        </t>\n"
-"        sumai <span style=\"font-weight:bold;\" t-out=\"format_amount"
-"(object.amount_total, object.currency_id) or ''\">$ 143,750.00</span>\n"
+"        sumai <span style=\"font-weight:bold;\" t-"
+"out=\"format_amount(object.amount_total, object.currency_id) or ''\">$ "
+"143,750.00</span>\n"
 "        nuo <t t-out=\"object.company_id.name or ''\">Jūsų įm.</t>.\n"
 "        <t t-if=\"object.payment_state in ('paid', 'in_payment')\">\n"
 "            Ši sąskaita jau apmokėta.\n"
@@ -632,15 +634,15 @@ msgstr ""
 "object.timesheet_count\">\n"
 "            <br><br>\n"
 "            PS: darbo laiko apskaitos žiniaraščius galite pasitikrinti <a t-"
-"att-href=\"'my/timesheets?search_in=invoice&amp;search=%s' % object.name\">"
-"mūsų portale.</a> \n"
+"att-href=\"'my/timesheets?search_in=invoice&amp;search=%s' % "
+"object.name\">mūsų portale.</a> \n"
 "        </t>\n"
 "        <br><br>\n"
 "        Nedvejodami susisiekite su mumis, jei turite klausimų.\n"
 "        <t t-if=\"not is_html_empty(object.invoice_user_id.signature)\">\n"
 "            <br><br>\n"
-"            <t t-out=\"object.invoice_user_id.signature or ''\">--<br>"
-"Mitchell Admin</t>\n"
+"            <t t-out=\"object.invoice_user_id.signature or ''\">--"
+"<br>Mitchell Admin</t>\n"
 "        </t>\n"
 "    </p>\n"
 "</div>\n"
@@ -673,15 +675,15 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        Gerb. <t t-out=\"object.partner_id.name or ''\">Azure Interior</t>"
-"<br><br>\n"
+"        Gerb. <t t-out=\"object.partner_id.name or ''\">Azure Interior</"
+"t><br><br>\n"
 "        Dėkojame už Jūsų mokėjimą.\n"
 "        Čia yra Jūsų mokėjimo kvitas <span style=\"font-weight:bold;\" t-"
 "out=\"(object.name or '').replace('/','-') or ''\">BNK1-2021-05-0002</span> "
 "kurio\n"
-"      suma <span style=\"font-weight:bold;\" t-out=\"format_amount"
-"(object.amount, object.currency_id) or ''\">$ 10.00</span> nuo <t t-"
-"out=\"object.company_id.name or ''\">Jūsų įm..\n"
+"      suma <span style=\"font-weight:bold;\" t-"
+"out=\"format_amount(object.amount, object.currency_id) or ''\">$ 10.00</"
+"span> nuo <t t-out=\"object.company_id.name or ''\">Jūsų įm..\n"
 "        <br><br>\n"
 "        Nedvejodami susisiekite su mumis, jei turite klausimų.\n"
 "        <br><br>\n"
@@ -866,8 +868,8 @@ msgid ""
 "<span class=\"o_form_label oe_inline\" invisible=\"amount_type == "
 "'fixed'\">%</span>"
 msgstr ""
-"<span class=\"o_form_label oe_inline\" invisible=\"amount_type == 'fixed'\">"
-"%</span>"
+"<span class=\"o_form_label oe_inline\" invisible=\"amount_type == "
+"'fixed'\">%</span>"
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_account_reconcile_model_form
@@ -1609,7 +1611,8 @@ msgstr ""
 #: code:addons/account/models/account_move_line.py:0
 #, python-format
 msgid "Account %s is of receivable type, but is used in a purchase operation."
-msgstr "Sąskaitos %s   tipas yra gautina, bet ji naudojama pirkimo operacijoje."
+msgstr ""
+"Sąskaitos %s   tipas yra gautina, bet ji naudojama pirkimo operacijoje."
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__module_account_avatax
@@ -1699,6 +1702,11 @@ msgid "Account Mapping"
 msgstr "Sąskaitų susiejimai"
 
 #. module: account
+#: model:ir.model.fields,field_description:account.field_account_tax__account_move_line_ids
+msgid "Account Move Line"
+msgstr ""
+
+#. module: account
 #: model:ir.model,name:account.model_account_move_reversal
 msgid "Account Move Reversal"
 msgstr "Sąskaitos perkėlimo apsukimas"
@@ -1750,6 +1758,11 @@ msgstr "Gautinos sumos (PoS)"
 #: model:ir.model.fields,field_description:account.field_account_move_line__is_account_reconcile
 msgid "Account Reconcile"
 msgstr "Sąskaitų suderinimas"
+
+#. module: account
+#: model:ir.model.fields,field_description:account.field_account_tax__account_reconcile_model_line_ids
+msgid "Account Reconcile Model Line"
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_move_line__account_root_id
@@ -4736,6 +4749,8 @@ msgid ""
 "Create invoices, register payments and keep track of the discussions with "
 "your vendors."
 msgstr ""
+"Sukurkite sąskaitas faktūras, registruokite mokėjimus ir sekite diskusijas "
+"su tiekėjais."
 
 #. module: account
 #: model_terms:ir.actions.act_window,help:account.rounding_list_action
@@ -6966,7 +6981,8 @@ msgstr ""
 #. module: account
 #: model:ir.model.fields,help:account.field_account_reconcile_model_line__force_tax_included
 msgid "Force the tax to be managed as a price included tax."
-msgstr "Priverstinai valdyti mokestį kaip mokestį, įtrauktą į sąskaitą mokestį."
+msgstr ""
+"Priverstinai valdyti mokestį kaip mokestį, įtrauktą į sąskaitą mokestį."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_account__currency_id
@@ -8808,7 +8824,8 @@ msgstr ""
 #: model:ir.model.fields,help:account.field_res_company__account_opening_journal_id
 msgid ""
 "Journal where the opening entry of this company's accounting has been posted."
-msgstr "Žurnalas, kuriame buvo įvestas šios kompanijos pradinių likučių įrašas."
+msgstr ""
+"Žurnalas, kuriame buvo įvestas šios kompanijos pradinių likučių įrašas."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_automatic_entry_wizard__journal_id
@@ -9963,8 +9980,8 @@ msgid ""
 "No journal could be found in company %(company_name)s for any of those "
 "types: %(journal_types)s"
 msgstr ""
-"Nerasta jokio žurnalo įmonėje %(company_name)s bet kuriam iš šių tipų: %"
-"(journal_types)s"
+"Nerasta jokio žurnalo įmonėje %(company_name)s bet kuriam iš šių tipų: "
+"%(journal_types)s"
 
 #. module: account
 #. odoo-python
@@ -10379,12 +10396,20 @@ msgstr ""
 #: code:addons/account/models/account_move_line.py:0
 #, python-format
 msgid "One or more lines require a 100% analytic distribution."
-msgstr "Vienai ar kelioms eilutėms reikalingas 100 % analitinis pasiskirstymas."
+msgstr ""
+"Vienai ar kelioms eilutėms reikalingas 100 % analitinis pasiskirstymas."
 
 #. module: account
 #: model:ir.ui.menu,name:account.root_payment_menu
 msgid "Online Payments"
 msgstr "Mokėjimai internetu"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/partner.py:0
+#, python-format
+msgid "Only Accounting managers can create foreign taxes."
+msgstr ""
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_account_report__only_tax_exigible
@@ -11660,6 +11685,7 @@ msgstr "Pirkimas"
 
 #. module: account
 #: model:ir.model.fields,field_description:account.field_res_config_settings__group_show_purchase_receipts
+#: model:ir.model.fields.selection,name:account.selection__account_invoice_report__move_type__in_receipt
 #: model:ir.model.fields.selection,name:account.selection__account_move__move_type__in_receipt
 #: model:res.groups,name:account.group_purchase_receipts
 msgid "Purchase Receipt"
@@ -12422,6 +12448,7 @@ msgid "Sales Expenses"
 msgstr ""
 
 #. module: account
+#: model:ir.model.fields.selection,name:account.selection__account_invoice_report__move_type__out_receipt
 #: model:ir.model.fields.selection,name:account.selection__account_move__move_type__out_receipt
 msgid "Sales Receipt"
 msgstr "Pardavimo kvitas"
@@ -14729,6 +14756,8 @@ msgid ""
 "The register payment wizard should only be called on account.move or "
 "account.move.line records."
 msgstr ""
+"Mokėjimo už registrą vedlys turėtų būti iškviečiamas tik „account.move“ arba "
+"„account.move.line“ įrašuose."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_report__root_report_id
@@ -16569,7 +16598,7 @@ msgstr ""
 #: code:addons/account/wizard/account_payment_register.py:0
 #, python-format
 msgid "You can only register payment for posted journal entries."
-msgstr ""
+msgstr "Galite užregistruoti tik apmokėjimus už įtrauktus žurnalo įrašus."
 
 #. module: account
 #. odoo-python
@@ -16736,6 +16765,8 @@ msgid ""
 "You can't open the register payment wizard without at least one receivable/"
 "payable line."
 msgstr ""
+"Negalima atidaryti sąskaitų apmokėjimo vedlio, jei nėra bent vienos gautinų "
+"ar mokėtinų sumų eilutės."
 
 #. module: account
 #. odoo-python
@@ -16771,7 +16802,7 @@ msgstr ""
 msgid ""
 "You can't register payments for both inbound and outbound moves at the same "
 "time."
-msgstr ""
+msgstr "Negalima vienu metu registruoti mokėjimų už įvežimą ir išvežimą."
 
 #. module: account
 #. odoo-python
@@ -17564,6 +17595,9 @@ msgid ""
 "to its registered office within 8 days of the delivery of the goods or the "
 "provision of the services."
 msgstr ""
+"Apie bet kokį reikalavimą turi būti pranešta registruotu laišku, išsiųstu į "
+"jos registruotą buveinę per 8 dienas nuo prekių pristatymo arba paslaugų "
+"suteikimo."
 
 #. module: account
 #: model:ir.model.fields.selection,name:account.selection__account_tax_repartition_line__repartition_type__tax

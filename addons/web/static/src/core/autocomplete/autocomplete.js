@@ -5,7 +5,7 @@ import { useAutofocus, useForwardRefToParent, useService } from "@web/core/utils
 import { useDebounced } from "@web/core/utils/timing";
 import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { usePosition } from "@web/core/position_hook";
-import { Component, onWillUpdateProps, useExternalListener, useRef, useState } from "@odoo/owl";
+import { Component, onWillUpdateProps, status, useExternalListener, useRef, useState } from "@odoo/owl";
 
 export class AutoComplete extends Component {
     setup() {
@@ -120,6 +120,15 @@ export class AutoComplete extends Component {
         this.state.activeSourceOption = null;
     }
 
+    discardPendingInput() {
+        this.debouncedProcessInput.cancel();
+        this.pendingPromise?.resolve();
+        if (this.loadingPromise === this.pendingPromise) {
+            this.loadingPromise = null;
+        }
+        this.pendingPromise = null;
+    }
+
     cancel() {
         if (this.inputRef.el.value.length) {
             if (this.props.autoSelect) {
@@ -193,6 +202,7 @@ export class AutoComplete extends Component {
 
     selectOption(option, params = {}) {
         this.inEdition = false;
+        this.discardPendingInput();
         if (option.unselectable) {
             this.inputRef.el.value = "";
             this.close();
@@ -327,6 +337,9 @@ export class AutoComplete extends Component {
             }
 
             await this.loadingPromise;
+            if (status(this) === "destroyed") {
+                return;
+            }
         }
 
         switch (hotkey) {

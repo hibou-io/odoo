@@ -9,8 +9,10 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from odoo import Command
 from odoo.exceptions import UserError
 from odoo.tests.common import tagged
+from odoo.tools.misc import file_open
+from odoo.tools import mute_logger
 
-from .common import FAKE_UUID
+from .common import FAKE_UUID, FILE_PATH
 from .messages_common import TestPdpMessagesCommon
 
 
@@ -473,26 +475,6 @@ class TestPdpMessage(TestPdpMessagesCommon):
             self.env.ref('account.ir_cron_account_move_send').method_direct_trigger()
         self.assertEqual(move_1.peppol_move_state, 'skipped')
 
-    def _pay(self, move, amount=None):
-        payment = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=move.ids).create({
-            'payment_date': '2020-01-02',
-            **({'amount': amount} if amount else {}),
-        })._create_payments()
-        self.assertTrue(payment.is_reconciled)
-        self.assertFalse(payment.is_matched)
-        liquidity_lines, _counterpart_lines, _writeoff_lines = payment._seek_for_lines()
-
-        statement_line = self.env['account.bank.statement.line'].create({
-            'payment_ref': 'test',
-            'journal_id': self.company_data['default_journal_bank'].id,
-            'partner_id': move.partner_id.id,
-            'amount': amount or payment.amount,
-        })
-
-        _st_liquidity_lines, st_suspense_lines, _st_other_lines = statement_line._seek_for_lines()
-        st_suspense_lines.account_id = liquidity_lines.account_id
-        (st_suspense_lines + liquidity_lines).reconcile()
-
     def test_paid_lifecycle_credit_note_without_payment(self):
         move = self._create_french_invoice()
         move.action_post()
@@ -773,4 +755,152 @@ class TestPdpMessage(TestPdpMessagesCommon):
                 {'amount_changed': False, 'type_code': 'MEN', 'amount': '1085.00', 'currency': 'EUR', 'tax_percent': '8.50'},
             ],
             'move_id': move.id,
+        }])
+
+    def test_paid_lifecycle_cron_response_not_created(self):
+        def mocked_pdp_send_response(self, reference_moves, status, additional_info=None):
+            # Do not do anything; i.e. do not create responses
+            return None
+
+        move = self._create_french_invoice()
+        move.action_post()
+
+        send_wizard = self.create_send_and_print(move)
+        send_wizard.action_send_and_print()
+        self.env['account_edi_proxy_client.user']._cron_peppol_get_message_status()
+        self.assertEqual(move.peppol_move_state, 'done')
+        self._pay(move)
+        # We only sent the payment lifecycle automatically in case the Flow 1 succeeded
+        move.pdp_ppf_move_state = 'sent'
+        self.assertEqual(move.payment_state, 'paid')
+        self.assertEqual(move.pdp_lifecycle_residual, move.amount_total)
+        self.assertFalse(move.peppol_response_ids)
+
+        with patch(
+            'odoo.addons.l10n_fr_pdp.models.account_edi_proxy_user.AccountEdiProxyClientUser._pdp_send_response',
+            mocked_pdp_send_response,
+        ):
+            self.env.ref('l10n_fr_pdp.ir_cron_pdp_send_lifecycles').method_direct_trigger()
+
+        paid_response = move.peppol_response_ids
+        self.assertRecordValues(paid_response, [{
+            'peppol_state': 'error',
+            'pdp_flow_number': '2',
+            'response_code': 'PD',
+            'pdp_ppf_state': False,
+            'pdp_payment_info': [
+                {'amount_changed': False, 'type_code': 'MEN', 'amount': '600.00', 'currency': 'EUR', 'tax_percent': '20.00'},
+                {'amount_changed': False, 'type_code': 'MEN', 'amount': '1085.00', 'currency': 'EUR', 'tax_percent': '8.50'},
+            ],
+            'move_id': move.id,
+        }])
+        self.assertEqual(move.pdp_lifecycle_residual, 0)
+        self.assertFalse(self.env['account_edi_proxy_client.user']._pdp_get_send_lifecycles_moves(move.company_id, 100))
+
+        with patch(
+            'odoo.addons.l10n_fr_pdp.wizard.pdp_response_wizard.PdpResponseWizard.button_send',
+        ) as button_send:
+            self.env.ref('l10n_fr_pdp.ir_cron_pdp_send_lifecycles').method_direct_trigger()
+            self.assertFalse(button_send.called)
+
+    def test_paid_lifecycle_cron_sending_exception(self):
+        def mocked_button_send_raises(self):
+            raise Exception("test")
+
+        move = self._create_french_invoice()
+        move.action_post()
+
+        send_wizard = self.create_send_and_print(move)
+        send_wizard.action_send_and_print()
+        self.env['account_edi_proxy_client.user']._cron_peppol_get_message_status()
+        self.assertEqual(move.peppol_move_state, 'done')
+        self._pay(move)
+        # We only sent the payment lifecycle automatically in case the Flow 1 succeeded
+        move.pdp_ppf_move_state = 'sent'
+        self.assertEqual(move.payment_state, 'paid')
+        self.assertEqual(move.pdp_lifecycle_residual, move.amount_total)
+        self.assertFalse(move.peppol_response_ids)
+
+        with mute_logger('odoo.addons.l10n_fr_pdp.models.account_edi_proxy_user'), patch(
+            'odoo.addons.l10n_fr_pdp.wizard.pdp_response_wizard.PdpResponseWizard.button_send',
+            mocked_button_send_raises,
+        ):
+            self.env.ref('l10n_fr_pdp.ir_cron_pdp_send_lifecycles').method_direct_trigger()
+
+        paid_response = move.peppol_response_ids
+        self.assertRecordValues(paid_response, [{
+            'peppol_state': 'error',
+            'pdp_flow_number': '2',
+            'response_code': 'PD',
+            'pdp_ppf_state': False,
+            'pdp_payment_info': [
+                {'amount_changed': False, 'type_code': 'MEN', 'amount': '600.00', 'currency': 'EUR', 'tax_percent': '20.00'},
+                {'amount_changed': False, 'type_code': 'MEN', 'amount': '1085.00', 'currency': 'EUR', 'tax_percent': '8.50'},
+            ],
+            'move_id': move.id,
+        }])
+        self.assertEqual(move.pdp_lifecycle_residual, 0)
+        self.assertFalse(self.env['account_edi_proxy_client.user']._pdp_get_send_lifecycles_moves(move.company_id, 100))
+
+        with patch(
+            'odoo.addons.l10n_fr_pdp.wizard.pdp_response_wizard.PdpResponseWizard.button_send',
+        ) as button_send:
+            self.env.ref('l10n_fr_pdp.ir_cron_pdp_send_lifecycles').method_direct_trigger()
+            self.assertFalse(button_send.called)
+
+
+@tagged('post_install_l10n', 'post_install', '-at_install')
+class TestPdpMessageFacturX(TestPdpMessagesCommon):
+
+    @classmethod
+    def _get_mock_data(cls, error=False, nr_invoices=1):
+        proxy_documents = {
+            FAKE_UUID[0]: {
+                'accounting_supplier_party': '0184:16356706',
+                'filename': 'test_incoming',
+                'enc_key': file_open(f'{FILE_PATH}/enc_key', mode='rb').read(),
+                'document': b64encode(file_open(f'{FILE_PATH}/document_factur_x_self_bill', mode='rb').read()),
+                'state': 'done' if not error else 'error',
+                'direction': 'incoming',
+                'document_type': 'Factur-X',
+                'origin_message_uuid': FAKE_UUID[0],
+            }
+        }
+
+        responses = {
+            '/api/pdp/1/ack': {'result': {}},
+            '/api/pdp/1/get_all_documents': {'result': {
+                'messages': [
+                    {
+                        'accounting_supplier_party': None,
+                        'filename': 'test_incoming.pdf',
+                        'uuid': FAKE_UUID[0],
+                        'origin_message_uuid': FAKE_UUID[0],
+                        'state': 'done',
+                        'direction': 'incoming',
+                        'document_type': 'Factur-X',
+                        'sender': '0184:16356706',
+                        'receiver': '0088:5798009811512',
+                        'timestamp': '2022-12-30',
+                        'error': False if not error else 'Test error',
+                    }
+                ],
+            }},
+        }
+        return proxy_documents, responses
+
+    def test_receive_success_pdp_factur_x_self_billed(self):
+        # An outgoing invoice should be created from the Factur-X format when it is self-billed.
+        self.env['account_edi_proxy_client.user']._cron_peppol_get_new_documents()
+
+        move = self.env['account.move'].search([('peppol_message_uuid', '=', FAKE_UUID[0])])
+        self.assertRecordValues(move, [{
+            'peppol_move_state': 'done',
+            'move_type': 'out_invoice',
+            'amount_total': 24,
+        }])
+        self.assertNotEqual(move.partner_id.id, move.company_id.id)
+        self.assertRecordValues(move.partner_id, [{
+            'name': 'SUPER FRENCH PARTNER',
+            'vat': 'FR23334175221',
         }])

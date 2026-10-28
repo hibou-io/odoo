@@ -21,6 +21,7 @@ class PeppolSettingsButtons extends Component {
     setup() {
         super.setup();
         this.orm = useService("orm");
+        this.action = useService("action");
         this.dialogService = useService("dialog");
         this.notification = useService("notification");
         this.state = useState({
@@ -170,15 +171,36 @@ class PeppolSettingsButtons extends Component {
 
     async createUser() {
         const record = this.props.record;
+        const countryCode = record.data.company_country_code || record.data.country_code;
+        const isFrenchCompany = ['FR', 'GP', 'MQ', 'RE'].includes(countryCode);
+        const isFrenchEas = ['0225', '0009', '9957', '0002'].includes(record.data.account_peppol_eas);
+
+        if (!(isFrenchCompany || isFrenchEas)) {
+            await this._createUser();
+            return
+        }
+
+        this.dialogService.add(ConfirmationDialog, {
+            title: _t("French Company Registration"),
+            body: _t("If you want to use the French E-Invoicing via Approved Platform, please consider installing the module `France - E-Invoicing (Approved Platform)` before registering here. Are you sure you want to continue?"),
+            confirmLabel: _t("OK"),
+            cancelLabel: _t("Cancel"),
+            confirm: () => this._createUser(),
+            cancel: () => {},
+        });
+    }
+
+    async _createUser() {
+        const record = this.props.record;
         try {
             await this._save();
-            await this.orm.call(
+            const action = await this.orm.call(
                 record.resModel,
-                "button_create_peppol_proxy_user",
+                "button_register_with_kyc",
                 [[record.resId]],
                 { context: record.context }
             );
-            await this.env.model.root.load();
+            await this.action.doAction(action);
         } catch (error) {
             const isAlreadyRegisteredError = (
                 error.exceptionName?.endsWith("EndpointAlreadyRegisteredError")
@@ -193,13 +215,13 @@ class PeppolSettingsButtons extends Component {
                 cancelLabel: _t("Cancel"),
                 confirm: async () => {
                     await this._save();
-                    await this.orm.call(
+                    const action = await this.orm.call(
                         record.resModel,
                         "button_create_peppol_proxy_user_sender_only",
                         [[record.resId]],
                         { context: record.context }
                     );
-                    await this.env.model.root.load();
+                    await this.action.doAction(action);
                 },
                 cancel: () => { },
             });
