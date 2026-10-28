@@ -354,7 +354,10 @@ class ResCompany(models.CachedModel):
             if vals.get('name') and not vals.get('partner_id')
         ]
         if no_partner_vals_list:
-            partners = self.env['res.partner'].with_context(default_parent_id=False).create([
+            partners = self.env['res.partner'].with_context(
+                default_parent_id=False,
+                default_company_id=False,
+            ).create([
                 {
                     'name': vals['name'],
                     'image_1920': vals.get('logo'),
@@ -404,12 +407,13 @@ class ResCompany(models.CachedModel):
             if not currency.active:
                 currency.write({'active': True})
 
-        res = super().write(vals)
-
+        # computed before the write: afterwards, every company has the new country
         companies_needs_l10n = (
             vals.get('country_id')
             and self.filtered(lambda company: not company.country_id)
         ) or self.browse()
+
+        res = super().write(vals)
 
         if any(self._ids) and not self._clear_asset_cache_on_fields.isdisjoint(vals):
             # this is used in the content of an asset (see asset_styles_company_report)

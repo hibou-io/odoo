@@ -41,6 +41,9 @@ class PosSelfOrderController(http.Controller):
         if preset_id and preset_id.service_at == 'delivery':
             self._ensure_delivery_fee(order_ids, preset_id)
 
+        if preset_id:
+            self._ensure_service_fee(order_ids, preset_id)
+
         # Recompute all prices from newly created lines to ensure price correctness and
         # avoid potential manipulation from the frontend
         order_ids.recompute_prices()
@@ -61,8 +64,11 @@ class PosSelfOrderController(http.Controller):
         orders = self.env['pos.order']._load_pos_self_data_read(order, config)
 
         for o in orders:
-            del o['email']
-            del o['mobile']
+            if config.self_ordering_mode != 'kiosk':
+                # Kiosk needs this data to print the preparation receipt
+                del o['email']
+                del o['mobile']
+            o['partner_id'] = order._get_signed_self_partner_id(config, o['partner_id']) if o.get('partner_id') else False
 
         result = {
             'pos.order': orders,
@@ -108,6 +114,27 @@ class PosSelfOrderController(http.Controller):
             })
             order._compute_line_price(new_line, price=preset.delivery_product_price)
 
+    def _ensure_service_fee(self, order, preset):
+        """Add or remove the service fee line based on the preset configuration."""
+        service_fee_product = preset.service_fee_product_id
+        if not service_fee_product:
+            return
+
+        existing_service_fee_lines = order.lines.filtered(
+            lambda l: l.product_id == service_fee_product
+        )
+        if not preset.service_fee:
+            existing_service_fee_lines.unlink()
+        elif not existing_service_fee_lines:
+            order.env['pos.order.line'].sudo().create({
+                'order_id': order.id,
+                'product_id': service_fee_product.id,
+                'qty': 1,
+                'price_subtotal': 0.0,
+                'price_subtotal_incl': 0.0,
+                'full_product_name': service_fee_product.name,
+            })
+
     @http.route('/pos-self-order/get-order/<int:order_id>', auth='public', type='jsonrpc', website=True)
     def get_order(self, access_token, order_id, order_access_token):
         pos_config = self._verify_pos_config(access_token)
@@ -122,7 +149,8 @@ class PosSelfOrderController(http.Controller):
     def validate_partner(self, access_token, name, phone, street, zip, city, country_id, state_id=None, partner_id=None, email=None, preset_id=None):
         pos_config = self._verify_pos_config(access_token)
         preset = pos_config.env['pos.preset'].browse(int(preset_id)) if preset_id else False
-        existing_partner = pos_config.env['res.partner'].sudo().browse(int(partner_id)) if partner_id else False
+        POSOrder = pos_config.env['pos.order']
+        existing_partner = POSOrder._get_self_partner_from_token(pos_config, partner_id)
         google_places_api_key = request.env['ir.config_parameter'].sudo().get_str('google_address_autocomplete.google_places_api_key') or None
 
         if existing_partner and existing_partner.exists():
@@ -131,7 +159,7 @@ class PosSelfOrderController(http.Controller):
                 if error:
                     return {'error': error}
             return {
-                'res.partner': existing_partner.read(['id'], load=False),
+                'res.partner': [{'id': partner_id}],
             }
 
         state_id = pos_config.env['res.country.state'].browse(int(state_id)) if state_id else False
@@ -153,7 +181,7 @@ class PosSelfOrderController(http.Controller):
                 return {'error': error}
 
         return {
-            'res.partner': partner_sudo.read(['id'], load=False),
+            'res.partner': [{'id': POSOrder._get_signed_self_partner_id(pos_config, partner_sudo.id)}],
         }
 
     def _check_delivery_address_for_partner(self, preset, partner):
@@ -340,6 +368,18 @@ class PosSelfOrderController(http.Controller):
 
     def _verify_config_constraint(self, pos_config_sudo):
         return not pos_config_sudo or (pos_config_sudo.self_ordering_mode != 'mobile' and pos_config_sudo.self_ordering_mode != 'kiosk')
+
+    def _verify_pos_order(self, pos_config, order_id, order_access_token):
+        """Verify the POS order and its access token for the given POS config."""
+        pos_order = pos_config.env['pos.order'].browse(int(order_id))
+        if (
+            not pos_order.exists()
+            or pos_order.config_id != pos_config
+            or not order_access_token
+            or not consteq(pos_order.access_token, order_access_token)
+        ):
+            raise NotFound()
+        return pos_order
 
     def _verify_authorization(self, access_token, table_identifier, order):
         """

@@ -26,6 +26,16 @@ class ProductProduct(models.Model):
     }
     _check_company_domain = models.check_company_domain_parent_of
 
+    @api.model
+    def default_get(self, fields):
+        res = super().default_get(fields)
+        if 'uom_id' in fields and not res.get('uom_id'):
+            # Since uom is required, always fallback on a default (if any) even when the context
+            # gives an empty default value. Delegating to the product template default_get override
+            # as it already handles erroneous `{'default_uom_id': False}` context value.
+            res['uom_id'] = self.env['product.template'].default_get(['uom_id']).get('uom_id', False)
+        return res
+
     # price_extra: catalog extra value only, sum of variant extra attributes
     price_extra = fields.Float(
         'Variant Price Extra', compute='_compute_product_price_extra',
@@ -463,6 +473,7 @@ class ProductProduct(models.Model):
             template = product.product_tmpl_id
             if len(template.with_context(active_test=False).product_variant_ids) == 1 and not template.has_configurable_attributes:
                 template.list_price = product.lst_price
+                product.invalidate_recordset(['list_price'])
 
     @api.depends_context('partner_id')
     def _compute_product_code(self):
@@ -1146,14 +1157,27 @@ class ProductProduct(models.Model):
     @api.model
     def name_search(self, name='', domain=None, operator='ilike', limit=100):
         if not name:
-            return super().name_search(name, domain, operator, limit)
+            domain = Domain(domain or Domain.TRUE)
+            favorite_products = self.search_fetch(
+                domain & Domain("is_favorite", "=", True), ["display_name"], limit=limit
+            )
+            limit_products = limit and limit - len(favorite_products)
+            products = favorite_products
+            if limit_products is None or limit_products > 0:
+                products |= self.search_fetch(
+                    domain & Domain("is_favorite", "=", False),
+                    ["display_name"],
+                    limit=limit_products,
+                )
+            return [(product.id, product.display_name) for product in products.sudo()]
         # search progressively by the most specific attributes
         positive_operators = ['=', 'ilike', '=ilike', 'like', '=like']
         is_positive = not operator in Domain.NEGATIVE_OPERATORS
         products = self.browse()
         domain = Domain(domain or Domain.TRUE)
         if operator in positive_operators:
-            products = self.search_fetch(domain & Domain('default_code', operator, name), ['display_name'], limit=limit) \
+            code_operator = '=ilike' if operator == 'ilike' else '='
+            products = self.search_fetch(domain & Domain('default_code', code_operator, name), ['display_name'], limit=limit) \
                 or self.search_fetch(domain & Domain('barcode', '=', name), ['display_name'], limit=limit)
         if not products:
             if is_positive:
@@ -1293,7 +1317,11 @@ class ProductProduct(models.Model):
             }
             return [vals.get(key, record[key]) for key in sort_key]
         sellers = self._get_filtered_sellers(partner_id=partner_id, quantity=quantity, date=date, uom_id=uom_id, params=params)
-        return sellers.sorted(sort_function)[:1]._get_seller_info()
+        res = self.env['product.supplierinfo']
+        for seller in sellers:
+            if not res or res.partner_id == seller.partner_id:
+                res |= seller
+        return res.sorted(sort_function)[:1]._get_seller_info()
 
     def _get_product_price_context(self, combination):
         self.ensure_one()

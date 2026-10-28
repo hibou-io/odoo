@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from freezegun import freeze_time
+from lxml import etree
 
 from odoo.exceptions import ValidationError
 from odoo.fields import Date, Datetime
@@ -119,6 +120,32 @@ class TestAllocations(TestHrHolidaysCommon):
 
         self.assertEqual(employee_allocation.name, "Custom Time Off Test (10.0 day(s))")
 
+    def test_allocation_request_default_work_entry_type(self):
+        company = self.env['res.company'].create({'name': 'Antarctic Company', 'country_id': self.env.ref('base.aq').id})
+        employee = self.env['hr.employee'].create({'name': 'Penguin', 'company_id': company.id})
+        legal, requestable = self.env['hr.work.entry.type'].create([{
+            'name': name,
+            'code': name,
+            'count_as': 'absence',
+            'country_id': company.country_id.id,
+            'requires_allocation': True,
+            'employee_requests': employee_requests,
+            'allocation_validation_type': 'no_validation',
+            'sequence': sequence,
+        } for name, employee_requests, sequence in [('Legal Time Off', False, 1), ('Requestable Time Off', True, 2)]])
+        self.env['hr.leave.allocation'].create({
+            'employee_id': employee.id,
+            'work_entry_type_id': legal.id,
+            'number_of_days': 10,
+            'date_from': date(date.today().year, 1, 1),
+        }).action_approve()
+
+        Allocation = self.env['hr.leave.allocation'].with_context(default_employee_id=employee.id)
+        self.assertEqual(Allocation.default_get(['employee_id', 'work_entry_type_id'])['work_entry_type_id'], legal.id)
+        # an allocation requested by the employee is of a time type they can request
+        employee_request_defaults = Allocation.with_context(is_employee_allocation=True).default_get(['employee_id', 'work_entry_type_id'])
+        self.assertEqual(employee_request_defaults['work_entry_type_id'], requestable.id)
+
     def test_allocation_request_half_days(self):
         self.work_entry_type.write({
             'name': 'Custom Time Off Test',
@@ -177,6 +204,42 @@ class TestAllocations(TestHrHolidaysCommon):
 
         self.assertEqual(employee_allocation.number_of_hours, 10)
         self.assertEqual(employee_emp_allocation.number_of_hours, 10)
+
+    def test_allocation_hours_0_hour_calendar(self):
+        self.work_entry_type.request_unit = 'hour'
+        self.work_entry_type.unit_of_measure = 'hour'
+        calendar_8h = self.employee_emp.resource_calendar_id
+        self.employee.resource_calendar_id = self.env['resource.calendar'].create({
+            'name': 'Calendar - 0H',
+            'company_id': self.company.id,
+            'calendar_type': 'fixed',
+            'days_per_week': 5,
+            'hours_per_day': 0,
+        })
+        self.assertEqual(self.employee.resource_calendar_id.hours_per_day, 0.0)
+        self.assertEqual(calendar_8h.hours_per_day, 8.0)
+
+        self.env['hr.leave.allocation.generate.multi.wizard'].create({
+            'name': 'Hours Allocation',
+            'employee_ids': [(4, self.employee.id), (4, self.employee_emp.id)],
+            'work_entry_type_id': self.work_entry_type.id,
+            'duration': 10,
+        }).action_generate_allocations()
+
+        employee_allocation = self.env['hr.leave.allocation'].search([
+            ('employee_id', '=', self.employee.id),
+        ])
+        employee_emp_allocation = self.env['hr.leave.allocation'].search([
+            ('employee_id', '=', self.employee_emp.id),
+        ])
+        self.assertEqual(employee_emp_allocation.number_of_hours, 10)
+
+        # Editing the hours and switching back to a working schedule must not divide by zero
+        employee_allocation.number_of_hours = 16
+        self.assertEqual(employee_allocation.number_of_days, 0)
+        self.employee.resource_calendar_id = calendar_8h
+        employee_allocation.number_of_hours = 16
+        self.assertEqual(employee_allocation.number_of_days, 2)
 
     def test_allocation_hours_recompute_on_schedule_change(self):
         self.work_entry_type.request_unit = 'hour'
@@ -512,12 +575,12 @@ class TestAllocations(TestHrHolidaysCommon):
         leave = self.env['hr.leave'].with_context(skip_allocation_check=True).create({
             'employee_id': self.employee.id,
             'work_entry_type_id': self.work_entry_type_diff_gran.id,
-            'request_date_from': date(2026, 10, 31),
-            'request_date_to': date(2026, 10, 31),
+            'request_date_from': date(2026, 10, 29),
+            'request_date_to': date(2026, 10, 30),
         })
-        self.assertEqual(leave.work_entry_type_request_unit, 'day')  # leave request is for 1 day -> 8 hours -> remining 0.5
-        self.assertEqual(leave.number_of_hours, 8)
-        self.assertEqual(leave.allocation_display_warning, "Only 0.5 hour(s) available")
+        self.assertEqual(leave.work_entry_type_request_unit, 'day')  # leave request is for 2 days -> 16 hours > 8.5 hours
+        self.assertEqual(leave.number_of_hours, 16)
+        self.assertEqual(leave.allocation_display_warning, "Only 8.5 hour(s) available")
 
     def test_leave_allocation_by_removing_employee(self):
         """
@@ -790,3 +853,34 @@ class TestAllocations(TestHrHolidaysCommon):
             self.assertEqual(pending_leave.state, 'confirm')
             with self.assertRaises(ValidationError):
                 allocation.write({'date_to': date(2024, 1, 11)})
+
+    @freeze_time('2024-01-05')
+    def test_employee_form_time_off_not_defined(self):
+        """ The employee form shows a red "Not defined" Time Off button when the employee has no
+            currently valid allocation; an accrual allocation that has not accrued anything yet
+            is an allocation (no red button). """
+        arch = etree.fromstring(self.env['hr.employee'].get_views([(False, 'form')])['views']['form']['arch'])
+        not_defined_button = arch.xpath("//button[@name='action_time_off_dashboard'][.//span[text()='Not defined']]")
+        self.assertEqual(len(not_defined_button), 1)
+        # based on the number of valid allocations, not on the number of allocated days
+        self.assertIn('allocations_count', not_defined_button[0].get('invisible'))
+
+        self.assertEqual(self.employee.allocations_count, 0)
+        self.assertEqual(self.employee.allocation_display, '0')
+
+        accrual_plan = self.env['hr.leave.accrual.plan'].with_context(tracking_disable=True).create({
+            'name': 'Monthly Accrual Plan',
+            'work_entry_type_id': self.work_entry_type_paid.id,
+            'accrued_gain_time': 'end',
+            'level_ids': [(0, 0, {
+                'added_value': 1,
+                'added_value_type': 'day',
+                'frequency': 'monthly',
+            })],
+        })
+        self._create_validated_allocation(
+            self.work_entry_type_paid, self.employee, date(2024, 1, 1), accrual_plan=accrual_plan, days=0,
+        )
+        self.employee.invalidate_recordset(['allocations_count', 'allocation_display'])
+        self.assertEqual(self.employee.allocation_display, '0', "nothing accrued yet")
+        self.assertEqual(self.employee.allocations_count, 1, "but the employee has an allocation")

@@ -311,8 +311,10 @@ class StockMove(models.Model):
                 move.picked = False
 
     def _inverse_picked(self):
-        for move in self:
-            move.move_line_ids.picked = move.picked
+        picked_moves = self.filtered('picked')
+        not_picked_moves = self - picked_moves
+        picked_moves.move_line_ids.picked = True
+        not_picked_moves.move_line_ids.picked = False
 
     @api.depends('picking_id.priority')
     def _compute_priority(self):
@@ -786,7 +788,8 @@ Please change the quantity done or the rounding precision in your settings.""",
     def _compute_show_info(self):
         for move in self:
             move.show_quant = move.picking_code != 'incoming'\
-                           and move.product_id.is_storable
+                           and move.product_id.is_storable\
+                           and not (move.product_id.tracking in ['lot', 'serial'] and move.picking_type_id.use_create_lots and not move.picking_type_id.use_existing_lots)
             move.show_lots_text = move.product_id.tracking in ['lot', 'serial']\
                 and move.picking_type_id.use_create_lots\
                 and not move.picking_type_id.use_existing_lots\
@@ -1117,7 +1120,7 @@ Please change the quantity done or the rounding precision in your settings.""",
         count = next_serial_count or self.next_serial_count
         if not count:
             raise ValidationError(_("The number of Serial Numbers to generate must be greater than zero."))
-        lot_names = self.env['stock.lot'].generate_lot_names(next_serial, count)
+        lot_names = self.env['stock.lot'].generate_lot_names(next_serial, count, self.product_id.lot_sequence_id)
         field_data = [{'lot_name': lot_name['lot_name'], 'quantity': 1} for lot_name in lot_names]
         if self._can_create_lot():
             self._create_lot_ids_from_move_line_vals(field_data, self.product_id.id, self.company_id.id)
@@ -1220,15 +1223,15 @@ Please change the quantity done or the rounding precision in your settings.""",
         else:
             lot_qties = [1] * count
 
+        product = self.env['product.product'].browse(default_vals['product_id'])
         if mode == 'generate':
-            lot_names = self.env['stock.lot'].generate_lot_names(first_lot, len(lot_qties))
+            lot_names = self.env['stock.lot'].generate_lot_names(first_lot, len(lot_qties), product.lot_sequence_id)
         elif mode == 'import':
             lot_names = self.split_lots(lot_text)
             lot_qties = [1] * len(lot_names)
 
         vals_list = []
         loc_dest = self.env['stock.location'].browse(default_vals['location_dest_id'])
-        product = self.env['product.product'].browse(default_vals['product_id'])
         for lot, qty in zip(lot_names, lot_qties):
             if not lot.get('quantity'):
                 lot['quantity'] = qty
@@ -2236,7 +2239,8 @@ Please change the quantity done or the rounding precision in your settings.""",
                     all_move_line_vals = []
                     for (location_id, lot_id, package_id, owner_id), quantity in available_move_lines.items():
                         need = move.product_qty - sum(move.move_line_ids.mapped('quantity_product_uom')) - sum(taken_quantities.values())
-                        move_line_vals, taken_quantity = move._update_reserved_quantity_vals(min(quantity, need), location_id, lot_id, package_id, owner_id, strict=True)
+                        effective_need = move._get_quantity_to_assign() - sum(move.move_line_ids.mapped('quantity_product_uom')) - sum(taken_quantities.values())
+                        move_line_vals, taken_quantity = move._update_reserved_quantity_vals(min(quantity, effective_need), location_id, lot_id, package_id, owner_id, strict=True)
                         all_move_line_vals += move_line_vals
                         if move_line_vals:  # Only subtract for new lines (updates are already reflected in sum(move_line_ids))
                             taken_quantities[need, location_id, lot_id, package_id, owner_id] = taken_quantity
@@ -2555,6 +2559,10 @@ Please change the quantity done or the rounding precision in your settings.""",
         to_wh = self.location_dest_id.warehouse_id
         return self.picking_type_id.code in ('internal', 'outgoing') or (from_wh and to_wh and from_wh != to_wh)
 
+    def _get_quantity_to_assign(self):
+        self.ensure_one()
+        return self.product_qty
+
     def _get_lang(self):
         """Determine language to use for translated description"""
         return self.picking_id.partner_id.lang or self.partner_id.lang or self.env.user.lang
@@ -2640,7 +2648,7 @@ Please change the quantity done or the rounding precision in your settings.""",
                 res.append(Command.update(ml.id, {'quantity': avail_qty}))
 
         # First reserve on quants
-        if self.uom_id.compare(_move_qty(qty), 0.0) > 0:
+        if self.uom_id.compare(_move_qty(qty), 0.0) > 0 and not self._should_bypass_reservation():
             quants = self.env['stock.quant']._get_reserve_quantity(self.product_id, self.location_id, total_qty)
             for quant, avail_qty in quants:
                 if quant.id in consumed_quant:

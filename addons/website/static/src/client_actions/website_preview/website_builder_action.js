@@ -88,8 +88,6 @@ export class WebsiteBuilderClientAction extends Component {
         this.cleanups = [];
 
         this.snippetsTemplate = "website.snippets";
-        // Track iframe navigation state
-        this.isNavigatingToAnotherPage = null;
 
         this.containerRef = signal.ref();
         this.state = proxy({ isEditing: false, showSidebar: true, key: 1, is404: false });
@@ -303,8 +301,8 @@ export class WebsiteBuilderClientAction extends Component {
         this.blockIframe();
 
         // Wait for navigation to complete if currently navigating
-        if (this.isNavigatingToAnotherPage) {
-            await this.isNavigatingToAnotherPage.promise;
+        if (this.websiteService.isNavigatingToAnotherPage) {
+            await this.websiteService.isNavigatingToAnotherPage.promise;
         }
 
         await this.loadIframeAndBundles(true);
@@ -435,9 +433,9 @@ export class WebsiteBuilderClientAction extends Component {
         this.websiteService.hideLoader();
         this.lastPageURL = iframe.contentWindow.location.href;
 
-        if (this.isNavigatingToAnotherPage) {
-            this.isNavigatingToAnotherPage.resolve();
-            this.isNavigatingToAnotherPage = null;
+        if (this.websiteService.isNavigatingToAnotherPage) {
+            this.websiteService.isNavigatingToAnotherPage.resolve();
+            this.websiteService.isNavigatingToAnotherPage = null;
         }
     }
 
@@ -493,7 +491,10 @@ export class WebsiteBuilderClientAction extends Component {
                     ) {
                         // This scenario triggers a navigation inside the iframe.
                         this.websiteService.websiteRootInstance = undefined;
-                        this.isNavigatingToAnotherPage = Promise.withResolvers();
+                        if (this.websiteService.isNavigatingToAnotherPage) {
+                            this.websiteService.isNavigatingToAnotherPage.resolve();
+                        }
+                        this.websiteService.isNavigatingToAnotherPage = Promise.withResolvers();
                     }
                 }
             }
@@ -555,7 +556,7 @@ export class WebsiteBuilderClientAction extends Component {
     waitForIframeReady() {
         return new Promise((resolve) => {
             const doc = this.websiteContent().contentDocument;
-            if (doc.body.hasAttribute("is-ready")) {
+            if (doc.body.getAttribute("is-ready") === "true") {
                 resolve();
             } else {
                 const observer = new MutationObserver(() => {
@@ -594,13 +595,20 @@ export class WebsiteBuilderClientAction extends Component {
         this.setIframeLoaded();
         this.websiteService.websiteRootInstance = undefined;
         if (url) {
-            const urlObj = new URL(url, this.websiteContent().contentWindow.location);
+            const baseUrl = new URL(this.websiteContent().contentWindow.location);
+            const urlObj = new URL(url, baseUrl);
             const pathSegments = urlObj.pathname.split("/").map(encodeURIComponent);
             const encodedPath = pathSegments.join("/");
-            this.websiteContent().contentWindow.location.href = new URL(
-                encodedPath,
-                this.websiteContent().contentWindow.location
-            );
+            const newUrl = new URL(encodedPath, baseUrl);
+            if(newUrl.origin !== baseUrl.origin) {
+                console.error("Tried to change the iframe's origin. Reloading instead")
+                this.websiteContent().contentWindow.location.reload();
+            } else {
+                if (history.state?.skipRouteChange) {
+                    history.pushState({}, "", newUrl);
+                }
+                this.websiteContent().contentWindow.location.href = newUrl;
+            }
         } else {
             this.websiteContent().contentWindow.location.reload();
         }

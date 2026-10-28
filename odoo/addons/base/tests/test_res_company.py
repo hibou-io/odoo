@@ -78,6 +78,10 @@ class TestCompany(TransactionCase):
             "Companies are not in the correct order",
         )
 
+    def test_create_company_with_default_company_id_context(self):
+        company = self.env['res.company'].with_context(default_company_id=self.env.company.id).create({'name': 'foo'})
+        self.assertFalse(company.partner_id.company_id)
+
     def test_write_company_root_delegated_field_names(self):
         self.env['res.company'].with_context(default_parent_id=self.env.company.id).create({'name': 'foo'})
         new_currency = self.env['res.currency'].create({
@@ -87,6 +91,15 @@ class TestCompany(TransactionCase):
         })
         with patch('odoo.addons.base.models.res_company.ResCompany._get_company_root_delegated_field_names', return_value=["currency_id", "zip"]):
             self.env.company.write({'currency_id': new_currency.id, 'zip': '12345'})
+
+    def test_write_country_installs_l10n_modules(self):
+        company = self.env['res.company'].create({'name': 'foo'})
+        with patch('odoo.addons.base.models.res_company.ResCompany.install_l10n_modules', autospec=True) as install:
+            company.write({'country_id': self.env.ref('base.be').id})
+            install.assert_called_once_with(company)
+            install.reset_mock()
+            company.write({'country_id': self.env.ref('base.fr').id})
+            install.assert_not_called()
 
 
 class TestResCompanyForm(TransactionCase):
