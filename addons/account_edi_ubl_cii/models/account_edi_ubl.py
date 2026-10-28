@@ -6,7 +6,7 @@ from lxml import etree
 from stdnum.be import vat as be_vat
 
 from odoo import Command, _, api, fields, models
-from odoo.tools import formatLang, frozendict, groupby, html2plaintext, html_escape, pdf, str2bool, unique
+from odoo.tools import formatLang, frozendict, html2plaintext, html_escape, pdf, str2bool, unique
 from odoo.tools.float_utils import float_compare
 
 from odoo.addons.account.tools import dict_to_xml
@@ -2620,28 +2620,7 @@ class AccountEdiUBL(models.AbstractModel):
 
         base_lines belonging to sections without `collapse_composition` are left untouched.
         """
-        def _build_collapsed_base_line(group, section):
-            """Build a single base_line representing all lines of a tax group under a collapsed section"""
-            AccountTax = self.env['account.tax']
-            first_line = group[0]
-            total_excluded_currency = sum(bl['tax_details']['total_excluded_currency'] for bl in group)
-
-            collapsed_line = AccountTax._prepare_base_line_for_taxes_computation(
-                first_line['record'],
-                quantity=1.0,
-                price_unit=total_excluded_currency,
-                discount=0.0,
-                tax_ids=first_line['tax_ids'],
-                currency_id=first_line['currency_id'],
-            )
-            collapsed_line.update({
-                'name': section.name,
-                '_line_name': section.name,
-                'product_id': self.env['product.product'],
-            })
-            AccountTax._add_tax_details_in_base_lines([collapsed_line], invoice.company_id)
-            AccountTax._round_base_lines_tax_details([collapsed_line], invoice.company_id)
-            return collapsed_line
+        AccountTax = self.env['account.tax']
 
         def _get_collapsed_section_line_ids(invoice, base_lines):
             """Return collapse roots (sections/subsections), their subsections, and the hidden product lines."""
@@ -2669,11 +2648,15 @@ class AccountEdiUBL(models.AbstractModel):
                 if not section_bls:
                     continue
 
-                for _taxes, lines in groupby(
-                    sorted(section_bls, key=lambda bl: bl['tax_ids'].ids),
-                    key=lambda bl: bl['tax_ids'],
-                ):
-                    result.append(_build_collapsed_base_line(list(lines), section))
+                reduced_lines = AccountTax._reduce_base_lines_with_grouping_function(section_bls)
+
+                for bl in reduced_lines:
+                    bl.update({
+                        'name': section.name,
+                        '_line_name': section.name,
+                        'product_id': self.env['product.product'],
+                    })
+                result.extend(reduced_lines)
             return result
 
         collapsed_roots, hidden_lines = _get_collapsed_section_line_ids(invoice, base_lines)
@@ -2764,8 +2747,13 @@ class AccountEdiUBL(models.AbstractModel):
         if party_node is None:
             return
 
+        # Only take the CompanyID of a PartyTaxScheme using a VAT scheme (e.g. not the Peppol endpoint with its EAS)
+        customer_values['vat'] = next((
+            node.findtext('./{*}CompanyID')
+            for node in party_node.iterfind('./{*}PartyTaxScheme')
+            if (node.findtext('./{*}TaxScheme/{*}ID') or '').upper() in ('VAT', 'GST', 'NOT_EU_VAT', '63')
+        ), None)
         for key, xpaths in (
-            ('vat', [".//{*}CompanyID"]),
             ('phone', [".//{*}Telephone"]),
             ('name', [
                 ".//{*}RegistrationName",

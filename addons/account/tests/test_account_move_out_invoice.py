@@ -150,6 +150,17 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
         with self.assertRaisesRegex(UserError, 'lock date'):
             inv.line_ids.tax_tag_ids = tax_tag.ids
 
+    def test_taxes_legal_notes_translated(self):
+        self.env['res.lang']._activate_lang('fr_FR')
+        tax = self.tax_sale_a
+        tax.invoice_legal_notes = '<p>English note</p>'
+        tax.update_field_translations('invoice_legal_notes', {'fr_FR': {'English note': 'Note en français'}})
+        invoices = self.init_invoice('out_invoice', products=self.product_a) + self.init_invoice('out_invoice', products=self.product_a)
+
+        # Both invoices are computed at once in French, as when a batch of invoices is rendered
+        self.assertEqual(invoices.with_context(lang='fr_FR').mapped('taxes_legal_notes'), ['<p>Note en français</p>'] * 2)
+        self.assertEqual(invoices[1].with_context(lang='en_US').taxes_legal_notes, '<p>English note</p>')
+
     def test_invoice_default_sale_person(self):
         """ Test public user won't be assigned as invoice salesman
         """
@@ -4616,6 +4627,34 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
             },
         ])
 
+    def test_discount_allocation_account_with_price_included_tax(self):
+        """ Test that the discount allocation is computed on the untaxed amount, rounded per account rather than per line """
+        discount_account = self.company_data['default_account_expense'].copy()
+        self.company_data['company'].account_discount_expense_allocation_id = discount_account
+        tax_included = self.env['account.tax'].create({
+            'name': '15% incl',
+            'amount': 15,
+            'price_include_override': 'tax_included',
+        })
+        invoice = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.partner_a.id,
+            'invoice_line_ids': [
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'price_unit': 1.0,
+                    'discount': 20,
+                    'tax_ids': [Command.set(tax_included.ids)],
+                })
+                for _i in range(3)
+            ],
+        })
+        product_line_account = invoice.invoice_line_ids.account_id
+        self.assertRecordValues(invoice.line_ids.filtered(lambda l: l.display_type == 'discount'), [
+            {'account_id': product_line_account.id, 'balance': -0.52},
+            {'account_id': discount_account.id, 'balance': 0.52},
+        ])
+
     def test_invoice_with_empty_currency(self):
         move = self.env['account.move'].create({
             'move_type': 'out_invoice',
@@ -5018,6 +5057,46 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
             {'balance': -851053.94},
             {'balance': 851053.94},
         ])
+
+    def test_posted_invoice_amount_residual_from_payment_term_lines(self):
+        """ The amount due of a posted invoice must be the open balance of its payment term lines, even when
+        the totals recomputed from the invoice lines no longer match the journal items (here, because the tax
+        rounding method changed after posting). Otherwise a fully paid invoice ends up partially paid. """
+        self.env.company.tax_calculation_rounding_method = 'round_per_line'
+        invoice = self._create_invoice(
+            invoice_line_ids=[
+                self._prepare_invoice_line(price_unit=10.0, discount=0.04, tax_ids=self.tax_sale_a)
+                for _i in range(3)
+            ],
+            post=True,
+        )
+        # Rounded per line: 3 * 10.00 + 3 * 1.50 = 34.50
+        self.assertEqual(invoice.amount_total, 34.5)
+
+        # Rounded globally, the same lines only amount to 29.99 + 4.50 = 34.49
+        self.env.company.tax_calculation_rounding_method = 'round_globally'
+        self.env.invalidate_all()
+        self.assertEqual(invoice.tax_totals['total_amount_currency'], 34.49)
+
+        self._register_payment(invoice)
+        self.assertRecordValues(invoice, [{
+            'amount_total': 34.5,
+            'amount_residual': 0.0,
+            'amount_residual_signed': 0.0,
+            'payment_state': invoice._get_invoice_in_payment_state(),
+        }])
+
+    def test_draft_invoice_amount_residual_follows_unsaved_lines(self):
+        """ The amount due of a draft invoice follows its lines before the record is saved. """
+        with Form(self.env['account.move'].with_context(default_move_type='out_invoice')) as move_form:
+            move_form.partner_id = self.partner_a
+            with move_form.invoice_line_ids.new() as line_form:
+                line_form.name = 'test line'
+                line_form.price_unit = 100.0
+                line_form.tax_ids.clear()
+                line_form.tax_ids.add(self.tax_sale_a)
+            self.assertEqual(move_form.tax_totals['total_amount_currency'], 115.0)
+            self.assertEqual(move_form.amount_residual, 115.0)
 
     def test_tax_recomputed_when_changing_base_lines(self):
         percent_tax = self.company_data['default_tax_sale']
