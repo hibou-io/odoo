@@ -1538,7 +1538,7 @@
             <t t-set="show_qty" t-value="is_view_active('website_sale.product_quantity')"/>
             <div t-foreach="website_sale_order.website_order_line"
                  t-as="line"
-                 t-attf-class="o_cart_product d-flex align-items-stretch gap-3 #{line.linked_line_id and 'optional_product info'} #{not line_last and 'border-bottom pb-4'} #{line_index &gt; 0 and 'pt-4'}"
+                 t-attf-class="o_cart_product d-flex align-items-stretch gap-3 #{line.linked_line_id and 'optional_product info' or ''} #{not line_last and 'border-bottom pb-4'} #{line_index &gt; 0 and 'pt-4'}"
                  t-attf-data-product-id="#{line.product_id and line.product_id.id}">
                 <t t-if="line.product_id">
                     <div style="width: 64px">
@@ -2414,7 +2414,7 @@
                     </h5>
                 </div>
             </t>
-            <t t-if="request.env['res.users']._get_signup_invitation_scope() == 'b2c' and request.website.is_public_user()">
+            <t t-if="request.env['res.users']._get_signup_invitation_scope() == 'b2c' and request.website.is_public_user() and not order.partner_id.user_ids">
                 <p class="alert alert-info mt-3" role="status">
                     <a role="button" t-att-href="order.partner_id.signup_prepare() and order.partner_id.with_context(relative_url=True).signup_url" class="btn btn-primary">Sign Up</a>
                     to follow your order.

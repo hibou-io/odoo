@@ -38,7 +38,7 @@ import re
 import uuid
 import warnings
 from collections import defaultdict, OrderedDict, deque
-from collections.abc import MutableMapping
+from collections.abc import Iterable, MutableMapping
 from contextlib import closing
 from inspect import getmembers, currentframe
 from operator import attrgetter, itemgetter
@@ -1123,7 +1123,7 @@ class BaseModel(metaclass=MetaModel):
                 for record, xid in self.env[model].browse(ids).__ensure_xml_id():
                     for i, j in xidmap.pop((record._name, record.id)):
                         lines[i][j] = xid
-            assert not xidmap, "failed to export xids for %s" % ', '.join('{}:{}' % it for it in xidmap.items())
+            assert not xidmap, "failed to export xids for %s" % ', '.join('%s:%s' % it for it in xidmap.items())
 
         return lines
 
@@ -1524,6 +1524,23 @@ class BaseModel(metaclass=MetaModel):
         for fname, value in defaults.items():
             if fname in self._fields:
                 field = self._fields[fname]
+                if (
+                    field.relational
+                    and not self.env.su
+                    and isinstance(value, Iterable)
+                ):
+                    # since the value will be converted into a SET, we still
+                    # need to check permissions for these actions
+                    for cmd in value:
+                        command_code = cmd[0] if isinstance(cmd, (tuple, list)) and len(cmd) >= 2 else None
+                        if command_code == Command.DELETE:
+                            record = self.env[field.comodel_name].browse(cmd[1])
+                            record.check_access_rights('unlink')
+                            record.check_access_rule('unlink')
+                        elif command_code == Command.UPDATE or (field.type == 'one2many' and command_code in (Command.UNLINK, Command.LINK)):
+                            record = self.env[field.comodel_name].browse(cmd[1])
+                            record.check_access_rights('write')
+                            record.check_access_rule('write')
                 value = field.convert_to_cache(value, self, validate=False)
                 defaults[fname] = field.convert_to_write(value, self)
 
@@ -7169,9 +7186,8 @@ class TransientModel(Model):
     """ Model super-class for transient records, meant to be temporarily
     persistent, and regularly vacuum-cleaned.
 
-    A TransientModel has a simplified access rights management, all users can
-    create new records, and may only access the records they created. The
-    superuser has unrestricted access to all TransientModel records.
+    A TransientModel uses the same access rights mechanisms as a regular
+    :class:`Model`, through access control lists and record rules.
     """
     _auto = True                # automatically create database backend
     _register = False           # not visible in ORM registry, meant to be python-inherited only

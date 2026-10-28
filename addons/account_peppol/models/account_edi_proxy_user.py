@@ -182,7 +182,8 @@ class AccountEdiProxyClientUser(models.Model):
             'domain': {
                 'direction': 'incoming',
                 'errors': False,
-            }
+            },
+            'limit': job_count
         }
         for edi_user in self:
             params['domain']['receiver_identifier'] = edi_user.edi_identification
@@ -198,6 +199,7 @@ class AccountEdiProxyClientUser(models.Model):
                 continue
 
             received_messages = messages.get('messages', [])
+            has_more = messages.get('has_more', False)
             # Edge case: self-addressed messages (sender == receiver), i.e. a company genuinely
             # invoicing itself. The outgoing invoice already carries the message UUID, so the
             # duplicate check would wrongly discard the incoming document.
@@ -232,8 +234,7 @@ class AccountEdiProxyClientUser(models.Model):
             if not message_uuids:
                 continue
 
-            need_retrigger = need_retrigger or len(message_uuids) > job_count
-            message_uuids = message_uuids[:job_count]
+            need_retrigger = need_retrigger or has_more
 
             # retrieve attachments for filtered messages
             all_messages = edi_user._make_request(
@@ -272,6 +273,10 @@ class AccountEdiProxyClientUser(models.Model):
             limit=1,
         )
 
+    def _get_type_code(self, attachment, content):
+        xml_tree = etree.fromstring(attachment.raw)
+        return xml_tree.findtext('.//{*}InvoiceTypeCode') or xml_tree.findtext('.//{*}CreditNoteTypeCode')
+
     def _peppol_process_new_messages(self, messages):
         self.ensure_one()
         company = self.company_id
@@ -289,14 +294,11 @@ class AccountEdiProxyClientUser(models.Model):
 
             try:
                 attachment = self.env['ir.attachment'].create(attachment_vals)
-                xml_tree = etree.fromstring(attachment.raw)
-                invoice_type_code = xml_tree.findtext('.//{*}InvoiceTypeCode')
-                credit_note_type_code = xml_tree.findtext('.//{*}CreditNoteTypeCode')
-
-                if invoice_type_code in ['389', '527'] or credit_note_type_code == '261':
+                type_code = self._get_type_code(attachment, content)
+                if type_code in ['389', '527', '261']:
                     # 389/527: Self-billing invoice; 261: Self-billing credit note
                     journal = self._peppol_get_import_sale_journal(company)
-                    move_type = 'out_invoice' if invoice_type_code else 'out_refund'
+                    move_type = 'out_invoice' if type_code in ['389', '527'] else 'out_refund'
                 else:
                     # use the first purchase journal if the Peppol journal is not set up
                     # to create the move anyway

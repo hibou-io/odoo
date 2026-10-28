@@ -6,7 +6,9 @@ from urllib import parse
 
 from odoo import _, api, fields, models
 
+from odoo.addons.l10n_fr_pdp.models.account_edi_xml_ubl_21_fr import CPRO_INVOICE_IDENTIFIER
 from odoo.addons.l10n_fr_pdp.tools.demo_utils import handle_demo
+from odoo.addons.l10n_fr_pdp.utils import drom_com_territories
 
 _logger = logging.getLogger(__name__)
 
@@ -69,6 +71,29 @@ class ResPartner(models.Model):
         if id_type in ('siren', 'siret'):
             return id_value[:9]
         return False
+
+    def _l10n_fr_pdp_get_flow_10_identifier(self):
+        """Return the scheme and identifier used for a Flow 10 party."""
+        self.ensure_one()
+        country_code = (self.country_id.code or '').upper()
+        specific_scheme = drom_com_territories.get_specific_identifier_scheme(country_code)
+        if specific_scheme and self.ref:
+            return specific_scheme['qualifier'], self.ref
+        if siren := self._l10n_fr_pdp_get_siren():
+            return '0002', siren
+
+        partner_vat = self.vat or ''
+        if country_code == 'WF' and self.name:
+            return '0227', country_code + self.name[:16]
+        if (
+            specific_scheme
+            or drom_com_territories.is_france_territory(country_code)
+            or self.country_id in self.env.ref('base.europe').country_ids
+        ):
+            return ('0223', partner_vat) if len(partner_vat) > 1 else (False, False)
+        if country_code and self.name:
+            return '0227', country_code + self.name[:16]
+        return False, False
 
     def _l10n_fr_pdp_get_base_identifier(self):
         self.ensure_one()
@@ -144,14 +169,19 @@ class ResPartner(models.Model):
                 'account_peppol_validity_last_check': fields.Date.context_today(self),
                 'account_peppol_is_endpoint_valid': (participant_info or {}).get('in_annuaire') or False,
             })
+
+            self._peppol_fill_participant_supported_documents()
         return False
 
     @api.model
     @handle_demo
     def _pdp_annuaire_lookup_participant(self, edi_identification):
+        eas, _colon, pdp_identifier = edi_identification.partition(":")
+        if eas != '0225':
+            return None
+
         edi_mode = self.env.company._get_peppol_edi_mode()
         origin = self.env['account_edi_proxy_client.user']._get_proxy_urls()['pdp'][edi_mode]
-        pdp_identifier = edi_identification.partition(":")[2]
         query = parse.urlencode({'pdp_identifier': pdp_identifier})  # Note: the annuaire lookup is case-sensitive
         endpoint = f'{origin}/api/pdp/1/annuaire_lookup?{query}'
 
@@ -187,3 +217,20 @@ class ResPartner(models.Model):
         if peppol_eas == '0225':
             proxy_type = 'pdp'
         return proxy_type, identifier
+
+    def _peppol_fill_participant_supported_documents(self):
+        super()._peppol_fill_participant_supported_documents()
+
+        for partner in self:
+            edi_identification = f"{partner.peppol_eas}:{partner.peppol_endpoint}".lower()
+            annuaire_info = self._pdp_annuaire_lookup_participant(edi_identification) or {}
+            if not annuaire_info.get('b2g'):
+                continue
+
+            # This is a bit of a hack to avoid having to add a field to signify the partner is behind Chorus Pro.
+            # The users that are associated with Chorus Pro (9999) on the annuaire are not on Peppol.
+            # They just communicate with Chorus Pro which communicates with the other platforms (not via Peppol).
+            # So the `peppol_supported_documents` would be empty for them otherwise.
+            # The CPRO_INVOICE_IDENTIFIER acts as a general placeholder and does not indicate the actually
+            # supported documents (i.e. credit notes and CDAR lifecycles are possible too ofc.).
+            partner.peppol_supported_documents = [CPRO_INVOICE_IDENTIFIER]

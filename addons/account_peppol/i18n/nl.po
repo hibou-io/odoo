@@ -14,9 +14,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-31 17:38+0000\n"
-"PO-Revision-Date: 2026-08-08 05:45+0000\n"
-"Last-Translator: \"Manon Rondou (ronm)\" <ronm@odoo.com>\n"
+"POT-Creation-Date: 2026-09-18 17:37+0000\n"
+"PO-Revision-Date: 2026-09-19 09:33+0000\n"
+"Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Dutch <https://translate.odoo.com/projects/odoo-17/"
 "account_peppol/nl/>\n"
 "Language: nl\n"
@@ -24,7 +24,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #. module: account_peppol
 #. odoo-python
@@ -54,8 +54,8 @@ msgid ""
 "                    </span>"
 msgstr ""
 "<span class=\"mx-1\" invisible=\"not peppol_is_demo_uuid\">(Demo)</span> "
-"<span class=\"text-muted mx-3\" invisible=\"peppol_move_state != 'to_send'\">"
-"De factuur wordt automatisch naar PEPPOL verzonden</span>"
+"<span class=\"text-muted mx-3\" invisible=\"peppol_move_state != "
+"'to_send'\">De factuur wordt automatisch naar PEPPOL verzonden</span>"
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
@@ -191,6 +191,14 @@ msgid "Application status:"
 msgstr "Status aanvraag:"
 
 #. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid ""
+"Authentication is required but not available. Please contact Odoo support."
+msgstr ""
+
+#. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid ""
 "By clicking the button below I accept that Odoo may process my e-invoices."
@@ -322,6 +330,13 @@ msgstr "E-mailadres en telefoonnummer van contactpersoon zijn vereist."
 
 #. module: account_peppol
 #. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "Could not connect to Peppol proxy"
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
 #: code:addons/account_peppol/wizard/account_move_send.py:0
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_config_settings__account_peppol_edi_mode__demo
 #: model:ir.model.fields.selection,name:account_peppol.selection__res_config_settings__account_peppol_mode_constraint__demo
@@ -374,6 +389,13 @@ msgid "Error"
 msgstr "Foutmelding"
 
 #. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/tools/peppol_iap_connector.py:0
+#, python-format
+msgid "Failed to connect to Odoo Peppol Proxy."
+msgstr "Kon geen verbinding maken met Odoo Peppol Proxy."
+
+#. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.account_journal_dashboard_kanban_view
 msgid "Fetch Peppol invoice status"
 msgstr "Haal de Peppol-factuurstatus op"
@@ -394,12 +416,53 @@ msgid ""
 msgstr ""
 
 #. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid "French Company Registration"
+msgstr ""
+
+#. module: account_peppol
 #. odoo-python
 #: code:addons/account_peppol/tools/peppol_errors.py:0
 #, python-format
 msgid ""
 "If you are not subject to VAT, you should not have a VAT number on your "
 "company/contacts and your clients should not have one either."
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"If you want to register for the French e-invoicing, first install the PDP "
+"module: France - E-Invoicing (Approved Platform)."
+msgstr ""
+"Als je je wilt registreren voor Franse elektronische facturatie, installeer "
+"dan eerst de PDP-module: Frankrijk - E-facturatie (goedgekeurd platform)."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"If you want to register for the French e-invoicing, first install the PDP "
+"module: France - E-Invoicing (Approved Platform).\n"
+"The module was not found. Please update the available apps first."
+msgstr ""
+"Als je je wilt registreren voor Franse elektronische facturatie, installeer "
+"dan eerst de PDP-module: Frankrijk - E-facturatie (goedgekeurd platform).\n"
+"De module is niet gevonden. Werk eerst de beschikbare apps bij."
+
+#. module: account_peppol
+#. odoo-javascript
+#: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.js:0
+#, python-format
+msgid ""
+"If you want to use the French E-Invoicing via Approved Platform, please "
+"consider installing the module `France - E-Invoicing (Approved Platform)` "
+"before registering here. Are you sure you want to continue?"
 msgstr ""
 
 #. module: account_peppol
@@ -415,6 +478,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Incoming Invoices Journal"
 msgstr "Dagboek binnenkomende facturen"
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid "Install module"
+msgstr "Module installeren"
 
 #. module: account_peppol
 #. odoo-python
@@ -960,6 +1030,15 @@ msgstr ""
 
 #. module: account_peppol
 #. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "The database you are trying to connect to is not suitable for Peppol."
+msgstr ""
+"De database waarmee je verbinding probeert te maken, is niet geschikt voor "
+"Peppol."
+
+#. module: account_peppol
+#. odoo-python
 #: code:addons/account_peppol/models/res_config_settings.py:0
 #, python-format
 msgid ""
@@ -1130,6 +1209,13 @@ msgstr ""
 "ook wel 'Endpoint ID' genoemd."
 
 #. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_config_settings.py:0
+#, python-format
+msgid "Update Apps List"
+msgstr "Lijst met apps bijwerken"
+
+#. module: account_peppol
 #. odoo-javascript
 #: code:addons/account_peppol/static/src/components/res_config_settings_buttons/res_config_settings_buttons.xml:0
 #, python-format
@@ -1279,6 +1365,34 @@ msgstr "Je Peppol-activeringscode in Odoo is"
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form
 msgid "Your Peppol identification is:"
 msgstr "Je Peppol-identificatie is:"
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "Your identifier does not have a valid format."
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "Your identifier does not have a valid format. Expected format: %s."
+msgstr ""
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "Your identifier is invalid."
+msgstr "Je identifier is ongeldig."
+
+#. module: account_peppol
+#. odoo-python
+#: code:addons/account_peppol/models/res_company.py:0
+#, python-format
+msgid "Your identifier you entered is invalid for Peppol."
+msgstr "De door jou ingevoerde identifier is ongeldig voor Peppol."
 
 #. module: account_peppol
 #: model_terms:ir.ui.view,arch_db:account_peppol.res_config_settings_view_form

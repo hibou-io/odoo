@@ -7,6 +7,7 @@ import { AutoComplete } from "@web/core/autocomplete/autocomplete";
 import { makeTestEnv } from "../helpers/mock_env";
 import {
     click,
+    destroy,
     editInput,
     getFixture,
     makeDeferred,
@@ -117,6 +118,119 @@ QUnit.module("Components", (hooks) => {
         await click(target.querySelectorAll(".o-autocomplete--dropdown-item")[1]);
         assert.strictEqual(target.querySelector(".o-autocomplete--input").value, "Hello");
         assert.verifySteps(["Hello"]);
+    });
+
+    QUnit.test("select option while a search is pending", async (assert) => {
+        let timeoutId = 0;
+        const timeouts = new Map();
+        patchWithCleanup(browser, {
+            setTimeout: (fn) => {
+                timeouts.set(++timeoutId, fn);
+                return timeoutId;
+            },
+            clearTimeout: (id) => timeouts.delete(id),
+        });
+        class Parent extends Component {
+            setup() {
+                this.state = useState({
+                    value: "",
+                });
+            }
+            get sources() {
+                return [
+                    {
+                        options: (search) => {
+                            assert.step(`search: ${search}`);
+                            return [{ label: "World" }, { label: "Hello" }];
+                        },
+                    },
+                ];
+            }
+            onSelect(option) {
+                this.state.value = option.label;
+            }
+        }
+        Parent.components = { AutoComplete };
+        Parent.template = xml`
+            <AutoComplete
+                value="state.value"
+                sources="sources"
+                onSelect="(option) => this.onSelect(option)"
+            />
+        `;
+
+        await mount(Parent, target, { env });
+        await click(target, ".o-autocomplete--input");
+        assert.containsOnce(target, ".o-autocomplete--dropdown-menu");
+        assert.verifySteps(["search: "]);
+
+        target.querySelector(".o-autocomplete--input").value = "W";
+        await triggerEvent(target, ".o-autocomplete--input", "input");
+        await click(target.querySelector(".o-autocomplete--dropdown-item"));
+        assert.strictEqual(target.querySelector(".o-autocomplete--input").value, "World");
+        assert.containsNone(target, ".o-autocomplete--dropdown-menu");
+
+        for (const fn of timeouts.values()) {
+            fn();
+        }
+        await nextTick();
+        assert.containsNone(target, ".o-autocomplete--dropdown-menu");
+        assert.verifySteps([]);
+    });
+
+    QUnit.test("value change while a search is pending", async (assert) => {
+        let timeoutId = 0;
+        const timeouts = new Map();
+        patchWithCleanup(browser, {
+            setTimeout: (fn) => {
+                timeouts.set(++timeoutId, fn);
+                return timeoutId;
+            },
+            clearTimeout: (id) => timeouts.delete(id),
+        });
+        class Parent extends Component {
+            setup() {
+                this.state = useState({
+                    value: "",
+                });
+            }
+            get sources() {
+                return [
+                    {
+                        options: (search) => {
+                            assert.step(`search: ${search}`);
+                            return [{ label: "World" }, { label: "Hello" }];
+                        },
+                    },
+                ];
+            }
+        }
+        Parent.components = { AutoComplete };
+        Parent.template = xml`
+            <AutoComplete
+                value="state.value"
+                sources="sources"
+                onSelect="() => {}"
+            />
+        `;
+
+        const parent = await mount(Parent, target, { env });
+        await click(target, ".o-autocomplete--input");
+        assert.containsOnce(target, ".o-autocomplete--dropdown-menu");
+        assert.verifySteps(["search: "]);
+
+        target.querySelector(".o-autocomplete--input").value = "W";
+        await triggerEvent(target, ".o-autocomplete--input", "input");
+        parent.state.value = "World";
+        await nextTick();
+        assert.containsNone(target, ".o-autocomplete--dropdown-menu");
+
+        for (const fn of timeouts.values()) {
+            fn();
+        }
+        await nextTick();
+        assert.containsOnce(target, ".o-autocomplete--dropdown-menu");
+        assert.verifySteps(["search: W"]);
     });
 
     QUnit.test("autocomplete with resetOnSelect='true'", async (assert) => {
@@ -724,5 +838,37 @@ QUnit.module("Components", (hooks) => {
             ),
             ["World", "Hello"]
         );
+    });
+
+    QUnit.test("skip handling input when destroyed while loading", async (assert) => {
+        const optionsDoLoad = makeDeferred();
+        class Parent extends Component {
+            onSelect(option) {
+                assert.step(option.label);
+            }
+            get sources() {
+                return [
+                    {
+                        async options() {
+                            await optionsDoLoad;
+                            return [{ label: "World" }];
+                        },
+                    },
+                ];
+            }
+        }
+        Parent.components = { AutoComplete };
+        Parent.template = xml`
+            <AutoComplete value="''" sources="sources" onSelect.bind="onSelect"/>
+        `;
+
+        const parent = await mount(Parent, target, { env });
+        await editInput(target, ".o-autocomplete--input", "W");
+        await triggerEvent(target, ".o-autocomplete--input", "keydown", { key: "Enter" });
+
+        destroy(parent);
+        optionsDoLoad.resolve();
+        await nextTick();
+        assert.verifySteps([], "the destroyed component does not select an option");
     });
 });
