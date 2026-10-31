@@ -647,10 +647,10 @@ class IrAttachment(models.Model):
 
         # remove computed field depending of datas
         vals_list = [{
-            key: value
-            for key, value
-            in vals.items()
-            if key not in ('file_size', 'checksum', 'store_fname')
+            **vals,
+            'file_size': 0,
+            'checksum': False,
+            'store_fname': False,
         } for vals in vals_list]
 
         for values in vals_list:
@@ -708,10 +708,17 @@ class IrAttachment(models.Model):
                 ['file_size', '=', len(bin_data)],
                 ['mimetype', '=', values['mimetype']],
             ]
-            existing = self.sudo().search(existing_domain)
-            if existing:
-                for attachment in existing:
-                    ids.append(attachment.id)
+            existing_ids = []
+            for attachment in self.sudo().search(existing_domain).sudo(False):
+                # Only reuse the attachments the current user can write, as callers may
+                # link new attachments to them (e.g. the resized variants of an image).
+                try:
+                    attachment.check('write')
+                except AccessError:
+                    continue
+                existing_ids.append(attachment.id)
+            if existing_ids:
+                ids.extend(existing_ids)
             else:
                 attachment = self.create(values)
                 ids.append(attachment.id)
