@@ -10,6 +10,7 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
+  GIT_DEPTH: "1"
   CONTAINER_IMAGE: registry.gitlab.com/hibou-io/hibou-odoo/odoo
   DOCKERHUB_IMAGE: hibou/hibou-odoo
   GITLAB_BASE_URL: https://gitlab.com
@@ -26,9 +27,11 @@ build:
   script:
     - apk add git
     - git submodule sync design-themes
-    - git submodule update --init -- design-themes
-    - docker pull $CONTAINER_IMAGE:$RELEASE || true
+    - git submodule update --init --depth 1 -- design-themes
     - docker build --pull -t $CONTAINER_IMAGE:$RELEASE .
+    - docker builder prune -af
+    - df -h
+    - docker system df
     - docker push $CONTAINER_IMAGE:$RELEASE
     - docker tag $CONTAINER_IMAGE:$RELEASE $CONTAINER_IMAGE:$RELEASE_DATE
     - docker push $CONTAINER_IMAGE:$RELEASE_DATE
