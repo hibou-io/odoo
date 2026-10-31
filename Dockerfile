@@ -1,7 +1,8 @@
 FROM python:3.14-slim-trixie
 LABEL maintainer="Hibou Corp. <hello@hibou.io>"
 
-ENV NODE_MAJOR=24
+ENV NODE_MAJOR=24 \
+    PIP_NO_CACHE_DIR=1
 
 COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 
