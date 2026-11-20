@@ -1,4 +1,8 @@
+from lxml import etree
+from unittest.mock import patch
+
 from odoo import Command
+from odoo.models import fields
 from odoo.tests import tagged
 
 from odoo.addons.l10n_fr_pdp.models.account_edi_xml_ubl_21_fr import CPRO_INVOICE_IDENTIFIER
@@ -10,6 +14,14 @@ from .common import TestL10nFrPdpCommon
 class TestL10nFrPdpXml(TestL10nFrPdpCommon):
 
     @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.ubl_namespaces = {
+            'cbc': "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+            'cac': "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+        }
+
+    @classmethod
     def subfolders(cls):
         return 'ubl_21_fr', 'invoice', 'fr'
 
@@ -18,6 +30,36 @@ class TestL10nFrPdpXml(TestL10nFrPdpCommon):
         invoice.action_post()
         self._send_patched(invoice)
         self._assert_invoice_ubl_file(invoice, "ubl_21_fr_out_invoice")
+
+    def test_export_invoice_partner_fr_tax_unit(self):
+        """
+        Under French Single Taxpayer Group rules (Assujetti Unique, CGI art. 256 C):
+        - BT-29 (Seller identifier): The Single Taxpayer Group's 9-digit SIREN must appear
+          under cac:PartyIdentification with schemeID "0231" (BR-FR-32).
+        - BT-21/BT-22: Mandatory note #TXD#MEMBRE_ASSUJETTI_UNIQUE must appear (BR-FR-CO-14).
+        - BG-11 (Tax Representative): cac:TaxRepresentativeParty must be present and contain
+          the Single Taxpayer Group's VAT under BT-63 (BR-FR-CO-15), along with name (BT-62)
+          and postal address (BG-12).
+        - BT-31: The member company's own VAT remains under cac:AccountingSupplierParty.
+        """
+        self.ensure_installed('account_reports')
+        other_company = self.env['res.company'].create({
+            'name': 'Company 2',
+            'country_id': self.env.ref('base.fr').id,
+            'currency_id': self.env.company.currency_id.id,
+        })
+        self.env['account.tax.unit'].create({  # noqa: OLS03001
+            'name': 'company_1_data',
+            'country_id': self.env.ref('base.fr').id,
+            'vat': 'FR05677404089',
+            'company_ids': [Command.set((self.env.company + other_company).ids)],
+            'main_company_id': self.env.company.id,
+        })
+
+        invoice = self._create_french_invoice()
+        invoice.action_post()
+        self._send_patched(invoice)
+        self._assert_invoice_ubl_file(invoice, "ubl_21_fr_out_invoice_tax_unit")
 
     def test_export_invoice_partner_fr_without_pdp(self):
         """
@@ -204,3 +246,102 @@ class TestL10nFrPdpXml(TestL10nFrPdpCommon):
         bill = self._import_invoice_as_attachment_on('ubl_21_fr_in_invoice_establishment')
         self.assertEqual(bill.partner_id, other_establishment)
         self.assertEqual(bill.partner_bank_id.partner_id, other_establishment)
+
+    def test_ubl_use_correct_vat(self):
+        """Test that UBL use the foreign VAT when available, else the company VAT."""
+        germany = self.env.ref("base.de")
+
+        tax_group = self.env['account.tax.group'].create({
+            'name': 'German Taxes',
+            'company_id': self.company.id,
+            'country_id': germany.id,
+        })
+        tax = self.env['account.tax'].create({
+            'name': 'DE VAT 19%',
+            'amount': 19,
+            'amount_type': 'percent',
+            'type_tax_use': 'sale',
+            'country_id': germany.id,
+            'tax_group_id': tax_group.id,
+        })
+
+        fiscal_position = self.env['account.fiscal.position'].create({
+            'name': 'German FP',
+            'vat_required': True,
+            'foreign_vat': 'DE123456788',
+            'country_id': germany.id,
+        })
+
+        invoice_with_fp = self.env['account.move'].create({
+            'partner_id': self.partner_a.id,
+            'move_type': 'out_invoice',
+            'fiscal_position_id': fiscal_position.id,
+            'invoice_date': fields.Date.from_string('2025-12-22'),
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+                'tax_ids': [Command.set(tax.ids)],
+            })],
+        })
+        local_invoice = self.env['account.move'].create({
+            'partner_id': self.partner_a.id,
+            'move_type': 'out_invoice',
+            'invoice_date': fields.Date.from_string('2025-12-22'),
+            'invoice_line_ids': [Command.create({
+                'product_id': self.product_a.id,
+            })],
+        })
+        invoice_with_fp.action_post()
+        local_invoice.action_post()
+
+        # Check XML for foreign VAT
+        xml_bytes = self.env["account.edi.xml.ubl_21_fr"]._export_invoice(invoice_with_fp)[0]
+        xml_tree = etree.fromstring(xml_bytes)
+        node = xml_tree.xpath(
+            "//cac:AccountingSupplierParty//cac:PartyTaxScheme/cbc:CompanyID",
+            namespaces=self.ubl_namespaces,
+        )
+        self.assertEqual(node[0].text, fiscal_position.foreign_vat, "Foreign Fiscal Position VAT")
+
+        # Check XML for company VAT fallback
+        xml_bytes = self.env["account.edi.xml.ubl_21_fr"]._export_invoice(local_invoice)[0]
+        xml_tree = etree.fromstring(xml_bytes)
+        node = xml_tree.xpath(
+            "//cac:AccountingSupplierParty//cac:PartyTaxScheme/cbc:CompanyID",
+            namespaces=self.ubl_namespaces,
+        )
+        self.assertEqual(node[0].text, self.company.vat, "Company VAT fallback")
+
+
+# Tests below tests unusuals invoice line.
+# Since ubl 2.1 doesn't include the peppol rule https://docs.peppol.eu/poacc/billing/3.0/rules/ubl-peppol/PEPPOL-EN16931-R120/
+# People can ends up with weird invoices that were validated by the Approved Plateform
+# At the end, the imported line subtotal should match LineExtensionAmount
+
+    def test_import_partial_invoice_line_charges_price_details(self):
+        # Some invoice provider (FedEx) uses allowances and charges to details the price of an items
+        invoice = self._import_invoice_as_attachment_on('ubl_21_fr_in_partial_invoice_line_charges_price_details')
+        self.assertRecordValues(invoice.invoice_line_ids, [
+            {'quantity': 1, 'price_subtotal': 100.0},
+        ])
+
+    def test_import_partial_invoice_line_wrong_unit_price(self):
+        # Some invoice provider puts the subtotal of the line (without charges and allowances) on the PriceAmount in the price section.
+        # Without taking into account the invoiced quantity or the implicite PriceAmount quantity.
+        invoice = self._import_invoice_as_attachment_on('ubl_21_fr_in_partial_invoice_line_wrong_unit_price')
+        self.assertRecordValues(invoice.invoice_line_ids, [
+            {'quantity': 10, 'price_subtotal': 100.0},
+        ])
+
+    def test_import_en16931_customization_id(self):
+        # Some Approved Platforms only set the EN16931 CustomizationID, but the documents still follow the French rules
+        attachment = self._import_invoice_as_attachment('ubl_21_fr_in_partial_invoice_en16931_customization_id')
+        tree = etree.fromstring(attachment.raw)
+        self.assertEqual(self.env['account.move']._get_ubl_cii_builder_from_xml_tree(tree)._name, 'account.edi.xml.ubl_21_fr')
+        invoice = self._import_invoice_as_attachment_on(attachment=attachment)
+        self.assertRecordValues(invoice.invoice_line_ids, [
+            {'quantity': 10, 'price_unit': 10.0, 'discount': 0.0, 'price_subtotal': 100.0},
+        ])
+
+        # Without PDP, the generic format is used
+        with patch.object(self.env.registry['res.company'], '_get_peppol_proxy_type', return_value='peppol'):
+            self.assertEqual(self.env['account.move']._get_ubl_cii_builder_from_xml_tree(tree)._name, 'account.edi.xml.ubl_21')

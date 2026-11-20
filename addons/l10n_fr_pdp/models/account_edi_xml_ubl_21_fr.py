@@ -6,6 +6,7 @@ from odoo.addons.account_edi_ubl_cii.models.account_edi_common import FloatFmt
 PDP_CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017#conformant#urn.cpro.gouv.fr:1p0:extended-ctc-fr'  # Not accepted by SuperPDP due to missing validator
 
 CPRO_CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017#conformant#urn.cpro.gouv.fr:1p0:extended-ctc-fr'
+EN16931_CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017'
 CPRO_INVOICE_IDENTIFIER = f'busdox-docid-qns::urn:oasis:names:specification:ubl:schema:xsd:Invoice-2::Invoice##{CPRO_CUSTOMIZATION_ID}::2.1'
 
 PAID_STATES = frozenset({'in_payment', 'paid'})
@@ -64,6 +65,11 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
             constraints["ubl_21_fr_cpro_module_missing"] = self.env._("This partner is behind Chorus PRO. Please install the module '%s'", cpro_module_name)
 
         return constraints
+
+    def _get_invoice_node(self, vals):
+        document_node = super()._get_invoice_node(vals)
+        self._pdp_add_invoice_tax_representative_party_nodes(document_node, vals)
+        return document_node
 
     def _add_invoice_header_nodes(self, document_node, vals):
         # EXTENDS account.edi.xml.ubl_bis3
@@ -135,6 +141,21 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
                 'cbc:ID': {'_text': invoice.purchase_order_reference}
             }
 
+    def _pdp_add_invoice_tax_representative_party_nodes(self, document_node, vals):
+        # [BR-FR-CO-15] For Single Taxpayer Groups, report the group in cac:TaxRepresentativeParty (BG-11)
+        if tax_unit := self._l10n_fr_pdp_get_company_tax_unit(vals['company']):
+            address_node = self._get_address_node({'partner': tax_unit.main_company_id.partner_id})
+            # [UBL-CR-323] A UBL invoice should not include the TaxRepresentativeParty PostalAddress Country Name
+            address_node['cac:Country']['cbc:Name'] = None
+            document_node['cac:TaxRepresentativeParty'] = {
+                'cac:PartyName': {'cbc:Name': {'_text': tax_unit.name}},
+                'cac:PostalAddress': address_node,
+                'cac:PartyTaxScheme': {
+                    'cbc:CompanyID': {'_text': tax_unit.vat},
+                    'cac:TaxScheme': {'cbc:ID': {'_text': 'VAT'}},
+                },
+            }
+
     def _add_invoice_payment_means_nodes(self, document_node, vals):
         # EXTENDS account.edi.xml.ubl_bis3
         super()._add_invoice_payment_means_nodes(document_node, vals)
@@ -179,9 +200,20 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
         else:  # id_type == 'siren'
             party_id_scheme = "0002"
         # [UBL-SR-16] Buyer identifier shall occur maximum once
-        vals['party_node']['cac:PartyIdentification'] = {
+        vals['party_node']['cac:PartyIdentification'] = [{
             'cbc:ID': {'_text': party_id, 'schemeID': party_id_scheme},
-        }
+        }]
+
+    def _ubl_add_accounting_supplier_party_identification_nodes(self, vals):
+        # [CGI art. 256 C] [BR-FR-32] For Single Taxpayer Groups, report the group SIREN (BT-29) with scheme 0231
+        super()._ubl_add_accounting_supplier_party_identification_nodes(vals)
+        if tax_unit := self._l10n_fr_pdp_get_company_tax_unit(vals['company']):
+            vals['party_node']['cac:PartyIdentification'].append({
+                'cbc:ID': {
+                    '_text': self._l10n_fr_pdp_get_siren_from_vat(tax_unit.vat),
+                    'schemeID': '0231',
+                },
+            })
 
     def _ubl_add_party_legal_entity_nodes(self, vals):
         # EXTENDS account.edi.xml.ubl_bis3
@@ -296,3 +328,8 @@ class AccountEdiXmlUbl21Fr(models.AbstractModel):
                 invoice._sync_dynamic_lines(container),
             ):
                 downpayment_lines.move_id = invoice.id
+
+    def _fix_price_unit_quantity_discount(self, quantity, discount, price_unit, line_extension_amount, currency):
+        # EXTENDS account.edi.ubl
+        # TODO: Remove this when french enforces stricter rules
+        return self._import_fix_line_price_unit_quantity_discount(quantity, discount, price_unit, line_extension_amount, currency)
