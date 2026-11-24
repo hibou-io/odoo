@@ -47,6 +47,7 @@ RUN set -x; \
         postgresql-client \
     #  install Python Requirements
     && pip3 install -r /opt/odoo/odoo/requirements.txt \
+    && pip3 install setuptools\<58.0.0 \
     && pip3 install -r /opt/odoo/odoo/requirements-hibou.txt \
     && pip3 install git+https://github.com/OCA/openupgradelib.git \
     #  install wkhtmltox
