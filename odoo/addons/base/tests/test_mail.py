@@ -281,6 +281,38 @@ class TestSanitizer(BaseCase):
         sanitized = html_sanitize(img_tag, sanitize_tags=False, strip_classes=True)
         self.assertEqual(img_tag, sanitized, "img with can have cid containing @ and shouldn't be escaped")
 
+    def test_comment_malformed(self):
+        html = '''<!-- malformed-close --!> <img src='x' onerror='alert(1)'></img> --> comment <!-- normal comment --> --> out of context balise --!>'''
+        html_result = html_sanitize(html)
+        self.assertNotIn('alert(1)', html_result)
+
+    def test_multiline(self):
+        payload = """
+            <div> <!--
+                multi line comment
+                --!> </div> <script> alert(1) </script> -->
+        """
+        html_result = html_sanitize(payload)
+        self.assertNotIn('alert(1)', html_result)
+
+    def test_abrupt_close(self):
+        payload = """<!--> <script> alert(1) </script> -->"""
+        html_result = html_sanitize(payload)
+        self.assertNotIn('alert(1)', html_result)
+
+        payload = """<!---> <script> alert(1) </script> -->"""
+        html_result = html_sanitize(payload)
+        self.assertNotIn('alert(1)', html_result)
+
+    def test_abrut_malformed(self):
+        payload = """<!--!> <script> alert(1) </script> -->"""
+        html_result = html_sanitize(payload)
+        self.assertNotIn('alert(1)', html_result)
+
+        payload = """<!---!> <script> alert(1) </script> -->"""
+        html_result = html_sanitize(payload)
+        self.assertNotIn('alert(1)', html_result)
+
     # ms office is currently not supported, have to find a way to support it
     # def test_30_email_msoffice(self):
     #     new_html = html_sanitize(test_mail_examples.MSOFFICE_1, remove=True)
