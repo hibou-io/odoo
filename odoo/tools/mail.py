@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 import idna
 import markupsafe
-from lxml import etree
+from lxml import etree, html as lxml_html
 from lxml.html import clean, defs
 from werkzeug import urls
 
@@ -193,7 +193,7 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
         return src
     src = ustr(src, errors='replace')
     # html: remove encoding attribute inside tags
-    doctype = re.compile(r'(<[^>]*\s)(encoding=(["\'][^"\']*?["\']|[^\s\n\r>]+)(\s[^>]*|/)?>)', re.IGNORECASE | re.DOTALL)
+    doctype = re.compile(r'(<(?=[^<>]*>)[^<>]*\s)(encoding=(["\'][^"\'<>]*?["\']|[^\s\n\r<>]+)(\s[^<>]*|/)?>)', re.IGNORECASE | re.DOTALL)
     src = doctype.sub(u"", src)
 
     logger = logging.getLogger(__name__ + '.html_sanitize')
@@ -204,7 +204,7 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
 
     # On the specific case of Outlook desktop it adds unnecessary '<o:.*></o:.*>' tags which are parsed
     # in '<p></p>' which may alter the appearance (eg. spacing) of the mail body
-    src = re.sub(r'</?o:.*?>', '', src)
+    src = re.sub(r'</?o:[^<>\n]*?>', '', src)
 
     kwargs = {
         'page_structure': True,
@@ -245,8 +245,11 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
         src = src.replace('--!>', '-->')
         src = re.sub(r'(<!-->|<!--->)', '<!-- -->', src)
         # some corner cases make the parser crash (such as <SCRIPT/XSS SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT> in test_mail)
+        serialized = lxml_html.tostring(lxml_html.fromstring(src), encoding='unicode')
+        serialized = serialized.replace('--!>', '-->')
+        serialized = re.sub(r'(<!-->|<!--->)', '<!-- -->', serialized)
         cleaner = _Cleaner(**kwargs)
-        cleaned = cleaner.clean_html(src)
+        cleaned = cleaner.clean_html(serialized)
         assert isinstance(cleaned, str)
         # MAKO compatibility: $, { and } inside quotes are escaped, preventing correct mako execution
         cleaned = cleaned.replace(u'%24', u'$')
