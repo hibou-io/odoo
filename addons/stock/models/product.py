@@ -4,7 +4,6 @@ import operator as py_operator
 from ast import literal_eval
 from collections import defaultdict
 from collections.abc import Iterable
-from datetime import date, datetime, time
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
@@ -150,19 +149,15 @@ class ProductProduct(models.Model):
         self.outgoing_qty = 0.0
         self.virtual_available = 0.0
         self.free_qty = 0.0
-        for product in products:
-            product.with_context(skip_qty_available_update=True).update({key: val for key, val in res[product.id].items() if val})
+        for product in products.with_context(skip_qty_available_update=True):
+            product.update({key: val for key, val in res[product.id].items() if val})
 
     def _compute_quantities_dict(self, lot_id, owner_id, package_id, from_date=False, to_date=False):
         domain_quant_loc, domain_move_in_loc, domain_move_out_loc, domain_move_in_loc_done, domain_move_out_loc_done = self._get_domain_locations()
         domain_quant = [('product_id', 'in', self.ids)] + domain_quant_loc
         dates_in_the_past = False
         # only to_date as to_date will correspond to qty_available
-        original_value = to_date
-        to_date = fields.Datetime.to_datetime(to_date)
-        if (isinstance(original_value, date) and not isinstance(original_value, datetime)) or \
-            (isinstance(original_value, str) and len(original_value) == 10):
-            to_date = datetime.combine(to_date.date(), time.max)
+        to_date = self.env.company._to_datetime_upper_bound(to_date)
 
         if to_date and to_date < fields.Datetime.now():
             dates_in_the_past = True
@@ -910,15 +905,20 @@ class ProductTemplate(models.Model):
             else:
                 template.lot_sequence_id = self.env.ref('stock.sequence_production_lots', raise_if_not_found=False)
 
+    @api.depends_context('complete_next_serial')
     @api.depends('lot_sequence_id.number_next_actual')
     def _compute_next_serial(self):
         for template in self:
-            if template.lot_sequence_id:
-                template.next_serial = '{:0{}d}{}'.format(
-                    template.lot_sequence_id.number_next_actual,
-                    template.lot_sequence_id.padding,
-                    template.lot_sequence_id.suffix or ""
-                )
+            sequence = template.lot_sequence_id
+            if sequence:
+                if self.env.context.get('complete_next_serial'):
+                    template.next_serial = sequence.get_next_char(sequence.number_next_actual)
+                else:
+                    template.next_serial = '{:0{}d}{}'.format(
+                        sequence.number_next_actual,
+                        sequence.padding,
+                        sequence.suffix or ""
+                    )
             else:
                 template.next_serial = '0000001'
 
@@ -932,7 +932,7 @@ class ProductTemplate(models.Model):
     def _compute_has_available_route_ids(self):
         self.has_available_route_ids = self.env['stock.route'].search_count([('product_selectable', '=', True)])
 
-    @api.depends('product_variant_count', 'tracking')
+    @api.depends('product_variant_count', 'tracking', 'store_by')
     def _compute_show_qty_update_button(self):
         for product in self:
             product.show_qty_update_button = (
@@ -1203,6 +1203,7 @@ class ProductTemplate(models.Model):
         return (
             any(self.env.user.has_group(g) for g in advanced_option_groups)
             or bool(self.tracking)
+            or self.store_by in ['lot', 'serial']
         )
 
     # Be aware that the exact same function exists in product.product

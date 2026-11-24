@@ -164,6 +164,37 @@ class TestMenu(common.TransactionCase):
         default_menu.child_id[0].unlink()
         self.assertEqual(total_menu_items - 1 - self.nb_website, Menu.search_count([]), "Deleting a default menu item should delete its 'copies' (same URL) from website's menu trees. In this case, the default child menu and its copies on website 1 and website 2")
 
+    def test_default_menu_unlink_other_menu_trees(self):
+        Menu = self.env['website.menu']
+        website = self.env.ref('base.default_website')
+        default_menu = self.env.ref('website.main_menu')
+        generic_menu = Menu.create({
+            'name': 'Generic',
+            'url': '/generic-menu',
+            'parent_id': default_menu.id,
+        })
+        copies = Menu.search([('url', '=', '/generic-menu'), ('website_id', '!=', False)])
+        self.assertEqual(len(copies), self.nb_website)
+        # A copy moved into a submenu of the main menu is still a copy
+        submenu = Menu.create({
+            'name': 'Submenu',
+            'website_id': website.id,
+            'parent_id': website.menu_id.id,
+        })
+        copies.filtered(lambda m: m.website_id == website).parent_id = submenu
+        # Another menu tree of the website links the same URL
+        other_root = Menu.create({'name': 'Other Root', 'website_id': website.id})
+        other_menu = Menu.create({
+            'name': 'Same URL',
+            'url': '/generic-menu',
+            'website_id': website.id,
+            'parent_id': other_root.id,
+        })
+
+        generic_menu.unlink()
+        self.assertFalse(copies.exists(), "Deleting a default menu should delete its copies from the websites' main menus")
+        self.assertTrue(other_menu.exists(), "Deleting a default menu should keep the menus of other menu trees with the same URL")
+
     def test_06_menu_active(self):
         Menu = self.env['website.menu']
         website_1 = self.env.ref('base.default_website')
@@ -385,6 +416,18 @@ class TestMenu(common.TransactionCase):
 
         with self.assertRaises(UserError):
             top_menu.is_mega_menu = True
+
+    def test_09_main_menu_ignores_child_without_website(self):
+        website = self.env.ref('base.default_website')
+        menu = self.env['website.menu'].create({
+            'name': 'No website',
+            'url': '/no-website',
+            'parent_id': website.menu_id.id,
+            'website_id': False,
+        })
+        self.env.invalidate_all()
+
+        self.assertNotIn(menu, website.menu_id.child_id)
 
 
 class TestMenuHttp(common.HttpCase):

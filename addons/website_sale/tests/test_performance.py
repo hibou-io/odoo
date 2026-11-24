@@ -73,8 +73,7 @@ class TestWebsiteSalePerformanceNoPricelist(WebsiteSaleCommon, UtilPerf, Product
             "product_tag": 1,
             "product_template": 2,
             "product_template_attribute_line": 2,
-            "res_company": 2,
-            "res_currency": 1,
+            "res_company": 1,
             "res_partner": 1,
             "res_users": 1,
             "website_menu": 1,
@@ -119,8 +118,7 @@ class TestWebsiteSalePerformanceNoPricelist(WebsiteSaleCommon, UtilPerf, Product
             "product_template": 3,
             "product_template_attribute_line": 2,
             "product_template_attribute_value": 4,
-            "res_company": 2,
-            "res_currency": 1,
+            "res_company": 1,
             "res_partner": 1,
             "res_users": 1,
             "website_menu": 1,
@@ -256,12 +254,6 @@ class TestWebsiteSalePerformanceWithPricelist(TestWebsiteSalePerformanceWithPric
     def _get_product_page_queries(self):
         res = super()._get_product_page_queries()
         res["product_pricelist_item"] += 1
-        if "website_sale_subscription" not in self.installed_modules:
-            # FIXME VFE magic comeback when sub is installed makes no **** sense
-            # Seems to come from the `website_sale` template, not the sub override strangely
-            # The rules are fixed, product currency (through _get_main_company) does not have to be
-            # computed anymore
-            res["res_company"] -= 1
         return res
 
     def test_product_page_generation(self):
@@ -318,6 +310,33 @@ class TestWebsiteSalePerformanceWithPricelistDepth(TestWebsiteSalePerformanceWit
             self.heavy_product.website_url,
             sum(select_queries.values()),
             select_tables_perf=select_queries,
+        )
+
+
+class TestWebsiteSalePerformanceCategoriesSidebar(TestWebsiteSalePerformanceNoPricelist):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Published category with an unpublished child (inaccessible to public/portal users)
+        parent_categ = cls.env["product.public.category"].create({"name": "Published"})
+        cls.env["product.public.category"].create({
+            "name": "Unpublished", "parent_id": parent_categ.id
+        })
+        cls.heavy_product.public_categ_ids = parent_categ
+
+        # Show the categories as a sidebar instead of a top bar
+        cls.env.ref("website_sale.products_categories_top").active = False
+        cls.env.ref("website_sale.products_categories").active = True
+
+    def _get_shop_page_queries(self):
+        res = super()._get_shop_page_queries()
+        res["product_public_category"] += 3
+        return res
+
+    def test_shop_page_generation(self):
+        select_queries = self._get_shop_page_queries()
+        self._check_url_hot_query(
+            "/shop", sum(select_queries.values()), select_tables_perf=select_queries
         )
 
 

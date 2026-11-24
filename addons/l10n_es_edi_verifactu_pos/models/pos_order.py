@@ -108,6 +108,7 @@ class PosOrder(models.Model):
         return taxes._l10n_es_get_applicability()
 
     def l10n_es_edi_verifactu_button_send(self):
+        self.check_access('write')
         self._l10n_es_edi_verifactu_mark_for_next_batch()
 
     def _l10n_es_edi_verifactu_check(self, cancellation=False):
@@ -243,8 +244,15 @@ class PosOrder(models.Model):
                 order._l10n_es_edi_verifactu_create_documents(cancellation=True)
                 new_documents = True
 
-            # Register the invoice instead. The call to `super()` may already have sent it
+            # `l10n_es_invoice_type` is computed (store=True, readonly=False): our explicit
+            # refund reason, passed via `_prepare_invoice_vals`, can get silently recomputed
+            # away by a later line write (e.g. a rounding line) still happening before the
+            # move is posted. Reassert it now that posting is done, so it sticks for good.
             invoice = order.account_move
+            if order.refunded_order_id and order.l10n_es_invoice_type:
+                invoice.sudo().l10n_es_invoice_type = order.l10n_es_invoice_type
+
+            # Register the invoice instead. The call to `super()` may already have sent it
             if invoice.l10n_es_edi_verifactu_required and invoice and not invoice.l10n_es_edi_verifactu_document_ids:
                 invoice._l10n_es_edi_verifactu_create_documents()
                 new_documents = True

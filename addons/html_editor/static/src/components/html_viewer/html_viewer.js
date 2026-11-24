@@ -1,7 +1,7 @@
 import { HtmlUpgradeManager } from "@html_editor/html_migrations/html_upgrade_manager";
 import { mountComponent } from "@html_editor/others/embedded_component_utils";
 import { TableOfContentManager } from "@html_editor/others/embedded_components/core/table_of_content/table_of_content_manager";
-import { fillHtmlTransferData } from "@html_editor/utils/clipboard";
+import { fillClipboardWithSelection } from "@html_editor/utils/clipboard";
 import { fixInvalidHTML, instanceofMarkup } from "@html_editor/utils/sanitize";
 import {
     Component,
@@ -19,10 +19,11 @@ import {
     useProps,
 } from "@odoo/owl";
 import { getBundle } from "@web/core/assets";
-import { location } from "@web/core/browser/browser";
 import { memoize } from "@web/core/utils/functions";
 import { useLayoutEffect } from "@web/owl2/utils";
-import { TABLE_WRAPPER_SELECTOR, wrapTableInScrollContainer } from "@html_editor/utils/table";
+import { TABLE_WRAPPER_SELECTOR, wrapReadonlyTables } from "@html_editor/utils/table";
+import { unwrapContents } from "@html_editor/utils/dom";
+import { getLinksToRetarget, retargetLinkToNewTab } from "@html_editor/utils/url";
 
 export class HtmlViewer extends Component {
     static template = "html_editor.HtmlViewer";
@@ -48,6 +49,9 @@ export class HtmlViewer extends Component {
         useEffect(() => {
             const newValue = this.formatValue(this.props.config.value);
             if (newValue.toString() !== this.state.value.toString()) {
+                // Owl removes the nodes it rendered from '.o_readonly' when the
+                // value changes, so the tables have to be back there first.
+                this.unwrapTables();
                 this.state.value = newValue;
                 if (this.props.config.embeddedComponents) {
                     this.destroyComponents();
@@ -146,7 +150,7 @@ export class HtmlViewer extends Component {
         this.retargetLinks(container);
         this.applyAccessibilityAttributes(container);
         this.wrapTables(container);
-        this.addDomListener(container, "copy", this.onCopy);
+        this.addDomListener(container, "copy", fillClipboardWithSelection);
     }
 
     /**
@@ -155,23 +159,15 @@ export class HtmlViewer extends Component {
      * @param {HTMLElement} container
      */
     wrapTables(container) {
-        for (const table of container.querySelectorAll(".o_table")) {
-            if (!table.closest(TABLE_WRAPPER_SELECTOR)) {
-                wrapTableInScrollContainer(table);
-            }
-        }
+        wrapReadonlyTables(container);
     }
 
     /**
-     * @param {ClipboardEvent} ev
+     * Remove the scroll containers added by 'wrapTables', putting the tables
+     * back where they were rendered.
      */
-    onCopy(ev) {
-        ev.preventDefault();
-        const selection = ev.target.ownerDocument.defaultView.getSelection();
-        const clonedContents = selection.getRangeAt(0).cloneContents();
-        fillHtmlTransferData(ev, "clipboardData", clonedContents, {
-            textContent: selection.toString(),
-        });
+    unwrapTables() {
+        this.readonlyElementRef()?.querySelectorAll(TABLE_WRAPPER_SELECTOR).forEach(unwrapContents);
     }
 
     /**
@@ -189,23 +185,17 @@ export class HtmlViewer extends Component {
 
     /**
      * Retarget links to open in a new tab.
-     * When inside an iframe, all links are retargeted.
-     * Otherwise, only external links (different origin) are retargeted.
+     *
+     * @param {HTMLElement} container
      */
     retargetLinks(container) {
-        const isInsideIframe = container.ownerDocument !== document;
-        const retargetSelector = isInsideIframe
-            ? "a"
-            : `a:not([href^="${location.origin}"]):not([href^="/"])`;
-
-        for (const link of container.querySelectorAll(retargetSelector)) {
+        for (const link of getLinksToRetarget(container)) {
             this.retargetLink(link);
         }
     }
 
     retargetLink(link) {
-        link.setAttribute("target", "_blank");
-        link.setAttribute("rel", "noreferrer");
+        retargetLinkToNewTab(link);
     }
 
     updateIframeContent(content) {

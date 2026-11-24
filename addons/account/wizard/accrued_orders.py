@@ -63,7 +63,7 @@ class AccountAccruedOrdersWizard(models.TransientModel):
         comodel_name='account.account',
         string='Accrual Account',
         check_company=True,
-        domain="[('account_type', '=', 'liability_current')] if context.get('active_model') in ['purchase.order', 'purchase.order.line'] else [('account_type', '=', 'asset_current')]",
+        domain="[('account_type', '=', 'liability_current')] if accrual_type in ('bill_to_receive', 'invoiced_not_delivered') else [('account_type', 'in', ('asset_current', 'asset_prepayments'))]",
     )
     preview_data = fields.Text(compute='_compute_preview_data')
     display_amount = fields.Boolean(compute='_compute_display_amount')
@@ -114,21 +114,9 @@ class AccountAccruedOrdersWizard(models.TransientModel):
                 },
             })
 
-    @api.depends('date', 'journal_id', 'preview_data')
     def _compute_duplicate_entry(self):
-        for record in self:
-            if not record.preview_data:
-                record.duplicate_entry_id = False
-                continue
-
-            data = json.loads(record.preview_data)
-            ref = data['groups_vals'][0]['group_name'].split(', ')[1]
-            record.duplicate_entry_id = self.env['account.move'].search([
-                ('date', '=', record.date),
-                ('journal_id', '=', record.journal_id.id),
-                ('ref', '=', ref),
-                ('state', 'in', ('draft', 'posted')),
-            ], order='id desc', limit=1)
+        # TODO: remove the field in master
+        self.duplicate_entry_id = False
 
     def _get_aml_vals(self, is_purchase, order, balance, amount_currency, account_id, label="", analytic_distribution=None):
         # `balance`/`amount_currency` use the expense/income account's sign
@@ -293,21 +281,6 @@ class AccountAccruedOrdersWizard(models.TransientModel):
         if self.reversal_date <= self.date:
             raise UserError(_('Reversal date must be posterior to date.'))
 
-        # Try to unlink the duplicate entry and its reversal
-        if self.duplicate_entry_id:
-            original_reverse_entry = self.env['account.move'].search([
-                ('reversed_entry_id', '=', self.duplicate_entry_id.id),
-            ])
-
-            moves_to_delete = self.duplicate_entry_id | original_reverse_entry
-            moves_to_delete._unlink_or_reverse(default_values_list=[
-                {
-                    'ref': _("Reversal of: %s", move.ref),
-                    'date': self.date if move == self.duplicate_entry_id else self.reversal_date,
-                }
-                for move in moves_to_delete
-            ])
-
         move_vals, orders_with_entries, order_lines_with_entries = self._compute_move_vals()
         moves = self.env['account.move'].create([move_vals])
         move = moves[0]
@@ -334,6 +307,7 @@ class AccountAccruedOrdersWizard(models.TransientModel):
             'domain': [('id', 'in', (moves | reverse_moves).ids)],
         }
 
+    # TODO: remove in master
     def open_duplicate(self):
         self.ensure_one()
         if self.duplicate_entry_id:

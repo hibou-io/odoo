@@ -101,7 +101,8 @@ class PosController(PortalAccount):
         session_info['user_context']['allowed_company_ids'] = company.ids
         session_info['user_companies'] = {'current_company': company.id, 'allowed_companies': {company.id: session_info['user_companies']['allowed_companies'][company.id]}}
         session_info['nomenclature_id'] = pos_session.company_id.nomenclature_id.id
-        session_info['fallback_nomenclature_id'] = pos_session.config_id.fallback_nomenclature_id.id
+        fallback_nomenclature = pos_session.config_id.fallback_nomenclature_id
+        session_info['fallback_nomenclature_id'] = fallback_nomenclature.id if fallback_nomenclature != company.nomenclature_id else False
         context = {
             'from_backend': 1 if from_backend else 0,
             'use_pos_fake_tours': True if k.get('tours', False) else False,
@@ -134,10 +135,11 @@ class PosController(PortalAccount):
         form_values = {}
         if request.httprequest.method == 'POST':
             for field in ['pos_reference', 'date_order', 'ticket_code']:
-                if not kwargs.get(field):
+                value = (kwargs.get(field) or '').strip()
+                if not value:
                     errors[field] = " "
                 else:
-                    form_values[field] = kwargs.get(field)
+                    form_values[field] = value
 
             if errors:
                 errors['generic'] = _("Please fill all the required fields.")
@@ -146,7 +148,7 @@ class PosController(PortalAccount):
             else:
                 date_order = datetime(*[int(i) for i in form_values['date_order'].split('-')])
                 order = request.env['pos.order'].sudo().search([
-                    ('pos_reference', '=like', '%' + form_values['pos_reference'].strip().replace('%', r'\%').replace('_', r'\_')),
+                    ('pos_reference', '=like', '%' + form_values['pos_reference'].replace('%', r'\%').replace('_', r'\_')),
                     ('date_order', '>=', date_order - timedelta(days=1)),
                     ('date_order', '<', date_order + timedelta(days=2)),
                     ('ticket_code', '=', form_values['ticket_code']),

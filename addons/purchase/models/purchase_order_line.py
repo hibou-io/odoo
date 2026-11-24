@@ -34,7 +34,7 @@ class PurchaseOrderLine(models.Model):
     discount = fields.Float(
         string="Discount (%)",
         compute='_compute_price_unit_and_date_planned_and_name',
-        digits='Discount', aggregator='avg',
+        min_display_digits='Discount', aggregator='avg',
         store=True, readonly=False)
     tax_ids = fields.Many2many(
         comodel_name='account.tax',
@@ -265,9 +265,9 @@ class PurchaseOrderLine(models.Model):
             for inv_line in line._get_invoice_lines():
                 if inv_line.move_id.state not in ['cancel'] or inv_line.move_id.payment_state == 'invoicing_legacy':
                     if inv_line.move_id.move_type == 'in_invoice':
-                        invoiced_qties[line] += inv_line.product_uom_id._compute_quantity(inv_line.quantity, line.uom_id)
+                        invoiced_qties[line] += inv_line.product_uom_id._compute_quantity(inv_line.quantity, line.uom_id, round=False)
                     elif inv_line.move_id.move_type == 'in_refund':
-                        invoiced_qties[line] -= inv_line.product_uom_id._compute_quantity(inv_line.quantity, line.uom_id)
+                        invoiced_qties[line] -= inv_line.product_uom_id._compute_quantity(inv_line.quantity, line.uom_id, round=False)
         return invoiced_qties
 
     def _get_invoice_lines(self):
@@ -360,13 +360,20 @@ class PurchaseOrderLine(models.Model):
         ones currently out of sync, or that were out of sync as of `date` but have since been
         settled (nothing left to accrue today). Extended by `purchase_stock`, which can also
         detect a receipt-side mismatch via stock moves.
+        Lines with an accrual entry still active as of `date` are left out, their mismatch was
+        already accounted for.
         """
         domain = Domain([
             ('state', '=', 'purchase'),
             ('display_type', '=', False),
             ('is_downpayment', '=', False),
-            ('accrual_move_ids', 'not any', [('state', '=', 'posted'), ('reversal_move_ids', '=', False)]),
         ])
+        accrual_entry_date = date or fields.Date.to_date(self.env.context.get('accrual_entry_date')) or fields.Date.context_today(self)
+        domain &= Domain(
+            'accrual_move_ids',
+            'any' if self.env.context.get('already_accrued') else 'not any',
+            self.env['account.move']._get_active_accrual_domain(accrual_entry_date),
+        )
         if date:
             domain &= Domain.OR([
                 [('qty_to_invoice', '!=', 0)],
@@ -396,8 +403,11 @@ class PurchaseOrderLine(models.Model):
         (received ahead of invoicing). Reused by the `prepaid_expense`/`bill_to_receive` filters
         and by `res.company._get_accrual_candidate_lines`.
         """
+        if not date:
+            date = fields.Date.to_date(self.env.context.get('accrual_entry_date'))
         accrual_entry_date = date or fields.Date.context_today(self)
-        domain = self._get_accrual_domain(accrual_entry_date)
+        # The date is also put in the context for the stock overrides using no date in _get_accrual_domain
+        domain = self.with_context(accrual_entry_date=fields.Date.to_string(accrual_entry_date))._get_accrual_domain(accrual_entry_date)
         if extra_domain:
             domain &= extra_domain
         order_lines = self.env['purchase.order.line'].search(domain)
@@ -506,7 +516,7 @@ class PurchaseOrderLine(models.Model):
     @api.onchange('product_id')
     def onchange_product_id(self):
         # TODO: Remove when onchanges are replaced with computes
-        if not self.product_id:
+        if not self.product_id or self.env.context.get("first_onchange_call"):
             return
         if self.env.context.get('origin_po_id') and self.product_qty:
             self._compute_tax_id()

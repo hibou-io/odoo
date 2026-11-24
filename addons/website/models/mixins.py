@@ -61,7 +61,6 @@ class WebsiteSeoMetadata(models.AbstractModel):
         }
         default_twitter = {
             'twitter:card': 'summary_large_image',
-            'twitter:image': default_opengraph['og:image'],
         }
 
         return {
@@ -89,7 +88,7 @@ class WebsiteSeoMetadata(models.AbstractModel):
             ["", "", *urllib.parse.urlsplit(self.website_meta_og_img)[2:]]
         )
         opengraph_meta['og:image'] = url_join(root_url, self.env['ir.http']._url_for(og_image or opengraph_meta['og:image']))
-        twitter_meta['twitter:image'] = url_join(root_url, self.env['ir.http']._url_for(og_image or twitter_meta['twitter:image']))
+        twitter_meta['twitter:image'] = opengraph_meta['og:image']
         return {
             'opengraph_meta': opengraph_meta,
             'twitter_meta': twitter_meta,
@@ -287,6 +286,14 @@ class WebsiteLocatedMixin(models.AbstractModel):
             if record.website_url != '#':
                 record.website_absolute_url = url_join(record.get_base_url(), record.website_url)
 
+    def _get_localized_absolute_url(self):
+        """Return the absolute URL of the record's page as the current page links it."""
+        self.ensure_one()
+        website = self.env.website
+        if not website:
+            return self.website_absolute_url
+        return url_join(website.get_base_url(), self.env['ir.http']._url_for(self.website_url))
+
 
 class WebsiteStructuredDataMixin(models.AbstractModel):
     """Mixin to generate Schema.org JSON-LD structured data for website pages."""
@@ -363,7 +370,7 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
                     '@type': 'ListItem',
                     'position': i,
                     'name': name,
-                    'item': url_join(base_url, url),
+                    'item': url_join(base_url, self.env['ir.http']._url_for(url)),
                 }
                 for i, (name, url) in enumerate(items, start=1)
             ],
@@ -390,7 +397,7 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
         return {
             '@type': 'CollectionPage',
             'name': name,
-            'url': f'{base_url}{path}',
+            'url': url_join(base_url, self.env['ir.http']._url_for(path)),
             'publisher': {'@id': f'{base_url}/#organization'},
             'mainEntity': {
                 '@type': 'ItemList',
@@ -402,6 +409,7 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
             },
         }
 
+    # TODO: remove the unused base_url param in master
     def _build_listitem_jsonld_vals(self, record, position, base_url, name_field, embed_items):
         """Build a single ``ListItem`` entry for an ``ItemList``.
 
@@ -413,7 +421,7 @@ class WebsiteStructuredDataMixin(models.AbstractModel):
         if embed_items:
             list_item['item'] = record._prepare_jsonld_vals()
         else:
-            list_item['url'] = f'{base_url}{record.website_url}'
+            list_item['url'] = record._get_localized_absolute_url()
             list_item['name'] = record[name_field]
         return list_item
 

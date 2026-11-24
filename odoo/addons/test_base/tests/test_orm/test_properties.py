@@ -1667,6 +1667,15 @@ class PropertiesCase(TestPropertiesMixin):
         values = email.message.read(['attributes'])
         self.assertEqual(values[0]['attributes'][0]['value'], 'red')
 
+    def test_properties_inherits_existing_parent(self):
+        """ Creating a record inheriting from an existing parent keeps the
+        property values of the parent. """
+        values = self.message_1.read(['attributes'])[0]['attributes']
+        self.assertTrue(any(prop['value'] for prop in values))
+        self.env['test_orm.emailmessage'].create({'message': self.message_1.id})
+        self.message_1.invalidate_recordset()
+        self.assertEqual(self.message_1.read(['attributes'])[0]['attributes'], values)
+
     def test_properties_server_action_path_traversal(self):
         email = self.env['test_orm.emailmessage'].create({
             'discussion': self.discussion_1.id,
@@ -1708,18 +1717,18 @@ class PropertiesCase(TestPropertiesMixin):
         action.update_path = 'attributes.discussion_color_code'
         action.value = 'green'
         self.assertEqual(email['attributes']['discussion_color_code'], 'red')
-        action.with_context(active_id=email.id).run()
+        action.with_context(active_model='test_orm.emailmessage', active_id=email.id).run()
         self.assertEqual(email['attributes']['discussion_color_code'], 'green')
 
         action.update_path = 'attributes.discussion_color_size'
         action.value = 'large'
         self.assertEqual(email['attributes']['discussion_color_size'], 'small')
-        action.with_context(active_id=email.id).run()
+        action.with_context(active_model='test_orm.emailmessage', active_id=email.id).run()
         self.assertEqual(email['attributes']['discussion_color_size'], 'large')
 
         action.update_path = 'attributes.discussion_color_partner_ids'
         action.resource_ref = self.partner_2
-        action.with_context(active_id=email.id).run()
+        action.with_context(active_model='test_orm.emailmessage', active_id=email.id).run()
         self.assertEqual(email['attributes']['discussion_color_partner_ids'], self.partner_2)
 
     def test_getitem_property(self):

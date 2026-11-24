@@ -833,27 +833,22 @@ class HrLeave(models.Model):
             ]
         return domain
 
-    # so that when we consider allocated work entry types for employees that don't have allocations, it doesn't revert back to a generic one
     @api.onchange('employee_id', 'request_date_from', 'request_date_to')
     def _onchange_work_entry_type_id(self):
+        """Replace the time type when it is no longer valid for the employee and period.
+
+        The candidates are the allowed time types, as in the domain of the form view. Types
+        requiring an allocation are preferred over the others, so that an employee having
+        allocations does not fall back on a generic type.
+        """
         for holiday in self:
-            if not holiday.work_entry_type_id.requires_allocation:
+            if not holiday.employee_id or not holiday.request_date_from or not holiday.request_date_to:
                 continue
-            if not holiday.work_entry_type_id.get_work_entry_types_with_valid_allocations(holiday.request_date_from, holiday.request_date_to, holiday.employee_id.id):
-                local_work_entry_types = self.env['hr.work.entry.type'].with_context(
-                    default_date_from=holiday.request_date_from,
-                    default_date_to=holiday.request_date_to,
-                ).search([('country_id', 'in', [holiday.employee_id.country_id.id or holiday.employee_id.company_id.country_id.id] + [False])])
-                all_valid_work_entry_types = local_work_entry_types.with_context(
-                    default_date_from=holiday.request_date_from,
-                    default_date_to=holiday.request_date_to,
-                ).filtered_domain([('has_valid_allocation', '=', True)])
-                no_allocation_required = local_work_entry_types.filtered_domain([('requires_allocation', '=', False)])
-                valid_types = all_valid_work_entry_types.get_work_entry_types_with_valid_allocations(holiday.request_date_from, holiday.request_date_to, holiday.employee_id.id)
-                if not valid_types or not holiday.employee_id:
-                    holiday.work_entry_type_id = no_allocation_required[:1] or False
-                else:
-                    holiday.work_entry_type_id = valid_types[0]
+            valid_types = holiday.allowed_work_entry_type_ids._origin.get_work_entry_types_with_valid_allocations(
+                holiday.request_date_from, holiday.request_date_to, holiday.employee_id.id)
+            if holiday.work_entry_type_id._origin in valid_types:
+                continue
+            holiday.work_entry_type_id = valid_types.filtered('requires_allocation')[:1] or valid_types[:1]
 
     @api.depends('employee_id')
     def _compute_department_id(self):
@@ -912,7 +907,8 @@ class HrLeave(models.Model):
         triggering the computes depending on ``number_of_days``/``number_of_hours``. The hours
         are the working hours of the schedule within ``[date_from, date_to]``, minus the absence
         leaves: public holidays (unless the type has ``include_public_holidays_in_duration``) and
-        the other validated absences of the employee, but not the leave itself. Then:
+        the other validated absences of the employee, but not the leave itself nor its time rule
+        source. Then:
 
         - types counted in calendar days (``count_days_as = 'calendar'``) count every day;
         - a flexible schedule counts the real length of a single-day request;
@@ -944,8 +940,10 @@ class HrLeave(models.Model):
         domain = [('count_as', '=', 'absence'),
                   ('company_id', 'in', self.env.companies.ids + self.env.context.get('allowed_company_ids', [])),
                   # When searching for resource leave intervals, we exclude the one that
-                  # is related to the leave we're currently trying to compute for.
-                  '|', ('holiday_id', '=', False), ('holiday_id', 'not in', employee_leaves.ids)]
+                  # is related to the leave we're currently trying to compute for, and the one
+                  # of its time rule source, which can still span the output while it is created.
+                  '|', ('holiday_id', '=', False),
+                  ('holiday_id', 'not in', (employee_leaves | employee_leaves.source_leave_id).ids)]
         if additional_domain:
             domain = Domain.AND([domain, additional_domain])
         # Precompute values in batch for performance purposes
@@ -1059,7 +1057,7 @@ class HrLeave(models.Model):
 
             # For flexible employees, if it's a single day leave, we force it to the real duration since the virtual intervals might not match reality on that day, especially for custom hours
             # sudo as is_flexible is on version model and employee does not have access to it.
-            elif calendar._is_flexible() and leave.request_date_to == leave.request_date_from:
+            elif calendar._is_fully_flexible() or (calendar._is_flexible() and leave.request_date_to == leave.request_date_from):
                 # Only subtract public holidays if the leave type does NOT include public holidays in duration.
                 # When include_public_holidays_in_duration is True ("Public Holiday Included" enabled),
                 # the leave should count the full day even if it falls on a public holiday.
@@ -1068,8 +1066,27 @@ class HrLeave(models.Model):
                     h.company_id == leave.company_id
                 ) if not leave.work_entry_type_id.include_public_holidays_in_duration else self.env['resource.calendar.leaves']
                 hours = leave._subtract_public_holidays(filtered_public_holidays)
-                if leave.work_entry_type_request_unit != 'hour' and not public_holidays:
-                    days = 1 if leave.work_entry_type_request_unit != 'half_day' or leave.request_date_from_period != leave.request_date_to_period else 0.5
+                if leave.work_entry_type_request_unit != 'hour':
+                    # days of the request that are not public holidays, in the timezone of the employee
+                    tz = ZoneInfo(leave.employee_id.sudo()._get_tz())
+                    off_dates = {
+                        leave.request_date_from + timedelta(days=day)
+                        for day in range((leave.request_date_to - leave.request_date_from).days + 1)
+                    }
+                    for ph in filtered_public_holidays:
+                        ph_start = ph.date_from.replace(tzinfo=UTC).astimezone(tz).date()
+                        ph_end = ph.date_to.replace(tzinfo=UTC).astimezone(tz).date()
+                        off_dates.difference_update(
+                            ph_start + timedelta(days=day) for day in range((ph_end - ph_start).days + 1)
+                        )
+                    days = len(off_dates)
+                    # a half day bound is only off half a day, unless it is a public holiday (not counted at all)
+                    if leave.work_entry_type_request_unit == 'half_day':
+                        if leave.request_date_from_period == 'pm' and leave.request_date_from in off_dates:
+                            days -= 0.5
+                        if leave.request_date_to_period == 'am' and leave.request_date_to in off_dates:
+                            days -= 0.5
+                    days = max(0, days)
                 else:
                     days = hours / 24
             elif leave.work_entry_type_request_unit == 'day' and check_work_entry_type:
@@ -1695,7 +1712,9 @@ class HrLeave(models.Model):
             employees_without_allocation, zero_duration_employees = real_holidays.with_context(multi_leave_request=self.env.context.get('multi_leave_request'))._check_validity()
             invalid_holidays = real_holidays.filtered(lambda l: l.employee_id in (employees_without_allocation | zero_duration_employees))
             holidays -= invalid_holidays
-            invalid_holidays.unlink()
+            # sudo: drop the time off just created, the creator (e.g. the time off manager of the
+            # employee) is not always allowed to delete them
+            invalid_holidays.sudo().unlink()
         self.env['hr.leave.allocation'].invalidate_model(['leaves_taken', 'max_leaves'])  # missing dependency on compute
 
         for holiday in holidays:
@@ -2983,7 +3002,7 @@ class HrLeave(models.Model):
         # leave_split: List of tuple (work_entry_type_id, number_of_days) of the time off to create
         # use_worked_days: Take into account the working days instead of the calendar days
         #                  If True, we will deduct the time off date to value according to the
-        #                  employee working schedule and public time off according to time off type
+        #                  employee working schedule and public time off according to time type
         #                  configuration
         self.ensure_one()
         if len(leave_split) == 1:

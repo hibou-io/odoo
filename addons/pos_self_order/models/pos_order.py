@@ -157,6 +157,31 @@ class PosOrder(models.Model):
             ):
                 raise UserError(_("Invalid product attribute"))
 
+            # Only the values of the ordered variant, and the template's active no_variant values,
+            # may be attached: a sibling variant's value would add its price_extra to this line.
+            no_variant_lines = product.product_tmpl_id.attribute_line_ids.filtered(lambda ptal: ptal.attribute_id.create_variant == 'no_variant')
+            valid_ptavs = product.product_template_attribute_value_ids | no_variant_lines.product_template_value_ids._only_active()
+            if command == Command.UPDATE:
+                # A value archived since the line was ordered stays valid on that line,
+                # otherwise updating the line would change what was ordered and its price.
+                valid_ptavs |= existing_lines.filtered(lambda existing_line: existing_line.id == id_to_use).attribute_value_ids
+            if attribute_values - valid_ptavs:
+                raise UserError(_("Invalid product attribute"))
+
+            # Only 'multi' attributes accept several values; any other no_variant
+            # attribute must carry at most one value per line.
+            for attribute_line in no_variant_lines.filtered(lambda ptal: ptal.attribute_id.display_type != 'multi'):
+                if len(attribute_values & attribute_line.product_template_value_ids) > 1:
+                    raise UserError(_("Invalid product configuration"))
+
+            # Reject combinations forbidden by the template's exclusion rules
+            # (e.g. a no_variant value marked incompatible with the variant).
+            combination = product.product_template_attribute_value_ids | attribute_values
+            exclusions = product.product_tmpl_id._get_own_attribute_exclusions()
+            excluded_ids = {ptav_id for ptav in combination for ptav_id in exclusions.get(ptav.id, [])}
+            if excluded_ids & set(combination.ids):
+                raise UserError(_("Invalid product configuration"))
+
             return [command, id_to_use, {
                 'combo_id': line_data.get('combo_id'),
                 'product_id': line_data.get('product_id'),
@@ -207,10 +232,12 @@ class PosOrder(models.Model):
     def _get_self_order_floating_name(self, pos_config, order, device_type, table, tracking_number, prefix=""):
         if device_type == 'kiosk':
             return f"Table tracker {order['table_stand_number']}" if order.get('table_stand_number') else f"Kiosk Order {tracking_number}"
-        if not table:
+        if not table and order.get('floating_order_name'):
+            return order.get('floating_order_name')
+        elif not table:
             return f"Self-Order {tracking_number}"
         if pos_config.self_ordering_service_mode == 'dynamic_qr':
-            return f"T {table.table_number} - {prefix}{tracking_number}"
+            return f"T {table.table_number} - {tracking_number}"
         return f"Self-Order T {table.table_number}"
 
     @api.model
@@ -239,22 +266,6 @@ class PosOrder(models.Model):
                 _logger.warning("pos_self_order: Lock not available while opening a session for future orders.")
                 raise UserError(_("Error while creating the order. Please try again."))
             order['session_id'] = pos_config.current_session_id.id
-
-        existing_order = pos_config.env['pos.order']._get_open_order(order)
-        if not existing_order.exists():
-            pos_reference, tracking_number = pos_config._get_next_order_refs()
-            prefix = f"K{pos_config.id}-" if device_type == "kiosk" else "S"
-
-            if not floating_order_name:
-                floating_order_name = self._get_self_order_floating_name(pos_config, order, device_type, table, tracking_number, prefix)
-
-            tracking_number = f"{prefix}{tracking_number}"
-        else:
-            pos_reference = existing_order.pos_reference
-            floating_order_name = existing_order.floating_order_name
-            tracking_number = existing_order.tracking_number
-            if not floating_order_name:
-                floating_order_name = self._get_self_order_floating_name(pos_config, order, device_type, table, tracking_number)
 
         fiscal_position_id = preset_id.fiscal_position_id if preset_id else pos_config.default_fiscal_position_id
         pricelist_id = preset_id.pricelist_id if preset_id else pos_config.pricelist_id
@@ -289,7 +300,6 @@ class PosOrder(models.Model):
             'fiscal_position_id': fiscal_position_id.id if fiscal_position_id else False,
             'preset_id': preset_id.id if preset_id else False,
             'preset_time': order.get('preset_time'),
-            'tracking_number': tracking_number,
             'source': 'kiosk' if device_type == 'kiosk' else 'mobile',
             'email': partner.email if partner else order.get('email'),
             'mobile': partner.phone if partner else order.get('mobile'),
@@ -297,7 +307,6 @@ class PosOrder(models.Model):
             'floating_order_name': floating_order_name,
             'general_customer_note': order.get('general_customer_note'),
             'nb_print': order.get('nb_print'),
-            'pos_reference': pos_reference,
             'to_invoice': order.get('to_invoice'),
             'is_tipped': order.get('is_tipped'),
             'tip_amount': order.get('tip_amount'),
@@ -308,6 +317,9 @@ class PosOrder(models.Model):
             'payment_ids': payment_lines,
             'relations_uuid_mapping': order.get('relations_uuid_mapping', {}),
         }
+
+        if pos_config.self_ordering_mode == 'kiosk':
+            result['table_stand_number'] = order.get('table_stand_number')
 
         if (table and pos_config.self_ordering_service_mode == 'table'):
             result['table_stand_number'] = order.get('table_stand_number')
@@ -458,8 +470,7 @@ class PosOrder(models.Model):
         )
         applicable_lines = self.lines.filtered(
             lambda line: line.product_id != service_fee_product
-            and line.product_id != self.config_id.tip_product_id
-            and not line.combo_parent_id,
+            and line.product_id != self.config_id.tip_product_id,
         )
 
         if not applicable_lines:

@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from datetime import date
+from datetime import date, datetime
 from psycopg2.errors import CheckViolation
 
 from odoo.tests import tagged
@@ -54,6 +54,42 @@ class TestHrVersion(TestHrCommon):
                 'contract_date_start': '2021-01-01',
                 'contract_date_end': '2020-12-31'
             })
+
+    def test_direct_version_write_tracked_on_employee(self):
+        """ A write on versions, not through the employee, is logged on the employee's chatter, once per interval of
+        consecutive written versions, and bumps their last modification (which flags their validated payslips). """
+        employee = self.env['hr.employee'].create({'name': 'John Doe', 'date_version': '2020-01-01', 'wage': 1000})
+        version_1 = employee.version_id
+        version_2 = employee.create_version({'date_version': '2021-01-01'})
+        version_3 = employee.create_version({'date_version': '2022-01-01'})
+        self.env.flush_all()
+        self.env.cr.flush()
+
+        def wage_messages(messages):
+            # the tracked values are rendered in the body: "old -> new (Field)"
+            return messages.filtered(lambda m: '(Wage)' in (m.body or ''))
+
+        messages = employee.message_ids
+        with freeze_time('2025-01-01'):
+            (version_1 | version_3).write({'wage': 2000})
+        self.env.flush_all()
+        self.env.cr.flush()
+        self.assertEqual(len(wage_messages(employee.message_ids - messages)), 2,
+            "versions 1 and 3 are not consecutive: one message each")
+        self.assertEqual((version_1 | version_3).mapped('last_modified_date'), [datetime(2025, 1, 1)] * 2)
+
+        messages = employee.message_ids
+        (version_1 | version_2).write({'wage': 3000})
+        self.env.flush_all()
+        self.env.cr.flush()
+        self.assertEqual(len(wage_messages(employee.message_ids - messages)), 1,
+            "versions 1 and 2 are consecutive: a single message")
+
+        messages = employee.message_ids
+        version_2.with_context(skip_employee_tracking=True).write({'wage': 4000})
+        self.env.flush_all()
+        self.env.cr.flush()
+        self.assertFalse(wage_messages(employee.message_ids - messages))
 
     def test_contracts_no_overlap(self):
         # Simple overlap cases
@@ -372,6 +408,12 @@ class TestHrVersion(TestHrCommon):
         self.assertFalse(employee._is_in_contract(date(2010, 1, 1)))
         self.assertTrue(employee._is_in_contract(date(2020, 1, 1)))
         self.assertFalse(employee._is_in_contract(date(2030, 1, 1)))
+
+        # Without date, today is checked at the call, not when the module was loaded
+        with freeze_time(date(2029, 6, 1)):
+            self.assertTrue(employee.version_id._is_in_contract())
+        with freeze_time(date(2030, 6, 1)):
+            self.assertFalse(employee.version_id._is_in_contract())
 
     @freeze_time('2020-06-15')
     def test_default_date_is_today(self):
@@ -1004,6 +1046,24 @@ class TestHrVersion(TestHrCommon):
         versions = self.env['hr.version'].search([('id', 'in', (template_1 | template_2).ids), ('date_end', '=', False)])
         self.assertEqual(versions, template_1 | template_2)
 
+    def test_multi_version_changes_hr_officer(self):
+        # HR officer who edits the old version must get the summary of the changes to apply to the next versions (without access error)
+        job_developer, job_manager = self.env['hr.job'].create([{'name': 'Developer'}, {'name': 'Manager'}])
+        employee = self.env['hr.employee'].create({
+            'name': 'John Doe',
+            'job_id': job_developer.id,
+            'job_title': 'Old Title',
+        })
+
+        changes = employee.with_user(self.res_users_hr_officer).get_multi_version_changes({
+            'job_id': job_manager.id,
+            'job_title': 'New Title',
+        })
+        self.assertEqual(changes, {
+            '(Job)': ('Developer', 'Manager'),
+            '(Job Title)': ('Old Title', 'New Title'),
+        })
+
     def test_version_id_context_multi_employees(self):
         """The ``version_id`` context key applies to its employee in a multi-employee recordset."""
         employee_a, employee_b = self.env['hr.employee'].create([
@@ -1044,3 +1104,45 @@ class TestHrVersion(TestHrCommon):
         self.assertEqual(version_1.date_end, date(2023, 12, 31))
         self.assertEqual(version_2.date_start, date(2024, 1, 1))
         self.assertFalse(version_2.date_end)
+
+    def test_work_address_follows_work_location(self):
+        """The work address of a version is the address of its work location (the company's address without one)."""
+        company_address = self.env.company.partner_id
+        other_address = self.env['res.partner'].create({'name': 'Second site', 'parent_id': company_address.id})
+        other_location = self.env['hr.work.location'].create({
+            'name': 'Second site',
+            'address_id': other_address.id,
+            'location_type': 'office',
+        })
+        employee = self.env['hr.employee'].create({'name': 'Site worker', 'work_location_id': other_location.id})
+        self.assertEqual(employee.version_id.address_id, other_address)
+
+        employee.version_id.work_location_id = self.work_location
+        self.assertEqual(employee.version_id.address_id, self.work_location.address_id)
+
+        previous_address = self.work_location.address_id
+        third_address = self.env['res.partner'].create({'name': 'Third site', 'parent_id': company_address.id})
+        self.work_location.address_id = third_address
+        # the versions keep their work address: a site moving is a new version from the date of the move
+        self.assertEqual(employee.version_id.address_id, previous_address)
+        employee.version_id.work_location_id = other_location
+        employee.version_id.work_location_id = self.work_location
+        self.assertEqual(employee.version_id.address_id, third_address)
+
+        employee.version_id.work_location_id = False
+        self.assertEqual(employee.version_id.address_id, third_address)
+        no_location = self.env['hr.employee'].create({'name': 'No location'})
+        self.assertEqual(no_location.version_id.address_id.commercial_partner_id, company_address)
+
+    @freeze_time('2026-03-01')
+    def test_is_current_after_a_new_version(self):
+        """ A version read as current is no longer current once a later version starts before today, even when
+        its state was read (e.g. by the tracking of a write) before the new version was created. """
+        employee = self.env['hr.employee'].create({'name': 'Moved', 'date_version': date(2026, 1, 1)})
+        first_version = employee.version_id
+        self.assertTrue(first_version.is_current)
+        second_version = employee.create_version({'date_version': date(2026, 2, 1)})
+        self.assertFalse(first_version.is_current)
+        self.assertTrue(first_version.is_past)
+        self.assertTrue(second_version.is_current)
+        self.assertEqual(employee.current_version_id, second_version)

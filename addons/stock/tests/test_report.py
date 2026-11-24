@@ -1578,6 +1578,18 @@ class TestReports(TestReportsCommon):
                 {'uom_id': uom_dozen_id, 'packaging_uom_id': uom_dozen_id, 'product_uom_qty': 2, 'product_qty': 24, 'state': 'confirmed', 'move_orig_ids': []},
             ])
 
+        # Reserve 6 units: all the report's quantities must be expressed in the product's UoM.
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 6)
+        delivery_1.action_assign()
+        self.assertRecordValues(delivery_1.move_ids, [{'state': 'partially_available', 'quantity': 0.5}])
+        for receipt in receipts:
+            report_values = self.allocation_report._get_report_values('stock.picking', receipt.ids)
+            product_line = report_values['product_lines'][0]
+            self.assertEqual(product_line['total_qty'], 12)
+            self.assertEqual(product_line['free_qty'], 12)
+            self.assertEqual(product_line['needs'][0]['quantity'], 24)
+            self.assertEqual(product_line['needs'][0]['reserved_quantity'], 6)
+
     def test_report_reception_1_one_receipt(self):
         """ Create 2 deliveries and 1 receipt where some of the products being received
         can be reserved for the deliveries. Check that the reception report correctly
@@ -2344,3 +2356,27 @@ class TestReports(TestReportsCommon):
 
         html = self.env['ir.actions.report']._render_qweb_html('stock.report_deliveryslip', [picking_out.id])[0]
         self.assertEqual(len(findall(rb'Customizable Desk', html)), 1)
+
+    def test_incoming_qty_follows_operation_type_change(self):
+        """ Changing the operation type of a receipt to another warehouse's one must also move
+        the final location of its moves, so the forecasted incoming qty is counted there. """
+        wh_1 = self.env.ref('stock.warehouse0')
+        wh_1.reception_steps = 'two_steps'
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': self.ref('stock.picking_type_in'),
+            'location_id': self.ref('stock.stock_location_suppliers'),
+            'location_dest_id': wh_1.wh_input_stock_loc_id.id,
+            'move_ids': [Command.create({
+                'product_id': self.product.id,
+                'product_uom_qty': 1,
+                'location_id': self.supplier_location.id,
+                'location_dest_id': wh_1.wh_input_stock_loc_id.id,
+                'forecasted_location_id': wh_1.lot_stock_id.id,
+            })],
+        })
+        picking.action_confirm()
+
+        picking.picking_type_id = self.wh_2.in_type_id
+        self.assertEqual(picking.move_ids.forecasted_location_id, self.wh_2.lot_stock_id)
+        self.assertEqual(self.product.with_context(warehouse_id=wh_1.id).incoming_qty, 0)
+        self.assertEqual(self.product.with_context(warehouse_id=self.wh_2.id).incoming_qty, 1)

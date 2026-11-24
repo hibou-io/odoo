@@ -4,10 +4,8 @@ from datetime import time
 from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
-from collections import defaultdict
 from odoo.tools.intervals import Intervals
 from odoo import SUPERUSER_ID, models, fields, api, exceptions, _
-from odoo.fields import Domain
 from odoo.tools import BinaryBytes
 from odoo.tools.date_utils import sum_intervals
 
@@ -339,6 +337,10 @@ class HrEmployee(models.Model):
                 'employee_id': self.id,
                 'check_in': action_date,
             }
+            # the time type of the company of the employee, not the one of the current company
+            # (e.g. the kiosk of another company)
+            if work_entry_type := self.company_id.sudo().attendance_work_entry_type_id:
+                vals['work_entry_type_id'] = work_entry_type.id
             if geo_information:
                 vals.update({'in_%s' % key: geo_information[key] for key in geo_information})
 
@@ -397,13 +399,25 @@ class HrEmployee(models.Model):
         now_tz = now.replace(tzinfo=datetime.UTC).astimezone(tz)
         month_start = now_tz.replace(day=1, hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.UTC).replace(tzinfo=None)
         month_end = (now_tz + relativedelta(months=1)).replace(day=1, hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.UTC).replace(tzinfo=None)
+        # Same rights as hr.attendance._compute_can_edit and the access rules: the own attendances can be created and
+        # edited with the "Self Attendance Edit" right, but only deleted by their attendance manager or an officer
+        user = self.env.user
+        can_manage = user.has_group('hr_attendance.group_hr_attendance_user') \
+            or (user.has_group('hr_attendance.group_hr_attendance_officer') and self.attendance_manager_id == user)
+        can_edit = can_manage or (user.has_group('hr_attendance.group_hr_attendance_own') and self.user_id == user)
         return {
             "type": "ir.actions.act_window",
             "name": _("Attendances This Month"),
             "res_model": "hr.attendance",
             "views": [[False, "list"], [False, "form"]],
             "domain": [('employee_id', '=', self.id), ('check_in', '>=', month_start), ('check_in', '<', month_end)],
-            "context": {"group_by": ["check_in:week"]},
+            "context": {
+                "group_by": ["check_in:week"],
+                "default_employee_id": self.id,
+                "create": can_edit,
+                "edit": can_edit,
+                "delete": can_manage,
+            },
         }
 
     @api.depends("user_id.im_status", "attendance_state")
@@ -443,102 +457,3 @@ class HrEmployee(models.Model):
             "tag": "employee_barcode_scanner",
             "name": "Badge Scanner"
         }
-
-    def _get_calendar_attendance_domain(self):
-        """Return the domain on ``resource.calendar.attendance`` used by
-        :meth:`_get_work_intervals_by_type` to build the schedule intervals.
-
-        ``hr_holidays_attendance`` excludes the schedule attendances whose type is an absence.
-
-        :rtype: Domain
-        """
-        return Domain.TRUE
-
-    def _get_work_intervals_by_type(self, start, stop, version_periods_by_employee):
-        """Split the schedule of the employees in a period by kind of interval.
-
-        :param datetime start: aware datetime
-        :param datetime stop: aware datetime
-        :param dict version_periods_by_employee: ``{employee: [(start, stop, version)]}``
-        :return: ``{'schedule' | 'leave' | 'public_leave' | 'fully_flexible':
-            {employee: Intervals}}``, naive datetimes; fully flexible versions only get a
-            ``fully_flexible`` interval over their period. The timezone of the intervals is
-            dropped, not converted.
-        :rtype: dict
-        """
-        employees_by_calendar = defaultdict(lambda: self.env['hr.employee'])
-        leave_intervals_by_cal_by_resource = defaultdict(lambda: defaultdict(Intervals))
-        public_leave_intervals_by_cal_by_resource = defaultdict(lambda: defaultdict(Intervals))
-        attendance_intervals_by_employee = defaultdict(Intervals)
-
-        for employee, intervals in version_periods_by_employee.items():
-            for (_start, _stop, version) in intervals:
-                employees_by_calendar[version.resource_calendar_id] |= employee
-
-        for cal, employees in employees_by_calendar.items():
-            if not cal:  # employees are flex or fully flex
-                employees = employees.filtered(lambda e: not e._is_fully_flexible())
-                if not employees:
-                    continue
-            resources_per_tz = employees._get_resources_per_tz()
-            cal_leave_intervals_by_resource = cal._leave_intervals_batch(
-                start,
-                stop,
-                resources_per_tz=resources_per_tz,
-            )
-            cal_public_leave_intervals_by_resource = cal._leave_intervals_batch(
-                start,
-                stop,
-                resources_per_tz=resources_per_tz,
-                domain=[('resource_id', '=', False)]
-            )
-            for resource, leave_intervals in cal_leave_intervals_by_resource.items():
-                naive_leave_intervals = Intervals([(
-                    i_start.replace(tzinfo=None),
-                    i_stop.replace(tzinfo=None),
-                    i_model
-                ) for (i_start, i_stop, i_model) in leave_intervals])
-                leave_intervals_by_cal_by_resource[cal][resource] = naive_leave_intervals
-
-            for resource, public_leave_intervals in cal_public_leave_intervals_by_resource.items():
-                naive_public_leave_intervals = Intervals([(
-                    i_start.replace(tzinfo=None),
-                    i_stop.replace(tzinfo=None),
-                    i_model
-                ) for (i_start, i_stop, i_model) in public_leave_intervals])
-                public_leave_intervals_by_cal_by_resource[cal][resource] = naive_public_leave_intervals
-
-            cal_attendance_intervals_by_resource = cal._attendance_intervals_batch(
-                start,
-                stop,
-                resources_per_tz=resources_per_tz,
-                domain=self._get_calendar_attendance_domain() if cal else None,
-            )
-            for employee in employees:
-                attendance_intervals_by_employee[employee] = Intervals([(
-                    i_start.replace(tzinfo=None),
-                    i_stop.replace(tzinfo=None),
-                    i_model
-                ) for (i_start, i_stop, i_model) in cal_attendance_intervals_by_resource[employee.resource_id.id]])
-
-        work_intervals_by_type = {
-            'leave': defaultdict(Intervals),
-            'schedule': defaultdict(Intervals),
-            'fully_flexible': defaultdict(Intervals),
-            'public_leave': defaultdict(Intervals),
-        }
-        for employee, intervals in version_periods_by_employee.items():
-            employee_attendances = attendance_intervals_by_employee[employee]
-            for (p_start, p_stop, version) in intervals:
-                interval = Intervals([(p_start.replace(tzinfo=None), p_stop.replace(tzinfo=None), self.env['resource.calendar'])])
-                if version._is_fully_flexible():
-                    work_intervals_by_type['fully_flexible'][employee] |= interval
-                    continue
-                calendar = version.resource_calendar_id
-                employee_leaves = leave_intervals_by_cal_by_resource[calendar][employee.resource_id.id]
-                employee_public_leaves = public_leave_intervals_by_cal_by_resource[calendar][employee.resource_id.id]
-                work_intervals_by_type['public_leave'][employee] |= employee_public_leaves & interval
-                work_intervals_by_type['leave'][employee] |= employee_leaves & interval
-                work_intervals_by_type['schedule'][employee] |= employee_attendances & interval
-
-        return work_intervals_by_type

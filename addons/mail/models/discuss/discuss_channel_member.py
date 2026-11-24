@@ -363,7 +363,8 @@ class DiscussChannelMember(models.Model):
         post_leave_message = self.env.context.get("post_leave_message") is POST_LEAVE_MESSAGE
         for member in self:
             channel = member.channel_id
-            channel.message_unsubscribe(member.partner_id.ids)
+            # sudo: discuss.channel - removing followers of a member that was allowed to be removed
+            channel.sudo().message_unsubscribe(member.partner_id.ids)
             if close_chat_window:
                 for bus_channel in member._bus_channels():
                     custom_store = Store(bus_channel=bus_channel)
@@ -624,10 +625,12 @@ class DiscussChannelMember(models.Model):
 
     def _get_recording_permissions(self, user, sfu_url=True):
         can_record = bool(user and user._is_internal() and sfu_url)
+        channel = self.channel_id
+        can_record_media = can_record and channel._has_recording_feature()
         return {
-            "audioRecording": can_record,
-            "transcription": False,
-            "videoRecording": can_record,
+            "audioRecording": can_record_media,
+            "transcription": can_record and channel._has_transcription_feature(),
+            "videoRecording": can_record_media,
         }
 
     def _get_rtc_server_info(self, rtc_session, ice_servers=None, key=None):

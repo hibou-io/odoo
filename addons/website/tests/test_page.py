@@ -1,8 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from unittest.mock import patch
-from freezegun import freeze_time
-from datetime import date
 
 from lxml import html
 
@@ -15,6 +13,7 @@ from odoo.tools import mute_logger
 from odoo.addons.base.tests.common import TransactionCaseWithUserDemo
 from odoo.addons.http_routing.tests.common import MockRequest
 from odoo.addons.website.controllers.main import Website
+from odoo.addons.website.tests.common import set_url_code
 
 import werkzeug
 
@@ -313,6 +312,11 @@ class TestPage(common.TransactionCase):
 
 @tagged('-at_install', 'post_install')
 class WithContext(HttpCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        set_url_code(cls.env.ref('base.lang_fr'))
+
     def setUp(self):
         super().setUp()
         Page = self.env['website.page']
@@ -346,19 +350,51 @@ class WithContext(HttpCase):
         self.assertEqual(r.status_code, 200, "Admin should see the specific unpublished page")
         self.assertEqual('I am a specific page' in r.text, True, "Admin should see the specific unpublished page")
 
-    def test_unpublished_page_no_cache(self):
-        """Ensure that a previously-published page that is now unpublished will not be cached."""
+    def test_unpublished_page_deactivated_user(self):
+        designer = common.new_test_user(
+            self.env,
+            login='designer',
+            groups='base.group_user,website.group_website_designer',
+        )
+        self.page.is_published = False
+
+        self.authenticate(designer.login, designer.login)
+        r = self.url_open(self.page.url)
+        self.assertEqual(r.status_code, 200, "Website Designers should see unpublished pages")
+
+        designer.active = False
+        r = self.url_open(self.page.url)
+        self.assertEqual(r.status_code, 404, "Deactivated users should be logged out before serving fallback pages")
+
+    def test_hidden_page_cache_invalidation(self):
+        """Ensure that a cached page is not served anymore once it is hidden"""
         self.authenticate(None, None)
 
-        with freeze_time(date(2025, 12, 30)):
-            r = self.url_open(self.page.url)
+        r = self.url_open(self.page.url)
         self.assertEqual(r.status_code, 200, "Restricted users should see the published page")
 
         self.page.write({'is_published': False})
-
-        with freeze_time(date(2025, 12, 31)):
-            r = self.url_open(self.page.url)
+        r = self.url_open(self.page.url)
         self.assertEqual(r.status_code, 404, "Restricted users should see a 404 as the page is unpublished")
+
+        self.page.write({'is_published': True})
+        r = self.url_open(self.page.url)
+        self.assertEqual(r.status_code, 200, "Restricted users should see the republished page")
+
+    def test_page_host_indexability(self):
+        """Cached HTML must preserve the current host's robots directive."""
+        self.env.ref('base.default_website').domain = 'https://example.com'
+        self.authenticate(None, None)
+
+        for hosts in [('preview.example.com', 'example.com'), ('example.com', 'preview.example.com')]:
+            with self.subTest(hosts=hosts):
+                self.env.transaction.invalidate_ormcache()
+                # Check indexability on both hosts, regardless of request order.
+                for host in hosts:
+                    response = self.url_open(self.page.url, headers={'Host': host})
+                    self.assertEqual(response.status_code, 200)
+                    noindex = html.fromstring(response.content).xpath('//meta[@name="robots"]/@content')
+                    self.assertEqual(noindex, ['noindex'] if host == 'preview.example.com' else [], host)
 
     @mute_logger('odoo.addons.rpc.controllers.xmlrpc')
     def test_search(self):
@@ -619,7 +655,6 @@ class WithContext(HttpCase):
     def test_07_alternatives(self):
         website = self.env.ref('base.default_website')
         lang_fr = self.env['res.lang']._activate_lang('fr_FR')
-        lang_fr.write({'url_code': 'fr'})
         website.language_ids = self.env.ref('base.lang_en') + lang_fr
         website.default_lang_id = self.env.ref('base.lang_en')
 
@@ -866,6 +901,65 @@ class WithContext(HttpCase):
         r3 = self.url_open(expected_cafe_with_accent_url_full)
         self.assertEqual(r3.status_code, 200)
         self.assertURLEqual(test_cafe_with_accent_page.url, expected_cafe_with_accent_url_full)
+
+
+@tagged('-at_install', 'post_install')
+class TestPageInMenu(common.TransactionCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.website = cls.env.ref('base.default_website')
+        cls.page = cls.env['website.page'].create({
+            'name': 'In Menu Page',
+            'type': 'qweb',
+            'arch': '<div>content</div>',
+            'key': 'test.in_menu_page',
+            'url': '/in-menu-page',
+            'website_id': cls.website.id,
+        })
+        # A menu tree other than the main menu
+        other_menu = cls.env['website.menu'].create({
+            'name': 'Other Menu',
+            'url': '#',
+            'website_id': cls.website.id,
+        })
+        cls.other_entry = cls.env['website.menu'].create({
+            'name': 'In Menu Page',
+            'url': cls.page.url,
+            'page_id': cls.page.id,
+            'parent_id': other_menu.id,
+            'website_id': cls.website.id,
+        })
+
+    def _page_properties(self):
+        return self.env['website.page.properties'].create({
+            'target_model_id': self.page.id,
+            'website_id': self.website.id,
+            'url': self.page.url,
+        })
+
+    def _main_menu_entries(self):
+        return self.env['website.menu'].search([
+            ('page_id', '=', self.page.id),
+            ('parent_id', '=', self.website.menu_id.id),
+        ])
+
+    def test_in_menu_ignores_other_menu_trees(self):
+        self.assertFalse(self.page.is_in_menu)
+        properties = self._page_properties()
+        self.assertFalse(properties.is_in_menu)
+
+        properties.is_in_menu = True
+        self.assertEqual(len(self._main_menu_entries()), 1, "Switching 'In Menu' on should add the page to the main menu")
+        self.page.invalidate_recordset(['menu_ids', 'is_in_menu'])
+        self.assertTrue(self.page.is_in_menu)
+
+        properties = self._page_properties()
+        self.assertTrue(properties.is_in_menu)
+        properties.is_in_menu = False
+        self.assertFalse(self._main_menu_entries(), "Switching 'In Menu' off should remove the page from the main menu")
+        self.assertTrue(self.other_entry.exists(), "'In Menu' should not remove the entries of other menu trees")
 
 
 @tagged('-at_install', 'post_install')

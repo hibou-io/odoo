@@ -1,11 +1,12 @@
 import { test, expect, animationFrame } from "@odoo/hoot";
-import { mountWithCleanup } from "@web/../tests/web_test_helpers";
+import { mountWithCleanup, patchWithCleanup } from "@web/../tests/web_test_helpers";
 import { patch } from "@web/core/utils/patch";
 import { setupPosEnv, getFilledOrder, expectFormattedPrice, addTestTerminals } from "../utils";
 import { definePosModels } from "../data/generate_model_definitions";
 import { queryOne } from "@odoo/hoot-dom";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
 import { localization } from "@web/core/l10n/localization";
+import { currencies } from "@web/core/currency";
 
 definePosModels();
 
@@ -154,6 +155,42 @@ test("onClickProvider", async () => {
     expect(order.payment_ids[0].payment_method_id).toBe(terminal2);
 });
 
+test("force done dialog closes once the payment ends", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const [terminal] = addTestTerminals(store, 1);
+    const comp = await mountWithCleanup(PaymentScreen, {
+        props: { orderUuid: order.uuid },
+    });
+    const { data: line } = order.addPaymentline(terminal);
+    line.setPaymentStatus("waiting");
+
+    comp.sendForceDone(line);
+    await animationFrame();
+    line.setPaymentStatus("waitingCard");
+    await animationFrame();
+    expect(".modal").toHaveCount(1);
+
+    line.setPaymentStatus("done");
+    await animationFrame();
+    expect(".modal").toHaveCount(0);
+});
+
+test("force done dialog on a payment already done", async () => {
+    const store = await setupPosEnv();
+    const order = await getFilledOrder(store);
+    const [terminal] = addTestTerminals(store, 1);
+    const comp = await mountWithCleanup(PaymentScreen, {
+        props: { orderUuid: order.uuid },
+    });
+    const { data: line } = order.addPaymentline(terminal);
+    line.setPaymentStatus("done");
+
+    comp.sendForceDone(line);
+    await animationFrame();
+    expect(".modal").toHaveCount(0);
+});
+
 const getPaidOrder = async (store, { invoiced = false } = {}) => {
     const order = await getFilledOrder(store);
     if (invoiced) {
@@ -198,4 +235,38 @@ test("invoice button is enabled for normal orders", async () => {
 
     const invoiceBtn = queryOne(".js_invoice");
     expect(invoiceBtn.disabled).toBe(false);
+});
+
+test("addTip default amount of a currency without decimals", async () => {
+    const store = await setupPosEnv();
+    store.config.iface_tipproduct = true;
+    patchWithCleanup(currencies[store.config.currency_id.id], { digits: [69, 0] });
+    store.currency.decimal_places = 0;
+
+    const order = await getFilledOrder(store);
+    order.addPaymentline(store.models["pos.payment.method"].get(1)).data.setAmount(3000);
+    expect(Math.abs(order.change)).toBe(2405);
+
+    let startingValue;
+    const screen = {
+        pos: store,
+        currentOrder: order,
+        dialog: { add: (_, props) => (startingValue = props.startingValue) },
+    };
+    await PaymentScreen.prototype.addTip.call(screen);
+    const tip = PaymentScreen.prototype.computeNewTip.call(screen, {
+        value: startingValue,
+        type: "fixed",
+    });
+    expect(tip).toBe(2405);
+});
+
+test("configFastPaymentMethod uses the provider default", async () => {
+    const store = await setupPosEnv();
+    const [terminal1, terminal2] = addTestTerminals(store);
+    terminal1.sequence = -2;
+    terminal2.sequence = -1;
+    expect(store.configFastPaymentMethod[0]).toBe(terminal1);
+    store.paymentMethods.setDefault("test_terminal", terminal2.id);
+    expect(store.configFastPaymentMethod[0]).toBe(terminal2);
 });

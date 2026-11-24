@@ -1127,13 +1127,14 @@ class MrpProduction(models.Model):
             to_update = self.filtered(lambda p: p.state == 'done')
             to_update._track_add({production.id: {'date_finished': production.date_finished} for production in to_update})
 
+        confirmed_productions = self.filtered(lambda p: p.state == 'confirmed') if 'date_start' in vals else self.env['mrp.production']
         res = super(MrpProduction, self).write(vals)
 
         for production in self:
             if 'date_start' in vals and not self.env.context.get('force_date', False):
                 if production.state in ['done', 'cancel']:
                     raise UserError(_('You cannot move a manufacturing order once it is cancelled or done.'))
-                if production.is_planned and vals.get('state') != 'progress':
+                if production.is_planned and vals.get('state') != 'progress' and not (production in confirmed_productions and production.state == 'progress'):
                     production._unplan_workorders()
             if vals.get('date_start'):
                 production.move_raw_ids.write({'date': production.date_start, 'date_deadline': production.date_start})
@@ -3129,23 +3130,10 @@ class MrpProduction(models.Model):
 
     def _set_quantities(self):
         self.ensure_one()
-        self.qty_producing = self.product_qty - self.qty_produced
-        self._set_qty_producing()
+        if not self.qty_producing:
+            self.qty_producing = self.product_qty - self.qty_produced
+            self._set_qty_producing()
         self._mark_byproducts_as_produced()
-
-        missing_lot_id_products = ""
-        for move in self.move_raw_ids:
-            if move.state in ('done', 'cancel') or not move.product_uom_qty:
-                continue
-            if move.picked and move.has_tracking in ('serial', 'lot') and \
-                any(not line.lot_id for line in move.move_line_ids if line.quantity and line.picked):
-                missing_lot_id_products += "\n  - %s" % move.product_id.display_name
-        if missing_lot_id_products:
-            error_msg = _(
-                "You need to supply Lot/Serial Number for products and 'consume' them: %(missing_products)s",
-                missing_products=missing_lot_id_products,
-            )
-            raise UserError(error_msg)
 
     def _get_autoprint_done_report_actions(self):
         """ Reports to auto-print when MO is marked as done

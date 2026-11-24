@@ -73,6 +73,24 @@ def _trim_hours_from_start(intervals, hours):
     return result
 
 
+def _trim_hours_from_end(intervals, hours):
+    """Remove `hours` worth of time from the end of an interval list."""
+    remaining = hours
+    result = []
+    for s, e, r in reversed(intervals):
+        if remaining <= 0:
+            result.append((s, e, r))
+            continue
+        slot = (e - s).total_seconds() / 3600
+        if slot <= remaining:
+            remaining -= slot
+        else:
+            result.append((s, e - timedelta(hours=remaining), r))
+            remaining = 0
+    result.reverse()
+    return result
+
+
 def _to_utc(dt, tz):
     """Convert a naive local datetime to a naive UTC datetime."""
     return dt.replace(tzinfo=tz).astimezone(UTC).replace(tzinfo=None)
@@ -298,8 +316,9 @@ class HrTimeRule(models.Model):
                 rule.country_id = rule.company_id.country_id
 
     @api.depends('country_id', 'company_id')
+    @api.depends_context('company')
     def _compute_country_work_entry_type_ids(self):
-        rule_country = {rule: rule.country_id or rule.company_id.country_id for rule in self}
+        rule_country = {rule: rule.country_id or rule.company_id.country_id or self.env.company.country_id for rule in self}
         all_country_ids = list({c.id for c in rule_country.values() if c})
 
         # which of those countries actually have localized WETs
@@ -717,7 +736,7 @@ class HrTimeRule(models.Model):
                 # group by period, pick the lowest-sequence rule per period
                 by_period = defaultdict(list)
                 for iv_start, iv_end, rule in intervals:
-                    if not rule.work_entry_type_id or iv_end <= iv_start:
+                    if iv_end <= iv_start:
                         continue
                     if rule.quantity_period == 'week':
                         ws = int(rule.week_start or '0')
@@ -733,9 +752,12 @@ class HrTimeRule(models.Model):
                     for iv_start, iv_end, rule in period_ivs:
                         if rule != winning_rule:
                             continue
+                        deficit_hours = (iv_end - iv_start).total_seconds() / 3600
+                        if not rule.work_entry_type_id:
+                            deficit_alloc.append([employee, rule, deficit_hours, source, source])
+                            continue
                         pp = rule._get_pp_frozenset()
                         df = _to_utc(iv_start, tz)
-                        deficit_hours = (iv_end - iv_start).total_seconds() / 3600
                         occupied = source._get_time_rule_deficit_occupied(employee.id, df, period_end)
                         already_covered = source._get_time_rule_deficit_already_covered(rule, df, period_end)
                         remaining = max(0.0, deficit_hours - already_covered)
@@ -818,7 +840,6 @@ class HrTimeRule(models.Model):
                     first_end_utc = _to_utc(first.end, tz)
                     extra_vals = first.rule._get_source_annotation_vals(accumulated_pp=first.pp)
                     # source record is repurposed as the first output; all remainder segments need new records
-                    rem_offset = 0
                     # remainder: time between/after outputs that reverts to the original work type
                     remainder_secs = sum(
                         _utc_seconds(seg_s, seg_e, tz)
@@ -867,8 +888,8 @@ class HrTimeRule(models.Model):
                     subsequent = output_intervals[1:]
                 else:
                     min_out_start_local = min(iv.start for iv in output_intervals)
-                    # source record is repurposed as the first remainder
-                    rem_offset = 1
+                    # source record is cut at the first output: it keeps all the remainder
+                    # segments before it (several when absences are clipped to the schedule)
                     # eligible pool: all remainder segments + output slices
                     # that keep the original type/pp
                     break_pool_secs = sum(
@@ -889,7 +910,9 @@ class HrTimeRule(models.Model):
                     source.sudo().with_context(**source._time_rule_write_ctx).write(write_vals)
                     subsequent = output_intervals
 
-                for seg_s, seg_e, _ in remainder_segments[rem_offset:]:
+                for seg_s, seg_e, _ in remainder_segments:
+                    if _to_utc(seg_e, tz) <= min_out_start_utc:
+                        continue
                     # snap a start that lands on the end-of-day boundary to midnight
                     if seg_s.time() == time.max:
                         seg_s = datetime.combine(seg_s.date() + timedelta(1), time.min)
@@ -999,7 +1022,22 @@ class HrTimeRule(models.Model):
                 intervals_by_source.keys(),
                 key=lambda r: max(e for _, e, _ in intervals_by_source[r]),
             )
-            if self.calendar_source:
+            dummy = self.env['resource.calendar']
+            sched_cal = next((att.calendar_id for _s, _e, att in schedule), dummy)
+            if self.calendar_source and sched_cal._is_duration_based() and total_worked:
+                # place deficit after checkout, or before checkin if the day is too short
+                last_end = max(e for _s, e, _ in total_worked)
+                first_start = min(s for s, _e, _ in total_worked)
+                after_slot = Intervals([(last_end, stop, dummy)]) - total_worked
+                if sum_intervals(after_slot) >= deficit_amount:
+                    gap = _trim_hours_from_end(list(after_slot), sum_intervals(after_slot) - deficit_amount)
+                else:
+                    before_slot = Intervals([(start, first_start, dummy)]) - total_worked
+                    gap = list(before_slot)
+                    trim = sum_intervals(before_slot) - deficit_amount
+                    if trim > 0:
+                        gap = _trim_hours_from_start(gap, trim)
+            elif self.calendar_source:
                 gap = list((schedule & period_window) - total_worked)
                 extra_outside = sum_intervals(total_worked) - sum_intervals(total_worked & schedule & period_window)
                 if extra_outside > 0:
@@ -1009,21 +1047,15 @@ class HrTimeRule(models.Model):
                     absence_hours = sum((e - s).total_seconds() / 3600 for s, e, _ in gap)
                     break_deficit = deficit_amount - absence_hours
                     if break_deficit > 1e-6:
-                        dummy = self.env['resource.calendar']
                         gap.append((stop - timedelta(hours=break_deficit), stop, dummy))
-                return {}, {last_source: [(s, e, self) for s, e, _ in gap]}
             else:
-                # when schedule data is available, clip the gap to actual working-time
-                # slots so the deficit output lands within calendar hours, mirroring the
-                # calendar_source branch.  falls back to the full period window for
-                # fully-flexible employees who have no schedule.
                 available = schedule if schedule else period_window
                 gap_iv = available - total_worked
                 gap = list(gap_iv)
                 trim = sum_intervals(gap_iv) - deficit_amount
                 if trim > 0:
                     gap = _trim_hours_from_start(gap, trim)
-                return {}, {last_source: [(s, e, self) for s, e, _ in gap]}
+            return {}, {last_source: [(s, e, self) for s, e, _ in gap]}
 
         tolerance = self.employer_tolerance
         if float_compare(excess_amount, tolerance, 5) != 1:

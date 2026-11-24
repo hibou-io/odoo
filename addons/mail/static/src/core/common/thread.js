@@ -480,7 +480,8 @@ export class Thread extends Component {
             }
             if (
                 (this.lastSetValue === undefined || Math.abs(this.lastSetValue - value) > 1) &&
-                !this.isSmoothScrolling
+                !this.isSmoothScrolling &&
+                !this.scrollingToHighlight
             ) {
                 this.setScroll(value, {
                     smooth:
@@ -611,6 +612,7 @@ export class Thread extends Component {
             this.props.thread.loadNewer = false;
             this.state.showJumpPresent = false;
         }
+        this.scrollingToHighlight = false;
         this.props.thread.scrollTop = immediate ? "bottom" : "bottom-smooth";
         if (!this.ui.isSmall) {
             this.props.thread.composer.autofocus++;
@@ -791,9 +793,31 @@ export class Thread extends Component {
             } else {
                 // To remove when safari will support the "scrollend" event.
                 let lastScrollTop = this.scrollableRef().scrollTop;
+                let previousScrollTop = lastScrollTop;
+                let movedAway = false;
+                const highlightScroll = this.messageHighlight?.scrollPromise;
+                const scrollListener = new AbortController();
+                this.scrollableRef().addEventListener(
+                    "scroll",
+                    (ev) => {
+                        const distance = Math.abs(value - ev.target.scrollTop);
+                        movedAway ||= distance > Math.abs(value - previousScrollTop);
+                        previousScrollTop = ev.target.scrollTop;
+                    },
+                    { signal: scrollListener.signal }
+                );
                 const checkSmoothScrollingEnd = () => {
                     const el = this.scrollableRef();
                     if (!el || el.scrollTop === lastScrollTop) {
+                        scrollListener.abort();
+                        if (
+                            el &&
+                            !movedAway &&
+                            thread.eq(this.props.thread) &&
+                            this.messageHighlight?.scrollPromise === highlightScroll
+                        ) {
+                            el.scrollTop = value;
+                        }
                         onSmoothScrollingEnd();
                         return;
                     }

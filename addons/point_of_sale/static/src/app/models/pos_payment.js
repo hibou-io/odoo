@@ -122,6 +122,10 @@ export class PosPayment extends Base {
             : false;
     }
 
+    isForceDoneAllowed() {
+        return true;
+    }
+
     setCashierReceipt(value) {
         this.cashier_receipt = value;
     }
@@ -176,10 +180,18 @@ export class PosPayment extends Base {
 
     // ----- Payment Force State -----
     forceDone() {
+        if (this.isDone()) {
+            return;
+        }
+        this.payment_interface?.onForceDone();
+        this.card_no = "forced";
         this.setPaymentStatus("done");
     }
 
     forceCancel() {
+        if (this.isDone()) {
+            return;
+        }
         this.setPaymentStatus("retry");
     }
 

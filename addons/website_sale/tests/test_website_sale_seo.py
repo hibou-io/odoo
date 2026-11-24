@@ -1,8 +1,11 @@
+import json
+
 from lxml import html
 
 from odoo.fields import Command
 from odoo.tests import HttpCase
 
+from odoo.addons.website.tests.common import set_url_code
 from odoo.addons.website_sale.tests.common import WebsiteSaleCommon
 
 
@@ -15,6 +18,11 @@ class WebsiteSaleSEO(HttpCase, WebsiteSaleCommon):
     )
 
     _test_user_name = 'Test Sales & Product Manager'
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        set_url_code(cls.env.ref('base.lang_fr'))
 
     def test_website_sale_user_designer_can_edit_seo(self):
         public_categ = self.env["product.public.category"].create({"name": "Website Category"})
@@ -59,3 +67,8 @@ class WebsiteSaleSEO(HttpCase, WebsiteSaleCommon):
         root = html.fromstring(res.content)
         canonical = root.xpath('//link[@rel="canonical"]')[0].attrib["href"]
         self.assertEqual(canonical, self.base_url() + "/fr" + self.product.website_url)
+        jsonld = json.loads(root.xpath('//script[@type="application/ld+json"]')[0].text)
+        product_jsonld = next(node for node in jsonld["@graph"] if node["@type"] == "Product")
+        self.assertEqual(product_jsonld["url"], canonical)
+        breadcrumb_jsonld = next(node for node in jsonld["@graph"] if node["@type"] == "BreadcrumbList")
+        self.assertEqual(breadcrumb_jsonld["itemListElement"][-1]["item"], canonical)

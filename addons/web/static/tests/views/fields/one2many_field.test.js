@@ -8,7 +8,7 @@ import {
     queryFirst,
     queryOne,
 } from "@odoo/hoot-dom";
-import { animationFrame, mockTimeZone, runAllTimers } from "@odoo/hoot-mock";
+import { advanceTime, animationFrame, mockTimeZone, runAllTimers } from "@odoo/hoot-mock";
 
 import { Component, onWillDestroy, onWillStart, proxy, useProps, xml } from "@odoo/owl";
 import { getPickerCell } from "@web/../tests/core/datetime/datetime_test_helpers";
@@ -2122,6 +2122,52 @@ test("discard with nested o2m form view dialog", async () => {
     await contains("#dialog_0 .o_form_button_cancel").click();
     await contains(".o_data_row .o_data_cell").click();
     expect(".modal .o_data_row [name='name']").toHaveText("aaa");
+});
+
+test("discard new o2m record opened in dialog with extra x2many, then discard main form", async () => {
+    Partner._records[0].turtles = [];
+    Partner._onChanges = {
+        foo: (obj) => {
+            obj.turtles = [[0, 0, { name: "new turtle" }]];
+        },
+    };
+    Turtle._views = {
+        form: `
+            <form>
+                <field name="name"/>
+                <field name="partner_ids" widget="many2many_tags"/>
+            </form>`,
+    };
+
+    await mountView({
+        type: "form",
+        resModel: "partner",
+        resId: 1,
+        arch: `
+            <form>
+                <field name="foo"/>
+                <field name="turtles" mode="kanban">
+                    <kanban>
+                        <templates>
+                            <t t-name="card">
+                                <field name="name"/>
+                            </t>
+                        </templates>
+                    </kanban>
+                </field>
+            </form>`,
+    });
+
+    await contains("[name=foo] input").edit("trigger onchange");
+    expect("article.o_kanban_record").toHaveText("new turtle");
+
+    await contains("article.o_kanban_record").click();
+    await contains(".modal .o_form_button_cancel").click();
+    expect(".modal").toHaveCount(0);
+
+    await contains(".o_form_button_cancel").click();
+    expect("[name=foo] input").toHaveValue("yop");
+    expect("article.o_kanban_record").toHaveCount(0);
 });
 
 test("discard a form dialog view and then reopen it with a domain based on a text field", async () => {
@@ -8049,6 +8095,57 @@ test("one2many field: change value before pending onchange returns", async () =>
     // check name_search result
     expect(".o_field_many2one input").toHaveValue("first");
     expect(".dropdown-menu li:not(.o_m2o_dropdown_option)").toHaveCount(1);
+});
+
+test("deleting lines on a slow connection does not send a virtual delete", async () => {
+    Partner._onChanges = {
+        p: function () {},
+    };
+    let slowOnchange = null;
+    onRpc("partner", "onchange", ({ args }) => {
+        const commands = args[1].p || [];
+        expect(commands.some(([cmd, id]) => cmd === 2 && typeof id === "string")).toBe(false, {
+            message: "a virtual id must never be sent in a DELETE command",
+        });
+        if (slowOnchange) expect.step("onchange");
+        return slowOnchange?.promise;
+    });
+    await mountView({
+        type: "form",
+        resModel: "partner",
+        arch: `
+            <form>
+                <field name="p">
+                    <list editable="bottom">
+                        <field name="foo"/>
+                    </list>
+                </field>
+            </form>`,
+    });
+
+    await contains(".o_field_x2many_list_row_add button").click();
+    await contains("div[name='foo'] input").edit("First line", { confirm: "blur" });
+    await contains(".o_field_x2many_list_row_add button").click();
+    await contains("div[name='foo'] input").edit("Second line", { confirm: "blur" });
+    expect(".o_data_row").toHaveCount(2);
+
+    // Throttle the connection: the onchange of the first deletion stays pending.
+    slowOnchange = Promise.withResolvers();
+    await contains(".o_data_row:eq(0) .o_list_record_remove").click();
+    await animationFrame();
+    // The first line is removed locally even though its onchange is still pending.
+    expect(".o_data_row").toHaveCount(1);
+
+    // Delete the second line twice, waiting out the remove button's 500ms debounce.
+    await contains(".o_data_row:eq(0) .o_list_record_remove").click();
+    await advanceTime(500);
+    await contains(".o_data_row:eq(0) .o_list_record_remove").click();
+
+    slowOnchange.resolve();
+    await animationFrame();
+    await animationFrame();
+    expect(".o_data_row").toHaveCount(0);
+    expect.verifySteps(["onchange", "onchange"]);
 });
 
 test.tags("desktop");

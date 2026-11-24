@@ -170,6 +170,7 @@ export class PosStore extends WithLazyGetterTrap {
         this.debounceUpdateCustomerDisplay = debounce(() => this.sendOrderToCustomerDisplay(), 100);
 
         this.syncingOrders = new Set();
+        this.deletingOrders = new Set();
         await this.initServerData();
 
         this.closeOtherTabs();
@@ -251,6 +252,9 @@ export class PosStore extends WithLazyGetterTrap {
          * to be able to use it in templates.
          */
         return formatCurrency(amount, currencyId, opts);
+    }
+    parseCurrency(value, currency = this.currency) {
+        return parseFloat(value, { digits: [69, currency.decimal_places] });
     }
     isValidFloat(inputValue) {
         let floatRegex;
@@ -386,6 +390,12 @@ export class PosStore extends WithLazyGetterTrap {
         this.navigate(page, params);
     }
 
+    get configFastPaymentMethod() {
+        const resolve = (pm) => this.paymentMethods.getDefault(pm.payment_provider) || pm;
+        const fast = this.config.paymentMethods.filter((pm) => pm.type !== "pay_later");
+        return (fast.length ? fast : this.config.paymentMethods).map(resolve);
+    }
+
     get defaultPage() {
         return {
             page: "ProductScreen",
@@ -416,10 +426,16 @@ export class PosStore extends WithLazyGetterTrap {
         return [
             {
                 timeout: 180000, // 3 minutes
-                action: () =>
-                    this.router.currentScreen() !== "PaymentScreen" &&
-                    this.saveIfOrder() &&
-                    this.navigate("SaverScreen"),
+                action: () => {
+                    if (this.router.currentScreen() === "PaymentScreen") {
+                        return false;
+                    }
+                    if (!this.saveIfOrder()) {
+                        return false;
+                    }
+                    this.resetCashier();
+                    return this.navigate("SaverScreen");
+                },
             },
             {
                 timeout: 120000, // 2 minutes
@@ -520,7 +536,7 @@ export class PosStore extends WithLazyGetterTrap {
 
         try {
             const paidOrderNotSynced = this.models["pos.order"].filter(
-                (order) => order.state === "paid" && !order.isSynced
+                (order) => order.state === "paid" && order.isUnsyncedPaid
             );
             this.addPendingOrder(paidOrderNotSynced.map((o) => o.id));
             await this.syncAllOrders({ throw: true });
@@ -773,29 +789,50 @@ export class PosStore extends WithLazyGetterTrap {
         return true;
     }
     async onDeleteOrder(order) {
+        if (this.isOrderDeleting(order)) {
+            return false;
+        }
         const canDelete = await this.beforeDeleteOrder(order);
-        if (!canDelete) {
+        if (!canDelete || this.isOrderDeleting(order)) {
             return false;
         }
-        const refundedOrderLines = order.lines
-            .filter((line) => line.refunded_orderline_id?.order_id)
-            .map((line) => ({
-                order: line.refunded_orderline_id.order_id,
-                uuid: line.refunded_orderline_id.uuid,
-            }));
+        if (this.isOrderSyncing(order, false)) {
+            this.notification.add(
+                _t("This order is currently syncing, please wait a moment before cancelling it.")
+            );
+            return false;
+        }
+        this.deletingOrders.add(order.uuid);
+        try {
+            this.onDeleteOrderConfirmed(order);
+            const refundedOrderLines = order.lines
+                .filter((line) => line.refunded_orderline_id?.order_id)
+                .map((line) => ({
+                    order: line.refunded_orderline_id.order_id,
+                    uuid: line.refunded_orderline_id.uuid,
+                }));
 
-        const orderIsDeleted = await this.deleteOrders([order]);
-        if (!orderIsDeleted) {
-            return false;
-        }
-        // Delete refunded lines linked to the current order
-        for (const refundedLine of refundedOrderLines) {
-            delete refundedLine.order?.uiState?.lineToRefund[refundedLine.uuid];
+            const orderIsDeleted = await this.deleteOrders([order]);
+            if (!orderIsDeleted) {
+                return false;
+            }
+            // Delete refunded lines linked to the current order
+            for (const refundedLine of refundedOrderLines) {
+                delete refundedLine.order?.uiState?.lineToRefund[refundedLine.uuid];
+            }
+        } finally {
+            this.deletingOrders.delete(order.uuid);
         }
 
         await this.afterOrderDeletion();
         return true;
     }
+
+    // Overrided inside "pos_restaurant"
+    onDeleteOrderConfirmed(_) {
+        return;
+    }
+
     async afterOrderDeletion() {
         if (!this.config.module_pos_restaurant) {
             const newOrder = this.getOpenOrders().at(-1) || this.addNewOrder();
@@ -846,6 +883,9 @@ export class PosStore extends WithLazyGetterTrap {
                 await actionPosOrderCancelCall([
                     ...new Set(serverIds.filter((id) => typeof id === "number")),
                 ]);
+                for (const id of serverIds) {
+                    this.pendingOrder.delete.delete(id);
+                }
             }
         } finally {
             // Remove orders locally at the end to avoid reactivity during the async process
@@ -916,9 +956,10 @@ export class PosStore extends WithLazyGetterTrap {
 
     async afterProcessServerData() {
         // Adding the not synced paid orders to the pending orders
-        const paidUnsyncedOrderIds = this.models["pos.order"]
-            .filter((order) => order.isUnsyncedPaid)
-            .map((order) => order.id);
+        const paidUnsyncedOrders = this.models["pos.order"].filter((order) => order.isUnsyncedPaid);
+        // Orders known by the server aren't dirty after a reload, they would be skipped by the sync
+        paidUnsyncedOrders.forEach((order) => order.markDirty());
+        const paidUnsyncedOrderIds = paidUnsyncedOrders.map((order) => order.id);
 
         if (paidUnsyncedOrderIds.length > 0) {
             this.addPendingOrder(paidUnsyncedOrderIds);
@@ -968,7 +1009,7 @@ export class PosStore extends WithLazyGetterTrap {
     async openConfigurator(pTemplate, opts = {}) {
         const attrById = this.models["product.attribute"].getAllBy("id");
         const attributeLines = pTemplate.attribute_line_ids.filter(
-            (attr) => attr.attribute_id?.id in attrById
+            (attr) => attr.active !== false && attr.attribute_id?.id in attrById
         );
         let attributeLinesValues = attributeLines.map((attr) => attr.product_template_value_ids);
         let variantProduct = null;
@@ -1740,13 +1781,24 @@ export class PosStore extends WithLazyGetterTrap {
         const orderIdsToDelete = this.getOrderIdsToDelete();
 
         let orders = options.orders || [...orderToCreate, ...orderToUpdate];
+        // Skip an order being deleted, unless the caller asked to sync it explicitely (`options.orders`)
+        const isBackgroundSync = !options.orders;
         orders = orders.filter(
-            (order) => !this.syncingOrders.has(order.uuid) && (order.isDirty() || options.force)
+            (order) =>
+                !this.syncingOrders.has(order.uuid) &&
+                !(isBackgroundSync && this.deletingOrders.has(order.uuid)) &&
+                (order.isDirty() || options.force)
         );
 
         // Delete orders first
         if (orderIdsToDelete.length > 0) {
-            await this.deleteOrders([], orderIdsToDelete);
+            try {
+                await this.deleteOrders([], orderIdsToDelete);
+            } catch (error) {
+                if (options.throw || !(error instanceof ConnectionLostError)) {
+                    throw error;
+                }
+            }
         }
 
         // Allow us to force the sync of the orders In the case of
@@ -1807,6 +1859,7 @@ export class PosStore extends WithLazyGetterTrap {
                 }
 
                 if (error instanceof ConnectionLostError) {
+                    this.addPendingOrder([order.id]);
                     logPosMessage(
                         "Store",
                         "syncAllOrders",
@@ -2074,6 +2127,9 @@ export class PosStore extends WithLazyGetterTrap {
             if (this.config.printerCategories.size && !opts.byPassPrint) {
                 try {
                     isPrinted = await this.ticketPrinter.printOrderChanges({ order, opts });
+                    if (isPrinted) {
+                        order.updateLastOrderChange(opts);
+                    }
                 } catch (e) {
                     logPosMessage(
                         "Store",
@@ -2084,15 +2140,24 @@ export class PosStore extends WithLazyGetterTrap {
                     );
                 }
             }
-            order.updateLastOrderChange(opts);
+            this.updateLastOrderChangeIfNoDevice(order, opts);
         } finally {
             this.syncingOrders.delete(order.uuid);
         }
         // Ensure that other devices are aware of the changes
         // Otherwise several devices can print the same changes
         // We need to check if a preparation display is configured to avoid unnecessary sync
-        if (isPrinted && !this.models["pos.prep.display"]?.length) {
+        if ((isPrinted || !opts.orderDone) && !this.models["pos.prep.display"]?.length) {
             await this.syncAllOrders({ orders: [order] });
+        }
+        return isPrinted;
+    }
+    hasDevice(opts = {}) {
+        return this.config.printerCategories.size || opts.byPassPrint;
+    }
+    updateLastOrderChangeIfNoDevice(order, opts = {}) {
+        if (!this.hasDevice(opts)) {
+            order.updateLastOrderChange(opts);
         }
     }
     async checkPreparationStateAndSentOrderInPreparation(order, opts = {}) {
@@ -2125,7 +2190,19 @@ export class PosStore extends WithLazyGetterTrap {
         await this.checkPreparationStateAndSentOrderInPreparation(o, opts);
     }
 
+    isOrderDeleting(order, notify = true) {
+        const isDeleting = !!order && this.deletingOrders.has(order.uuid);
+        if (isDeleting && notify) {
+            this.notification.add(_t("This order is being cancelled, please wait a moment."));
+        }
+        return isDeleting;
+    }
+
     isOrderSyncing(order, notify = true) {
+        // An order being deleted is considered as syncing
+        if (this.isOrderDeleting(order, notify)) {
+            return true;
+        }
         const isSyncing = !!order && this.syncingOrders.has(order?.uuid);
         if (isSyncing && notify) {
             this.notification.add(
@@ -2184,6 +2261,9 @@ export class PosStore extends WithLazyGetterTrap {
                     buttonDialogTemplate: "point_of_sale.ProductQuickCreateDialogButtons",
                     onSave: async (record, params) => {
                         await this.loadNewProducts([["id", "=", record.evalContext.id]]);
+                        if (this.selectedCategory?.id && !this.productsToDisplay.length) {
+                            this.setSelectedCategory(0);
+                        }
                         this.action.doAction({
                             type: "ir.actions.act_window_close",
                         });
@@ -2340,40 +2420,42 @@ export class PosStore extends WithLazyGetterTrap {
                           size: "md",
                           bodyClass: "pb-4",
                       });
+            // Keep the existing preset if the user cancels the selection popup.
+            if (!preset && order.preset_id) {
+                return;
+            }
         }
+        preset ??= this.config.default_preset_id;
+        order.setPreset(preset);
 
-        if (preset) {
-            order.setPreset(preset);
-
-            if (preset.needsPartner) {
-                const partner = order.partner_id || (await this.selectPartner(order));
-                if (!partner) {
+        if (preset.needsPartner) {
+            const partner = order.partner_id || (await this.selectPartner(order));
+            if (!partner) {
+                return;
+            }
+            if (!(partner.street || partner.street2)) {
+                this.notification.add(_t("Customer address is required"), { type: "warning" });
+                await this.editPartner(partner);
+                if (!(partner.street || partner.street2)) {
                     return;
                 }
-                if (!(partner.street || partner.street2)) {
-                    this.notification.add(_t("Customer address is required"), { type: "warning" });
-                    await this.editPartner(partner);
-                    if (!(partner.street || partner.street2)) {
-                        return;
-                    }
-                }
             }
+        }
 
-            if (preset.identification === "name") {
-                await this.handleSelectNamePreset(order);
-                // re-set the order in case an order was selected from the current orders list in the EditOrderNamePopup
-                order = this.getOrder();
-            }
+        if (preset.identification === "name") {
+            await this.handleSelectNamePreset(order);
+            // re-set the order in case an order was selected from the current orders list in the EditOrderNamePopup
+            order = this.getOrder();
+        }
 
-            if (preset.use_timing && !order.preset_time) {
-                await this.openPresetTiming(order);
-                if (!order.preset_time) {
-                    await this.syncPresetSlotAvaibility(preset);
-                    order.preset_time = preset.nextSlot?.datetime || false;
-                }
-            } else if (!preset.use_timing) {
-                order.preset_time = false;
+        if (preset.use_timing && !order.preset_time) {
+            await this.openPresetTiming(order);
+            if (!order.preset_time) {
+                await this.syncPresetSlotAvaibility(preset);
+                order.preset_time = preset.nextSlot?.datetime || false;
             }
+        } else if (!preset.use_timing) {
+            order.preset_time = false;
         }
     }
     orderUsageUTCtoLocal(data) {
@@ -2507,6 +2589,10 @@ export class PosStore extends WithLazyGetterTrap {
         return false;
     }
 
+    getQRCodeValueContext(_payment) {
+        return {};
+    }
+
     async showQR(payment) {
         if (this.currency.isZero(payment.amount)) {
             this.notification.add(_t("Can't create a QR for a zero amount"), { type: "warning" });
@@ -2515,14 +2601,19 @@ export class PosStore extends WithLazyGetterTrap {
         payment.setPaymentStatus("waiting");
         let qrCodeValue;
         try {
-            qrCodeValue = await this.data.call("pos.payment.method", "get_qr_code_value", [
-                [payment.payment_method_id.id],
-                payment.amount,
-                payment.pos_order_id.name + " " + payment.pos_order_id.tracking_number,
-                "",
-                this.currency.id,
-                payment.pos_order_id.partner_id?.id,
-            ]);
+            qrCodeValue = await this.data.call(
+                "pos.payment.method",
+                "get_qr_code_value",
+                [
+                    [payment.payment_method_id.id],
+                    payment.amount,
+                    payment.pos_order_id.name + " " + payment.pos_order_id.tracking_number,
+                    "",
+                    this.currency.id,
+                    payment.pos_order_id.partner_id?.id,
+                ],
+                { context: this.getQRCodeValueContext(payment) }
+            );
         } catch (error) {
             qrCodeValue = payment.payment_method_id.default_qr;
             if (!qrCodeValue) {
@@ -2830,7 +2921,7 @@ export class PosStore extends WithLazyGetterTrap {
                 paymentLines[0].payment_method_id.type === "pay_later" &&
                 this.currency.isNegative(paymentLines[0].amount))
         ) {
-            opts.fastPaymentMethod = this.config.paymentMethods[0];
+            opts.fastPaymentMethod = this.configFastPaymentMethod[0];
         }
         return opts;
     }

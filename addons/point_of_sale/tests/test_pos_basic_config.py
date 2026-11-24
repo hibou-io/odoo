@@ -3,7 +3,7 @@
 from dateutil.relativedelta import relativedelta
 
 import odoo
-from odoo import fields
+from odoo import Command, fields
 from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.point_of_sale.tests.common import TestPoSCommon
@@ -167,6 +167,20 @@ class TestPoSBasicConfig(TestPoSCommon):
         self.assertCountEqual(loaded_ids(3), [product0.id, product1.id, product2.id])
         # type breaks ties among non-favorited products too.
         self.assertCountEqual(loaded_ids(4), [product0.id, product1.id, product2.id, product3.id])
+
+    def test_limited_partners_loading_skips_archived(self):
+        session = self.open_new_session(0)
+        partners_with_orders = self.env['pos.order'].search([]).partner_id
+        self.env['ir.config_parameter'].sudo().set_int('point_of_sale.limited_customer_count', len(partners_with_orders) + 5)
+        # Archived partners sort before the active ones and must not use up the limit
+        self.env['res.partner'].create([{'name': f'000 Archived {i}', 'active': False} for i in range(5)])
+        active_partners = self.env['res.partner'].create([{'name': f'001 Active {i}'} for i in range(5)])
+
+        loaded_ids = {p['id'] for p in session.load_data({'only_records': True})['res.partner']}
+        self.assertEqual(set(active_partners.ids) - loaded_ids, set())
+        # Also used to load the next partners
+        limited_partner_ids = {row[0] for row in self.config.get_limited_partners_loading()}
+        self.assertEqual(set(active_partners.ids) - limited_partner_ids, set())
 
     def test_pos_payment_method_copy(self):
         """
@@ -560,3 +574,27 @@ class TestPoSBasicConfig(TestPoSCommon):
 
         with self.assertRaisesRegex(UserError, "currently in use in a point of sale"):
             category1.unlink()
+
+    def test_set_journal_on_bank_payment_method_with_open_session(self):
+        bank_pm = self.env['pos.payment.method'].create({
+            'name': 'Bank without journal',
+            'type': 'bank',
+            'receivable_account_id': self.pos_receivable_bank.id,
+            'config_ids': [Command.link(self.config.id)],
+        })
+        self.open_new_session()
+        self.assertTrue(bank_pm.open_session_ids)
+
+        # Other protected fields remain locked
+        with self.assertRaisesRegex(UserError, "close and validate"):
+            bank_pm.receivable_account_id = self.cash_pm1.receivable_account_id
+
+        bank_pm.write({
+            'journal_id': self.company_data['default_journal_bank'].id,
+            'outstanding_account_id': self.outstanding_bank.id,
+        })
+        self.assertEqual(bank_pm.journal_id, self.company_data['default_journal_bank'])
+        self.assertEqual(bank_pm.outstanding_account_id, self.outstanding_bank)
+
+        with self.assertRaisesRegex(UserError, "close and validate"):
+            bank_pm.journal_id = False

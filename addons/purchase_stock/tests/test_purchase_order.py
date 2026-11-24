@@ -1,7 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import re
 from datetime import datetime, timedelta
-from unittest import skip
 
 from odoo import Command, fields
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
@@ -228,7 +227,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         self.assertEqual(po.order_line[0].date_planned, tomorrow)
         activity = self.env['mail.activity'].search([
             ('summary', '=', 'Date Updated'),
-            ('res_model_id', '=', 'purchase.order'),
+            ('res_model', '=', 'purchase.order'),
             ('res_id', '=', po.id),
         ])
         self.assertTrue(activity)
@@ -648,7 +647,6 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         po.picking_ids.button_validate()
         self.assertEqual(po.order_line.qty_received, po.order_line.product_qty)
 
-    @skip('Temporary to fast merge new valuation')
     def test_receive_qty_invoiced_but_no_posted(self):
         """
         Create a purchase order, confirm it, invoice it, but don't post the invoice.
@@ -670,10 +668,9 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         self.assertEqual(receipt01.state, 'done')
         self.assertEqual(po.order_line[0].qty_received, 5)
         self.assertEqual(po.order_line[0].price_unit, 500)
-        layers = self.env['stock.valuation.layer'].search([('product_id', '=', self.product_id_1.id)])
-        self.assertEqual(len(layers), 1)
-        self.assertEqual(layers.quantity, 5)
-        self.assertEqual(layers.value, 2500)
+        move = receipt01.move_ids.filtered(lambda m: m.product_id == self.product_id_1)
+        self.assertEqual(move.quantity, 5)
+        self.assertEqual(move.value, 2500)
 
     def test_stock_picking_type_for_deliveries_generated_from_po(self):
         """
@@ -938,7 +935,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         Form.from_action(self.env, receipt.button_validate()).save().process_cancel_backorder()
         # A note is created: it mentions 2 incomplete lines and ignores the complete one
         activity = self.env['mail.activity'].search([
-            ('res_model_id', '=', 'purchase.order'), ('res_id', '=', po.id),
+            ('res_model', '=', 'purchase.order'), ('res_id', '=', po.id),
         ])
         self.assertEqual(activity.summary, 'Missing products in receipt')
         # The PO user should be assigned to the note
@@ -970,7 +967,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         first_step.button_validate()
         # There should be no note
         activity = self.env['mail.activity'].search([
-            ('res_model_id', '=', 'purchase.order'), ('res_id', '=', multi_step_po.id),
+            ('res_model', '=', 'purchase.order'), ('res_id', '=', multi_step_po.id),
         ])
         self.assertFalse(activity)
         # Update quantities in the second transfer
@@ -982,7 +979,7 @@ class TestPurchaseOrder(ValuationReconciliationTestCommon):
         Form.from_action(self.env, second_step.button_validate()).save().process_cancel_backorder()
         # There should still be no note, since the first transfer was validated with full quantities
         activity = self.env['mail.activity'].search([
-            ('res_model_id', '=', 'purchase.order'), ('res_id', '=', multi_step_po.id),
+            ('res_model', '=', 'purchase.order'), ('res_id', '=', multi_step_po.id),
         ])
         self.assertFalse(activity)
 

@@ -31,6 +31,7 @@ import {
 } from "@odoo/hoot";
 import { onWillDestroy, proxy, signal, useProps, xml } from "@odoo/owl";
 import {
+    clickModalButton,
     clickSave,
     contains,
     defineModels,
@@ -42,6 +43,8 @@ import {
     mountViewInDialog,
     onRpc,
     serverState,
+    toggleActionMenu,
+    toggleMenuItem,
 } from "@web/../tests/web_test_helpers";
 import { assets } from "@web/core/assets";
 import { location } from "@web/core/browser/browser";
@@ -366,7 +369,7 @@ test("only external links should always open on a new tab in readonly", async ()
     expect("[name='txt'] p").toHaveText("first");
     for (const link of queryAll("a.external")) {
         expect(link.getAttribute("target")).toBe("_blank");
-        expect(link.getAttribute("rel")).toBe("noreferrer");
+        expect(link.getAttribute("rel")).toBe("noreferrer noopener");
     }
     for (const link of queryAll("a.internal")) {
         expect(link.getAttribute("target")).toBe(null);
@@ -377,7 +380,7 @@ test("only external links should always open on a new tab in readonly", async ()
     expect("[name='txt'] p").toHaveText("second");
     for (const link of queryAll("a.external")) {
         expect(link.getAttribute("target")).toBe("_blank");
-        expect(link.getAttribute("rel")).toBe("noreferrer");
+        expect(link.getAttribute("rel")).toBe("noreferrer noopener");
     }
     for (const link of queryAll("a.internal")) {
         expect(link.getAttribute("target")).toBe(null);
@@ -405,7 +408,7 @@ test("XML-like self-closing elements are fixed in readonly mode", async () => {
     expect(".odoo-editor-editable").toHaveCount(0);
     expect(`[name="txt"] .o_readonly`).toHaveCount(1);
     expect(`[name="txt"] .o_readonly`).toHaveInnerHTML(
-        `<a href="#" target="_blank" rel="noreferrer"></a>outside<a href="#" target="_blank" rel="noreferrer">inside</a>`
+        `<a href="#" target="_blank" rel="noreferrer noopener"></a>outside<a href="#" target="_blank" rel="noreferrer noopener">inside</a>`
     );
 });
 
@@ -1731,6 +1734,28 @@ test("edit and save a html field in collaborative should keep the same wysiwyg",
     expect.verifySteps(["web_save"]);
 });
 
+test("deleting a record with a collaborative html field should not broadcast without peers", async () => {
+    onRpc("/html_editor/get_ice_servers", () => []);
+    onRpc("/html_editor/bus_broadcast", () => expect.step("bus_broadcast"));
+
+    await mountView({
+        type: "form",
+        resModel: "partner",
+        resId: 1,
+        resIds: [1, 2],
+        actionMenus: {},
+        arch: `
+            <form>
+                <field name="txt" widget="html" options="{'collaborative': true}"/>
+            </form>`,
+    });
+
+    await toggleActionMenu();
+    await toggleMenuItem("Delete");
+    await clickModalButton({ text: "Delete" });
+    expect.verifySteps([]);
+});
+
 test("'checklist' command is not available when 'allowChecklist' = false", async () => {
     await mountView({
         type: "form",
@@ -2132,7 +2157,7 @@ describe("sandbox", () => {
         expect(readonlyIframe.contentDocument.body.querySelector("p")).toHaveText("first");
         for (const link of readonlyIframe.contentDocument.body.querySelectorAll("a")) {
             expect(link.getAttribute("target")).toBe("_blank");
-            expect(link.getAttribute("rel")).toBe("noreferrer");
+            expect(link.getAttribute("rel")).toBe("noreferrer noopener");
         }
 
         await contains(`.o_pager_next`).click();
@@ -2140,7 +2165,7 @@ describe("sandbox", () => {
         expect(readonlyIframe.contentDocument.body.querySelector("p")).toHaveText("second");
         for (const link of readonlyIframe.contentDocument.body.querySelectorAll("a")) {
             expect(link.getAttribute("target")).toBe("_blank");
-            expect(link.getAttribute("rel")).toBe("noreferrer");
+            expect(link.getAttribute("rel")).toBe("noreferrer noopener");
         }
     });
 

@@ -544,13 +544,14 @@ class SlideSlide(models.Model):
         self.ensure_one()
         website = self.env.website or self.env['website'].browse(self.env.context.get('host_id'))
         base_url = website.get_base_url()
-        slide_url = self.website_absolute_url
+        slide_url = self._get_localized_absolute_url()
+        course_url = self.channel_id._get_localized_absolute_url()
         vals = {
             '@type': 'LearningResource',
             '@id': f'{slide_url}/#learningresource',
             'name': self.name,
             'url': slide_url,
-            'isPartOf': {'@id': f'{self.channel_id.website_absolute_url}/#course'},
+            'isPartOf': {'@id': f'{course_url}/#course'},
         }
         if learning_type := {
             'infographic': 'Image',
@@ -847,6 +848,14 @@ class SlideSlide(models.Model):
             new_slide.write({
                 'slide_partner_ids': [(0, 0, {'vote': new_vote, 'partner_id': self.env.user.partner_id.id})]
             })
+
+    def get_image_1024_src(self):
+        attachment = self.env["ir.attachment"].search([
+            ("res_model", "=", self._name),
+            ("res_id", "=", self.id),
+            ("res_field", "=", "image_1024"),
+        ], limit=1)
+        return attachment and ("%s?access_token=%s" % (attachment.image_src, attachment.generate_access_token()[0]))
 
     def action_set_viewed(self, quiz_attempts_inc=False):
         if any(not slide.channel_id.is_member for slide in self):

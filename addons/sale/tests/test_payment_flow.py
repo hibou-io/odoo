@@ -342,6 +342,24 @@ class TestSalePayment(AccountPaymentCommon, MailCase, PaymentHttpCommon, SaleCom
         self.assertFalse(tx.invoice_ids)
         self.assertFalse(self.sale_order.invoice_ids)
 
+    def test_split_payment_without_prepayment_does_not_confirm_order(self):
+        """Test that a partial payment doesn't confirm an order that doesn't require prepayment."""
+        self.sale_order.prepayment_percent = 0.0
+        self.amount = self.sale_order.amount_total / 2
+        self._create_transaction(
+            flow="direct", sale_order_ids=[self.sale_order.id], state="done", reference="Split 1"
+        )
+        with mute_logger("odoo.addons.sale.models.payment_transaction"):
+            self._run_post_processing()
+        self.assertEqual(self.sale_order.state, "draft")
+
+        self._create_transaction(
+            flow="direct", sale_order_ids=[self.sale_order.id], state="done", reference="Split 2"
+        )
+        with mute_logger("odoo.addons.sale.models.payment_transaction"):
+            self._run_post_processing()
+        self.assertEqual(self.sale_order.state, "sale")
+
     def test_already_confirmed_so_payment(self):
         # Set automatic invoice
         self.env.company.sale_automatic_invoice = True
@@ -777,4 +795,61 @@ class TestSalePayment(AccountPaymentCommon, MailCase, PaymentHttpCommon, SaleCom
         self.assertEqual(tx.invoice_ids.state, "posted")
         self.assertEqual(
             tx.invoice_ids.payment_state, tx.invoice_ids._get_invoice_in_payment_state()
+        )
+
+    def test_get_line_items(self):
+        """Test that only the accountable lines are returned as line items, with all their
+        details."""
+        product = self.env["product.product"].create({
+            "name": "Desk",
+            "default_code": "DESK",
+            "barcode": "012345678905",
+            "list_price": 100.0,
+            "taxes_id": [Command.create({"name": "Tax 15%", "amount": 15.0})],
+        })
+        order = self._create_so(
+            order_line=[
+                Command.create({"display_type": "line_section", "name": "Section"}),
+                Command.create({"display_type": "line_note", "name": "Note"}),
+                Command.create({
+                    "product_id": product.id,
+                    "name": "Oak desk",
+                    "product_uom_qty": 2.0,
+                }),
+                Command.create({
+                    "name": "Assembly",
+                    "price_unit": 20.0,
+                    "tax_ids": [Command.clear()],
+                }),
+            ]
+        )
+        tx = self._create_transaction(flow="redirect", sale_order_ids=[order.id])
+        product_line, productless_line = order.order_line.filtered(
+            lambda line: not line.display_type
+        )
+
+        line_items = tx._get_line_items()
+
+        self.assertEqual(list(line_items), [product_line, productless_line])
+        self.assertDictEqual(
+            line_items[product_line],
+            {
+                "name": "Desk",
+                "description": "Oak desk",
+                "sku": "DESK",
+                "barcode": "012345678905",
+                "quantity": 2.0,
+                "total": 230.0,
+            },
+        )
+        self.assertDictEqual(
+            line_items[productless_line],
+            {
+                "name": "Assembly",
+                "description": "Assembly",
+                "sku": False,
+                "barcode": False,
+                "quantity": 1.0,
+                "total": 20.0,
+            },
         )

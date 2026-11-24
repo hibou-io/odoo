@@ -3,6 +3,7 @@
 import { PosAccessRightPlugin } from "@point_of_sale/app/plugins/access_right_plugin";
 import { patch } from "@web/core/utils/patch";
 import { _t } from "@web/core/l10n/translation";
+import { user } from "@web/core/user";
 import { NumberPopup } from "@point_of_sale/app/components/popups/number_popup/number_popup";
 import { makeAwaitable } from "@point_of_sale/app/utils/make_awaitable_dialog";
 
@@ -31,15 +32,33 @@ patch(PosAccessRightPlugin.prototype, {
         }
         return true;
     },
+    /**
+     * Employees allowed on this PoS (see `pos.config._employee_domain`). Other employees can be
+     * loaded as the cashier of an order (e.g. of a trusted config), but can't log in here.
+     */
+    getPosEmployees() {
+        const config = this.config;
+        const posEmployees = new Set([
+            ...config.supervised_employee_ids,
+            ...config.restrictive_employee_ids,
+            ...config.cashier_employee_ids,
+            ...config.manager_employee_ids,
+        ]);
+        const sessionUser = config.current_user_id;
+        return this.data.models["hr.employee"].filter(
+            (employee) =>
+                posEmployees.has(employee) || (sessionUser && employee.user_id === sessionUser)
+        );
+    },
     getEmployeeByPinCode(employees = [], code = "") {
         if (!employees.length) {
-            employees = this.data.models["hr.employee"].getAll();
+            employees = this.getPosEmployees();
         }
 
         return employees.filter((employee) => !code || Sha1.hash(code) === employee._pin);
     },
     getEmployeeByBarcode(code) {
-        return this.data.models["hr.employee"].find((emp) => emp._barcode === Sha1.hash(code));
+        return this.getPosEmployees().find((emp) => emp._barcode === Sha1.hash(code));
     },
     get employeeIsAdmin() {
         const cashier = this.loggedCashier;
@@ -97,7 +116,11 @@ patch(PosAccessRightPlugin.prototype, {
         return this.hasEmployeeRole(["cashier", "manager"]);
     },
     get canGoToBackend() {
-        return this.hasEmployeeRole(["manager"]);
+        if (!this.config.module_pos_hr) {
+            return super.canGoToBackend;
+        }
+        // Only the employee linked to the logged-in user, whatever their role
+        return this.cashier?.user_id?.id === user.userId;
     },
     get disablePartner() {
         return super.disablePartner || !this.hasEmployeeRole(["cashier", "manager", "restrictive"]);

@@ -316,6 +316,26 @@ class TestHrEmployee(TestHrCommon):
         self.assertFalse(employee_A.work_contact_id)
         self.assertEqual(employee_B.work_contact_id, user.partner_id)
 
+    def test_hr_manager_link_employee_to_user(self):
+        """
+            An HR manager can link an employee to an internal user even
+            without the rights to write on users/partners.
+        """
+        hr_manager = new_test_user(self.env, login='hrm', groups='base.group_user,hr.group_hr_manager', name='HR Manager', email='hrm@example.com')
+        user = self.env['res.users'].create({
+            'name': 'Test',
+            'login': 'test',
+            'email': 'test@example.com',
+        })
+        employee = self.env['hr.employee'].create({
+            'name': 'Employee',
+            'work_email': 'employee@example.com',
+        })
+        with Form(employee.with_user(hr_manager)) as employee_form:
+            employee_form.user_id = user
+        self.assertEqual(employee.work_contact_id, user.partner_id)
+        self.assertEqual(employee.work_email, 'test@example.com')
+
     def test_availability_user_infos_employee(self):
         """ Ensure that all the user infos needed to display the avatar popover card
             are available on the model hr.employee.
@@ -428,6 +448,25 @@ class TestHrEmployee(TestHrCommon):
         new_employee = user.employee_ids
         self.assertEqual(new_employee.work_contact_id, user.partner_id)
         self.assertEqual(new_employee.user_id, user)
+
+    def test_change_work_email_after_removing_user(self):
+        """ The partner of a user removed from the employee is kept, but changing the work email or phone of
+            the employee doesn't change the ones of the user. """
+        user = self.env['res.users'].create({
+            'name': 'Test User',
+            'login': 'test_user',
+            'email': 'user@example.com',
+        })
+        employee = self.env['hr.employee'].create({
+            'name': 'Test User - employee',
+            'user_id': user.id,
+        })
+        employee.user_id = None
+        employee.write({'work_email': 'employee@example.com', 'work_phone': '+32 470 00 00 00'})
+        self.assertEqual(employee.work_contact_id, user.partner_id)
+        self.assertEqual(employee.work_email, 'employee@example.com')
+        self.assertEqual(user.email, 'user@example.com')
+        self.assertFalse(user.partner_id.phone)
 
     def test_change_user_on_employee_multi_company(self):
         """

@@ -43,7 +43,7 @@ class HrLeaveAllocation(models.Model):
     @api.model
     def default_get(self, fields):
         defaults = super().default_get(fields)
-        if self.env.context.get('default_work_entry_type_id'):
+        if self.env.context.get('default_work_entry_type_id') or 'work_entry_type_id' not in fields:
             return defaults
         employee = defaults.get('employee_id')
         country = self.env['hr.employee'].browse(employee).company_id.country_id or self.env.company.country_id
@@ -370,6 +370,8 @@ class HrLeaveAllocation(models.Model):
         The negative allocations of the employee and type overlapping the validity period may
         not exceed ``max_allowed_negative`` in total.
         """
+        if self.env.context.get('time_rule_deduction'):
+            return
         for allocation in self.filtered(lambda allocation: allocation.number_of_days < 0):
             if not allocation.work_entry_type_id.allows_negative:
                 raise ValidationError(self.env._("Negative allocations are not allowed for this time type."))
@@ -1130,7 +1132,7 @@ class HrLeaveAllocation(models.Model):
 
         tracked_fields = {'number_of_days_display', 'number_of_hours', 'state', 'date_to'}
         tracked_updates = tracked_fields.intersection(values)
-        if not tracked_updates:
+        if not tracked_updates or self.env.context.get('time_rule_deduction'):
             return super().write(values)
 
         def total_excess(extra_data):

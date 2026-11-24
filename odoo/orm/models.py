@@ -1668,7 +1668,7 @@ class BaseModel(metaclass=MetaModel):
 
         # delegate the default properties to the properties field
         for field in self._fields.values():
-            if field.type == 'properties':
+            if field.type == 'properties' and not avoid(field):
                 defaults[field.name] = field._add_default_values(self.env, defaults)
 
         return defaults
@@ -4823,9 +4823,12 @@ class BaseModel(metaclass=MetaModel):
             # order on many2one values
             terms = []
             nulls_code = nulls._sql_tuple[0]
+            # The null-ordering expression must be grouped too.
             if nulls_code == 'NULLS FIRST':
+                table._query._order_groupby.append(sql_field)
                 terms.append(SQL("%s IS NOT NULL", sql_field))
             elif nulls_code == 'NULLS LAST':
+                table._query._order_groupby.append(sql_field)
                 terms.append(SQL("%s IS NULL", sql_field))
 
             # LEFT JOIN the comodel table, in order to include NULL values, too
@@ -5559,7 +5562,7 @@ class BaseModel(metaclass=MetaModel):
 
             # set inverse fields on new records in the comodel
             if field.relational:
-                inv_recs = self[field.name].filtered(lambda r: not r.id)
+                inv_recs = field.convert_to_record(value, self).filtered(lambda r: not r.id)
                 if not inv_recs:
                     continue
                 # we need to adapt the value of the inverse fields to integrate self into it:
@@ -6016,7 +6019,7 @@ class BaseModel(metaclass=MetaModel):
                 raise TypeError(f"inconsistent models in: {self} + {other}")
             if other:
                 ids = self._ids + other._ids
-                return self.__class__(self.env, ids, Prefetch.union(ids, self._prefetch_ids, other._prefetch_ids))
+                return self.__class__(self.env, ids, Prefetch.union(self._prefetch_ids, other._prefetch_ids))
         except AttributeError:
             raise TypeError(f"unsupported operand types in: {self} + {other!r}")
         return self
@@ -6046,7 +6049,7 @@ class BaseModel(metaclass=MetaModel):
         if len(prefetch_ids_list) == 1:
             prefetch_ids = prefetch_ids_list[0]
         else:
-            prefetch_ids = Prefetch.union(ids, *prefetch_ids_list)
+            prefetch_ids = Prefetch.union(*prefetch_ids_list)
         return self.__class__(self.env, ids, prefetch_ids)
 
     def __sub__(self, other) -> Self:
@@ -6058,7 +6061,7 @@ class BaseModel(metaclass=MetaModel):
                 raise TypeError(f"inconsistent models in: {self} - {other}")
             other_ids = set(other._ids)
             ids = tuple(id_ for id_ in self._ids if id_ not in other_ids)
-            return self.__class__(self.env, ids, Prefetch.union(ids, self._prefetch_ids))
+            return self.__class__(self.env, ids, self._prefetch_ids)
         except AttributeError:
             raise TypeError(f"unsupported operand types in: {self} - {other!r}")
 
@@ -6071,7 +6074,7 @@ class BaseModel(metaclass=MetaModel):
                 raise TypeError(f"inconsistent models in: {self} & {other}")
             other_ids = set(other._ids)
             ids = tuple({id_: None for id_ in self._ids if id_ in other_ids})
-            return self.__class__(self.env, ids, Prefetch.union(ids, self._prefetch_ids))
+            return self.__class__(self.env, ids, self._prefetch_ids)
         except AttributeError:
             raise TypeError(f"unsupported operand types in: {self} & {other!r}")
 
@@ -6084,7 +6087,7 @@ class BaseModel(metaclass=MetaModel):
                 raise TypeError(f"inconsistent models in: {self} | {other}")
             if other:
                 ids = tuple(dict.fromkeys(self._ids + other._ids))
-                return self.__class__(self.env, ids, Prefetch.union(ids, self._prefetch_ids, other._prefetch_ids))
+                return self.__class__(self.env, ids, Prefetch.union(self._prefetch_ids, other._prefetch_ids))
         except AttributeError:
             raise TypeError(f"unsupported operand types in: {self} | {other!r}")
         return self
@@ -6114,7 +6117,7 @@ class BaseModel(metaclass=MetaModel):
         if len(prefetch_ids_list) == 1:
             prefetch_ids = prefetch_ids_list[0]
         else:
-            prefetch_ids = Prefetch.union(ids, *prefetch_ids_list)
+            prefetch_ids = Prefetch.union(*prefetch_ids_list)
         return self.__class__(self.env, ids, prefetch_ids)
 
     def __eq__(self, other):
@@ -6200,11 +6203,9 @@ class BaseModel(metaclass=MetaModel):
             return self._fields[key].__get__(self)
         if isinstance(key, slice):
             ids = self._ids[key]
-            prefetch_ids = Prefetch.union(ids, self._prefetch_ids)
         else:
             ids = (self._ids[key],)
-            prefetch_ids = self._prefetch_ids
-        return self.__class__(self.env, ids, prefetch_ids)
+        return self.__class__(self.env, ids, self._prefetch_ids)
 
     def __setitem__(self, key: str, value: typing.Any):
         """ Assign the field ``key`` to ``value`` in record ``self``. """

@@ -237,8 +237,13 @@ class AccountMove(models.Model):
         if self.l10n_vn_edi_invoice_state != 'sent':
             raise UserError(_("Please send the invoice to SInvoice before fetching the tax invoice files."))
 
-        xml_data, xml_error_message = self._l10n_vn_edi_fetch_invoice_xml_file_data()
-        pdf_data, pdf_error_message = self._l10n_vn_edi_fetch_invoice_pdf_file_data()
+        # A stored SInvoice file never changes; fetching it again would only attach a duplicate.
+        xml_data, xml_error_message = {}, ''
+        if not self.l10n_vn_edi_sinvoice_xml_file:
+            xml_data, xml_error_message = self._l10n_vn_edi_fetch_invoice_xml_file_data()
+        pdf_data, pdf_error_message = {}, ''
+        if not self.l10n_vn_edi_sinvoice_pdf_file:
+            pdf_data, pdf_error_message = self._l10n_vn_edi_fetch_invoice_pdf_file_data()
 
         # Not using _link_invoice_documents for these because it depends on _need_invoice_document and I can't get it to work
         # well while allowing users to download the files before sending.
@@ -457,12 +462,15 @@ class AccountMove(models.Model):
         # When invoicing in a foreign currency, we need to provide the rate, or it will default to 1.
         if self.currency_id.name != 'VND':
             # Sinvoice only allow upto 2 decimal place for exchange rate
-            exchange_rate = self.env['res.currency']._get_conversion_rate(
-                from_currency=self.currency_id,
-                to_currency=self.env.ref('base.VND'),
-                company=self.company_id,
-                date=self.invoice_date or self.date,
-            )
+            if self.company_currency_id.name == 'VND':
+                exchange_rate = 1 / self.invoice_currency_rate
+            else:
+                exchange_rate = self.env['res.currency']._get_conversion_rate(
+                    from_currency=self.currency_id,
+                    to_currency=self.env.ref('base.VND'),
+                    company=self.company_id,
+                    date=self.invoice_date or self.date,
+                )
             invoice_data['exchangeRate'] = float_repr(float_round(exchange_rate, 2), 2)
 
         adjustment_origin_invoice = None
@@ -520,7 +528,7 @@ class AccountMove(models.Model):
             'sellerTaxCode': self.company_id.vat,
             'sellerAddressLine': seller_address,
             'sellerPhoneNumber': company_phone or '',
-            'sellerEmail': self.company_id.email,
+            'sellerEmail': self.company_id.email or '',
             'sellerDistrictName': self.company_id.state_id.name,
             'sellerCountryCode': self.company_id.country_id.code,
             'sellerWebsite': self.company_id.website,

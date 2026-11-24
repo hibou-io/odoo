@@ -7,6 +7,7 @@ from odoo import Command, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.fields import Domain
 from odoo.http import request
+from odoo.tools.urls import urljoin as url_join
 
 
 class ProductProduct(models.Model):
@@ -208,22 +209,28 @@ class ProductProduct(models.Model):
         # Use sudo to access cross-company taxes.
         price = self._apply_taxes_to_price(product_price, website.currency_id, website=website)
 
-        offer = {"@type": "Offer", "price": price, "priceCurrency": website.currency_id.name}
-        if self.is_product_variant and self.is_storable:
-            offer["availability"] = (
-                "https://schema.org/OutOfStock"
-                if self._is_sold_out()
-                else "https://schema.org/InStock"
-            )
+        is_zero_price = website.currency_id.is_zero(price)
+        hide_price = website._prevent_product_sale(self, is_zero_price) and is_zero_price
+        offer = None
+        if not hide_price:
+            offer = {"@type": "Offer", "price": price, "priceCurrency": website.currency_id.name}
+            if self.is_product_variant and self.is_storable:
+                offer["availability"] = (
+                    "https://schema.org/OutOfStock"
+                    if self._is_sold_out()
+                    else "https://schema.org/InStock"
+                )
 
+        product_url = url_join(base_url, self.env['ir.http']._url_for(self.website_url))
         vals = {
             "@type": "Product",
-            "@id": f"{base_url}{self.website_url}/#product-{self.id}",
+            "@id": f"{product_url}/#product-{self.id}",
             "name": self.with_context(display_default_code=False).display_name,
-            "url": f"{base_url}{self.website_url}",
-            "offers": offer,
+            "url": product_url,
             "image": f"{base_url}{self._get_image_1920_url()}",
         }
+        if offer:
+            vals["offers"] = offer
         if description := (self.website_meta_description or self.description_sale):
             vals["description"] = description
         if self.default_code:
@@ -311,7 +318,11 @@ class ProductProduct(models.Model):
             "image_1920": image,
             "product_tmpl_id": self.product_tmpl_id.id,
             "attribute_value_ids": [Command.set(self.product_template_attribute_value_ids.ids)],
-            "sequence": self.variant_image_ids.sorted("sequence")[:1].sequence - 1,
+            # Insert the new image before the first variant image if it exists, otherwise after the
+            # first template image (to avoid overriding it).
+            "sequence": min(self.variant_image_ids.mapped("sequence")) - 1
+            if self.variant_image_ids
+            else min(self.product_template_image_ids.mapped("sequence"), default=0) + 1,
         })
 
     def _set_main_image_from_extra_images(self):

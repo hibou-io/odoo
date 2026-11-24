@@ -150,6 +150,17 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
         with self.assertRaisesRegex(UserError, 'lock date'):
             inv.line_ids.tax_tag_ids = tax_tag.ids
 
+    def test_taxes_legal_notes_translated(self):
+        self.env['res.lang']._activate_lang('fr_FR')
+        tax = self.tax_sale_a
+        tax.invoice_legal_notes = '<p>English note</p>'
+        tax.update_field_translations('invoice_legal_notes', {'fr_FR': {'English note': 'Note en français'}})
+        invoices = self.init_invoice('out_invoice', products=self.product_a) + self.init_invoice('out_invoice', products=self.product_a)
+
+        # Both invoices are computed at once in French, as when a batch of invoices is rendered
+        self.assertEqual(invoices.with_context(lang='fr_FR').mapped('taxes_legal_notes'), ['<p>Note en français</p>'] * 2)
+        self.assertEqual(invoices[1].with_context(lang='en_US').taxes_legal_notes, '<p>English note</p>')
+
     def test_invoice_default_sale_person(self):
         """ Test public user won't be assigned as invoice salesman
         """
@@ -4914,6 +4925,21 @@ class TestAccountMoveOutInvoiceOnchanges(AccountTestInvoicingCommon):
         # Check the narration is in French
         expected_fr = f"<p>Conditions générales : {baseurl}</p>"
         self.assertEqual(invoice.narration, expected_fr)
+
+    def test_narration_kept_on_posted_invoice_on_partner_language_change(self):
+        """Ensure a posted invoice keeps its narration when partner.lang changes."""
+        self.env['ir.config_parameter'].sudo().set_bool('account.use_invoice_terms', True)
+        self.env['res.lang']._activate_lang('fr_FR')
+        self.env.company.terms_type = 'html'
+        self.partner_a.lang = 'en_US'
+        invoice = self._create_invoice(partner_id=self.partner_a, post=True)
+        baseurl = self.env.company.get_base_url() + '/terms'
+        expected_en = f"<p>Terms &amp; Conditions: {baseurl}</p>"
+        self.assertEqual(invoice.narration, expected_en)
+
+        self.partner_a.lang = 'fr_FR'
+
+        self.assertEqual(invoice.narration, expected_en, "A posted invoice must keep the terms it was issued with")
 
     def test_multiple_currency_change(self):
         """

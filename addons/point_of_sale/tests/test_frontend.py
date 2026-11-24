@@ -605,23 +605,24 @@ class TestPointOfSaleHttpCommon(AccountTestInvoicingHttpCommon):
         })
 
         # Set customers
-        # Unlink some data partners that makes the test crash
-        for xmlid in [
-            "l10n_us_hr_payroll.res_partner_taxation_va",
-            "l10n_us_hr_payroll.res_partner_revenue_dc",
-            "l10n_us_hr_payroll.res_partner_pfl_dc",
-            "l10n_us_hr_payroll.res_partner_revenue_or",
-            "l10n_us_hr_payroll.res_partner_dcbs_or",
-            "l10n_us_hr_payroll.res_partner_employment_or",
-            "l10n_us_hr_payroll.res_partner_revenue_nc",
-            "l10n_us_hr_payroll.res_partner_state_tax_commission_id",
-            "l10n_us_hr_payroll.res_partner_department_taxes_vt",
-            "l10n_us_hr_payroll.res_partner_department_revenue_il",
-            "l10n_us_hr_payroll.res_partner_department_revenue_az",
-        ]:
-            partner = cls.env.ref(xmlid, raise_if_not_found=False)
-            if partner:
-                partner.unlink()
+        # Remove payroll data partners that interfere with the customer tours.
+        cls.env['res.partner'].browse(
+            partner.id
+            for xmlid in [
+                "l10n_us_hr_payroll.res_partner_taxation_va",
+                "l10n_us_hr_payroll.res_partner_revenue_dc",
+                "l10n_us_hr_payroll.res_partner_pfl_dc",
+                "l10n_us_hr_payroll.res_partner_revenue_or",
+                "l10n_us_hr_payroll.res_partner_dcbs_or",
+                "l10n_us_hr_payroll.res_partner_employment_or",
+                "l10n_us_hr_payroll.res_partner_revenue_nc",
+                "l10n_us_hr_payroll.res_partner_state_tax_commission_id",
+                "l10n_us_hr_payroll.res_partner_department_taxes_vt",
+                "l10n_us_hr_payroll.res_partner_department_revenue_il",
+                "l10n_us_hr_payroll.res_partner_department_revenue_az",
+            ]
+            if (partner := cls.env.ref(xmlid, raise_if_not_found=False)) is not None
+        ).unlink()
 
         partners = cls.env['res.partner'].create([
             {'name': 'Partner Test 1'},
@@ -685,7 +686,7 @@ class TestUi(TestPointOfSaleHttpCommon):
             message = self.env['mail.message'].search([('model', '=', 'pos.order'), ('res_id', '=', order.id)], limit=1)
             self.assertEqual(len(message.attachment_ids), 2, "Should have 2 attachments when basic receipt is True")
 
-    @skip('Temporary to fast merge new valuation')
+    @skip('Temporary to fast merge new valuation: out-of-scope point-of-sale chrome tour, undeterministic since the inter-step macro delay was removed.')
     def test_02_pos_with_invoiced(self):
         self.pos_user.write({
             'group_ids': [
@@ -705,7 +706,7 @@ class TestUi(TestPointOfSaleHttpCommon):
         # Check if session name contains config name as prefix
         self.assertEqual(self.main_pos_config.name in last_order.session_id.name, True)
 
-    @skip('Temporary to fast merge new valuation')
+    @skip('Temporary to fast merge new valuation: out-of-scope point-of-sale ticket-screen tour that fails for a non-valuation reason.')
     def test_05_ticket_screen(self):
         self.env['res.lang']._lang_get(self.pos_user.lang).write({'date_format': '%m.%d.%Y', 'time_format': '%I.%M.%S %p'})
         self.pos_user.write({

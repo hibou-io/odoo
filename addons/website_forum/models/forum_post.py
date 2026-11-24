@@ -375,7 +375,7 @@ class ForumPost(models.Model):
             if post.parent_id.state == 'flagged':
                 raise UserError(_('Posting answer on a [Flagged] question is not possible.'))
             if post.forum_id.mode == 'questions' and \
-                post.create_uid in (post.parent_id.child_ids - post).create_uid:
+                post.create_uid in (post.parent_id.child_ids.filtered('active') - post).create_uid:
                 raise UserError(_('You can post only one answer.'))
 
     @api.model_create_multi
@@ -473,7 +473,11 @@ class ForumPost(models.Model):
             self._notify_content_update()
 
         if 'active' in vals:
-            answers = self.env['forum.post'].with_context(active_test=False).search([('parent_id', 'in', self.ids)])
+            domain = Domain('parent_id', 'in', self.ids)
+            if vals['active']:
+                # answers marked as offensive must stay archived
+                domain &= Domain('state', '!=', 'offensive')
+            answers = self.env['forum.post'].with_context(active_test=False).search(domain)
             if answers:
                 answers.write({'active': vals['active']})
         return res
@@ -826,8 +830,9 @@ class ForumPost(models.Model):
         items.extend([
             (self.env._("Forums"), '/forum'),
             (self.forum_id.name, f'/forum/{forum_slug}'),
-            (self.name, self.website_url),
         ])
+        if is_detail_page:
+            items.append((self.name, self.website_url))
         return items
 
     def _prepare_jsonld_vals(self):
@@ -837,14 +842,15 @@ class ForumPost(models.Model):
         return self._prepare_question_jsonld_vals()
 
     def _prepare_question_jsonld_vals(self):
+        post_url = self._get_localized_absolute_url()
         vals = {
             '@type': 'Question',
-            '@id': f'{self.website_absolute_url}/#question',
+            '@id': f'{post_url}/#question',
             'name': self.name,
             'answerCount': self.child_count,
             'upvoteCount': self.vote_count,
             'datePublished': self._to_iso_datetime(self.create_date),
-            'url': self.website_absolute_url,
+            'url': post_url,
             'author': {'@type': 'Person', 'name': self.create_uid.name},
         }
         if self.plain_content:
@@ -854,12 +860,13 @@ class ForumPost(models.Model):
         return vals
 
     def _prepare_reply_jsonld_vals(self, schema_type='Answer'):
+        post_url = self._get_localized_absolute_url()
         vals = {
             '@type': schema_type,
-            '@id': f'{self.website_absolute_url}/#{schema_type.lower()}-{self.id}',
+            '@id': f'{post_url}/#{schema_type.lower()}-{self.id}',
             'upvoteCount': self.vote_count,
             'datePublished': self._to_iso_datetime(self.create_date),
-            'url': self.website_absolute_url,
+            'url': post_url,
             'author': {'@type': 'Person', 'name': self.create_uid.name},
         }
         if self.plain_content:
@@ -896,14 +903,15 @@ class ForumPost(models.Model):
         self.ensure_one()
         if self.parent_id:
             return {}
+        post_url = self._get_localized_absolute_url()
         vals = {
             '@type': 'DiscussionForumPosting',
-            '@id': f'{self.website_absolute_url}/#discussionforumposting',
+            '@id': f'{post_url}/#discussionforumposting',
             'headline': self.name,
             'text': self.plain_content or self.name,
             'commentCount': self.child_count,
             'datePublished': self._to_iso_datetime(self.create_date),
-            'url': self.website_absolute_url,
+            'url': post_url,
             'author': {'@type': 'Person', 'name': self.create_uid.name},
         }
         if date_modified := self._to_iso_datetime(self.write_date_content):
@@ -924,6 +932,10 @@ class ForumPost(models.Model):
             elif self.forum_id.mode == 'questions':
                 if qapage := self._build_qapage_jsonld_vals():
                     schemas.append(qapage)
+        elif self:
+            schemas.append(self._build_collectionpage_jsonld_vals(
+                self.forum_id.name, self.forum_id.website_url, self,
+            ))
         return schemas
 
     def go_to_website(self):

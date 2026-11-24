@@ -282,6 +282,16 @@ class TestOrmCacheSignaling(BaseCase):
             ["INFO:odoo.registry:Invalidating caches after database signaling: ['assets', 'default', 'templates.cached_values']"],
         )
 
+
+class TestOrmCacheSignalingRaw(BaseCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # do not retry, these tests must always succeed the first time and avoid
+        # an autoretry hidding errors
+        cls._retry = False
+        cls.registry = Registry(common.get_db_name())
+
     def test_signaling_after_hooks(self):
         """ The transaction following a commit or a rollback starts after the
         hooks, so that it sees what they committed in other cursors, including
@@ -355,6 +365,16 @@ class TestRealCursor(BaseCase):
             cr.execute('SHOW transaction_read_only')
             self.assertEqual(cr.fetchone(), ('on',))
             self.assertTrue(cr._cnx.readonly)
+
+    def test_locked_registry_no_transaction(self):
+        from odoo.orm.environments import Transaction  # noqa: PLC0415
+        with self.registry.cursor() as cr:
+            with (
+                patch.object(Transaction, '_check_signaling', side_effect=AssertionError),
+                self.assertRaises(AssertionError),
+            ):
+                api.Environment(cr, api.SUPERUSER_ID, {})
+            self.assertIsNone(cr.transaction, "Failing to check signaling must not set a Transaction")
 
 
 @tagged('at_install', '-post_install')  # LEGACY at_install

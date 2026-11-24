@@ -461,7 +461,7 @@ class MrpWorkorder(models.Model):
             return (date_start or self.date_start) + timedelta(seconds=duration_in_seconds)
         return workcenter.resource_calendar_id.plan_hours(
             self.duration_expected / 60.0, date_start or self.date_start,
-            compute_leaves=True, domain=[('count_as', 'in', ['absence', 'working_time'])]
+            compute_leaves=True, resource=workcenter.resource_id,
         )
 
     @api.onchange('date_finished')
@@ -828,6 +828,15 @@ class MrpWorkorder(models.Model):
             ])
         date = max(min([wo.date_start for wo in workorders if wo.date_start], default=datetime.min), datetime.now())
         workorders._action_plan(from_date=date, alternative=False)
+
+        # since date_start changes, we need to resequence
+        for mo in workorders.production_id:
+            sorted_wos = mo.workorder_ids.sorted(
+                key=lambda w: (w.date_start or datetime.max, w.sequence, w.id)
+            )
+            for ind, wo in enumerate(sorted_wos):
+                wo.sequence = ind + 1
+
         return True
 
     def action_select_mo_to_plan(self):

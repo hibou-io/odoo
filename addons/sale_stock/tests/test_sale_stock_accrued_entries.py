@@ -525,6 +525,107 @@ class TestAccruedStockSaleOrders(TestSaleCommon):
             {'account_id': self.account_expense.id, 'debit': 0, 'credit': 30},
         ])
 
+    def test_accrued_order_in_anglo_saxon_avco_perpetual_partially_delivered(self):
+        """ Test that the revenue accrual of an invoiced but partially delivered SO line only
+        accounts for the undelivered quantity, at the price invoiced net of credit notes."""
+        product_category = self.env['product.category'].create({
+            'name': 'Test AVCO Category',
+            'property_account_income_categ_id': self.account_revenue.id,
+            'property_account_expense_categ_id': self.account_expense.id,
+            'property_valuation': 'real_time',
+            'property_cost_method': 'average',
+        })
+        account_valuation = product_category.property_stock_valuation_account_id
+        with freeze_time(fields.Datetime.now() - timedelta(seconds=10)):
+            avco_product = self.env['product.product'].create({
+                'name': "AVCO Product",
+                'categ_id': product_category.id,
+                'invoice_policy': 'order',
+                'is_storable': True,
+                'standard_price': 0,
+                'uom_id': self.uom_unit.id,
+            })
+        self._make_in_move(avco_product, 3, 10)
+
+        # Case 1.: 3 units invoiced, 1 delivered.
+        sale_order = self.env['sale.order'].with_context(tracking_disable=True).create({
+            'partner_id': self.partner_a.id,
+            'order_line': [
+                Command.create({
+                    'product_id': avco_product.id,
+                    'product_uom_qty': 3,
+                    'price_unit': 15,
+                    'tax_ids': False,
+                })
+            ]
+        })
+        sale_order.action_confirm()
+        sale_order._create_invoices().action_post()
+        sale_order.picking_ids.move_ids.write({'quantity': 1, 'picked': True})
+        backorder_wizard = Form.from_action(self.env, sale_order.picking_ids.button_validate())
+        backorder_wizard.save().process()
+
+        wizard = self.env['account.accrued.orders.wizard'].with_context({
+            'active_model': 'sale.order.line',
+            'active_ids': sale_order.order_line.ids,
+            'default_accrual_type': 'invoiced_not_delivered',
+        }).create({
+            'account_id': self.account_expense.id,
+            'date': fields.Date.today(),
+        })
+        account_move_domain = wizard.create_entries()['domain']
+        account_move = self.env['account.move'].search(account_move_domain)
+        self.assertRecordValues(account_move.line_ids.sorted('id'), [
+            # Accrued revenues entries.
+            {'account_id': self.account_revenue.id, 'debit': 30, 'credit': 0},
+            {'account_id': account_valuation.id, 'debit': 20, 'credit': 0},
+            {'account_id': self.account_expense.id, 'debit': 0, 'credit': 30},
+            {'account_id': self.account_expense.id, 'debit': 0, 'credit': 20},
+            # Reversal of accrued revenues entries.
+            {'account_id': self.account_revenue.id, 'debit': 0, 'credit': 30},
+            {'account_id': account_valuation.id, 'debit': 0, 'credit': 20},
+            {'account_id': self.account_expense.id, 'debit': 30, 'credit': 0},
+            {'account_id': self.account_expense.id, 'debit': 20, 'credit': 0},
+        ])
+
+        # Case 2.: 3 units invoiced, fully refunded, invoiced again at another price, 1 delivered.
+        sale_order = self.env['sale.order'].with_context(tracking_disable=True).create({
+            'partner_id': self.partner_a.id,
+            'order_line': [
+                Command.create({
+                    'product_id': avco_product.id,
+                    'product_uom_qty': 3,
+                    'price_unit': 15,
+                    'tax_ids': False,
+                })
+            ]
+        })
+        sale_order.action_confirm()
+        invoice = sale_order._create_invoices()
+        invoice.action_post()
+        invoice._reverse_moves().action_post()
+        invoice = sale_order._create_invoices()
+        invoice.invoice_line_ids.price_unit = 20
+        invoice.action_post()
+        sale_order.picking_ids.move_ids.write({'quantity': 1, 'picked': True})
+        backorder_wizard = Form.from_action(self.env, sale_order.picking_ids.button_validate())
+        backorder_wizard.save().process()
+
+        wizard = self.env['account.accrued.orders.wizard'].with_context({
+            'active_model': 'sale.order.line',
+            'active_ids': sale_order.order_line.ids,
+            'default_accrual_type': 'invoiced_not_delivered',
+        }).create({
+            'account_id': self.account_expense.id,
+            'date': fields.Date.today(),
+        })
+        account_move_domain = wizard.create_entries()['domain']
+        account_move = self.env['account.move'].search(account_move_domain)
+        self.assertRecordValues(account_move.line_ids.filtered(lambda line: line.account_id == self.account_revenue).sorted('id'), [
+            {'debit': 40, 'credit': 0},
+            {'debit': 0, 'credit': 40},
+        ])
+
     def test_accrued_order_in_anglo_saxon_fifo_perpetual(self):
         """ Ensure the COGS accrual lines are correctly computed for FIFO costing method product."""
         # Create a product using anglox-saxon valuation.
@@ -592,6 +693,9 @@ class TestAccruedStockSaleOrders(TestSaleCommon):
             {'account_id': self.account_expense.id, 'debit': 0, 'credit': 360},
             {'account_id': self.account_expense.id, 'debit': 0, 'credit': 240},
         ])
+        # The first accrual is still active as of today: cancel it before accruing again with the new delivered quantity
+        account_move.filtered(lambda m: m.state == 'posted').button_draft()
+        account_move.button_cancel()
 
         # Delivery 3 more units (20 / 20 units.)
         backorder_delivery = sale_order_1.picking_ids.filtered(lambda pick: pick.state == 'assigned')
@@ -1014,16 +1118,11 @@ class TestAccruedSaleOrdersStock(TestSaleCommon):
         ])
 
         self._cancel_accrual_entries(account_move)
+        # Periodic products aren't accrued from the stock valuation report, only the closing entry is created
         action = self.env.company.action_close_stock_valuation(auto_post=True, include_accruals=True)
-        moves = self.env['account.move'].search(action['domain']).filtered(lambda m: not m.reversed_entry_id)
-        accrual_move = moves.filtered(lambda m: accrual_account in m.line_ids.account_id)
-        closing_move = moves.filtered(lambda m: stock_variation_account in m.line_ids.account_id)
-        self.assertEqual(len(moves), 2)
-        self.assertRecordValues(accrual_move.line_ids, [
-            {'account_id': income_account.id, 'debit': 0, 'credit': 500},
-            {'account_id': accrual_account.id, 'debit': 500, 'credit': 0},
-        ])
-        self.assertRecordValues(closing_move.line_ids, [
+        # Only the closing move is created, so the action opens it as a form (`res_id`, no `domain`)
+        moves = self.env['account.move'].browse(action['res_id'])
+        self.assertRecordValues(moves.line_ids, [
             {'account_id': stock_variation_account.id, 'debit': 500, 'credit': 0},
             {'account_id': stock_valuation_account.id, 'debit': 0, 'credit': 500},
         ])
@@ -1065,10 +1164,6 @@ class TestAccruedSaleOrdersStock(TestSaleCommon):
         ])
 
         self._cancel_accrual_entries(account_move)
-        action = self.env.company.action_close_stock_valuation(auto_post=True, include_accruals=True)
-        moves = self.env['account.move'].search(action['domain'])
-        forward_lines = self._filter_reversal(moves).sorted(lambda l: (l.account_id.id, l.debit, l.credit))
-        self.assertRecordValues(forward_lines, [
-            {'account_id': accrual_account.id, 'debit': 0, 'credit': 1000},
-            {'account_id': income_account.id, 'debit': 1000, 'credit': 0},
-        ])
+        # Periodic products aren't accrued from the stock valuation report and nothing was delivered: nothing to close
+        with self.assertRaises(UserError):
+            self.env.company.action_close_stock_valuation(auto_post=True, include_accruals=True)

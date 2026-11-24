@@ -1125,6 +1125,28 @@ class TestProcurement(TestMrpCommon):
         self.assertRecordValues(mo.move_raw_ids, expected_vals)
         self.assertRecordValues(mo.picking_ids.move_ids, expected_vals)
 
+    def test_pbm_component_added_before_picking_type_change(self):
+        """ A component added to a draft MO before switching its operation type
+        to another 2-steps warehouse should be picked in that warehouse. """
+        self.warehouse_1.manufacture_steps = 'pbm'
+        # setup: creating a warehouse writes res.groups (implied_ids) via _check_multiwarehouse_group
+        warehouse_2 = self.env['stock.warehouse'].sudo().create({
+            'name': 'Warehouse 2',
+            'code': 'WH2',
+            'manufacture_steps': 'pbm',
+        })
+        product = self.env['product.product'].create({'name': 'Custom product'})
+        mo_form = Form(self.env['mrp.production'])
+        mo_form.product_id = product
+        mo_form.picking_type_id = self.warehouse_1.manu_type_id
+        with mo_form.move_raw_ids.new() as raw_line:
+            raw_line.product_id = self.product_2
+            raw_line.product_uom_qty = 1.0
+        mo_form.picking_type_id = warehouse_2.manu_type_id
+        mo = mo_form.save()
+        mo.action_confirm()
+        self.assertEqual(mo.picking_ids.picking_type_id, warehouse_2.pbm_type_id)
+
     @freeze_time("2025-11-3")
     def test_consecutive_pickings(self):
         """ Test that when we generate several procurements for a product in a raw
@@ -1638,3 +1660,31 @@ class TestProcurement(TestMrpCommon):
         mo = parent_mo._get_children()
         self.assertEqual(mo.product_id, finished)
         self.assertEqual(self.env['stock.move'].search([('product_id', '=', component.id)]), mo.move_raw_ids)
+
+    def test_pbm_mtso_child_mo_separate_pickings(self):
+        """ 2-steps manufacturing with the Pre-Production -> Production rule set
+        to 'mts_else_mto': each MO of a MTO chain should get its own components
+        picking. """
+        self.warehouse_1.manufacture_steps = 'pbm'
+        self.warehouse_1.pbm_route_id.rule_ids.filtered(
+            lambda r: r.location_src_id == self.warehouse_1.pbm_loc_id,
+        ).procure_method = 'mts_else_mto'
+        self.route_mto.active = True
+        self.productB.route_ids = [Command.link(self.route_mto.id)]
+        bom_a, _bom_b = self.env['mrp.bom'].create([{
+            'product_tmpl_id': self.productA.product_tmpl_id.id,
+            'bom_line_ids': [
+                Command.create({'product_id': self.productB.id, 'product_qty': 1}),
+                Command.create({'product_id': self.productC.id, 'product_qty': 1}),
+            ],
+        }, {
+            'product_tmpl_id': self.productB.product_tmpl_id.id,
+            'bom_line_ids': [Command.create({'product_id': self.productD.id, 'product_qty': 1})],
+        }])
+
+        mo = self.env['mrp.production'].create({'bom_id': bom_a.id})
+        mo.action_confirm()
+        child_mo = mo._get_children()
+        self.assertEqual(child_mo.product_id, self.productB)
+        self.assertEqual(mo.picking_ids.move_ids.product_id, self.productB | self.productC)
+        self.assertEqual(child_mo.picking_ids.move_ids.product_id, self.productD)

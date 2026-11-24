@@ -4,6 +4,7 @@ from odoo import Command
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
+from odoo.addons.point_of_sale.tests.common_setup_methods import setup_product_combo_items
 from odoo.addons.point_of_sale.tests.test_frontend import TestPointOfSaleHttpCommon
 
 
@@ -101,6 +102,27 @@ class TestPOSLoyaltyPoints(TestPointOfSaleHttpCommon):
         self.assertEqual(sum(history.mapped('issued')), 10.0, "The with_code rule should earn its points once the code is applied")
         self.assertEqual(card.points, 10.0)
 
+    def test_pricelist_restricted_program_earns_only_with_its_pricelist(self):
+        """
+        A program restricted to some pricelists generates points only for the orders
+        using one of them.
+        """
+        program_pricelist = self.main_pos_config.pricelist_id
+        other_pricelist = self.env['product.pricelist'].create({'name': 'Other Pricelist'})
+        program = self._create_loyalty_program(pricelist_ids=[Command.set(program_pricelist.ids)])
+        card = self.env['loyalty.card'].create({
+            'program_id': program.id,
+            'partner_id': self.partner.id,
+        })
+
+        self._create_order([self._line(self.whiteboard_pen_product, 1, 100)], pricelist_id=other_pricelist.id)
+        card.invalidate_recordset()
+        self.assertEqual(card.points, 0.0, "No points should be issued with a pricelist the program doesn't allow")
+
+        self._create_order([self._line(self.whiteboard_pen_product, 1, 100)], pricelist_id=program_pricelist.id)
+        card.invalidate_recordset()
+        self.assertEqual(card.points, 100.0)
+
     def test_points_cost_recomputed_not_trusted(self):
         """
         The client-sent points_cost is only a hint: the backend recomputes the cost
@@ -152,6 +174,55 @@ class TestPOSLoyaltyPoints(TestPointOfSaleHttpCommon):
         # ceil(5 / 2) * 3 = 9 points
         self.assertEqual(sum(history.mapped('used')), 9.0)
         self.assertEqual(card.points, 41.0)
+
+    def test_combo_minimum_amount_counts_combo_lines(self):
+        """
+        A combo line carries no price, its child lines do: a rule targeting the combo
+        must check its minimum amount against them.
+        """
+        setup_product_combo_items(self)
+        program = self._create_loyalty_program(
+            rule_vals={
+                'product_ids': [Command.set(self.office_combo.ids)],
+                'reward_point_mode': 'order',
+                'reward_point_amount': 1,
+                'minimum_amount': 50,
+                'minimum_qty': 0,
+            },
+            reward_vals={
+                'reward_type': 'product',
+                'reward_product_id': self.whiteboard_pen_product.id,
+                'reward_product_qty': 1,
+                'required_points': 1,
+            },
+            program_type='promotion',
+            applies_on='current',
+        )
+        reward_line = self._line(
+            self.whiteboard_pen_product, 1, 0,
+            is_reward_line=True, reward_id=program.reward_ids.id, points_cost=1,
+        )
+        order = self.env['pos.order'].create({
+            'config_id': self.main_pos_config.id,
+            'session_id': self.session.id,
+            'lines': [Command.create(line) for line in [
+                self._line(self.office_combo, 1, 0),
+                self._line(self.combo_product_1, 1, 30),
+                self._line(self.combo_product_2, 1, 40),
+                reward_line,
+            ]],
+            'amount_paid': 0,
+            'amount_return': 0,
+            'amount_tax': 0,
+            'amount_total': 0,
+        })
+        combo_line = order.lines.filtered(lambda l: l.product_id == self.office_combo)
+        (order.lines - combo_line).filtered(lambda l: not l.is_reward_line).combo_parent_id = combo_line
+        order._process_loyalty()
+
+        card = order.lines.filtered('is_reward_line').card_id
+        self.assertEqual(sum(card.history_ids.mapped('issued')), 1.0, "The combo lines reach the rule's minimum amount")
+        self.assertEqual(sum(card.history_ids.mapped('used')), 1.0)
 
     def test_insufficient_balance_raises(self):
         """Claiming a reward the card cannot cover must fail the order processing."""

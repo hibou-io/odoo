@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import base64
 import contextlib
+import errno
 import hashlib
 import io
 import os
@@ -12,6 +13,7 @@ from PIL import Image
 
 from odoo.api import SUPERUSER_ID
 from odoo.exceptions import AccessError, ValidationError
+from odoo.fields import Domain
 from odoo.tests import new_test_user, tagged
 from odoo.tools import BinaryBytes, file_open, file_path, mute_logger
 from odoo.tools.image import image_apply_opt
@@ -298,6 +300,23 @@ class TestIrAttachment(TransactionCaseWithUserDemo):
             )
             self.assertTrue(a.raw.size, "No bytes written")
 
+    def test_16_upload_stream_without_hardlink(self):
+        """ A stream without a path is copied to the filestore when the file-system doesn't
+        support hardlinks: the copy must have the content of the stream, not be empty. """
+        data = b'\xff\xd8\xff' + b'a' * 4096
+        with (
+            patch(
+                "odoo.addons.base.models.ir_attachment.IrAttachment._index",
+                new=lambda *args, **kwargs: None,
+            ),
+            patch(
+                "odoo.addons.base.models.ir_attachment.os.link",
+                side_effect=OSError(errno.ENOTSUP, "no hardlinks"),
+            ),
+        ):
+            attachment = self.env['ir.attachment']._upload_file(io.BytesIO(data), {'name': 'stream.bin'})
+        self.assertEqual(attachment.raw.content, data)
+
     def test_16_create_unique_only_reuses_writable_attachments(self):
         """ create_unique() must not return an attachment the current user cannot write, as
         callers link new attachments to it (e.g. the resized variants of an uploaded image).
@@ -527,6 +546,25 @@ class TestPermissions(TransactionCaseWithUserDemo):
         # Assert the attachment related to the field can't be read
         with self.assertRaises(AccessError):
             attachment.raw
+
+    def test_search_res_access(self):
+        self.rule.for_read = True
+        self.attachment.invalidate_recordset()
+        assert not self.attachment.has_access('read')
+
+        # prevent search access on record
+        assert self.attachment.sudo().name == 'attach'
+        self.assertFalse(self.attachment.search([('name', '=', 'attach'), ('id', '>=', self.attachment.id)]))
+        self.assertEqual(self.attachment.sudo().search([('name', '=', 'attach'), ('id', '>=', self.attachment.id)]), self.attachment)
+
+        # need to patch it to inject a search_domain and avoid getting all records
+        res_access_orig = self.registry['ir.attachment']._search_res_access
+
+        def res_access_mock(model, *a):
+            return res_access_orig(model.with_context(search_domain=Domain('id', '=', self.attachment.id)), *a)
+
+        with patch.object(self.registry['ir.attachment'], '_search_res_access', res_access_mock):
+            self.assertFalse(self.attachment.sudo().search([('name', '=', 'attach'), ('id', '>=', self.attachment.id), ('res_access_read', '=', True)]))
 
     def test_with_write_permissions(self):
         """With write permissions to the linked record, attachment can be

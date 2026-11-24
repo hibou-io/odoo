@@ -4,6 +4,7 @@ from itertools import product
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.fields import Domain
+from odoo.tools import clean_context
 
 
 class ApplicantGetRefuseReason(models.TransientModel):
@@ -65,7 +66,8 @@ class ApplicantGetRefuseReason(models.TransientModel):
     def _compute_duplicate_applicant_ids_domain(self):
         for wizard in self:
             domain = (
-                self.applicant_ids._get_similar_applicants_domain()
+                # the talents are not applications: refusing an applicant must not archive them
+                self.applicant_ids._get_similar_applicants_domain(ignore_talent=True)
                 & Domain('id', 'not in', self.applicant_ids.ids)
                 & Domain('application_status', 'not in', ['hired', 'refused', 'archived'])
             )
@@ -169,8 +171,10 @@ class ApplicantGetRefuseReason(models.TransientModel):
         for applicant in self.applicant_ids:
             mail_values = self._prepare_mail_values(applicant)
             if self.template_id:
-                # Ensure template custom recipients are used if needed
+                # Ensure template custom recipients are used if needed. Clean the context of
+                # the refuse action (default_applicant_ids), as contacts may be created for them.
                 composer = self.env['mail.compose.message'].with_context(
+                    clean_context(self.env.context),
                     default_composition_mode='comment',
                     default_model=applicant._name,
                     default_res_ids=applicant.ids,
