@@ -133,7 +133,7 @@ class AccountMove(models.Model):
     # TODO: remove in master
     @api.model
     def fields_get(self, allfields=None, attributes=None):
-        self.env['res.config.settings']._pdp_ensure_selection_value('account.move', 'peppol_move_state', 'completed')
+        self.env['res.config.settings']._pdp_ensure_selection_value('account.move', 'peppol_move_state', 'endorsed')
         return super().fields_get(allfields, attributes)
 
     @api.depends(
@@ -156,6 +156,8 @@ class AccountMove(models.Model):
             amount = 0
             if is_relevant:
                 amount = move._pdp_get_paid_amount() - already_sent
+                if move.currency_id.is_zero(amount):
+                    amount = 0
             move.pdp_lifecycle_residual = amount
 
     @api.depends('peppol_response_ids', 'peppol_response_ids.peppol_state')
@@ -631,7 +633,7 @@ class AccountMove(models.Model):
                     yield self.env._("Invalid partner VAT (%(vat)s).", vat=self.commercial_partner_id.vat)
                 # G2.19 limits Flow 10 VAT identifiers to 18 characters.
                 for partner in (self.company_id.partner_id, self.commercial_partner_id):
-                    if len(partner.vat or '') > 18:
+                    if len(partner._l10n_fr_pdp_get_flow_10_vat()) > 18:
                         yield self.env._(
                             "VAT number for %s must not exceed 18 characters.",
                             partner.display_name,
