@@ -479,8 +479,9 @@ class TestPdpReportsFlowLifecycle(TestL10nFrPdpCommon):
 
         self.assertEqual(len(flow), 1)
         actual_xml = self._build_flow_xml(flow)
+        # Adapted reserve report for invoices without deferred billing dates.
         expected_xml = self._load_expected_report_xml(
-            'FFE1025A_PPF262_PPF2621025000000000000290.xml',
+            'transaction_report_without_billing_period.xml',
         )
         self._assert_identification_nodes(actual_xml, expected_xml)
         self.assertXmlTreeEqual(
@@ -620,6 +621,115 @@ class TestPdpReportsFlowLifecycle(TestL10nFrPdpCommon):
             invoice._get_l10n_fr_pdp_errors(),
         )
 
+    def test_b2bi_french_vat_is_reported(self):
+        """A foreign customer alone must not turn French VAT into foreign VAT."""
+        invoice = self._create_reporting_invoice(
+            partner=self.b2bi_customer,
+            tax_ids=self._get_tax_on_payment_20(),
+        )
+
+        self.assertFalse(invoice._l10n_fr_pdp_uses_foreign_vat())
+        invoice_node = self._build_flow_xml(invoice.l10n_fr_pdp_last_flow_id).find(
+            './TransactionsReport/Invoice'
+        )
+        tax_subtotal = invoice_node.find('TaxSubTotal')
+        self.assertEqual(float(invoice_node.findtext('MonetaryTotal/TaxAmount')), 20.0)
+        self.assertEqual(float(tax_subtotal.findtext('TaxAmount')), 20.0)
+        self.assertEqual(tax_subtotal.findtext('TaxCategory/Code'), 'S')
+        self.assertEqual(float(tax_subtotal.findtext('TaxCategory/Percent')), 20.0)
+
+    def test_b2bi_foreign_vat_is_reported_as_zero(self):
+        """Foreign VAT stays on the invoice but is excluded from French e-reporting."""
+        belgium = self.env.ref('base.be')
+        foreign_vat_fiscal_position = self.env['account.fiscal.position'].create({
+            'name': 'Belgian VAT registration',
+            'company_id': self.company.id,
+            'country_id': belgium.id,
+            'foreign_vat': 'BE0477472701',
+        })
+        belgian_tax_group = self.env['account.tax.group'].create({
+            'name': 'Belgian VAT',
+            'country_id': belgium.id,
+        })
+        belgian_tax = self.env['account.tax'].create({
+            'name': '21% Belgian VAT',
+            'amount': 21,
+            'amount_type': 'percent',
+            'company_id': self.company.id,
+            'country_id': belgium.id,
+            'tax_group_id': belgian_tax_group.id,
+            'type_tax_use': 'sale',
+        })
+
+        # The commercial invoice is issued under the company's Belgian VAT registration.
+        invoice = self._create_invoice_one_line(
+            move_type='out_invoice',
+            partner_id=self.b2bi_customer,
+            product_id=self.product_a,
+            price_unit=100,
+            discount=10,
+            tax_ids=belgian_tax,
+            fiscal_position_id=foreign_vat_fiscal_position,
+            invoice_date=fields.Date.to_date('2025-02-05'),
+            post=False,
+        )
+        invoice.action_post()
+        invoice.is_move_sent = True
+        self._refresh_pdp_fields(invoice)
+
+        # Accounting and the commercial invoice keep the Belgian 21% VAT.
+        self.assertTrue(invoice._l10n_fr_pdp_uses_foreign_vat())
+        self.assertEqual(invoice.tax_country_id, belgium)
+        self.assertEqual(invoice.amount_untaxed, 90.0)
+        self.assertAlmostEqual(invoice.amount_tax, 18.9)
+        self.assertFalse(invoice._get_l10n_fr_pdp_errors())
+
+        # Flow 10 keeps a detailed B2B invoice but reports no French VAT.
+        xml = self._build_flow_xml(invoice.l10n_fr_pdp_last_flow_id)
+        invoice_nodes = xml.findall('./TransactionsReport/Invoice')
+        self.assertEqual(len(invoice_nodes), 1)
+        self.assertFalse(xml.findall('./TransactionsReport/Transactions'))
+        tax_subtotal = invoice_nodes[0].find('TaxSubTotal')
+        allowance_charge = invoice_nodes[0].find('AllowanceCharge')
+        self.assertEqual(float(invoice_nodes[0].findtext('MonetaryTotal/TaxAmount')), 0.0)
+        self.assertEqual(float(tax_subtotal.findtext('TaxableAmount')), 90.0)
+        self.assertEqual(float(tax_subtotal.findtext('TaxAmount')), 0.0)
+        self.assertEqual(tax_subtotal.findtext('TaxCategory/Code'), 'S')
+        self.assertEqual(float(tax_subtotal.findtext('TaxCategory/Percent')), 0.0)
+        self.assertEqual(allowance_charge.findtext('TaxCategoryCode'), 'S')
+        self.assertEqual(float(allowance_charge.findtext('TaxPercent')), 0.0)
+        self.assertAlmostEqual(invoice.amount_tax, 18.9)
+
+        # A fixed charge remains reportable alongside the excluded foreign VAT.
+        invoice.button_draft()
+        eco_tax = belgian_tax.copy({
+            'name': 'Eco-participation 12.85',
+            'amount_type': 'fixed',
+            'amount': 12.85,
+        })
+        invoice.invoice_line_ids.tax_ids |= eco_tax
+        invoice.action_post()
+        invoice.is_move_sent = True
+        self._refresh_pdp_fields(invoice)
+        self.assertFalse(invoice._get_l10n_fr_pdp_errors())
+        self.assertAlmostEqual(invoice.amount_tax, 31.75)
+
+        invoice_node = self._build_flow_xml(invoice.l10n_fr_pdp_last_flow_id).find(
+            './TransactionsReport/Invoice'
+        )
+        self.assertAlmostEqual(float(invoice_node.findtext('MonetaryTotal/TaxExclusiveAmount')), 102.85)
+        self.assertEqual(float(invoice_node.findtext('MonetaryTotal/TaxAmount')), 0.0)
+        tax_subtotals = {
+            node.findtext('TaxCategory/Code'): node
+            for node in invoice_node.findall('TaxSubTotal')
+        }
+        self.assertEqual(set(tax_subtotals), {'S', 'O'})
+        self.assertAlmostEqual(float(tax_subtotals['O'].findtext('TaxableAmount')), 12.85)
+        self.assertEqual(float(tax_subtotals['S'].findtext('TaxableAmount')), 90.0)
+        for node in tax_subtotals.values():
+            self.assertEqual(float(node.findtext('TaxAmount')), 0.0)
+            self.assertEqual(float(node.findtext('TaxCategory/Percent')), 0.0)
+
     def test_oss_b2c_transaction_excludes_foreign_vat(self):
         """OSS VAT remains on the invoice but is not reported as French VAT."""
         oss_tag = self.env.ref('l10n_eu_oss.tag_oss', raise_if_not_found=False)
@@ -694,6 +804,77 @@ class TestPdpReportsFlowLifecycle(TestL10nFrPdpCommon):
         self.assertEqual(len(transactions), 0)
         self.assertEqual(invoices[0].findtext('ID'), invoice.name)
         self.assertEqual(invoices[0].findtext('CurrencyCode'), invoice.currency_id.name)
+
+    def test_b2bi_invoice_without_billing_period(self):
+        """Do not use the reporting period or payment deadline as a billing period."""
+        invoice = self._create_reporting_invoice(
+            partner=self.b2bi_customer,
+            invoice_date='2025-02-05',
+            invoice_date_due='2025-04-30',
+        )
+        flow = invoice.l10n_fr_pdp_last_flow_id
+        xml = self._build_flow_xml(flow)
+        self.assertEqual(xml.findtext('./TransactionsReport/ReportPeriod/StartDate'), '20250201')
+        self.assertEqual(xml.findtext('./TransactionsReport/ReportPeriod/EndDate'), '20250210')
+        self.assertFalse(xml.findall('./TransactionsReport/Invoice/InvoicePeriod'))
+        self.assertFalse(xml.findall('./TransactionsReport/Invoice/Line/InvoicePeriod'))
+
+    def test_b2bi_invoice_billing_periods(self):
+        """Export valid line periods and infer the header only when every product line is dated."""
+        if 'deferred_start_date' not in self.env['account.move.line']._fields:
+            self.skipTest('Deferred dates require account_accountant to be installed.')
+
+        invoice = self._create_reporting_invoice_with_lines(
+            partner=self.b2bi_customer,
+            lines=[{'price_unit': 100.0}, {'price_unit': 200.0}],
+        )
+        cases = [
+            (
+                'different_periods',
+                [('2025-01-01', '2025-03-31'), ('2025-02-01', '2025-04-30')],
+                [('20250101', '20250331'), ('20250201', '20250430')],
+                ('20250101', '20250430'),
+            ),
+            (
+                'no_dates',
+                [(False, False), (False, False)],
+                [],
+                None,
+            ),
+            (
+                'one_undated_line',
+                [('2025-01-01', '2025-03-31'), (False, False)],
+                [('20250101', '20250331')],
+                None,
+            ),
+            (
+                'same_day',
+                [('2025-02-05', '2025-02-05'), ('2025-02-05', '2025-02-05')],
+                [('20250205', '20250205'), ('20250205', '20250205')],
+                ('20250205', '20250205'),
+            ),
+        ]
+        for name, periods, expected_lines, expected_header in cases:
+            with self.subTest(name=name):
+                for line, (start_date, end_date) in zip(invoice.invoice_line_ids, periods):
+                    line.write({
+                        'deferred_start_date': start_date,
+                        'deferred_end_date': end_date,
+                    })
+                xml = self._build_flow_xml(invoice.l10n_fr_pdp_last_flow_id)
+                invoice_node = xml.find('./TransactionsReport/Invoice')
+                self.assertEqual([
+                    (period.findtext('StartDate'), period.findtext('EndDate'))
+                    for period in invoice_node.findall('./Line/InvoicePeriod')
+                ], expected_lines)
+                header = invoice_node.find('InvoicePeriod')
+                if expected_header:
+                    self.assertIsNotNone(header)
+                    self.assertEqual(
+                        (header.findtext('StartDate'), header.findtext('EndDate')), expected_header,
+                    )
+                else:
+                    self.assertIsNone(header)
 
     def test_non_eu_vendor_without_vat_uses_country_and_name_identifier(self):
         us_vendor = self.env['res.partner'].create({
@@ -1651,6 +1832,53 @@ class TestPdpReportsFlowLifecycle(TestL10nFrPdpCommon):
 
         ereporting_messages = invoice.message_ids.filtered(lambda message: 'E-reporting Status:' in message.body)
         self.assertRecordValues(ereporting_messages, [{'author_id': self.env.ref('base.partner_root').id}])
+
+    def test_reset_reported_invoice_that_left_flow_10_scope(self):
+        """Resetting or cancelling a reported invoice that left the Flow 10 scope rectifies its report."""
+        invoices = (
+            self._create_reporting_invoice(partner=self.b2c_customer, invoice_date='2025-09-03')
+            | self._create_reporting_invoice(partner=self.b2c_customer, invoice_date='2025-09-04')
+        )
+        initial_flow = invoices[0].l10n_fr_pdp_last_flow_id
+        self._run_send_cron('2025-09-20', identifier='B2C-BEFORE-CUSTOMER-VAT')
+        initial_flow.invalidate_recordset(['state'])
+        self.assertEqual(initial_flow.state, 'sent')
+
+        # The customer gets a French VAT number after the B2C report was sent: the invoices are now
+        # domestic B2B and leave the Flow 10 scope, while they stay linked to the sent flow.
+        self.b2c_customer.with_context(no_vat_validation=True).vat = 'FR40303265045'
+        invoices._compute_l10n_fr_pdp_flow_10_report_type()
+        self.env.flush_all()
+        self.assertRecordValues(invoices, [
+            {'l10n_fr_pdp_flow_10_report_type': False, 'l10n_fr_pdp_sent_in_flow_ids': initial_flow.ids},
+            {'l10n_fr_pdp_flow_10_report_type': False, 'l10n_fr_pdp_sent_in_flow_ids': initial_flow.ids},
+        ])
+
+        # Both used to crash: the RE scope could not be computed for a move out of the Flow 10 scope
+        # (button_cancel resets posted moves to draft too).
+        invoices[0].button_draft()
+        invoices[1].button_cancel()
+
+        initial_flow.invalidate_recordset(['rectificative_flow_ids'])
+        rectificative_flow = initial_flow.rectificative_flow_ids
+        # Out of scope, the invoices stay in the sent moves of the initial flow.
+        self.assertRecordValues(invoices, [
+            {'state': 'draft', 'l10n_fr_pdp_sent_in_flow_ids': initial_flow.ids},
+            {'state': 'cancel', 'l10n_fr_pdp_sent_in_flow_ids': initial_flow.ids},
+        ])
+        # A single RE flow is created for the reported scope, then reused.
+        self.assertRecordValues(rectificative_flow, [{
+            'report_type': 'transaction',
+            'operation_type': 'sale',
+            'state': 'ready',
+            'transmission_type': 'rectificative',
+        }])
+        self.assertFalse(rectificative_flow._get_moves() & invoices)
+
+        # The RE differs from the initial flow, so the removal is transmitted.
+        self._run_send_cron('2025-09-21', identifier='RE-AFTER-RESET')
+        rectificative_flow.invalidate_recordset(['state'])
+        self.assertEqual(rectificative_flow.state, 'sent')
 
     def test_error_moves_are_moved_to_rectificative_flow_when_initial_is_sent(self):
         valid_invoice = self._create_reporting_invoice(
