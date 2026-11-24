@@ -687,8 +687,12 @@ class ProductTemplate(models.Model):
 
         if combination_info['prevent_zero_price_sale']:
             # If price is zero and prevent_zero_price_sale is enabled we don't want to send any
-            # price information regarding the product
-            combination_info['compare_list_price'] = 0
+            # price information regarding the product, including the price before discount
+            combination_info.update({
+                'compare_list_price': 0,
+                'has_discounted_price': False,
+                'list_price': combination_info['price'],
+            })
 
         return combination_info
 
@@ -979,10 +983,13 @@ class ProductTemplate(models.Model):
 
     def _get_google_analytics_data(self, product, combination_info):
         self.ensure_one()
-        return {
-            'item_id': product.default_code or product.id,
+        item = product._get_google_analytics_item() if product else {
+            'item_id': False,
             'item_name': combination_info['display_name'],
             'item_category': self.categ_id.name,
+        }
+        return {
+            **item,
             'currency': combination_info['currency'].name,
             'price': combination_info['list_price'],
         }
@@ -1142,6 +1149,9 @@ class ProductTemplate(models.Model):
             and not self.env.user._is_internal()
         ):
             website = self.env['website'].get_current_website()
-            if not website.with_context(website_id=website.id).is_view_active('website_sale.product_comment'):
+            if (
+                self.env.user._is_public()
+                or not website.with_context(website_id=website.id).is_view_active('website_sale.product_comment')
+            ):
                 return dict.fromkeys(self, 'write')
         return super()._mail_get_operation_for_mail_message_operation(message_operation)

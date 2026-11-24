@@ -979,15 +979,15 @@ Versions:
             validated_leaves._remove_resource_leave()
 
         employee_id = values.get('employee_id', False)
+        if values.get('state'):
+            self._check_approval_update(values['state'])
+            if any(holiday.validation_type == 'both' for holiday in self):
+                if values.get('employee_id'):
+                    employees = self.env['hr.employee'].browse(values.get('employee_id'))
+                else:
+                    employees = self.mapped('employee_id')
+                self._check_double_validation_rules(employees, values['state'])
         if not self.env.context.get('leave_fast_create'):
-            if values.get('state'):
-                self._check_approval_update(values['state'])
-                if any(holiday.validation_type == 'both' for holiday in self):
-                    if values.get('employee_id'):
-                        employees = self.env['hr.employee'].browse(values.get('employee_id'))
-                    else:
-                        employees = self.mapped('employee_id')
-                    self._check_double_validation_rules(employees, values['state'])
             employee = self.env['hr.employee'].browse(employee_id) or self.employee_id
             if 'date_from' in values:
                 values['request_date_from'] = datetime.date(values['date_from'].astimezone(pytz.timezone(employee.tz)))
@@ -1227,6 +1227,7 @@ Versions:
         to avoid one day leave.
         """
         new_leaves_vals = []
+        modified_leaves = self.env['hr.leave']
         if not split_date_to:
             split_date_to = split_date_from
 
@@ -1262,17 +1263,20 @@ Versions:
                     'request_date_from': vals['request_date_from'],
                     'request_date_to': vals['request_date_to'],
                 })
+                modified_leaves += leave
                 if target_leave_vals:
                     new_leaves_vals.extend(target_leave_vals)
 
-        if not new_leaves_vals:
-            return self.env['hr.leave']
-        return self.env['hr.leave'].with_context(
-            tracking_disable=True,
-            mail_activity_automation_skip=True,
-            leave_fast_create=True,
-            leave_skip_state_check=True
-        ).create(new_leaves_vals)
+        new_leaves = self.env['hr.leave']
+        if new_leaves_vals:
+            new_leaves = self.env['hr.leave'].with_context(
+                tracking_disable=True,
+                mail_activity_automation_skip=True,
+                leave_fast_create=True,
+                leave_skip_state_check=True
+            ).create(new_leaves_vals)
+        new_leaves.filtered(lambda leave: leave.state == 'validate')._create_resource_leave()
+        return new_leaves
 
     def _action_validate(self, check_state=True):
         current_employee = self.env.user.employee_id

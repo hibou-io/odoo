@@ -301,8 +301,8 @@
     .o_form_statusbar {
         position: relative;
         z-index: 0;
-        margin-inline: calc(-1 * var(--formView-sheetBg-padding-x)) calc(-1 * var(--formView-sheetBg-padding-right, --formView-sheetBg-padding-x));
-        padding-inline: var(--formView-sheetBg-padding-x) var(--formView-sheetBg-padding-right, --formView-sheetBg-padding-x);
+        margin-inline: calc(-1 * var(--formView-sheetBg-padding-x)) calc(-1 * var(--formView-sheetBg-padding-right, var(--formView-sheetBg-padding-x)));
+        padding-inline: var(--formView-sheetBg-padding-x) var(--formView-sheetBg-padding-right, var(--formView-sheetBg-padding-x));
 
         @include media-breakpoint-up(md) {
             position: sticky;
@@ -693,6 +693,19 @@
     .o_field_monetary {
         /*rtl:ignore*/
         direction : ltr;
+    }
+
+    /* keep monetary fields next to their label in rtl */
+    .o_rtl & .o_inner_group .o_cell {
+        > .o_field_monetary,
+        > div > .o_field_monetary {
+            justify-content: end;
+
+            > div > .o_input {
+                justify-content: end;
+                text-align: end;
+            }
+        }
     }
 
     .o_list_monetary {

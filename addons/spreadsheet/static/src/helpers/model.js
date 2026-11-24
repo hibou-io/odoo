@@ -5,7 +5,7 @@ import { isLoadingError } from "@spreadsheet/o_spreadsheet/errors";
 import { OdooSpreadsheetModel } from "@spreadsheet/model";
 import { OdooDataProvider } from "@spreadsheet/data_sources/odoo_data_provider";
 
-const { formatValue, isDefined, toCartesian, addStyleToWorkbookData, toXC } = helpers;
+const { formatValue, isDefined, toCartesian, addStylesToWorkbookData, toXC } = helpers;
 import {
     isMarkdownViewUrl,
     isMarkdownIrMenuIdUrl,
@@ -258,7 +258,7 @@ function containsOdooFunction(content) {
  */
 function isLoaded(model) {
     for (const sheetId of model.getters.getSheetIds()) {
-        for (const cell of Object.values(model.getters.getEvaluatedCells(sheetId))) {
+        for (const cell of model.getters.getEvaluatedCells(sheetId)) {
             if (cell.type === "error" && isLoadingError(cell)) {
                 return false;
             }
@@ -333,6 +333,8 @@ function freezeDynamicTable(model, position, data) {
     }
     sheetData.tables.splice(tableIndex, 1);
 
+    const styles = [];
+    const borders = [];
     const { left, right, top, bottom } = table.range.zone;
     for (let row = top; row <= bottom; row++) {
         for (let col = left; col <= right; col++) {
@@ -342,10 +344,12 @@ function freezeDynamicTable(model, position, data) {
                 ...model.getters.getCellTableStyle(position),
                 ...model.getters.getCell(position)?.style,
             };
-            addStyleToWorkbookData(data, "styles", position, style);
+            styles.push({ position, item: style });
 
             const border = model.getters.getCellComputedBorder(position);
-            addStyleToWorkbookData(data, "borders", position, border);
+            borders.push({ position, item: border });
         }
     }
+    addStylesToWorkbookData(data, "borders", borders);
+    addStylesToWorkbookData(data, "styles", styles);
 }

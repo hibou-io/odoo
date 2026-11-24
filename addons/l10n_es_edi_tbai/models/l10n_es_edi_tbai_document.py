@@ -155,6 +155,9 @@ class L10n_Es_Edi_TbaiDocument(models.Model):
                     return _('Refund reason must be R5 for simplified invoices (TicketBAI)')
                 if not is_simplified and refund_reason == 'R5':
                     return _('Refund reason cannot be R5 for non-simplified invoices (TicketBAI)')
+        elif not values['is_sale'] and not self.is_cancel and values['is_refund'] and not values['refund_reason']:
+            # the reason of a vendor credit note is required as well (LROE)
+            return _('Refund reason must be specified (TicketBAI)')
 
     # -------------------------------------------------------------------------
     # WEB SERVICE CALLS
@@ -775,7 +778,7 @@ class L10n_Es_Edi_TbaiDocument(models.Model):
                 return vals['sequence'], vals['number']
 
         sequence = "TEST" if self.company_id.l10n_es_tbai_test_env else ""
-        return sequence, self.name
+        return sequence, self.name[-20:]
 
     @api.model
     def _get_tbai_seq_from_name(self, name):

@@ -242,6 +242,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
         const saleOrderLine = this.props.record.data;
         const ptavIds = [...this._getVariantPtavIds(saleOrderLine)];
         let customPtavs = [];
+        let productUOMId;
 
         if (edit) {
             /**
@@ -250,6 +251,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
              */
             ptavIds.push(...this._getNoVariantPtavIds(saleOrderLine));
             customPtavs = await this._getCustomPtavs(saleOrderLine);
+            productUOMId = saleOrderLine.product_uom_id.id;
         }
 
         this.dialog.add(ProductConfiguratorDialog, {
@@ -257,7 +259,7 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
             ptavIds: ptavIds,
             customPtavs: customPtavs,
             quantity: saleOrderLine.product_uom_qty,
-            productUOMId: saleOrderLine.product_uom_id.id,
+            productUOMId: productUOMId,
             companyId: saleOrderRecord.data.company_id.id,
             pricelistId: saleOrderRecord.data.pricelist_id.id,
             currencyId: saleOrderLine.currency_id.id,
@@ -265,10 +267,14 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
             selectedComboItems: selectedComboItems,
             edit: edit,
             save: async (mainProduct, optionalProducts) => {
+                // When editing, the UoM is set back after the product change (see below)
+                const productUom = edit && mainProduct.uom;
                 // Don't add main product if it's a combo product as it has already been added
                 // from combo configurator
                 const proms = !selectedComboItems.length
-                    ? [applyProduct(this.props.record, mainProduct)]
+                    ? [applyProduct(
+                        this.props.record, productUom ? { ...mainProduct, uom: undefined } : mainProduct
+                    )]
                     : [];
 
                 for (const [i, product] of optionalProducts.entries()) {
@@ -284,6 +290,11 @@ export class SaleOrderLineProductField extends ProductLabelSectionAndNoteField {
                 }
 
                 await Promise.all(proms);
+                // The product change resets the UoM to the product's default one. Setting it back
+                // as a real change makes sure it is also saved, otherwise the server recomputes it.
+                if (productUom && productUom.id !== this.props.record.data.product_uom_id.id) {
+                    await this.props.record.update({ product_uom_id: productUom });
+                }
                 this._onProductUpdate();
                 saleOrderRecord.data.order_line.leaveEditMode();
             },

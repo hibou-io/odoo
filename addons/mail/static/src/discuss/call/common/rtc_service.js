@@ -12,6 +12,7 @@ import { reactive, toRaw } from "@odoo/owl";
 import { browser } from "@web/core/browser/browser";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
+import { Deferred } from "@web/core/utils/concurrency";
 import { pick } from "@web/core/utils/objects";
 import { debounce } from "@web/core/utils/timing";
 import { loadBundle, loadJS } from "@web/core/assets";
@@ -74,6 +75,7 @@ export const CROSS_TAB_CLIENT_MESSAGE = {
     LEAVE: "LEAVE", // request the host to leave the call
     UPDATE_VOLUME: "UPDATE_VOLUME", // sent by a tab to signal a volume change
 };
+export const CROSS_TAB_INIT_TIMEOUT = 2000;
 const PING_INTERVAL = 30_000;
 const UNAVAILABLE_AS_REMOTE = _t("This action can only be done in the call tab.");
 const CALL_FULLSCREEN_ID = Symbol("CALL_FULLSCREEN");
@@ -308,11 +310,16 @@ export class Rtc extends Record {
     sfuTimeout;
     /** @type {AudioContext} AudioContext used to mix screen and mic audio */
     audioContext;
+    /** id of the latest camera request, older ones are discarded */
+    cameraRequestId = 0;
+    /** id of the latest microphone request, older ones are discarded */
+    micRequestId = 0;
     // cross tab sync
     _broadcastChannel = new browser.BroadcastChannel("call_sync_state");
     _remotelyHostedSessionId;
     _remotelyHostedChannelId;
     _crossTabTimeoutId;
+    crossTabInitDeferred = new Deferred();
     /** @type {number} count of how many times the p2p service attempted a connection recovery */
     _p2pRecoveryCount = 0;
     upgradeConnectionDebounce = debounce(
@@ -400,6 +407,8 @@ export class Rtc extends Record {
             fallbackMode: false,
             isPipMode: false,
             isFullscreen: false,
+            /** Mirrors `screenTrack.enabled`, which a template cannot observe. */
+            isScreenTrackPaused: false,
         });
         this.blurManager = undefined;
     }
@@ -415,6 +424,7 @@ export class Rtc extends Record {
             this._broadcastChannel.onmessage = this._onBroadcastChannelMessage.bind(this);
             this._postToTabs({ type: CROSS_TAB_CLIENT_MESSAGE.INIT });
         }
+        browser.setTimeout(() => this.crossTabInitDeferred.resolve(), CROSS_TAB_INIT_TIMEOUT);
         /**
          * @type {import("@mail/discuss/call/common/peer_to_peer").PeerToPeer}
          */
@@ -548,8 +558,14 @@ export class Rtc extends Record {
         this.setPttReleaseTimeout();
     }
 
+    /** @param {boolean} paused */
+    setScreenTrackPaused(paused) {
+        this.state.screenTrack.enabled = !paused;
+        this.state.isScreenTrackPaused = paused;
+    }
+
     showMirroringWarning() {
-        this.state.screenTrack.enabled = false;
+        this.setScreenTrackPaused(true);
         const trackEndedFn = () => this.removeMirroringWarning?.();
         this.removeMirroringWarning = this.overlay.add(
             CallInfiniteMirroringWarning,
@@ -649,21 +665,24 @@ export class Rtc extends Record {
     async leaveCall(channel = this.state.channel) {
         this.store.fullscreenChannel = null;
         this.state.hasPendingRequest = true;
-        await this.rpcLeaveCall(channel);
-        this.endCall(channel);
-        this.state.hasPendingRequest = false;
+        try {
+            await this.rpcLeaveCall(channel);
+        } finally {
+            this.endCall(channel);
+            this.state.hasPendingRequest = false;
+        }
     }
 
     /**
      * @param {import("models").Thread} [channel]
      */
     endCall(channel = this.state.channel) {
-        this._endHost();
         if (channel.self_member_id) {
             channel.self_member_id.rtc_inviting_session_id = undefined;
         }
         channel.activeRtcSession = undefined;
         if (channel.eq(this.state.channel)) {
+            this._endHost();
             this.state.logs.end = new Date().toISOString();
             this.dumpLogs();
             this.pttExtService.unsubscribe();
@@ -1059,9 +1078,10 @@ export class Rtc extends Record {
                 this._remotelyHostedChannelId = hostedChannelId;
                 this._refreshCrossTabTimeout();
                 this.updateSessionInfo(changes);
+                this.crossTabInitDeferred.resolve();
                 return;
             case CROSS_TAB_HOST_MESSAGE.CLOSE: {
-                if (this._remotelyHostedSessionId !== hostedSessionId) {
+                if (this.isHost || this._remotelyHostedSessionId !== hostedSessionId) {
                     return;
                 }
                 this.clear();
@@ -1466,18 +1486,22 @@ export class Rtc extends Record {
             this.notification.add(_t("Your browser does not support webRTC."), { type: "warning" });
             return;
         }
-        this.pttExtService.subscribe();
         this.state.hasPendingRequest = true;
-        const data = await rpc(
-            "/mail/rtc/channel/join_call",
-            {
-                camera,
-                channel_id: channel.id,
-                check_rtc_session_ids: channel.rtc_session_ids.map((session) => session.id),
-            },
-            { silent: true }
-        );
-        this.state.hasPendingRequest = false;
+        let data;
+        try {
+            data = await rpc(
+                "/mail/rtc/channel/join_call",
+                {
+                    camera,
+                    channel_id: channel.id,
+                    check_rtc_session_ids: channel.rtc_session_ids.map((session) => session.id),
+                },
+                { silent: true }
+            );
+        } finally {
+            this.state.hasPendingRequest = false;
+        }
+        this.pttExtService.subscribe();
         // Initializing a new session implies closing the current session.
         this.clear();
         this.state.channel = channel;
@@ -1842,7 +1866,15 @@ export class Rtc extends Record {
                 const track = this.state.cameraTrack;
                 const sendCamera = force ?? !this.state.sendCamera;
                 this.state.sendCamera = false;
-                await this.setVideo(track, type, { activateVideo: sendCamera, env, refreshStream });
+                if (
+                    (await this.setVideo(track, type, {
+                        activateVideo: sendCamera,
+                        env,
+                        refreshStream,
+                    })) === false
+                ) {
+                    return;
+                }
                 break;
             }
             case "screen": {
@@ -1911,6 +1943,8 @@ export class Rtc extends Record {
     }
 
     /**
+     * Resolves to false when a newer camera request replaced this one.
+     *
      * @param {String} type 'camera' or 'screen'
      * @param {Object} [param1] options
      * @param {Boolean} [param1.activateVideo=false] options
@@ -1926,6 +1960,7 @@ export class Rtc extends Record {
             activateVideo = options?.activateVideo ?? false;
             env = options?.env;
         }
+        const cameraRequestId = type === "camera" ? ++this.cameraRequestId : undefined;
         const stopVideo = () => {
             if (track) {
                 track.stop();
@@ -1941,6 +1976,10 @@ export class Rtc extends Record {
                     this.state.screenTrack = undefined;
                     closeStream(this.state.sourceScreenStream);
                     this.state.sourceScreenStream = null;
+                    if (this.state.screenAudioTrack) {
+                        this.state.screenAudioTrack = undefined;
+                        this.updateAudioTrack();
+                    }
                     break;
                 }
             }
@@ -1964,6 +2003,7 @@ export class Rtc extends Record {
                     sourceStream = this.state.sourceCameraStream;
                 } else {
                     closeStream(this.state.sourceCameraStream);
+                    this.state.sourceCameraStream = null;
                     sourceStream = await sourceWindow.navigator.mediaDevices.getUserMedia({
                         video: this.store.settings.cameraConstraints,
                     });
@@ -1981,12 +2021,19 @@ export class Rtc extends Record {
                 this.soundEffectsService.play("screen-sharing");
             }
         } catch {
+            if (type === "camera" && cameraRequestId !== this.cameraRequestId) {
+                return false;
+            }
             this.showMediaUnavailableWarning({
                 camera: type === "camera",
                 screen: type === "screen",
             });
             stopVideo();
             return;
+        }
+        if (type === "camera" && cameraRequestId !== this.cameraRequestId) {
+            closeStream(sourceStream);
+            return false;
         }
         if (!this.selfSession) {
             closeStream(sourceStream);
@@ -2010,14 +2057,29 @@ export class Rtc extends Record {
         if (this.store.settings.useBlur && type === "camera") {
             this.blurManager?.close();
             this.blurManager = undefined;
+            let blurManager;
             try {
-                this.blurManager = await this.applyBlurEffect(sourceStream);
-                const blurredStream = await this.blurManager.stream;
+                blurManager = await this.applyBlurEffect(sourceStream);
+                this.blurManager = blurManager;
+                const blurredStream = await blurManager.stream;
                 outputTrack = blurredStream.getVideoTracks()[0];
             } catch (_e) {
-                this.notification.add(_e.message, { type: "warning" });
-                this.store.settings.setUseBlur(false);
+                if (cameraRequestId === this.cameraRequestId) {
+                    this.notification.add(_e.message, { type: "warning" });
+                    this.store.settings.setUseBlur(false);
+                }
                 outputTrack = sourceStream.getVideoTracks()[0];
+            }
+            if (cameraRequestId !== this.cameraRequestId) {
+                blurManager?.close();
+                if (toRaw(this.blurManager) === blurManager) {
+                    this.blurManager = undefined;
+                }
+                // a reused source stream is still owned by the current camera
+                if (sourceStream !== this.state.sourceCameraStream) {
+                    closeStream(sourceStream);
+                }
+                return false;
             }
         } else if (!this.store.settings.useBlur && type === "camera") {
             this.blurManager?.close();
@@ -2037,6 +2099,7 @@ export class Rtc extends Record {
                 Object.assign(this.state, {
                     sourceScreenStream: sourceStream,
                     screenTrack: outputTrack,
+                    isScreenTrackPaused: false,
                     screenAudioTrack: screenAudioTrack,
                     sendScreen: Boolean(outputTrack),
                     isScreenSourceExternal: Boolean(sourceStream) && env?.pipWindow,
@@ -2070,14 +2133,19 @@ export class Rtc extends Record {
             this.state.audioTrack = destination.stream.getAudioTracks()[0];
         } else {
             this.state.audioTrack = micAudioTrack ?? screenAudioTrack;
+            this.audioContext?.close();
+            this.audioContext = undefined;
         }
         await this.network?.updateUpload("audio", this.state.audioTrack);
     }
 
     async resetMicAudioTrack({ force = false }) {
+        const micRequestId = ++this.micRequestId;
         this.state.micAudioTrack?.stop();
         this.state.micAudioTrack = undefined;
-        this.state.audioTrack?.stop();
+        if (this.state.audioTrack !== this.state.screenAudioTrack) {
+            this.state.audioTrack?.stop();
+        }
         this.state.audioTrack = undefined;
         if (!this.state.channel) {
             return;
@@ -2092,11 +2160,19 @@ export class Rtc extends Record {
                     audio: this.store.settings.audioConstraints,
                 });
                 micAudioTrack = audioStream.getAudioTracks()[0];
+                if (micRequestId !== this.micRequestId) {
+                    micAudioTrack.stop();
+                    return;
+                }
                 if (this.localSession) {
                     this.setMute(false);
                 }
             } catch {
+                if (micRequestId !== this.micRequestId) {
+                    return;
+                }
                 this.showMediaUnavailableWarning({ microphone: true });
+                this.updateAudioTrack();
                 return;
             }
             if (!this.localSession) {
@@ -2113,6 +2189,8 @@ export class Rtc extends Record {
             micAudioTrack.enabled = !this.localSession.isMute && this.localSession.isTalking;
             this.state.micAudioTrack = micAudioTrack;
             this.linkVoiceActivationDebounce();
+            this.updateAudioTrack();
+        } else {
             this.updateAudioTrack();
         }
     }
@@ -2385,7 +2463,7 @@ export const rtcService = {
             } else if (!rtc.state.isFullscreen) {
                 rtc.removeMirroringWarning?.();
                 if (wasFullscreen && rtc.state.screenTrack) {
-                    rtc.state.screenTrack.enabled = true;
+                    rtc.setScreenTrackPaused(false);
                 }
             }
         });

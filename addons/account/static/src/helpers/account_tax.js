@@ -1804,18 +1804,19 @@ export const accountTaxHelpers = {
 
         const factors = this.normalize_target_factors(target_factors);
 
-        const new_taxes_data = [];
+        const new_taxes_data = factors.map((_) => null);
 
         // Distribution of raw amounts.
         for (const index_factor of factors) {
+            const index = index_factor[0];
             const factor = index_factor[1];
-            new_taxes_data.push({
+            new_taxes_data[index] = {
                 ...tax_data,
                 raw_tax_amount_currency: factor * tax_data.raw_tax_amount_currency,
                 raw_tax_amount: factor * tax_data.raw_tax_amount,
                 raw_base_amount_currency: factor * tax_data.raw_base_amount_currency,
                 raw_base_amount: factor * tax_data.raw_base_amount,
-            });
+            };
         }
 
         // Distribution of rounded amounts.
@@ -1856,12 +1857,13 @@ export const accountTaxHelpers = {
 
         const factors = this._normalize_target_factors(target_factors);
 
-        const new_tax_details_list = [];
+        const new_tax_details_list = factors.map((_) => null);
 
         // Distribution of raw amounts.
         for (const index_factor of factors) {
+            const index = index_factor[0];
             const factor = index_factor[1];
-            new_tax_details_list.push({
+            new_tax_details_list[index] = {
                 raw_total_excluded_currency: factor * tax_details.raw_total_excluded_currency,
                 raw_total_excluded: factor * tax_details.raw_total_excluded,
                 raw_total_included_currency: factor * tax_details.raw_total_included_currency,
@@ -1869,7 +1871,7 @@ export const accountTaxHelpers = {
                 delta_total_excluded_currency: 0.0,
                 delta_total_excluded: 0.0,
                 taxes_data: [],
-            });
+            };
         }
 
         // Manage 'taxes_data'.
@@ -2771,6 +2773,7 @@ export const accountTaxHelpers = {
                             .filter((t) => t.tax.price_include)
                             .reduce((sum, t) => sum + t.raw_tax_amount_currency, 0)) /
                     (base_line.quantity || 1.0),
+                discount: 0.0,
                 tax_details: second_tax_details,
                 _removed_tax_data: tax_data_to_remove,
             });

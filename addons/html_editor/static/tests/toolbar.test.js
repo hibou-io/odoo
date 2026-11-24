@@ -1,5 +1,5 @@
 import { withSequence } from "@html_editor/utils/resource";
-import { describe, expect, mockUserAgent, test } from "@odoo/hoot";
+import { describe, expect, freezeTime, mockUserAgent, test } from "@odoo/hoot";
 import {
     click,
     delay,
@@ -500,7 +500,9 @@ test("toolbar font size selector reflects heading size after remove format", asy
     await waitFor(".o-we-toolbar");
     const iframeEl = queryOne(".o-we-toolbar [name='font_size_selector'] iframe");
     const inputEl = await waitUntil(() => {
-        const input = iframeEl.contentWindow.document?.querySelector("input[name='font-size-input']");
+        const input = iframeEl.contentWindow.document?.querySelector(
+            "input[name='font-size-input']"
+        );
         return input?.value && input;
     });
     expect(inputEl).toHaveValue(getFontSizeFromVar("display-3-font-size").toString());
@@ -527,7 +529,9 @@ test("toolbar font size selector reflects default size with o_default_font_size 
     await waitFor(".o-we-toolbar");
     const iframeEl = queryOne(".o-we-toolbar [name='font_size_selector'] iframe");
     const inputEl = await waitUntil(() => {
-        const input = iframeEl.contentWindow.document?.querySelector("input[name='font-size-input']");
+        const input = iframeEl.contentWindow.document?.querySelector(
+            "input[name='font-size-input']"
+        );
         return input?.value && input;
     });
     expect(inputEl).toHaveValue(getFontSizeFromVar("font-size-base").toString());
@@ -1666,9 +1670,7 @@ test("toolbar should close on edit link from preview", async () => {
 
 test.tags("desktop");
 test("close the toolbar if the selection contains any nodes (traverseNode = [], ignore zws)", async () => {
-    const { el } = await setupEditor(
-        `<p>ab<strong data-oe-zws-empty-inline="">\u200B</strong>cd</p>`
-    );
+    const { el } = await setupEditor(`<p>ab<strong data-oe-zws-empty-inline=""></strong>cd</p>`);
     await expectElementCount(".o-we-toolbar", 0);
 
     setContent(el, `<p>a[b<strong data-oe-zws-empty-inline="">\u200B</strong>c]d</p>`);
@@ -1927,6 +1929,9 @@ describe("toolbar open and close on user interaction", () => {
 
             // Double click: first click is synchronous, second schedules debounced update
             await firstClick(p);
+            // Freeze time so the clock only moves with advanceTime, not with real time.
+            // Done after the first click, which waits for its update on the real clock.
+            freezeTime();
             await secondClick(p);
             expect(getContent(el)).toBe("<p>[test] text</p>");
             expect.verifySteps(["updateToolbar", "triggerDebouncedUpdateToolbar"]);

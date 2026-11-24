@@ -496,6 +496,85 @@ describe("pos.order - loyalty", () => {
         expect(loyaltyStats2[0].points.balance).toBe(3);
     });
 
+    test("getLoyaltyPoints with a reward line without coupon", async () => {
+        const store = await setupPosEnv();
+        const models = store.models;
+        const order = store.addNewOrder();
+        order.setPartner(models["res.partner"].get(1));
+
+        // A promotion reward line of a draft loaded from the server: its
+        // temporary negative coupon id is not serialized.
+        await addProductLineToOrder(store, order, {
+            is_reward_line: true,
+            reward_id: models["loyalty.reward"].get(4),
+            points_cost: 0,
+        });
+        order.uiState.couponPointChanges = {
+            1: { coupon_id: 1, program_id: 1, points: 25 },
+        };
+
+        const loyaltyStats = order.getLoyaltyPoints();
+        expect(loyaltyStats).toHaveLength(1);
+        expect(loyaltyStats[0].points.won).toBe(25);
+        expect(loyaltyStats[0].points.spent).toBe(0);
+    });
+
+    test("free product earns no points when another rule of the program is not met", async () => {
+        const store = await setupPosEnv();
+        const models = store.models;
+        const order = store.addNewOrder();
+        deactivateAllProgramsExcept(store, [7]);
+        const program = models["loyalty.program"].get(7);
+        program.applies_on = "both";
+        program.pricelist_ids = [];
+        const ruleChair = models["loyalty.rule"].get(4);
+        ruleChair.update({ any_product: false, reward_point_mode: "money" });
+        ruleChair.validProductIds = new Set([10]);
+        const ruleBurger = models["loyalty.rule"].create({
+            id: 100,
+            program_id: program,
+            any_product: false,
+            reward_point_amount: 1,
+            reward_point_mode: "money",
+            minimum_qty: 0,
+            minimum_amount: 0,
+        });
+        ruleBurger.validProductIds = new Set([12]);
+        const reward = models["loyalty.reward"].get(3);
+        const card = models["loyalty.card"].get(4);
+        card.points = 0;
+        order.setPartner(models["res.partner"].get(1));
+        order.pricelist_id = false;
+
+        const chairLine = await addProductLineToOrder(store, order, {
+            templateId: 10,
+            productId: 10,
+            qty: 2,
+            price_unit: 600,
+        });
+        // Paying one chair earns exactly the points of the other, free, chair
+        reward.required_points = chairLine.prices.total_included / 2;
+        await store.orderUpdateLoyaltyPrograms();
+        expect(order._applyReward(reward, card.id)).toBe(true);
+        const [rewardLine] = order._get_reward_lines();
+        expect(rewardLine.getQuantity()).toBe(1);
+        expect(rewardLine.prices.total_included).toBe(-chairLine.prices.total_included / 2);
+        // Only the paid chair earns points, not the free one
+        const expectedWon = chairLine.prices.total_included / 2;
+        expect(order.getLoyaltyPoints()[0].points.won).toBe(expectedWon);
+
+        const burgerLine = await addProductLineToOrder(store, order, {
+            templateId: 12,
+            productId: 12,
+            qty: 1,
+            price_unit: 14,
+        });
+        await store.orderUpdateLoyaltyPrograms();
+        expect(order.getLoyaltyPoints()[0].points.won).toBe(
+            expectedWon + burgerLine.prices.total_included
+        );
+    });
+
     test("reward amount tax included cheapest product", async () => {
         const store = await setupPosEnv();
         const order = store.addNewOrder();
@@ -646,6 +725,57 @@ describe("pos.order - loyalty", () => {
         const rewardLine = order._get_reward_lines()[0];
         expect(rewardLine.prices.total_included).toBe(-10);
     });
+
+    test("buy x get y one reward per rule product", async () => {
+        const store = await setupPosEnv();
+        const models = store.models;
+        const order = store.addNewOrder();
+        deactivateAllProgramsExcept(store, [8]);
+
+        const program = models["loyalty.program"].get(8);
+        models["loyalty.reward"].get(4).delete();
+        const [rewardA, rewardB] = [5, 10].map((productId) => {
+            const product = models["product.product"].get(productId);
+            return models["loyalty.reward"].create({
+                program_id: program,
+                reward_type: "product",
+                required_points: 1,
+                reward_product_id: product,
+                reward_product_ids: [product],
+                reward_product_qty: 1,
+                discount_line_product_id: models["product.product"].get(18),
+            });
+        });
+        const addAndUpdate = async (productId) => {
+            await store.addLineToCurrentOrder(
+                {
+                    product_id: models["product.product"].get(productId),
+                    product_tmpl_id: models["product.template"].get(productId),
+                    qty: 1,
+                },
+                {},
+                false
+            );
+            await tick();
+        };
+        const freeQty = (reward) =>
+            order
+                ._get_reward_lines()
+                .filter((line) => line.reward_id.id === reward.id)
+                .reduce((qty, line) => qty + line.getQuantity(), 0);
+
+        for (const productId of [5, 10, 10, 5]) {
+            await addAndUpdate(productId);
+        }
+        expect(freeQty(rewardA)).toBe(1);
+        expect(freeQty(rewardB)).toBe(1);
+
+        for (const productId of [5, 10, 10, 5]) {
+            await addAndUpdate(productId);
+        }
+        expect(freeQty(rewardA)).toBe(2);
+        expect(freeQty(rewardB)).toBe(2);
+    });
 });
 
 describe("pos.order - rebuilt client state", () => {
@@ -733,6 +863,64 @@ describe("pos.order - rebuilt client state", () => {
         store.setOrder(restored);
         await store.updatePrograms();
         expect(restored.getOrderlines()).toHaveLength(2);
+    });
+
+    test("promotion reward line without coupon is re-linked after a reload from the server", async () => {
+        const store = await setupPosEnv();
+        const models = store.models;
+        const order = store.addNewOrder();
+        deactivateAllProgramsExcept(store, [8]);
+        await addProductLineToOrder(store, order, {
+            templateId: 10,
+            productId: 10,
+            price_unit: 100,
+        });
+        await store.orderUpdateLoyaltyPrograms();
+        const [pointChange] = Object.values(order.uiState.couponPointChanges);
+        expect(pointChange.coupon_id).toBeLessThan(0);
+        expect(order._applyReward(models["loyalty.reward"].get(4), pointChange.coupon_id)).toBe(
+            true
+        );
+        const [rewardLine] = order._get_reward_lines();
+
+        // The server does not know the temporary coupon
+        rewardLine.update({ coupon_id: false });
+        await store.orderUpdateLoyaltyPrograms();
+        expect(rewardLine.coupon_id).toBe(undefined);
+
+        order.invalidCoupons = true;
+        await store.orderUpdateLoyaltyPrograms();
+        expect(rewardLine.coupon_id.id).toBe(pointChange.coupon_id);
+        order._updateRewardLines();
+        expect(order._get_reward_lines()).toHaveLength(1);
+        expect(order._get_reward_lines()[0].coupon_id.id).toBe(pointChange.coupon_id);
+    });
+
+    test("code rule of a reward line without coupon is activated again after a reload", async () => {
+        const store = await setupPosEnv();
+        const models = store.models;
+        const order = store.addNewOrder();
+        const program = models["loyalty.program"].get(9);
+        const rule = models["loyalty.rule"].create({
+            id: 100,
+            program_id: program,
+            mode: "with_code",
+            code: "PROMO10",
+        });
+        const reward = models["loyalty.reward"].create({
+            id: 100,
+            program_id: program,
+            reward_type: "discount",
+        });
+        await addProductLineToOrder(store, order, {
+            is_reward_line: true,
+            reward_id: reward,
+            points_cost: 0,
+        });
+        expect(order.uiState.codeActivatedProgramRules).toEqual([]);
+
+        order._restoreCodeActivatedCoupons();
+        expect(order.uiState.codeActivatedProgramRules).toEqual([rule.id]);
     });
 
     test("reward line of a nominative card is still dropped when the partner is removed", async () => {

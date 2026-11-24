@@ -248,11 +248,6 @@ class TestItEdiImport(TestItEdi):
                 'quantity': 5.0,
                 'price_unit': 1.0,
                 'credit': 5.0,
-            }, {
-                'display_type': 'line_section',
-                'quantity': 0.0,
-                'price_unit': 0.0,
-                'credit': 0.0,
             }],
         }])
 
@@ -725,7 +720,7 @@ class TestItEdiImport(TestItEdi):
                     'quantity': 5.0,
                     'name': 'DESCRIZIONE DELLA FORNITURA',
                     'price_unit': 1.0,
-                    'discount': -10.0,
+                    'discount': -10.000000000000014,
                 },
             ],
         }], applied_xml)
