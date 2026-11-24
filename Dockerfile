@@ -8,6 +8,9 @@ COPY --chown=104 requirements.txt requirements-hibou.txt /opt/odoo/odoo/
 RUN set -x; \
     # Add Odoo User
     useradd -m -d /var/lib/odoo -s /bin/false -u 104 -g 33 odoo \
+    && echo "deb http://archive.debian.org/debian bullseye main" > /etc/apt/sources.list \
+    && echo "deb http://archive.debian.org/debian-security bullseye-security main" >> /etc/apt/sources.list \
+    && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive \
     && apt-get update \
     && apt-get install -y curl ca-certificates gnupg \
     # setup Node sources \
@@ -38,7 +41,7 @@ RUN set -x; \
     && npm install yarn --global --force \
     #  install postgresql-client from postgres itself to support newer server versions
     && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && echo "deb https://apt-archive.postgresql.org/pub/repos/apt bullseye-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client \
