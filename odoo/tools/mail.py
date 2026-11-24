@@ -13,7 +13,7 @@ import time
 
 from email.header import decode_header, Header
 from email.utils import getaddresses, formataddr
-from lxml import etree
+from lxml import etree, html as lxml_html
 
 import odoo
 from odoo.loglevels import ustr
@@ -183,7 +183,7 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
         return src
     src = ustr(src, errors='replace')
     # html: remove encoding attribute inside tags
-    doctype = re.compile(r'(<[^>]*\s)(encoding=(["\'][^"\']*?["\']|[^\s\n\r>]+)(\s[^>]*|/)?>)', re.IGNORECASE | re.DOTALL)
+    doctype = re.compile(r'(<(?=[^<>]*>)[^<>]*\s)(encoding=(["\'][^"\'<>]*?["\']|[^\s\n\r<>]+)(\s[^<>]*|/)?>)', re.IGNORECASE | re.DOTALL)
     src = doctype.sub(u"", src)
 
     logger = logging.getLogger(__name__ + '.html_sanitize')
@@ -233,9 +233,14 @@ def html_sanitize(src, silent=True, sanitize_tags=True, sanitize_attributes=Fals
         })
 
     try:
+        src = src.replace('--!>', '-->')
+        src = re.sub(r'(<!-->|<!--->)', '<!-- -->', src)
         # some corner cases make the parser crash (such as <SCRIPT/XSS SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT> in test_mail)
+        serialized = lxml_html.tostring(lxml_html.fromstring(src), encoding='unicode')
+        serialized = serialized.replace('--!>', '-->')
+        serialized = re.sub(r'(<!-->|<!--->)', '<!-- -->', serialized)
         cleaner = _Cleaner(**kwargs)
-        cleaned = cleaner.clean_html(src)
+        cleaned = cleaner.clean_html(serialized)
         assert isinstance(cleaned, pycompat.text_type)
         # MAKO compatibility: $, { and } inside quotes are escaped, preventing correct mako execution
         cleaned = cleaned.replace(u'%24', u'$')
