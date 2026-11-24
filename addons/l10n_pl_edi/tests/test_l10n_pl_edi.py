@@ -209,15 +209,64 @@ class TestL10nPlEdi(AccountTestInvoicingCommon, CronMixinCase):
         self._assert_export_invoice(credit_note, 'standerd_fa3_credit_note.xml')
 
     @freeze_time('2026-01-23')
-    def test_ksef_fa3_reverse_charge(self):
-        K_12_tax = self.env['account.chart.template'].ref('vs_dostu')
-        K_31_tax = self.env['account.chart.template'].ref('vs_stal')
+    def test_ksef_fa3_reverse_charge_np_ii(self):
+        """
+        Intra-EU B2B service (np II, art. 100 ust. 1 pkt 4):
+        - the invoice is flagged as reverse charge (P_18 = 1)
+        - the base is reported only in P_13_9, since P_13_8 excludes it.
+        - P_13_10 must not be present: it is reserved for domestic reverse charge.
+        """
+        partner_be = self.env['res.partner'].create({
+            'name': 'Test Customer BE',
+            'is_company': True,
+            'country_id': self.env.ref('base.be').id,
+            'vat': 'BE0477472701',
+            'street': 'Rue de la Loi 16',
+            'city': 'Brussels',
+            'zip': '1000',
+        })
+        eu_service_tax = self.env['account.chart.template'].ref('vs_dostu')
+        service_product = self._create_product(name='EU Service', type='service', taxes_id=[Command.set(eu_service_tax.ids)])
+        invoice = self._create_invoice(
+            invoice_date=fields.Date.today(),
+            partner_id=partner_be,
+            invoice_line_ids=[
+                Command.create({'product_id': service_product.id, 'quantity': 1, 'price_unit': 500.0, 'tax_ids': eu_service_tax.ids}),
+            ],
+            post=True)
+        self._assert_export_invoice(invoice, 'standard_fa3_format_invoice_reverse_charge_only_np_II.xml')
+
+    @freeze_time('2026-01-23')
+    def test_ksef_fa3_reverse_charge_domestic(self):
+        """
+        Domestic reverse charge (oo, K_31) is the only base reported in P_13_10, even when the invoice
+        also contains an np II line.
+        """
+        tag_model = self.env['account.account.tag']
+        plus_k_31 = tag_model.search(tag_model._get_tax_tags_domain('K_31', self.country_pl.id, sign='+'))
+        minus_k_31 = tag_model.search(tag_model._get_tax_tags_domain('K_31', self.country_pl.id, sign='-'))
+        domestic_reverse_charge_tax = self.env['account.tax'].create({
+            'name': '0% oo',
+            'amount': 0.0,
+            'amount_type': 'percent',
+            'type_tax_use': 'sale',
+            'country_id': self.country_pl.id,
+            'invoice_repartition_line_ids': [
+                Command.create({'repartition_type': 'base', 'tag_ids': plus_k_31.ids}),
+                Command.create({'repartition_type': 'tax'}),
+            ],
+            'refund_repartition_line_ids': [
+                Command.create({'repartition_type': 'base', 'tag_ids': minus_k_31.ids}),
+                Command.create({'repartition_type': 'tax'}),
+            ],
+        })
+        eu_service_tax = self.env['account.chart.template'].ref('vs_dostu')
         invoice = self._create_invoice(
             invoice_date=fields.Date.today(),
             partner_id=self.partner_pl,
             invoice_line_ids=[
-                Command.create({'product_id': self.product_a.id, 'quantity': 1, 'price_unit': 1000.0, 'tax_ids': K_12_tax.ids}),
-                Command.create({'product_id': self.product_a.id, 'quantity': 1, 'price_unit': 500.0, 'tax_ids': K_31_tax.ids}),
+                Command.create({'product_id': self.product_a.id, 'quantity': 1, 'price_unit': 1000.0, 'tax_ids': eu_service_tax.ids}),
+                Command.create({'product_id': self.product_a.id, 'quantity': 1, 'price_unit': 500.0, 'tax_ids': domestic_reverse_charge_tax.ids}),
             ],
             post=True)
         self._assert_export_invoice(invoice, 'standard_fa3_format_invoice_reverse_charge.xml')
@@ -1048,6 +1097,48 @@ class TestL10nPlEdi(AccountTestInvoicingCommon, CronMixinCase):
         self.assertEqual(capt.call_count, 3)
         new_bill = self.env['account.move'].search([('l10n_pl_edi_number', '=', 'KSEF-NEW-BILL-001')])
         self.assertTrue(new_bill)
+
+    @freeze_time('2026-09-03')
+    def test_l10n_pl_edi_download_bill_populated_windows(self):
+        """Fetch all windows and pages, even after finding an already imported bill."""
+        moves = self.env['account.move'].with_company(self.company)
+        moves.create({
+            'move_type': 'in_invoice',
+            'invoice_date': '2025-10-02',
+            'l10n_pl_edi_number': 'KSEF-OLD-BILL',
+            'l10n_pl_edi_status': 'fetched',
+        })
+        pages = [
+            ('2025-10-02', '2025-12-02', 0, False, []),
+            ('2025-12-02', '2026-02-02', 0, False, []),
+            ('2026-02-02', '2026-04-02', 0, True, ['KSEF-OLD-BILL']),
+            ('2026-02-02', '2026-04-02', 1, False, ['KSEF-BOUNDARY-BILL']),
+            ('2026-04-02', '2026-06-02', 0, False, ['KSEF-BOUNDARY-BILL', 'KSEF-SPRING-BILL']),
+            ('2026-06-02', '2026-08-02', 0, False, []),
+            ('2026-08-02', '2026-09-04', 0, True, ['KSEF-SUMMER-BILL']),
+            ('2026-08-02', '2026-09-04', 1, False, ['KSEF-NEWEST-BILL']),
+        ]
+        expected_pages = iter(pages)
+
+        def query_invoice_metadata(query_criteria, page_size=100, page_offset=0):
+            date_from, date_to, expected_offset, has_more, numbers = next(expected_pages)
+            self.assertEqual(query_criteria['dateRange'], {
+                'from': f'{date_from}T00:00:00',
+                'to': f'{date_to}T00:00:00',
+                'dateType': 'Invoicing',
+            })
+            self.assertEqual(page_offset, expected_offset)
+            return {'hasMore': has_more, 'invoices': [{'ksefNumber': number} for number in numbers]}
+
+        with patch.object(KsefApiService, 'query_invoice_metadata', side_effect=query_invoice_metadata) as metadata:
+            self.assertFalse(moves._fetch_bills_metadata(KsefApiService(self.company)))
+
+        self.assertEqual(metadata.call_count, len(pages))
+        bills = moves.search([('l10n_pl_edi_status', '=', 'fetch_ready')])
+        self.assertEqual(set(bills.mapped('l10n_pl_edi_number')), {
+            'KSEF-BOUNDARY-BILL', 'KSEF-SPRING-BILL', 'KSEF-SUMMER-BILL', 'KSEF-NEWEST-BILL',
+        })
+        self.assertEqual(len(bills), 4)
 
     def test_ksef_bill_import_dynamic_taxes_and_fiscal_position(self):
         """ Test that importing a KSeF bill maps taxes dynamically using amounts and fiscal positions. """

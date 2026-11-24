@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import base64
-import io
 
 from lxml import etree
 from odoo import fields, Command
 from odoo.addons.account_edi_ubl_cii.tests.common import TestUblCiiCommon
 from odoo.tests import tagged
-from odoo.tools.pdf import OdooPdfFileWriter
 from odoo.tools.safe_eval import datetime
 
 
@@ -159,17 +157,6 @@ class TestAccountEdiUblCii(TestUblCiiCommon):
         new_invoice = invoice.journal_id._create_document_from_attachment(attachment.ids)
         self.assertRecordValues(new_invoice.invoice_line_ids, line_vals)
 
-    def _get_pdf_bytes(self, xml_content=None, filename='factur-x.xml'):
-        """ Small A4 PDF, with `xml_content` embedded as `filename` if given. """
-        a4_width_pt, a4_height_pt = 595, 842
-        writer = OdooPdfFileWriter()
-        writer.addBlankPage(a4_width_pt, a4_height_pt)
-        if xml_content:
-            writer.addAttachment(filename, xml_content, subtype='text/xml', afrelationship='/Alternative')
-        buffer = io.BytesIO()
-        writer.write(buffer)
-        return buffer.getvalue()
-
     def _configure_seller_for_cii_export(self):
         """ Factur-X/ZUGFeRD/CII exports require a fully configured seller (VAT, phone, email,
         bank account with a sanitized account number) or the export raises validation errors. """
@@ -276,39 +263,6 @@ class TestAccountEdiUblCii(TestUblCiiCommon):
         move.ubl_cii_xml_file = base64.b64encode(b"<test/>")
         extra_attachments = self.env['account.move.send']._get_invoice_extra_attachments(move)
         self.assertIn(move.ubl_cii_xml_id, extra_attachments)
-
-    def test_peppol_eas_endpoint_compute(self):
-        partner = self.partner_a
-        partner.vat = 'DE123456788'
-
-        self.assertRecordValues(partner, [{
-            'peppol_eas': '9930',
-            'peppol_endpoint': 'DE123456788',
-        }])
-
-        partner.vat = 'FR23334175221'
-
-        self.assertRecordValues(partner, [{
-            'peppol_eas': '9957',
-            'peppol_endpoint': 'FR23334175221',
-        }])
-
-        partner.vat = '23334175221'
-
-        self.assertRecordValues(partner, [{
-            'peppol_eas': '9957',
-            'peppol_endpoint': 'FR23334175221',
-        }])
-
-        partner.write({
-            'vat': 'BE0477472701',
-            'company_registry': '0477472701',
-        })
-
-        self.assertRecordValues(partner, [{
-            'peppol_eas': '0208',
-            'peppol_endpoint': '0477472701',
-        }])
 
     def test_import_partner_peppol_fields(self):
         """ Check that the peppol fields are used to retrieve the partner when importing a Bis 3 xml. """
@@ -1089,8 +1043,7 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
         })
         bill = self._import_invoice_as_attachment_on(attachment=xml_attachment, journal=self.company_data['default_journal_purchase'])
         self.assertRecordValues(bill.invoice_line_ids, [
-            {'quantity': 31.0, 'price_unit': 103.0, 'discount': 9.75, 'price_subtotal': 2881.68},
-            {'quantity': 3.0, 'price_unit': 86.96, 'discount': 0.0, 'price_subtotal': 260.88},
-            {'quantity': 1.0, 'price_unit': -0.01, 'discount': 0.0, 'price_subtotal': -0.01},
+            {'quantity': 31.0, 'price_unit': 103.0, 'discount': 9.750078296273102, 'price_subtotal': 2881.68},
+            {'quantity': 3.0, 'price_unit': 86.95666666666666, 'discount': 0.0, 'price_subtotal': 260.87},
         ])
         self.assertRecordValues(bill, [{'amount_untaxed': invoice.amount_untaxed, 'amount_total': invoice.amount_total}])

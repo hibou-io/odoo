@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 18.0+e\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-02-16 16:38+0000\n"
-"PO-Revision-Date: 2026-10-23 10:33+0000\n"
+"PO-Revision-Date: 2026-11-17 04:33+0000\n"
 "Last-Translator: \"Junko Augias (juau)\" <juau@odoo.com>\n"
 "Language-Team: Japanese <https://translate.odoo.com/projects/odoo-18/base/"
 "ja/>\n"
@@ -25,7 +25,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.8.1\n"
+"X-Generator: Weblate 2026.11.2\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_at_reports
@@ -3998,7 +3998,7 @@ msgid ""
 "Bridge module between MRP subcontracting and Repair\n"
 msgstr ""
 "\n"
-"MRP外注と修理の間のブリッジモジュール\n"
+"MRP外注と修理のブリッジモジュール\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_be_reports_sms
@@ -6967,12 +6967,12 @@ msgid ""
 "for customization purpose.\n"
 msgstr ""
 "\n"
-"カスタムデータモジュールをインポート\n"
-"===============\n"
+"カスタムデータモジュールのインポート\n"
+"===========================\n"
 "\n"
-"このモジュールを使用すると、許可されたユーザーは、カスタマイズのために\n"
-"カスタムデータモジュール(.xmlファイルとstatic assests)をインポートできます"
-"。\n"
+"このモジュールは、権限を持つユーザがカスタマイズ目的で"
+"カスタムデータモジュール(.xmlファイルおよび静的アセット)を\n"
+"インポートすることを許可します。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_sale_amazon
@@ -8190,16 +8190,21 @@ msgid ""
 "will\n"
 "procure.\n"
 msgstr ""
-"マスター生産スケジュール\n"
+"\n"
+"基準生産計画\n"
 "==========================\n"
-"後でのみ作成される製造指図のコンポーネントの発注書を作成する必要がある場合が"
-"あります。\n"
-"または、後で受注のみが発生する製造指図の場合。\n"
-"解決策は、販売予測を予測し、それに基づいて、すでにいくつかの製造指図または発"
-"注書を作成することです。\n"
-"レポートに追加する製品を選択する必要があります。\n"
-"レポートの期間を選択できます:日、週、月、...供給する安全在庫、最小/最大を定義"
-"し、調達する金額を手動で上書きすることもできます。"
+"\n"
+"後から作成される製造オーダの構成品に対する購買オーダ\n"
+"を作成しなければならない場合があります。  あるいは、受注が後から入る\n"
+"製造オーダの場合もあります。  その解決策として、\n"
+"販売予測を行い、それに基づいて事前に製造オーダや\n"
+"購買オーダを作成します。\n"
+"\n"
+"レポートに追加するプロダクトを選択する必要があります。  レポートの期間\n"
+"(日、週、月など)を選択できます。  また、安全在庫、最小補充数、および調達する"
+"金額を\n"
+"手動で上書きすることも\n"
+"可能です。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_mr_reports
@@ -8982,25 +8987,28 @@ msgid ""
 "  need or want an online import can avoid it being available to users.\n"
 msgstr ""
 "\n"
-"New extensible file import for Odoo\n"
+"Odoo向け 拡張可能な新しいファイルインポート機能\n"
 "======================================\n"
 "\n"
-"Re-implement Odoo's file import system:\n"
+"Odooのファイルインポートシステムを再実装しました:\n"
 "\n"
-"* Server side, the previous system forces most of the logic into the\n"
-"  client which duplicates the effort (between clients), makes the\n"
-"  import system much harder to use without a client (direct RPC or\n"
-"  other forms of automation) and makes knowledge about the\n"
-"  import/export system much harder to gather as it is spread over\n"
-"  3+ different projects.\n"
+"* サーバサイド処理への移行: 従来のシステムではロジックの\n"
+"  大部分がクライアント側に置かれていました。そのため、クライアント間での開発"
+"工数\n"
+"  の重複が生じ、クライアントを介さない利用(RPCの直接呼び出しや各種自動化処理)"
+"が\n"
+"  非常に困難になっていました。また、インポート/エクスポート関連のノウハウが3"
+"つ以上の\n"
+"  異なるプロジェクトに分散し、把握しづらい\n"
+"  要因にもなっていました。\n"
 "\n"
-"* In a more extensible manner, so users and partners can build their\n"
-"  own front-end to import from other file formats (e.g. OpenDocument\n"
-"  files) which may be simpler to handle in their work flow or from\n"
-"  their data production sources.\n"
+"* 拡張性の向上: ユーザーやパートナー企業が独自のフロントエンドを構築し、\n"
+"  業務フローやデータ生成元に合わせて扱いやすい他のファイル形式\n"
+"   (例：OpenDocumentファイルなど) からインポート\n"
+"  できるようにしました。\n"
 "\n"
-"* In a module, so that administrators and users of Odoo who do not\n"
-"  need or want an online import can avoid it being available to users.\n"
+"*オンラインでのインポート機能を必要としない、あるいはユーザに提供したくない\n"
+"  管理者やユーザが、機能を無効化できるようにモジュール化しました。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_ng
@@ -12332,12 +12340,12 @@ msgstr ""
 "うになります。\n"
 "============================================================\n"
 "\n"
-"自動化アクションを使用して、さまざまな画面のアクションを自動的にトリガします"
+"自動化ルールを使用すると、さまざまな画面でアクションを自動的にトリガできます"
 "。\n"
 "\n"
-"**例:** 特定のユーザによって作成されたリードは、自動的に特定の営業チームに設"
-"定されるかもしれません。または案件が14日後もまだ保留のステータスの場合\n"
-"自動リマインダメールをトリガすることもできます。\n"
+"**例:** 特定のユーザによって作成されたリードを特定の販売チームに自動的に設定"
+"したり、14日経過しても保留ステータスのままの案件に対して\n"
+"自動リマインダーメールをトリガしたりできます。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_onboarding
@@ -17089,7 +17097,7 @@ msgstr "方向情報を追加します(デジタルには使用されません)"
 #. module: base
 #: model:ir.module.module,summary:base.module_base_address_extended
 msgid "Add extra fields on addresses"
-msgstr "アドレスにフィールドを追加する"
+msgstr "住所にフィールドを追加"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_us_hr_payroll_state_calculation
@@ -19889,7 +19897,7 @@ msgstr "アジア/Yerevan"
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_appraisal
 msgid "Assess your employees"
-msgstr "従業員を評価する"
+msgstr "従業員を評価"
 
 #. module: base
 #: model:ir.model,name:base.model_ir_asset
@@ -20833,7 +20841,7 @@ msgstr "アプリ内課金をサポートするための基本的なモデルと
 #. module: base
 #: model:ir.module.module,summary:base.module_iot
 msgid "Basic models and helpers to support Internet of Things."
-msgstr "モノのインターネットをサポートするための基本的なモデルとヘルパー。"
+msgstr "IoTをサポートするための基本モデルおよび支援ツール"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_batch_payment
@@ -21556,7 +21564,7 @@ msgstr "予算管理"
 #. module: base
 #: model:ir.module.module,summary:base.module_marketing_automation
 msgid "Build automated mailing campaigns"
-msgstr "自動メーリングキャンペーンを作成"
+msgstr "自動メールキャンペーンを作成"
 
 #. module: base
 #: model:ir.module.module,description:base.module_sale_pdf_quote_builder
@@ -22061,12 +22069,12 @@ msgstr "中央アフリカ共和国 - 会計"
 #. module: base
 #: model:ir.module.module,summary:base.module_hr
 msgid "Centralize employee information"
-msgstr "従業員情報を一元化"
+msgstr "従業員情報の一元管理"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_contacts
 msgid "Centralize your address book"
-msgstr "アドレス帳を一元化する"
+msgstr "アドレス帳を一元管理"
 
 #. module: base
 #: model:ir.module.module,description:base.module_knowledge
@@ -22214,7 +22222,7 @@ msgstr "代わりに12時間時計フォーマットに変更します。"
 #: model:ir.module.module,summary:base.module_im_livechat
 #: model:ir.module.module,summary:base.module_website_livechat
 msgid "Chat with your website visitors"
-msgstr "ウェブサイト訪問者と会話"
+msgstr "ウェブサイト訪問者とチャット"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_mail
@@ -23577,7 +23585,7 @@ msgstr "インダストリーを作成"
 #. module: base
 #: model:ir.module.module,summary:base.module_web_studio
 msgid "Create and customize your Odoo apps"
-msgstr "Odooアプリを作成してカスタマイズする"
+msgstr "Odooアプリの作成およびカスタマイズ"
 
 #. module: base
 #: model_terms:ir.actions.act_window,help:base.action_res_company_form
@@ -24192,7 +24200,7 @@ msgstr "D - 電気、ガス、蒸気、空調の供給"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery_dhl_rest
 msgid "DHL Express Shipping"
-msgstr "DHLエクスプレス配送"
+msgstr "DHL Express配送連携"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery_dhl
@@ -24747,7 +24755,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_mass_mailing_sms
 msgid "Design, send and track SMS"
-msgstr "SMSの設計、送信、追跡"
+msgstr "SMSの作成・送信・効果測定"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_mass_mailing
@@ -26118,7 +26126,7 @@ msgstr "エントリ数"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery_envia
 msgid "Envia Shipping"
-msgstr "Envia配送"
+msgstr "Envia配送連携"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_theme_environment
@@ -27174,7 +27182,7 @@ msgstr "式"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_base_address_extended
 msgid "Extended Addresses"
-msgstr "拡張アドレス"
+msgstr "拡張住所"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_l10n_jo_edi_extended
@@ -27783,7 +27791,7 @@ msgstr "Unsplashから無料の高解像度画像を検索"
 #: model:ir.module.module,description:base.module_data_recycle
 #: model:ir.module.module,summary:base.module_data_recycle
 msgid "Find old records and archive/delete them"
-msgstr "古いレコードを見つけてアーカイブ/削除します"
+msgstr "古いレコードを検索してアーカイブまたは削除"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_industry_restaurant
@@ -28214,7 +28222,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_management
 msgid "From quotations to invoices"
-msgstr "見積もりから請求書まで"
+msgstr "見積もりから請求書までを一元管理"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_human_resources_frontdesk
@@ -28452,7 +28460,7 @@ msgstr "見込顧客がアポイントメントを予約した際にリードを
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_subscription
 msgid "Generate recurring invoices and manage renewals"
-msgstr "定期的な請求書を生成し、更新を管理する"
+msgstr "定期請求書の作成と更新管理"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_links
@@ -30077,7 +30085,7 @@ msgstr "SIE5ファイルから会計データをインポート"
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_amazon
 msgid "Import Amazon orders and sync deliveries"
-msgstr "Amazonオーダインポートおよび運送同期"
+msgstr "Amazonの注文を取り込み、配送状況を同期"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_account_bank_statement_import_camt
@@ -30107,7 +30115,7 @@ msgstr "QIF銀行取引明細書をインポート"
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_shopee
 msgid "Import Shopee orders and sync deliveries"
-msgstr "Shopeeオーダインポートおよび運送同期"
+msgstr "Shopeeの注文を取り込み、配送状況を同期"
 
 #. module: base
 #. odoo-python
@@ -32977,7 +32985,7 @@ msgstr "キットプロダクトの在庫と在庫状況を管理"
 #. module: base
 #: model:ir.module.module,summary:base.module_room
 msgid "Manage Meeting Rooms"
-msgstr "ミーティングルームを管理"
+msgstr "会議室の管理"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_recruitment_integration_skills_monster
@@ -33125,7 +33133,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_website_slides
 msgid "Manage and publish an eLearning platform"
-msgstr "Eラーニングプラットフォームを管理および公開する"
+msgstr "eラーニングプラットフォームの管理・公開"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_account_asset_fleet
@@ -33151,7 +33159,7 @@ msgstr "フリートの損金否認費用を管理する"
 #. module: base
 #: model:ir.module.module,summary:base.module_mrp_plm
 msgid "Manage engineering change orders on products, bills of material"
-msgstr "プロダクト、部品表の設計変更オーダを管理"
+msgstr "プロダクトおよび部品表の設計変更オーダを管理"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_event_booth
@@ -33191,7 +33199,7 @@ msgstr "プロダクト在庫および在庫管理"
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_renting
 msgid "Manage rental contracts, deliveries and returns"
-msgstr "レンタル契約、配送、返品を管理する"
+msgstr "レンタル契約・配送・返却の管理"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_recruitment_skills
@@ -33277,7 +33285,7 @@ msgstr "従業員のスケジュールを管理する"
 #. module: base
 #: model:ir.module.module,summary:base.module_fleet
 msgid "Manage your fleet and track car costs"
-msgstr "フリートを管理し、車のコストを追跡する"
+msgstr "車両フリートを管理し、車両コストを追跡"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_mail_group
@@ -37393,7 +37401,7 @@ msgstr ""
 "検索され、\n"
 "   当該ビューのモデルから継承するすべてのビューが適用されます (inherit_id経"
 "由)\n"
-"* プライマリの場合、最も近い主要ビューは完全に解決され (異なる\n"
+"* メインの場合、最も近い主要ビューは完全に解決され (異なる\n"
 "   モデルを使用している場合でも)、そして当該ビューの継承仕様 (<xpath/>) が \n"
 "   適用されて当該ビューの実際アーチとして結果が使用されます。\n"
 
@@ -38064,7 +38072,7 @@ msgstr "既存の用語を上書き"
 #. module: base
 #: model_terms:ir.ui.view,arch_db:base.view_attachment_search
 msgid "Owner"
-msgstr "オーナー"
+msgstr "所有者"
 
 #. module: base
 #: model:res.partner.industry,full_name:base.res_partner_industry_P
@@ -38105,7 +38113,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_pos_barcodelookup
 msgid "POS - Barcode Lookup"
-msgstr "POS - Barcode Lookup"
+msgstr "POS - バーコード検索"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_pos_event
@@ -40353,7 +40361,7 @@ msgstr "購買および外注管理"
 #. module: base
 #: model:ir.module.module,summary:base.module_purchase
 msgid "Purchase orders, tenders and agreements"
-msgstr "注文書、入札および契約"
+msgstr "購買オーダ・入札・契約を管理"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_event_track_social
@@ -41032,7 +41040,7 @@ msgstr "修理"
 #. module: base
 #: model:ir.module.module,summary:base.module_repair
 msgid "Repair damaged products"
-msgstr "故障したプロダクトの修理"
+msgstr "破損したプロダクトの修理管理"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_quality_repair
@@ -41257,7 +41265,7 @@ msgstr "レストラン"
 #. module: base
 #: model:ir.module.module,summary:base.module_pos_restaurant
 msgid "Restaurant extensions for the Point of Sale "
-msgstr "Pos機能のレストラン拡張機能"
+msgstr "POS(レジ機能)のレストラン向け拡張機能"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__reset_view_arch_wizard__reset_mode__soft
@@ -41984,7 +41992,7 @@ msgstr "販売・倉庫管理"
 #. module: base
 #: model:ir.module.module,summary:base.module_sale
 msgid "Sales internal machinery"
-msgstr "販売内部機械"
+msgstr "販売業務の内部機能"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner__user_id
@@ -42567,7 +42575,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_survey
 msgid "Send your surveys or share them live."
-msgstr "アンケートを送信するかライブでシェアします。"
+msgstr "アンケートを送信、またはリアルタイムで共有"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_delivery_sendcloud
@@ -43957,7 +43965,7 @@ msgstr "サブメニュー"
 #: model:ir.module.module,summary:base.module_hr_expense
 #: model:ir.module.module,summary:base.module_hr_payroll_expense
 msgid "Submit, validate and reinvoice employee expenses"
-msgstr "従業員経費の提出、検証および再請求"
+msgstr "従業員の経費申請・承認・再請求(顧客への請求振替)"
 
 #. module: base
 #: model:ir.module.category,name:base.module_category_sales_subscriptions
@@ -46663,13 +46671,13 @@ msgstr "セッションスピーカーSMSマーケティング"
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_attendance
 msgid "Track employee attendance"
-msgstr "従業員の勤怠を追跡"
+msgstr "従業員の勤怠を記録・追跡"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_hr_timesheet
 #: model:ir.module.module,summary:base.module_timesheet_grid
 msgid "Track employee time on tasks"
-msgstr "タスクの従業員の時間を追跡"
+msgstr "タスクごとの従業員の作業時間を記録・追跡"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_maintenance
@@ -47604,7 +47612,7 @@ msgstr "この連絡先を識別するためにバーコードを使用してく
 #. module: base
 #: model:ir.module.module,summary:base.module_stock_barcode
 msgid "Use barcode scanners to process logistics operations"
-msgstr "バーコードスキャナーを使用して物流業務を処理する"
+msgstr "バーコードスキャナーを使用して物流業務を処理"
 
 #. module: base
 #. odoo-python
@@ -48203,7 +48211,7 @@ msgstr "ヴァージン諸島 (アメリカ領)"
 #: model_terms:ir.ui.view,arch_db:base.edit_menu_access
 #: model_terms:ir.ui.view,arch_db:base.view_window_action_form
 msgid "Visibility"
-msgstr "可視性"
+msgstr "表示設定"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_module_category__visible
@@ -48309,9 +48317,9 @@ msgid ""
 "enhancing solutions through the use of advanced software for our clients "
 "worldwide. At Lumber Inc we bring operational experience combined..."
 msgstr ""
-"私たちは、世界中のクライアントのために高度なソフトウェアを使用して価値を高め"
-"るソリューションを作成する技術コンサルティングおよび戦略的アドバイザリー会社"
-"です。 Lumber Incであれば、運用経験が統合できます..."
+"当社は、高度なソフトウェアを活用し、世界中のクライアントに向けて価値創出"
+"ソリューションを提供するテクノロジーコンサルティングおよび戦略アドバイザリー"
+"企業です。Lumber Inc. では、これまでの実務運用経験と..."
 
 #. module: base
 #: model_terms:res.partner,website_description:base.res_partner_18

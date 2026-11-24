@@ -1474,7 +1474,9 @@ class AccountMove(models.Model):
                 move.preferred_payment_method_line_id = partner.property_outbound_payment_method_line_id
 
     @api.depends('move_type', 'line_ids.amount_residual')
+    @api.depends_context('uid')
     def _compute_payments_widget_reconciled_info(self):
+        can_read_accounting = self.env.user.has_group('account.group_account_readonly')
         for move in self:
             payments_widget_vals = {'title': _('Less Payment'), 'outstanding': False, 'content': []}
 
@@ -1507,6 +1509,10 @@ class AccountMove(models.Model):
                         'ref': reconciliation_ref,
                         # these are necessary for the views to change depending on the values
                         'is_exchange': reconciled_partial['is_exchange'],
+                        # the invoicing users only manage the invoices and the payments, the other entries are part of the accounting
+                        'can_open_move': can_read_accounting
+                            or bool(counterpart_line.move_id.origin_payment_id)
+                            or counterpart_line.move_id.is_invoice(include_receipts=True),
                         'amount_company_currency': formatLang(self.env, abs(counterpart_line.balance), currency_obj=counterpart_line.company_id.currency_id),
                         'amount_foreign_currency': foreign_currency and formatLang(self.env, abs(counterpart_line.amount_currency), currency_obj=foreign_currency)
                     })
@@ -1680,6 +1686,9 @@ class AccountMove(models.Model):
             base_lines += self._prepare_epd_base_lines_for_taxes_computation_from_base_lines(base_amls)
             AccountTax._add_tax_details_in_base_lines(base_lines, self.company_id)
             AccountTax._round_base_lines_tax_details(base_lines, self.company_id)
+
+        # todo: modify the _order in master
+        base_lines[:len(base_amls)] = sorted(base_lines[:len(base_amls)], key=lambda base_line: (base_line['record'].sequence, base_line['record']._origin.id))
         return base_lines, tax_lines
 
     @api.depends_context('lang')
@@ -1763,7 +1772,7 @@ class AccountMove(models.Model):
         for move in self:
             move.need_cancel_request = move._need_cancel_request()
 
-    @api.depends('partner_id', 'invoice_source_email', 'partner_id.display_name')
+    @api.depends('partner_id', 'invoice_source_email', 'partner_id.complete_name')
     def _compute_invoice_partner_display_info(self):
         for move in self:
             vendor_display_name = move.partner_id.with_context({'lang': self.env.lang}).display_name
@@ -1839,7 +1848,7 @@ class AccountMove(models.Model):
         for move in self.filtered(lambda move: move.is_invoice()):
             move.access_url = '/my/invoices/%s' % (move.id)
 
-    @api.depends('move_type', 'partner_id', 'partner_id.lang', 'company_id')
+    @api.depends('move_type', 'partner_id', 'company_id')
     def _compute_narration(self):
         use_invoice_terms = self.env['ir.config_parameter'].sudo().get_param('account.use_invoice_terms')
         invoice_to_update_terms = self.filtered(lambda m: use_invoice_terms and m.is_sale_document(include_receipts=True))
@@ -4152,9 +4161,14 @@ class AccountMove(models.Model):
             ('journal_id', '=', journal.id),
             ('sequence_prefix', '=', last_move_in_chain.sequence_prefix),
         ]
+
+        sequence_number_reset = last_move_in_chain._deduce_sequence_number_reset(last_move_in_chain.name)
+        date_start, date_end, _, _ = last_move_in_chain._get_sequence_date_range(sequence_number_reset)
         last_move_hashed = self.env['account.move'].search_fetch([
             *common_domain,
             ('inalterable_hash', '!=', False),
+            ('date', '>=', date_start),
+            ('date', '<=', date_end),
         ], ['sequence_number', 'inalterable_hash'], order='sequence_number desc', limit=1)
 
         domain = self.env['account.move']._get_move_hash_domain([
